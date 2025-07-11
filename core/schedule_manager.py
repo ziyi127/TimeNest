@@ -46,6 +46,11 @@ class ScheduleManager(QObject):
         self.last_update_time: Optional[datetime] = None
         # 课程状态缓存
         self.class_status_cache: Dict[str, str] = {}
+
+        # 性能优化缓存
+        self._current_class_cache = None
+        self._cache_timestamp = None
+        self._cache_ttl = 30  # 缓存30秒
         # 加载默认课程表
         self._load_default_schedule()
         self.logger.info("课程表管理器初始化完成")
@@ -287,23 +292,35 @@ class ScheduleManager(QObject):
             self.logger.error(f"更新课程状态失败: {e}")
     
     def _get_current_class_at_time(self, current_time: datetime) -> Optional[ClassItem]:
-        """获取指定时间的当前课程"""
+        """获取指定时间的当前课程（带缓存优化）"""
         if not self.current_schedule:
             return None
-        
+
+        # 检查缓存是否有效
+        if (self._cache_timestamp and
+            self._current_class_cache is not None and
+            (current_time.timestamp() - self._cache_timestamp) < self._cache_ttl):
+            return self._current_class_cache
+
         current_date = current_time.date()
         current_time_only = current_time.time()
         weekday = self._get_weekday_name(current_date)
-        
+
         # 获取当天的课程
         today_classes = self.current_schedule.get_classes_by_weekday(weekday)
-        
+
+        current_class = None
         for class_item in today_classes:
             time_slot = self.current_schedule.get_time_slot(class_item.time_slot_id)
             if time_slot and time_slot.start_time <= current_time_only <= time_slot.end_time:
-                return class_item
-        
-        return None
+                current_class = class_item
+                break
+
+        # 更新缓存
+        self._current_class_cache = current_class
+        self._cache_timestamp = current_time.timestamp()
+
+        return current_class
     
     def _update_class_statuses(self, current_time: datetime):
         """更新所有课程的状态"""

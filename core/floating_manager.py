@@ -61,8 +61,11 @@ class FloatingManager(QObject):
     def create_widget(self) -> bool:
         """创建浮窗组件"""
         try:
-            if self.floating_widget is None:
-                self._initialize_widget()
+            # 避免重复创建
+            if self.floating_widget is not None:
+                return True
+
+            self._initialize_widget()
             return self.floating_widget is not None
         except Exception as e:
             self.logger.error(f"创建浮窗失败: {e}")

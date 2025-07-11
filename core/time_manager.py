@@ -28,10 +28,7 @@ class TimeManager(QObject):
         # 时间流速（用于调试，1.0为正常速度）
         self._time_speed = 1.0
 
-        # 时间偏移是否启用
-        self.is_offset_enabled = False
-        
-        # 是否启用时间偏移
+        # 是否启用时间偏移（合并重复变量）
         self._offset_enabled = False
         
         # 加载设置
