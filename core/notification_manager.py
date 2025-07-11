@@ -387,13 +387,17 @@ class NotificationManager(QObject):
         # 通知窗口管理
         self.notification_windows: List[NotificationWindow] = []
 
-        # 定时器管理
+        # 定时器管理 - 使用弱引用避免内存泄漏
+        import weakref
         self.reminder_timers: Dict[str, QTimer] = {}
+        self._timer_cleanup_counter = 0
 
         # 状态跟踪
         self.last_notified_class: Optional[ClassItem] = None
-        self.notification_history: List[Dict[str, Any]] = []
-        self.failed_notifications: List[Dict[str, Any]] = []
+        # 使用有界队列防止内存泄漏
+        from collections import deque
+        self.notification_history: deque = deque(maxlen=1000)  # 最多保存1000条历史
+        self.failed_notifications: deque = deque(maxlen=100)   # 最多保存100条失败记录
 
         # 通道注册表
         self.channels: Dict[str, NotificationChannel] = {}
@@ -912,6 +916,31 @@ class NotificationManager(QObject):
 
         except Exception as e:
             self.logger.error(f"设置课程通知失败: {e}")
+
+    def _cleanup_expired_timers(self) -> None:
+        """清理过期的定时器，防止内存泄漏"""
+        try:
+            self._timer_cleanup_counter += 1
+
+            # 每100次调用清理一次
+            if self._timer_cleanup_counter % 100 == 0:
+                expired_timers = []
+
+                for timer_id, timer in self.reminder_timers.items():
+                    if not timer.isActive():
+                        expired_timers.append(timer_id)
+
+                # 移除过期定时器
+                for timer_id in expired_timers:
+                    timer = self.reminder_timers.pop(timer_id, None)
+                    if timer:
+                        timer.deleteLater()
+
+                if expired_timers:
+                    self.logger.debug(f"清理了 {len(expired_timers)} 个过期定时器")
+
+        except Exception as e:
+            self.logger.error(f"清理定时器失败: {e}")
 
     def _load_settings(self) -> Dict[str, Any]:
         """
