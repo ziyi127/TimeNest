@@ -7,7 +7,7 @@ TimeNest 基础管理器类
 
 import logging
 import threading
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 
@@ -15,7 +15,18 @@ if TYPE_CHECKING:
     from core.config_manager import ConfigManager
 
 
-class BaseManager(QObject, ABC):
+class QObjectABCMeta(type(QObject), ABCMeta):
+    """
+    Custom metaclass that combines QObject's metaclass with ABCMeta
+
+    This resolves the metaclass conflict when inheriting from both QObject and ABC.
+    The metaclass properly handles both PyQt's signal/slot mechanism and
+    abstract base class functionality.
+    """
+    pass
+
+
+class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
     """
     基础管理器类
     
