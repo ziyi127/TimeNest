@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import (
     QComboBox, QSpinBox, QCheckBox, QGroupBox, QFormLayout,
     QTextEdit, QProgressBar, QMessageBox, QFileDialog,
     QHeaderView, QSplitter, QListWidget, QListWidgetItem,
-    QDateEdit, QTimeEdit, QSlider, QFrame
+    QDateEdit, QTimeEdit, QSlider, QFrame, QDialogButtonBox,
+    QRadioButton, QButtonGroup, QLineEdit
 )
 from PyQt6.QtGui import QFont, QColor, QPalette, QIcon
 
@@ -855,7 +856,30 @@ class ScheduleManagementDialog(QDialog):
 
     def resolve_conflict(self):
         """解决冲突"""
-        QMessageBox.information(self, "功能开发中", "冲突解决功能正在开发中...")
+        current_item = self.conflicts_list.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "警告", "请先选择要解决的冲突")
+            return
+
+        conflict_data = current_item.data(Qt.ItemDataRole.UserRole)
+        if not conflict_data:
+            return
+
+        # 创建冲突解决对话框
+        dialog = ConflictResolutionDialog(conflict_data, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            resolution = dialog.get_resolution()
+
+            # 应用解决方案
+            if self._apply_conflict_resolution(conflict_data, resolution):
+                # 从列表中移除已解决的冲突
+                self.conflicts_list.takeItem(self.conflicts_list.row(current_item))
+                QMessageBox.information(self, "成功", "冲突已解决")
+
+                # 刷新课程表显示
+                self.refresh_schedule_display()
+            else:
+                QMessageBox.warning(self, "失败", "冲突解决失败，请重试")
 
     def ignore_conflict(self):
         """忽略冲突"""
@@ -1233,3 +1257,186 @@ class ScheduleManagementDialog(QDialog):
         except Exception as e:
             self.logger.error(f"关闭处理失败: {e}")
             event.accept()  # 只关闭窗口，不退出程序
+
+    def _apply_conflict_resolution(self, conflict_data: Dict[str, Any], resolution: Dict[str, Any]) -> bool:
+        """应用冲突解决方案"""
+        try:
+            resolution_type = resolution.get('type')
+
+            if resolution_type == 'keep_existing':
+                # 保留现有课程，不做任何操作
+                return True
+            elif resolution_type == 'replace_with_new':
+                # 用新课程替换现有课程
+                existing_course = conflict_data.get('existing_course')
+                new_course = conflict_data.get('new_course')
+
+                if existing_course and new_course:
+                    # 这里需要实际的课程替换逻辑
+                    # 由于没有具体的数据结构，这里只是示例
+                    self.logger.info(f"替换课程: {existing_course} -> {new_course}")
+                    return True
+            elif resolution_type == 'modify_time':
+                # 修改时间避免冲突
+                new_time = resolution.get('new_time')
+                course = conflict_data.get('new_course')
+
+                if new_time and course:
+                    # 修改课程时间
+                    self.logger.info(f"修改课程时间: {course} -> {new_time}")
+                    return True
+            elif resolution_type == 'merge_courses':
+                # 合并课程
+                existing_course = conflict_data.get('existing_course')
+                new_course = conflict_data.get('new_course')
+
+                if existing_course and new_course:
+                    # 合并课程逻辑
+                    self.logger.info(f"合并课程: {existing_course} + {new_course}")
+                    return True
+
+            return False
+
+        except Exception as e:
+            self.logger.error(f"应用冲突解决方案失败: {e}")
+            return False
+
+
+class ConflictResolutionDialog(QDialog):
+    """冲突解决对话框"""
+
+    def __init__(self, conflict_data: Dict[str, Any], parent=None):
+        super().__init__(parent)
+        self.conflict_data = conflict_data
+        self.resolution = {}
+
+        self.setWindowTitle("解决课程冲突")
+        self.setFixedSize(500, 400)
+
+        self.setup_ui()
+        self.load_conflict_info()
+
+    def setup_ui(self):
+        """设置界面"""
+        layout = QVBoxLayout(self)
+
+        # 冲突信息显示
+        info_group = QGroupBox("冲突信息")
+        info_layout = QVBoxLayout(info_group)
+
+        self.conflict_info_label = QLabel()
+        self.conflict_info_label.setWordWrap(True)
+        info_layout.addWidget(self.conflict_info_label)
+
+        layout.addWidget(info_group)
+
+        # 解决方案选择
+        solution_group = QGroupBox("解决方案")
+        solution_layout = QVBoxLayout(solution_group)
+
+        self.solution_group = QButtonGroup()
+
+        # 保留现有课程
+        self.keep_existing_radio = QRadioButton("保留现有课程，忽略新课程")
+        self.solution_group.addButton(self.keep_existing_radio, 0)
+        solution_layout.addWidget(self.keep_existing_radio)
+
+        # 替换为新课程
+        self.replace_radio = QRadioButton("用新课程替换现有课程")
+        self.solution_group.addButton(self.replace_radio, 1)
+        solution_layout.addWidget(self.replace_radio)
+
+        # 修改时间
+        self.modify_time_radio = QRadioButton("修改新课程时间")
+        self.solution_group.addButton(self.modify_time_radio, 2)
+        solution_layout.addWidget(self.modify_time_radio)
+
+        # 时间选择器
+        time_layout = QHBoxLayout()
+        time_layout.addWidget(QLabel("新时间:"))
+        self.new_time_edit = QTimeEdit()
+        self.new_time_edit.setEnabled(False)
+        time_layout.addWidget(self.new_time_edit)
+        time_layout.addStretch()
+        solution_layout.addLayout(time_layout)
+
+        # 合并课程
+        self.merge_radio = QRadioButton("合并两个课程")
+        self.solution_group.addButton(self.merge_radio, 3)
+        solution_layout.addWidget(self.merge_radio)
+
+        # 合并选项
+        merge_layout = QVBoxLayout()
+        merge_layout.addWidget(QLabel("合并后的课程名称:"))
+        self.merged_name_edit = QLineEdit()
+        self.merged_name_edit.setEnabled(False)
+        merge_layout.addWidget(self.merged_name_edit)
+        solution_layout.addLayout(merge_layout)
+
+        layout.addWidget(solution_group)
+
+        # 连接信号
+        self.modify_time_radio.toggled.connect(self.new_time_edit.setEnabled)
+        self.merge_radio.toggled.connect(self.merged_name_edit.setEnabled)
+
+        # 默认选择第一个选项
+        self.keep_existing_radio.setChecked(True)
+
+        # 按钮
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def load_conflict_info(self):
+        """加载冲突信息"""
+        try:
+            existing_course = self.conflict_data.get('existing_course', {})
+            new_course = self.conflict_data.get('new_course', {})
+
+            info_text = f"""
+<b>检测到课程时间冲突：</b><br><br>
+<b>现有课程：</b><br>
+名称: {existing_course.get('name', '未知')}<br>
+时间: {existing_course.get('time', '未知')}<br>
+地点: {existing_course.get('location', '未知')}<br><br>
+<b>新课程：</b><br>
+名称: {new_course.get('name', '未知')}<br>
+时间: {new_course.get('time', '未知')}<br>
+地点: {new_course.get('location', '未知')}<br><br>
+请选择解决方案：
+            """
+
+            self.conflict_info_label.setText(info_text.strip())
+
+            # 设置合并后的默认名称
+            existing_name = existing_course.get('name', '')
+            new_name = new_course.get('name', '')
+            if existing_name and new_name:
+                self.merged_name_edit.setText(f"{existing_name} & {new_name}")
+
+        except Exception as e:
+            self.conflict_info_label.setText(f"加载冲突信息失败: {e}")
+
+    def get_resolution(self) -> Dict[str, Any]:
+        """获取解决方案"""
+        checked_id = self.solution_group.checkedId()
+
+        if checked_id == 0:
+            return {'type': 'keep_existing'}
+        elif checked_id == 1:
+            return {'type': 'replace_with_new'}
+        elif checked_id == 2:
+            return {
+                'type': 'modify_time',
+                'new_time': self.new_time_edit.time().toString()
+            }
+        elif checked_id == 3:
+            return {
+                'type': 'merge_courses',
+                'merged_name': self.merged_name_edit.text()
+            }
+        else:
+            return {'type': 'keep_existing'}

@@ -198,10 +198,17 @@ class AppManager(QObject):
             )
             
             self._initialize_feature(
-                "时间校准服务", 
-                "core.time_calibration", 
-                "TimeCalibrationService", 
-                (self.config_manager, self.time_manager)
+                "时间校准服务",
+                "core.time_calibration_service",
+                "TimeCalibrationService",
+                (self.config_manager,)
+            )
+
+            self._initialize_feature(
+                "插件开发工具",
+                "core.plugin_development_tools",
+                "PluginDevelopmentTools",
+                (self.config_manager,)
             )
             
             self._initialize_feature(
