@@ -1,0 +1,27 @@
+# TimeNest 最小依赖
+# 仅包含应用运行的绝对必需依赖
+
+# 核心GUI框架
+PyQt6>=6.6.0
+
+# 配置文件处理
+PyYAML>=6.0.1
+
+# 网络请求（天气组件）
+requests>=2.31.0
+
+# 系统通知
+plyer>=2.1.0
+
+# 配置验证
+jsonschema>=4.19.0
+
+# 注意：
+# 这是最小化安装，某些功能可能不可用：
+# - Excel导入导出功能需要 openpyxl, xlsxwriter
+# - 数据分析功能需要 pandas, numpy  
+# - 性能监控需要 psutil
+# - 错误监控需要 sentry-sdk
+# - 图像处理需要 Pillow
+# - 加密功能需要 cryptography
+# - 彩色日志需要 coloredlogs
