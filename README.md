@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![TimeNest Logo]((https://github.com/ziyi127/TimeNest/blob/main/resources/icons/tray_icon.svg))
+![TimeNest Logo](https://github.com/ziyi127/TimeNest/blob/main/resources/icons/tray_icon.svg)
 
 **一个功能强大的跨平台课程表管理工具**
 
