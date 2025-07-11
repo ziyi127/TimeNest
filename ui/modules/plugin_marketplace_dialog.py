@@ -1296,7 +1296,7 @@ class ApiDocumentationDialog(QDialog):
 所有插件都必须实现 IPlugin 接口：
 
 ```python
-from core.plugin_system import IPlugin, PluginStatus
+from core.plugin_base import IPlugin, PluginStatus
 
 class MyPlugin(IPlugin):
     def __init__(self):
@@ -1348,7 +1348,7 @@ class MyPlugin(IPlugin):
 ### 注册服务
 
 ```python
-from core.plugin_system import IServiceProvider, ServiceInterface
+from core.plugin_base import IServiceProvider, ServiceInterface
 
 class MyServicePlugin(IPlugin, IServiceProvider):
     def get_service_interface(self) -> ServiceInterface:

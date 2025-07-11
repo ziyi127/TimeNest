@@ -137,6 +137,54 @@ class IPlugin(ABC):
         return self.status
 
 
+class ServiceType(Enum):
+    """服务类型"""
+    UTILITY = "utility"
+    NOTIFICATION = "notification"
+    UI_COMPONENT = "ui_component"
+    DATA_PROVIDER = "data_provider"
+    INTEGRATION = "integration"
+
+
+@dataclass
+class ServiceMethod:
+    """服务方法"""
+    name: str
+    callable: Callable
+    description: str = ""
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    return_type: Optional[Type] = None
+
+
+@dataclass
+class ServiceInterface:
+    """服务接口"""
+    name: str
+    version: str
+    provider_id: str
+    service_type: ServiceType
+    methods: Dict[str, ServiceMethod] = field(default_factory=dict)
+    description: str = ""
+
+    def add_method(self, method: ServiceMethod):
+        """添加方法"""
+        self.methods[method.name] = method
+
+
+class IServiceProvider(ABC):
+    """服务提供者接口"""
+
+    @abstractmethod
+    def get_service_interface(self) -> 'ServiceInterface':
+        """获取服务接口"""
+        pass
+
+    @abstractmethod
+    def get_service_type(self) -> ServiceType:
+        """获取服务类型"""
+        pass
+
+
 class PluginEvent:
     """插件事件"""
     

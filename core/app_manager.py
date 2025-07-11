@@ -20,7 +20,7 @@ from core.component_system import ComponentManager as ComponentSystemManager
 from core.config_manager import ConfigManager
 from core.floating_manager import FloatingManager
 from core.notification_manager import NotificationManager
-from core.plugin_system import PluginManager
+from core.plugin_base import PluginManager
 from core.schedule_manager import ScheduleManager
 from core.theme_system import ThemeManager, ThemeMarketManager
 from core.time_manager import TimeManager

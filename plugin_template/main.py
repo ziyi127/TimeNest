@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 # TimeNest 插件系统导入
-from core.plugin_system import IPlugin, PluginMetadata, PluginType, PluginStatus
+from core.plugin_base import IPlugin, PluginMetadata, PluginType, PluginStatus
 
 
 class MyPlugin(IPlugin):

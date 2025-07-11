@@ -11,7 +11,7 @@ from pathlib import Path
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.base_manager import BaseManager
-from core.plugin_system import IPlugin, PluginMetadata, PluginStatus
+from core.plugin_base import IPlugin, PluginMetadata, PluginStatus
 from .interface_registry import PluginInterfaceRegistry, IServiceProvider
 from .dependency_validator import DependencyValidator, PluginDependency, ValidationResult
 from .message_bus import PluginMessageBus
