@@ -35,6 +35,9 @@ coloredlogs>=15.0.1
 # 配置验证
 jsonschema>=4.19.0
 
+# 包版本管理（插件系统需要）
+packaging>=23.0
+
 # 加密（配置文件保护）
 cryptography>=41.0.0
 

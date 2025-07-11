@@ -120,7 +120,7 @@ TimeNest 支持以下类型的插件：
 
 ```python
 from abc import ABC, abstractmethod
-from core.plugin_system import IPlugin, PluginMetadata, PluginStatus
+from core.plugin_base import IPlugin, PluginMetadata, PluginStatus
 
 class MyPlugin(IPlugin):
     """我的插件"""
