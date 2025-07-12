@@ -1128,6 +1128,40 @@ class NotificationManager(QObject):
             import traceback
             traceback.print_exc()
             self.logger.error(f"初始化托盘图标失败: {e}")
+
+    def check_pending_notifications(self):
+        """检查待处理的通知"""
+        try:
+            # 检查是否有待处理的通知
+            current_time = datetime.now()
+
+            # 这里可以添加具体的通知检查逻辑
+            # 例如：检查课程提醒、系统通知等
+
+            # 清理过期的定时器
+            self._cleanup_expired_timers()
+
+        except Exception as e:
+            self.logger.error(f"检查待处理通知失败: {e}")
+
+    def _cleanup_expired_timers(self):
+        """清理过期的定时器"""
+        try:
+            expired_timers = []
+            for timer_id, timer in self.reminder_timers.items():
+                if not timer.isActive():
+                    expired_timers.append(timer_id)
+
+            for timer_id in expired_timers:
+                timer = self.reminder_timers.pop(timer_id, None)
+                if timer:
+                    timer.deleteLater()
+
+            if expired_timers:
+                self.logger.debug(f"清理了 {len(expired_timers)} 个过期定时器")
+
+        except Exception as e:
+            self.logger.error(f"清理过期定时器失败: {e}")
     
     def on_class_changed(self, new_class: Optional[ClassItem]):
         """处理课程变化事件"""

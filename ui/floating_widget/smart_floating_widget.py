@@ -125,9 +125,14 @@ class SmartFloatingWidget(QWidget):
     def load_config(self) -> None:
         """加载浮窗配置"""
         try:
+            # 确保有默认配置
+            self.enabled_modules = ['time', 'schedule']
+            self.module_order = ['time', 'schedule']
+
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
                 self.config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
-                
+                self.logger.debug(f"从配置管理器加载的配置: {self.config}")
+
                 # 加载基本配置
                 self.default_width = self.config.get('width', 400)
                 self.default_height = self.config.get('height', 60)
@@ -139,39 +144,47 @@ class SmartFloatingWidget(QWidget):
                 self.fixed_position = self.config.get('fixed_position', True)
                 self.auto_rotate_content = self.config.get('auto_rotate_content', True)
                 self.rotation_interval = self.config.get('rotation_interval', 5000)
-                
+
                 # 加载模块配置
                 modules_config = self.config.get('modules', {})
                 self.logger.debug(f"从配置加载的模块配置: {modules_config}")
 
-                self.enabled_modules = [
-                    module_id for module_id, config in modules_config.items()
-                    if config.get('enabled', True)
-                ]
+                if modules_config:
+                    enabled_modules = [
+                        module_id for module_id, config in modules_config.items()
+                        if config.get('enabled', True)
+                    ]
 
-                self.logger.debug(f"解析出的启用模块: {self.enabled_modules}")
+                    if enabled_modules:
+                        self.enabled_modules = enabled_modules
+                        # 按顺序排序
+                        self.module_order = sorted(
+                            self.enabled_modules,
+                            key=lambda x: modules_config.get(x, {}).get('order', 0)
+                        )
+                        self.logger.debug(f"从配置解析出的启用模块: {self.enabled_modules}")
 
-                # 如果没有启用的模块，使用默认模块
+                # 如果仍然没有启用的模块，创建并保存默认配置
                 if not self.enabled_modules:
-                    self.logger.warning("没有启用的模块，使用默认配置")
+                    self.logger.warning("没有启用的模块，创建默认配置")
                     self.enabled_modules = ['time', 'schedule']
-                    # 保存默认模块配置
+                    self.module_order = ['time', 'schedule']
+
+                    # 创建默认模块配置
                     default_modules_config = {
                         'time': {'enabled': True, 'order': 0},
                         'schedule': {'enabled': True, 'order': 1}
                     }
                     self.config['modules'] = default_modules_config
+
                     # 立即保存默认配置
                     self.save_config()
-
-                # 按顺序排序
-                self.module_order = sorted(
-                    self.enabled_modules,
-                    key=lambda x: modules_config.get(x, {}).get('order', 0)
-                )
+                    self.logger.info("已创建并保存默认模块配置")
 
                 self.logger.info(f"最终模块配置 - 启用: {self.enabled_modules}, 顺序: {self.module_order}")
-                
+            else:
+                self.logger.warning("配置管理器不可用，使用硬编码默认配置")
+
         except Exception as e:
             self.logger.warning(f"加载配置失败: {e}")
             # 使用默认配置
@@ -271,6 +284,8 @@ class SmartFloatingWidget(QWidget):
     def init_modules(self) -> None:
         """初始化功能模块"""
         try:
+            self.logger.info(f"开始初始化模块，启用模块列表: {self.enabled_modules}")
+
             # 创建所有可用模块
             available_modules = {
                 'time': TimeModule,
@@ -279,27 +294,57 @@ class SmartFloatingWidget(QWidget):
                 'weather': WeatherModule,
                 'system': SystemStatusModule
             }
-            
+
+            # 确保有启用的模块
+            if not self.enabled_modules:
+                self.logger.warning("没有启用的模块，使用默认模块")
+                self.enabled_modules = ['time', 'schedule']
+                self.module_order = ['time', 'schedule']
+
             # 实例化启用的模块
+            initialized_count = 0
             for module_id in self.enabled_modules:
                 if module_id in available_modules:
-                    module_class = available_modules[module_id]
-                    module = module_class(self.app_manager)
-                    
-                    # 连接信号
-                    module.content_updated.connect(self.on_module_content_updated)
-                    module.error_occurred.connect(self.on_module_error)
-                    
-                    self.modules[module_id] = module
-                    self.logger.debug(f"模块 {module_id} 初始化完成")
+                    try:
+                        module_class = available_modules[module_id]
+                        module = module_class(self.app_manager)
+
+                        # 连接信号
+                        module.content_updated.connect(self.on_module_content_updated)
+                        module.error_occurred.connect(self.on_module_error)
+
+                        self.modules[module_id] = module
+                        initialized_count += 1
+                        self.logger.debug(f"模块 {module_id} 初始化完成")
+                    except Exception as e:
+                        self.logger.error(f"初始化模块 {module_id} 失败: {e}")
+                else:
+                    self.logger.warning(f"未知模块: {module_id}")
 
             # 启动模块更新
             for module in self.modules.values():
-                module.start_updates(1000)  # 每秒更新一次
-                self.logger.debug(f"模块 {module.module_id} 已启动")
+                try:
+                    module.start_updates(1000)  # 每秒更新一次
+                    self.logger.debug(f"模块 {module.module_id} 已启动")
+                except Exception as e:
+                    self.logger.error(f"启动模块 {module.module_id} 失败: {e}")
+
+            self.logger.info(f"模块初始化完成，成功初始化 {initialized_count}/{len(self.enabled_modules)} 个模块")
 
         except Exception as e:
             self.logger.error(f"初始化模块失败: {e}")
+            # 确保至少有一些基本模块
+            if not self.modules:
+                self.logger.warning("没有成功初始化任何模块，尝试创建基本模块")
+                try:
+                    time_module = TimeModule(self.app_manager)
+                    time_module.content_updated.connect(self.on_module_content_updated)
+                    time_module.error_occurred.connect(self.on_module_error)
+                    self.modules['time'] = time_module
+                    time_module.start_updates(1000)
+                    self.logger.info("成功创建基本时间模块")
+                except Exception as fallback_e:
+                    self.logger.error(f"创建基本模块也失败: {fallback_e}")
 
     def reinitialize_modules(self) -> None:
         """重新初始化模块（用于设置更改后）"""
