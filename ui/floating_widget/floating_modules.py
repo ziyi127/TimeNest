@@ -542,7 +542,7 @@ class SystemStatusModule(FloatingModule):
         """开始系统状态更新"""
         super().start_updates(5000)  # 5秒更新一次
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取系统状态快速操作"""
         return [
             {
@@ -649,7 +649,7 @@ class StudyProgressModule(FloatingModule):
         except Exception as e:
             self.logger.error(f"更新学习进度失败: {e}")
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取学习进度快速操作"""
         return [
             {
@@ -737,7 +737,7 @@ class EnvironmentModule(FloatingModule):
         except Exception as e:
             self.logger.error(f"更新学习环境失败: {e}")
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取环境模块快速操作"""
         return [
             {
@@ -835,7 +835,7 @@ class ResourceQuickAccessModule(FloatingModule):
         except Exception as e:
             self.logger.error(f"更新资源快速访问失败: {e}")
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取资源快速操作"""
         return [
             {
@@ -973,7 +973,7 @@ class FocusModeModule(FloatingModule):
         except Exception as e:
             self.logger.error(f"切换专注模式失败: {e}")
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取专注模式快速操作"""
         return [
             {
