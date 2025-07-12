@@ -166,21 +166,40 @@ class AppManager(QObject):
         """
         attr_name = attr_name or feature_name.lower().replace(' ', '_')
         try:
+            # 参数验证
+            if not module_path or not class_name:
+                raise ValueError(f"模块路径或类名为空: {module_path}, {class_name}")
+
             module = __import__(module_path, fromlist=[class_name])
+            if not hasattr(module, class_name):
+                raise AttributeError(f"模块 {module_path} 中未找到类 {class_name}")
+
             cls = getattr(module, class_name)
-            setattr(self, attr_name, cls(*init_args))
+            if not callable(cls):
+                raise TypeError(f"类 {class_name} 不可调用")
+
+            # 安全实例化
+            instance = cls(*init_args) if init_args else cls()
+            setattr(self, attr_name, instance)
             self.logger.info(f"{feature_name}初始化完成")
             return True
         except Exception as e:
             if fallback_module:
                 try:
+                    if not fallback_module:
+                        raise ValueError("备选模块路径为空")
+
                     module = __import__(fallback_module, fromlist=[class_name])
+                    if not hasattr(module, class_name):
+                        raise AttributeError(f"备选模块 {fallback_module} 中未找到类 {class_name}")
+
                     cls = getattr(module, class_name)
-                    setattr(self, attr_name, cls(*init_args))
+                    instance = cls(*init_args) if init_args else cls()
+                    setattr(self, attr_name, instance)
                     self.logger.info(f"{feature_name}(备选)初始化完成")
                     return True
                 except Exception as fallback_e:
-                    self.logger.warning(f"{feature_name}初始化失败: {fallback_e}")
+                    self.logger.warning(f"{feature_name}初始化失败 (主模块: {e}, 备选模块: {fallback_e})")
                     setattr(self, attr_name, None)
                     return False
             else:
@@ -422,10 +441,10 @@ class AppManager(QObject):
             self.logger.debug(f"配置变化: {section}")
 
             # 根据配置键进行相应处理
-            if section == 'notifications':
+            if section == 'notifications' and self.notification_manager:
                 self.notification_manager.update_settings(config)
-            elif section == 'theme':
-                theme_id = config.get('current')
+            elif section == 'theme' and self.theme_manager:
+                theme_id = config.get('current') if config else None
                 if theme_id:
                     self.theme_manager.apply_theme(theme_id)
 

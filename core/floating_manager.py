@@ -128,17 +128,32 @@ class FloatingManager(QObject):
     def show_settings_dialog(self):
         """显示浮窗设置对话框"""
         try:
+            # 检查必要条件
+            if not self.app_manager:
+                self.logger.error("应用管理器未初始化，无法显示设置对话框")
+                return
+
             # 延迟导入避免循环依赖
             from ui.floating_widget.floating_settings import FloatingSettingsDialog
 
-            if hasattr(self, '_settings_dialog') and self._settings_dialog and self._settings_dialog.isVisible():
+            # 检查是否已有对话框打开
+            if (hasattr(self, '_settings_dialog') and
+                self._settings_dialog and
+                hasattr(self._settings_dialog, 'isVisible') and
+                self._settings_dialog.isVisible()):
                 self._settings_dialog.raise_()
                 self._settings_dialog.activateWindow()
                 return
 
+            # 创建新对话框
             self._settings_dialog = FloatingSettingsDialog(self.app_manager, self.floating_widget)
-            self._settings_dialog.show()
+            if self._settings_dialog:
+                self._settings_dialog.show()
+            else:
+                self.logger.error("创建设置对话框失败")
 
+        except ImportError as e:
+            self.logger.error(f"导入设置对话框失败: {e}")
         except Exception as e:
             self.logger.error(f"显示设置对话框失败: {e}")
 

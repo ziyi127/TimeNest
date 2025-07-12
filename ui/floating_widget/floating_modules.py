@@ -218,10 +218,13 @@ class ScheduleModule(FloatingModule):
             # 获取当前课程信息
             current_info = self.get_current_class_info()
             
-            if current_info['status'] == 'in_class':
-                return f"📚 {current_info['name']} | {current_info['room']}"
-            elif current_info['status'] == 'break':
-                return f"⏰ 课间 | 下节: {current_info['next_name']}"
+            if current_info and current_info.get('status') == 'in_class':
+                name = current_info.get('name', '未知课程')
+                room = current_info.get('room', '未知教室')
+                return f"📚 {name} | {room}"
+            elif current_info and current_info.get('status') == 'break':
+                next_name = current_info.get('next_name', '未知课程')
+                return f"⏰ 课间 | 下节: {next_name}"
             else:
                 return "📖 今日课程已结束"
                 
@@ -233,18 +236,38 @@ class ScheduleModule(FloatingModule):
         """获取课程工具提示"""
         try:
             current_info = self.get_current_class_info()
-            if current_info['status'] == 'in_class':
-                return f"当前课程: {current_info['name']}\n教室: {current_info['room']}\n剩余时间: {current_info['remaining']}"
-            elif current_info['status'] == 'break':
-                return f"课间休息\n下节课程: {current_info['next_name']}\n开始时间: {current_info['next_time']}"
+            if not current_info:
+                return "课程信息不可用"
+
+            status = current_info.get('status', 'no_class')
+            if status == 'in_class':
+                name = current_info.get('name', '未知课程')
+                room = current_info.get('room', '未知教室')
+                remaining = current_info.get('remaining', '未知')
+                return f"当前课程: {name}\n教室: {room}\n剩余时间: {remaining}"
+            elif status == 'break':
+                next_name = current_info.get('next_name', '未知课程')
+                next_time = current_info.get('next_time', '未知时间')
+                return f"课间休息\n下节课程: {next_name}\n开始时间: {next_time}"
             else:
                 return "今日课程已全部结束"
         except Exception as e:
+            self.logger.error(f"获取课程工具提示失败: {e}")
             return "课程信息不可用"
     
     def get_current_class_info(self) -> Dict[str, Any]:
         """获取当前课程信息"""
         try:
+            # 默认返回值，防止KeyError
+            default_info = {
+                'status': 'no_class',
+                'name': '',
+                'room': '',
+                'remaining': '',
+                'next_name': '',
+                'next_time': ''
+            }
+
             # 这里应该从 schedule_manager 获取实际数据
             # 暂时返回模拟数据
             now = datetime.now()

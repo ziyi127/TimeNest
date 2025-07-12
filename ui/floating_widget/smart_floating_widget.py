@@ -16,8 +16,9 @@ from PyQt6.QtGui import (
     QPaintEvent, QMouseEvent, QContextMenuEvent
 )
 
-# 导入安全日志记录器
+# 导入安全日志记录器和错误处理
 from core.safe_logger import get_cached_safe_logger
+from core.error_handler import error_handler, safe_getattr, safe_call_method
 
 from .floating_modules import (
     FloatingModule, TimeModule, ScheduleModule, 
@@ -285,42 +286,44 @@ class SmartFloatingWidget(QWidget):
         except Exception as e:
             self.logger.error(f"初始化动画失败: {e}")
     
+    @error_handler(default_return=None, log_errors=True)
     def apply_config(self) -> None:
         """应用配置"""
-        try:
-            # 应用透明度
-            self.setWindowOpacity(self.opacity_value)
+        # 应用透明度
+        opacity = getattr(self, 'opacity_value', 0.9)
+        if 0.0 <= opacity <= 1.0:
+            self.setWindowOpacity(opacity)
 
-            # 强制设置到屏幕顶部居中（忽略配置中的位置）
-            self.logger.info("强制设置浮窗到屏幕顶部居中")
-            self.center_on_screen()
+        # 强制设置到屏幕顶部居中（忽略配置中的位置）
+        self.logger.info("强制设置浮窗到屏幕顶部居中")
+        safe_call_method(self, 'center_on_screen')
 
-            # 应用主题
-            self.apply_theme()
+        # 应用主题
+        safe_call_method(self, 'apply_theme')
 
-            # 启动更新定时器
-            self.update_timer.start(1000)  # 每秒更新
+        # 启动更新定时器
+        if hasattr(self, 'update_timer') and self.update_timer:
+            safe_call_method(self.update_timer, 'start', 1000)
 
-            # 启动内容轮播（如果启用）
-            if self.auto_rotate_content and len(self.enabled_modules) > 1:
-                self.rotation_timer.start(self.rotation_interval)
+        # 启动内容轮播（如果启用）
+        auto_rotate = getattr(self, 'auto_rotate_content', False)
+        enabled_modules = getattr(self, 'enabled_modules', [])
+        if auto_rotate and len(enabled_modules) > 1:
+            rotation_timer = getattr(self, 'rotation_timer', None)
+            rotation_interval = getattr(self, 'rotation_interval', 5000)
+            if rotation_timer:
+                safe_call_method(rotation_timer, 'start', rotation_interval)
 
-        except Exception as e:
-            self.logger.error(f"应用配置失败: {e}")
-
+    @error_handler(default_return=None, log_errors=True)
     def update_from_config(self) -> None:
         """从配置更新浮窗设置"""
-        try:
-            # 重新加载配置
-            self.load_config()
+        # 重新加载配置
+        safe_call_method(self, 'load_config')
 
-            # 重新应用配置
-            self.apply_config()
+        # 重新应用配置
+        safe_call_method(self, 'apply_config')
 
-            self.logger.debug("浮窗配置已更新")
-
-        except Exception as e:
-            self.logger.error(f"从配置更新失败: {e}")
+        self.logger.debug("浮窗配置已更新")
 
     def ensure_always_on_top(self) -> None:
         """确保浮窗始终置顶"""
