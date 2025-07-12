@@ -1,0 +1,40 @@
+{
+  "floating_widget": {
+    "width": 400,
+    "height": 60,
+    "opacity": 0.9,
+    "border_radius": 30,
+    "position": {
+      "x": 0,
+      "y": 10
+    },
+    "mouse_transparent": false,
+    "fixed_position": true,
+    "auto_rotate_content": false,
+    "rotation_interval": 5000,
+    "modules": {
+      "time": {
+        "enabled": true,
+        "order": 0,
+        "format_24h": true,
+        "show_seconds": false
+      },
+      "schedule": {
+        "enabled": true,
+        "order": 1
+      },
+      "countdown": {
+        "enabled": false,
+        "order": 2
+      },
+      "weather": {
+        "enabled": false,
+        "order": 3
+      },
+      "system": {
+        "enabled": false,
+        "order": 4
+      }
+    }
+  }
+}
