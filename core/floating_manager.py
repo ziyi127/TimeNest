@@ -7,6 +7,7 @@ TimeNest 浮窗管理器
 
 import logging
 from typing import Optional
+from functools import lru_cache
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
@@ -95,18 +96,20 @@ class FloatingManager(QObject):
             self.show_widget()
 
     def on_config_changed(self, section: str, config: dict):
-        """处理配置变更"""
-        if section == 'floating_widget':
-            self.logger.debug("接收到浮窗配置变更，正在更新...")
-            if self.floating_widget:
-                enabled = self.config_manager.get_config('floating_widget.enabled', True)
-                if not enabled:
-                    self.cleanup()
-                else:
-                    self.floating_widget.update_from_config()
+        """处理配置变更（优化版本）"""
+        if section != 'floating_widget':
+            return
+
+        self.logger.debug("接收到浮窗配置变更，正在更新...")
+        if self.floating_widget:
+            enabled = self.config_manager.get_config('floating_widget.enabled', True)
+            if not enabled:
+                self.cleanup()
             else:
-                # 如果之前被禁用了，现在启用
-                self._initialize_widget()
+                self.floating_widget.update_from_config()
+        else:
+            # 如果之前被禁用了，现在启用
+            self._initialize_widget()
 
     def on_theme_changed(self, theme_id: str):
         """处理主题变更"""

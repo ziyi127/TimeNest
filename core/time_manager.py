@@ -7,6 +7,7 @@ TimeNest 时间管理器
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.config_manager import ConfigManager
@@ -55,10 +56,10 @@ class TimeManager(QObject):
     def get_current_time(self) -> datetime:
         """获取当前时间（考虑偏移）"""
         current_time = datetime.now()
-        
-        if self._offset_enabled and self._time_offset:
+
+        if self._offset_enabled and self._time_offset != timedelta():
             current_time += self._time_offset
-        
+
         return current_time
     
     def get_real_time(self) -> datetime:
@@ -140,8 +141,9 @@ class TimeManager(QObject):
         self.set_time_offset(offset, save_to_config)
         self.enable_time_offset(True, save_to_config)
     
+    @lru_cache(maxsize=128)
     def format_time(self, time_obj: datetime, format_str: str = "%H:%M:%S") -> str:
-        """格式化时间显示"""
+        """格式化时间显示（带缓存优化）"""
         try:
             return time_obj.strftime(format_str)
         except Exception as e:

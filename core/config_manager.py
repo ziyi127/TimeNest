@@ -18,6 +18,7 @@ import logging
 import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union, Callable, TypeVar, Generic
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal
 
 # 类型变量定义
@@ -312,30 +313,37 @@ class ConfigManager(QObject):
         except Exception as e:
             self.logger.error(f"保存布局配置失败: {e}")
     
-    def get_config(self, key: str, default: Any = None, config_type: str = 'main') -> Any:
-        """获取配置值"""
-        try:
-            if config_type == 'user':
-                config_dict = self.user_config
-            elif config_type == 'component':
-                config_dict = self.component_config
-            elif config_type == 'layout':
-                config_dict = self.layout_config
+    @lru_cache(maxsize=256)
+    def _get_config_cached(self, key: str, config_type: str) -> Any:
+        """缓存的配置获取（内部方法）"""
+        if config_type == 'user':
+            config_dict = self.user_config
+        elif config_type == 'component':
+            config_dict = self.component_config
+        elif config_type == 'layout':
+            config_dict = self.layout_config
+        else:
+            config_dict = self.main_config
+
+        # 支持嵌套键（如 'app.window.width'）
+        keys = key.split('.')
+        value = config_dict
+
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
             else:
-                config_dict = self.main_config
-            
-            # 支持嵌套键（如 'app.window.width'）
-            keys = key.split('.')
-            value = config_dict
-            
-            for k in keys:
-                if isinstance(value, dict) and k in value:
-                    value = value[k]
-                else:
-                    return default
-            
-            return value
-            
+                return None  # 返回None表示未找到
+
+        return value
+
+    def get_config(self, key: str, default: Any = None, config_type: str = 'main') -> Any:
+        """获取配置值（优化版本）"""
+        try:
+            # 使用缓存获取
+            value = self._get_config_cached(key, config_type)
+            return value if value is not None else default
+
         except Exception as e:
             self.logger.error(f"获取配置失败: {e}")
             return default
@@ -365,7 +373,10 @@ class ConfigManager(QObject):
                 current_dict = current_dict[k]
             
             current_dict[keys[-1]] = value
-            
+
+            # 清除缓存
+            self._get_config_cached.cache_clear()
+
             # 保存配置
             if save:
                 if config_type == 'user':

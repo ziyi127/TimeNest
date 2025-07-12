@@ -27,6 +27,8 @@ from typing import (
     Any, Callable, Dict, Generic, List, Optional, Protocol, TypeVar, Union,
     TYPE_CHECKING
 )
+from functools import lru_cache
+from collections import deque
 
 # 第三方库
 from PyQt6.QtCore import QMutex, QMutexLocker, QObject, Qt, QThread, QTimer, pyqtSignal
@@ -855,10 +857,7 @@ class NotificationManager(QObject):
 
             self.notification_history.append(history_entry)
 
-            # 限制历史记录数量
-            max_history = self.settings.get('max_history_records', 1000)
-            if len(self.notification_history) > max_history:
-                self.notification_history = self.notification_history[-max_history:]
+            # deque自动限制大小，无需手动清理
 
             # 记录失败通知
             if not success:

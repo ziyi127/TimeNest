@@ -14,6 +14,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.base_manager import BaseManager
@@ -351,9 +352,13 @@ class PluginDevelopmentTools(BaseManager):
                 return self._generate_styles_qss(plugin_info)
             elif file_name == 'resources.qrc':
                 return self._generate_resources_qrc(plugin_info)
+            elif file_name == '__init__.py':
+                return '# TimeNest Plugin\n'
+            elif file_name == 'requirements.txt':
+                return 'PyQt6>=6.0.0\n'
             else:
                 return f"# {file_name}\n# 由TimeNest插件开发工具生成\n"
-                
+
         except Exception as e:
             self.logger.error(f"生成文件内容失败 {file_name}: {e}")
             return f"# 生成失败: {e}\n"

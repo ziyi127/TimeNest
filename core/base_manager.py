@@ -9,6 +9,7 @@ import logging
 import threading
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Any, Dict, Optional, TYPE_CHECKING
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 
 if TYPE_CHECKING:
@@ -68,9 +69,11 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
         self._error_count = 0
         self._last_operation_time = None
         
-        # 配置缓存
+        # 配置缓存（优化版本）
         self._config_cache: Dict[str, Any] = {}
         self._cache_timeout = 300  # 5分钟缓存超时
+        self._cache_hits = 0
+        self._cache_misses = 0
         
         # 清理定时器
         self._cleanup_timer = QTimer()
@@ -110,16 +113,19 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
         try:
             # 检查缓存
             if key in self._config_cache:
+                self._cache_hits += 1
                 return self._config_cache[key]
-            
+
             # 从配置管理器获取
+            self._cache_misses += 1
             value = self.config_manager.get_config(key, default)
-            
-            # 缓存配置值
-            self._config_cache[key] = value
-            
+
+            # 缓存配置值（限制缓存大小）
+            if len(self._config_cache) < 100:
+                self._config_cache[key] = value
+
             return value
-            
+
         except Exception as e:
             self.logger.error(f"获取配置失败 {key}: {e}")
             return default
@@ -208,11 +214,12 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
             self.logger.error(f"定期清理失败: {e}")
     
     def _cleanup_cache(self) -> None:
-        """清理过期缓存"""
-        # 简单实现：定期清空所有缓存
-        # 实际项目中可以实现更精细的TTL机制
+        """清理过期缓存（优化版本）"""
         if len(self._config_cache) > 100:  # 缓存过多时清理
-            self._config_cache.clear()
+            # 保留最近使用的50个配置项
+            keys_to_remove = list(self._config_cache.keys())[:-50]
+            for key in keys_to_remove:
+                self._config_cache.pop(key, None)
     
     def periodic_cleanup(self) -> None:
         """子类可重写的定期清理方法"""
@@ -225,13 +232,19 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
         Returns:
             统计信息字典
         """
+        total_requests = self._cache_hits + self._cache_misses
+        hit_rate = (self._cache_hits / total_requests * 100) if total_requests > 0 else 0
+
         return {
             'manager_name': self.manager_name,
             'initialized': self._initialized,
             'running': self._running,
             'operation_count': self._operation_count,
             'error_count': self._error_count,
-            'cache_size': len(self._config_cache)
+            'cache_size': len(self._config_cache),
+            'cache_hits': self._cache_hits,
+            'cache_misses': self._cache_misses,
+            'cache_hit_rate': f"{hit_rate:.1f}%"
         }
     
     def is_initialized(self) -> bool:
