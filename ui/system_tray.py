@@ -195,7 +195,7 @@ class SystemTray(QObject):
 SystemTrayManager = SystemTray
 
 
-class _LegacySystemTrayManager(QObject):
+class SystemTrayManagerLegacy(QObject):
     """
     系统托盘管理器 - 完整版本
 
