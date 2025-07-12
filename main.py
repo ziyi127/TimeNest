@@ -168,7 +168,7 @@ def create_tray_system(app_manager, logger):
             return None
 
         # 创建托盘管理器
-        tray_manager = SystemTrayManager(
+        tray_manager = SystemTray(
             floating_manager=app_manager.floating_manager
         )
 

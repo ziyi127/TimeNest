@@ -138,6 +138,14 @@ class SystemTray(QObject):
             self.toggle_floater_action.setChecked(is_visible)
             self.toggle_floater_action.setText("隐藏浮窗" if is_visible else "显示浮窗")
 
+    def update_floating_status(self, is_visible: bool):
+        """更新浮窗状态（兼容方法）"""
+        try:
+            self.update_floating_widget_action(is_visible)
+            self.logger.debug(f"浮窗状态已更新: {is_visible}")
+        except Exception as e:
+            self.logger.error(f"更新浮窗状态失败: {e}")
+
     def show_message(self, title: str, message: str, icon: QSystemTrayIcon.MessageIcon = QSystemTrayIcon.MessageIcon.Information, timeout: int = 5000):
         """显示系统托盘消息"""
         if self.tray_icon and self.tray_icon.isVisible():
@@ -187,7 +195,7 @@ class SystemTray(QObject):
 SystemTrayManager = SystemTray
 
 
-class _LegacySystemTrayManager(QObject):
+class SystemTrayManagerLegacy(QObject):
     """
     系统托盘管理器 - 完整版本
 
