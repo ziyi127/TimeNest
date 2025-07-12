@@ -7,6 +7,7 @@ TimeNest 通知窗口
 
 import logging
 from typing import Optional, Dict, Any
+from functools import lru_cache
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPropertyAnimation, QRect
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtGui import QFont, QPainter, QColor, QBrush, QPen
@@ -130,8 +131,70 @@ class NotificationWindow(QWidget):
     
     def apply_theme(self, theme_colors: Dict[str, Any]):
         """应用主题"""
-        # 简单的主题应用实现
-        pass
+        try:
+            # 应用背景色
+            if 'background' in theme_colors:
+                bg_color = theme_colors['background']
+                self.setStyleSheet(f"""
+                    QWidget {{
+                        background-color: {bg_color};
+                        border-radius: 8px;
+                    }}
+                """)
+
+            # 应用文本颜色
+            if 'text' in theme_colors:
+                text_color = theme_colors['text']
+                if hasattr(self, 'title_label'):
+                    self.title_label.setStyleSheet(f"color: {text_color}; font-weight: bold;")
+                if hasattr(self, 'message_label'):
+                    self.message_label.setStyleSheet(f"color: {text_color};")
+
+            # 应用按钮样式
+            if 'accent' in theme_colors:
+                accent_color = theme_colors['accent']
+                if hasattr(self, 'close_button'):
+                    self.close_button.setStyleSheet(f"""
+                        QPushButton {{
+                            background-color: {accent_color};
+                            border: none;
+                            border-radius: 4px;
+                            color: white;
+                            padding: 4px 8px;
+                        }}
+                        QPushButton:hover {{
+                            background-color: {accent_color}dd;
+                        }}
+                    """)
+
+        except Exception as e:
+            self.logger.error(f"应用主题失败: {e}")
+
+    def show_with_animation(self, corner: str = "top-right"):
+        """带动画显示通知"""
+        self.show_at_corner(corner)
+
+        # 淡入动画
+        self.setWindowOpacity(0.0)
+        self.fade_in_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_in_animation.setDuration(300)
+        self.fade_in_animation.setStartValue(0.0)
+        self.fade_in_animation.setEndValue(1.0)
+        self.fade_in_animation.start()
+
+    def hide_with_animation(self):
+        """带动画隐藏通知"""
+        self.fade_out_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_out_animation.setDuration(200)
+        self.fade_out_animation.setStartValue(1.0)
+        self.fade_out_animation.setEndValue(0.0)
+        self.fade_out_animation.finished.connect(self.close)
+        self.fade_out_animation.start()
+
+    def set_auto_close(self, duration: int):
+        """设置自动关闭时间"""
+        if duration > 0:
+            QTimer.singleShot(duration, self.hide_with_animation)
     
     def show_at_position(self, x: int, y: int):
         """在指定位置显示"""
@@ -146,21 +209,17 @@ class NotificationWindow(QWidget):
         if screen:
             screen_rect = screen.availableGeometry()
             
-            if corner == "top-right":
-                x = screen_rect.width() - self.width() - 20
-                y = 20
-            elif corner == "top-left":
-                x = 20
-                y = 20
-            elif corner == "bottom-right":
-                x = screen_rect.width() - self.width() - 20
-                y = screen_rect.height() - self.height() - 20
-            elif corner == "bottom-left":
-                x = 20
-                y = screen_rect.height() - self.height() - 20
-            else:
-                x = screen_rect.width() - self.width() - 20
-                y = 20
+            # 使用字典查找替代多个if-elif，提高性能
+            margin = 20
+            positions = {
+                "top-right": (screen_rect.width() - self.width() - margin, margin),
+                "top-left": (margin, margin),
+                "bottom-right": (screen_rect.width() - self.width() - margin,
+                               screen_rect.height() - self.height() - margin),
+                "bottom-left": (margin, screen_rect.height() - self.height() - margin)
+            }
+
+            x, y = positions.get(corner, positions["top-right"])
             
             self.show_at_position(x, y)
         else:
