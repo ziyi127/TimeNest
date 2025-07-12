@@ -689,6 +689,62 @@ class PluginManager(QObject):
             self.logger.error(f"检查插件更新失败: {e}")
             return []
 
+    def update_plugins_status(self):
+        """更新插件状态（定期调用）"""
+        try:
+            # 检查插件状态
+            for plugin_id, plugin in self.plugins.items():
+                try:
+                    # 检查插件是否仍然正常运行
+                    current_status = plugin.get_status()
+
+                    # 如果插件状态异常，尝试恢复
+                    if current_status == PluginStatus.ERROR:
+                        self.logger.warning(f"插件 {plugin_id} 状态异常，尝试恢复")
+                        # 这里可以添加插件恢复逻辑
+
+                    # 更新插件内部状态（如果插件支持）
+                    if hasattr(plugin, 'update_status'):
+                        plugin.update_status()
+
+                except Exception as e:
+                    self.logger.error(f"更新插件 {plugin_id} 状态失败: {e}")
+                    plugin.status = PluginStatus.ERROR
+
+            # 清理无效的插件引用
+            self._cleanup_invalid_plugins()
+
+        except Exception as e:
+            self.logger.error(f"更新插件状态失败: {e}")
+
+    def _cleanup_invalid_plugins(self):
+        """清理无效的插件引用"""
+        try:
+            invalid_plugins = []
+
+            for plugin_id, plugin in self.plugins.items():
+                # 检查插件是否仍然有效
+                if not hasattr(plugin, 'get_status'):
+                    invalid_plugins.append(plugin_id)
+                    continue
+
+                # 检查插件状态
+                try:
+                    status = plugin.get_status()
+                    if status == PluginStatus.UNKNOWN:
+                        invalid_plugins.append(plugin_id)
+                except Exception:
+                    invalid_plugins.append(plugin_id)
+
+            # 移除无效插件
+            for plugin_id in invalid_plugins:
+                self.logger.warning(f"移除无效插件: {plugin_id}")
+                self.plugins.pop(plugin_id, None)
+                self.plugin_modules.pop(plugin_id, None)
+
+        except Exception as e:
+            self.logger.error(f"清理无效插件失败: {e}")
+
     def get_statistics(self) -> Dict[str, Any]:
         """获取插件统计信息"""
         status_count = {}

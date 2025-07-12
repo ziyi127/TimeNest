@@ -337,6 +337,65 @@ class EnhancedPluginManager(BaseManager):
     def get_communication_bus(self) -> PluginCommunicationBus:
         """Get the communication bus"""
         return self.communication_bus
+
+    def update_plugins_status(self):
+        """Update plugin status (called periodically)"""
+        try:
+            # Check plugin status
+            for plugin_id, plugin in self.plugins.items():
+                try:
+                    # Check if plugin is still running normally
+                    current_status = plugin.get_status()
+
+                    # If plugin status is abnormal, try to recover
+                    if current_status == PluginStatus.ERROR:
+                        self.logger.warning(f"Plugin {plugin_id} status abnormal, attempting recovery")
+                        # Recovery logic can be added here
+
+                    # Update plugin internal status (if plugin supports it)
+                    if hasattr(plugin, 'update_status'):
+                        plugin.update_status()
+
+                except Exception as e:
+                    self.logger.error(f"Failed to update plugin {plugin_id} status: {e}")
+                    plugin.status = PluginStatus.ERROR
+                    self.plugin_error.emit(plugin_id, f"Status update failed: {e}")
+
+            # Cleanup invalid plugin references
+            self._cleanup_invalid_plugins()
+
+        except Exception as e:
+            self.logger.error(f"Failed to update plugins status: {e}")
+
+    def _cleanup_invalid_plugins(self):
+        """Cleanup invalid plugin references"""
+        try:
+            invalid_plugins = []
+
+            for plugin_id, plugin in self.plugins.items():
+                # Check if plugin is still valid
+                if not hasattr(plugin, 'get_status'):
+                    invalid_plugins.append(plugin_id)
+                    continue
+
+                # Check plugin status
+                try:
+                    status = plugin.get_status()
+                    if status == PluginStatus.UNKNOWN:
+                        invalid_plugins.append(plugin_id)
+                except Exception:
+                    invalid_plugins.append(plugin_id)
+
+            # Remove invalid plugins
+            for plugin_id in invalid_plugins:
+                self.logger.warning(f"Removing invalid plugin: {plugin_id}")
+                self.plugins.pop(plugin_id, None)
+                self.plugin_metadata.pop(plugin_id, None)
+                self.plugin_dependencies.pop(plugin_id, None)
+                self.validation_results.pop(plugin_id, None)
+
+        except Exception as e:
+            self.logger.error(f"Failed to cleanup invalid plugins: {e}")
     
     def get_dependency_validator(self) -> DependencyValidator:
         """Get the dependency validator"""
