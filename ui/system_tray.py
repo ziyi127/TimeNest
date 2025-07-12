@@ -46,10 +46,13 @@ class SystemTray(QObject):
     # 应用控制信号
     quit_requested = pyqtSignal()
 
-    def __init__(self, parent: Optional[QObject] = None):
+    def __init__(self, parent: Optional[QObject] = None, floating_manager=None):
         super().__init__(parent)
         self.logger = get_cached_safe_logger(f'{__name__}.SystemTray')
         self.tray_icon: Optional[QSystemTrayIcon] = None
+
+        # 支持浮窗管理器参数（向后兼容）
+        self.floating_manager = floating_manager
 
         if QSystemTrayIcon.isSystemTrayAvailable():
             self._init_tray()
