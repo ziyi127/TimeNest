@@ -78,94 +78,389 @@ class FloatingSettingsDialog(QDialog):
     def init_ui(self) -> None:
         """初始化UI"""
         try:
-            self.setWindowTitle("浮窗设置")
-            self.setFixedSize(500, 600)
+            self.setWindowTitle("🎨 TimeNest 浮窗设置")
+            self.setFixedSize(650, 700)  # 增大窗口以容纳更多内容
             self.setModal(True)
-            
+
+            # 设置现代化样式
+            self.setStyleSheet("""
+                QDialog {
+                    background-color: #f5f5f5;
+                    border-radius: 10px;
+                }
+                QTabWidget::pane {
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    background-color: white;
+                }
+                QTabBar::tab {
+                    background-color: #e9e9e9;
+                    padding: 8px 16px;
+                    margin-right: 2px;
+                    border-top-left-radius: 6px;
+                    border-top-right-radius: 6px;
+                }
+                QTabBar::tab:selected {
+                    background-color: white;
+                    border-bottom: 2px solid #007acc;
+                }
+                QGroupBox {
+                    font-weight: bold;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    padding-top: 10px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 8px 0 8px;
+                }
+            """)
+
             # 主布局
             layout = QVBoxLayout(self)
-            
+            layout.setSpacing(10)
+            layout.setContentsMargins(15, 15, 15, 15)
+
+            # 添加标题和描述
+            title_label = QLabel("🎨 浮窗个性化设置")
+            title_label.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #333;
+                    padding: 10px;
+                }
+            """)
+            layout.addWidget(title_label)
+
             # 创建选项卡
             self.tab_widget = QTabWidget()
-            
+
             # 外观设置选项卡
             self.appearance_tab = self.create_appearance_tab()
-            self.tab_widget.addTab(self.appearance_tab, "外观设置")
-            
+            self.tab_widget.addTab(self.appearance_tab, "🎨 外观设置")
+
             # 模块管理选项卡
             self.modules_tab = self.create_modules_tab()
-            self.tab_widget.addTab(self.modules_tab, "模块管理")
-            
+            self.tab_widget.addTab(self.modules_tab, "🧩 模块管理")
+
             # 高级设置选项卡
             self.advanced_tab = self.create_advanced_tab()
-            self.tab_widget.addTab(self.advanced_tab, "高级设置")
-            
+            self.tab_widget.addTab(self.advanced_tab, "⚙️ 高级设置")
+
+            # 新增：预设方案选项卡
+            self.presets_tab = self.create_presets_tab()
+            self.tab_widget.addTab(self.presets_tab, "📋 预设方案")
+
             layout.addWidget(self.tab_widget)
-            
+
+            # 实时预览区域
+            self.create_preview_area(layout)
+
             # 按钮组
             button_box = QDialogButtonBox(
                 QDialogButtonBox.StandardButton.Ok |
                 QDialogButtonBox.StandardButton.Cancel |
-                QDialogButtonBox.StandardButton.Apply
+                QDialogButtonBox.StandardButton.Apply |
+                QDialogButtonBox.StandardButton.RestoreDefaults
             )
+
+            # 美化按钮
+            button_box.setStyleSheet("""
+                QPushButton {
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #e6f3ff;
+                }
+            """)
+
             button_box.accepted.connect(self.accept_settings)
             button_box.rejected.connect(self.reject)
             button_box.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply_settings)
-            
+            button_box.button(QDialogButtonBox.StandardButton.RestoreDefaults).clicked.connect(self.restore_defaults)
+
             layout.addWidget(button_box)
-            
+
         except Exception as e:
             self.logger.error(f"初始化UI失败: {e}")
-    
+
+    def create_preview_area(self, layout: QVBoxLayout) -> None:
+        """创建实时预览区域"""
+        try:
+            preview_group = QGroupBox("🔍 实时预览")
+            preview_layout = QVBoxLayout(preview_group)
+
+            # 预览说明
+            preview_info = QLabel("在这里可以实时预览浮窗效果")
+            preview_info.setStyleSheet("color: #666; font-style: italic;")
+            preview_layout.addWidget(preview_info)
+
+            # 预览控制按钮
+            preview_controls = QHBoxLayout()
+
+            self.preview_btn = QPushButton("🔄 刷新预览")
+            self.preview_btn.clicked.connect(self.refresh_preview)
+            self.preview_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #007acc;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #005a9e;
+                }
+            """)
+
+            self.test_position_btn = QPushButton("📍 测试位置")
+            self.test_position_btn.clicked.connect(self.test_position)
+            self.test_position_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #1e7e34;
+                }
+            """)
+
+            preview_controls.addWidget(self.preview_btn)
+            preview_controls.addWidget(self.test_position_btn)
+            preview_controls.addStretch()
+
+            preview_layout.addLayout(preview_controls)
+            layout.addWidget(preview_group)
+
+        except Exception as e:
+            self.logger.error(f"创建预览区域失败: {e}")
+
+    def create_presets_tab(self) -> QWidget:
+        """创建预设方案选项卡"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+
+        # 预设方案说明
+        info_label = QLabel("选择预设方案快速配置浮窗样式")
+        info_label.setStyleSheet("color: #666; font-style: italic; margin-bottom: 10px;")
+        layout.addWidget(info_label)
+
+        # 预设方案列表
+        presets_group = QGroupBox("📋 预设方案")
+        presets_layout = QVBoxLayout(presets_group)
+
+        # 预设方案按钮
+        presets = [
+            ("minimal", "🎯 极简模式", "简洁的时间显示，适合专注工作"),
+            ("productivity", "💼 效率模式", "显示时间、课程和系统状态"),
+            ("comprehensive", "📊 全功能模式", "显示所有可用信息模块"),
+            ("gaming", "🎮 游戏模式", "低干扰，仅显示必要信息"),
+            ("presentation", "🎤 演示模式", "大字体，高对比度显示")
+        ]
+
+        for preset_id, name, description in presets:
+            preset_btn = QPushButton(f"{name}\n{description}")
+            preset_btn.setStyleSheet("""
+                QPushButton {
+                    text-align: left;
+                    padding: 12px;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    background-color: white;
+                    margin: 2px;
+                }
+                QPushButton:hover {
+                    border-color: #007acc;
+                    background-color: #f0f8ff;
+                }
+                QPushButton:pressed {
+                    background-color: #e6f3ff;
+                }
+            """)
+            preset_btn.clicked.connect(lambda checked, pid=preset_id: self.apply_preset(pid))
+            presets_layout.addWidget(preset_btn)
+
+        layout.addWidget(presets_group)
+
+        # 自定义方案管理
+        custom_group = QGroupBox("💾 自定义方案")
+        custom_layout = QFormLayout(custom_group)
+
+        self.preset_name_edit = QLineEdit()
+        self.preset_name_edit.setPlaceholderText("输入方案名称...")
+
+        save_preset_btn = QPushButton("💾 保存当前配置")
+        save_preset_btn.clicked.connect(self.save_custom_preset)
+
+        custom_layout.addRow("方案名称:", self.preset_name_edit)
+        custom_layout.addRow("", save_preset_btn)
+
+        layout.addWidget(custom_group)
+        layout.addStretch()
+
+        return tab
+
     def create_appearance_tab(self) -> QWidget:
         """创建外观设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        
+
         # 透明度设置
-        opacity_group = QGroupBox("透明度设置")
+        opacity_group = QGroupBox("🌟 透明度设置")
         opacity_layout = QFormLayout(opacity_group)
-        
+
         self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
-        self.opacity_slider.setRange(50, 100)
+        self.opacity_slider.setRange(30, 100)  # 扩大透明度范围
         self.opacity_slider.setValue(90)
         self.opacity_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.opacity_slider.setTickInterval(10)
-        
+        self.opacity_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                border: 1px solid #bbb;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #ff6b6b, stop:1 #4ecdc4);
+                height: 8px;
+                border-radius: 4px;
+            }
+            QSlider::handle:horizontal {
+                background: white;
+                border: 2px solid #007acc;
+                width: 18px;
+                margin: -5px 0;
+                border-radius: 9px;
+            }
+        """)
+
         self.opacity_label = QLabel("90%")
+        self.opacity_label.setStyleSheet("font-weight: bold; color: #007acc;")
         self.opacity_slider.valueChanged.connect(
-            lambda v: self.opacity_label.setText(f"{v}%")
+            lambda v: [
+                self.opacity_label.setText(f"{v}%"),
+                self.on_setting_changed()  # 实时预览
+            ]
         )
-        
+
         opacity_h_layout = QHBoxLayout()
         opacity_h_layout.addWidget(self.opacity_slider)
         opacity_h_layout.addWidget(self.opacity_label)
-        
+
+        # 添加透明度预设按钮
+        opacity_presets = QHBoxLayout()
+        for value, name in [(50, "半透明"), (75, "适中"), (90, "推荐"), (100, "不透明")]:
+            btn = QPushButton(name)
+            btn.setStyleSheet("""
+                QPushButton {
+                    padding: 4px 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    background-color: #f8f9fa;
+                }
+                QPushButton:hover {
+                    background-color: #e9ecef;
+                }
+            """)
+            btn.clicked.connect(lambda checked, v=value: self.opacity_slider.setValue(v))
+            opacity_presets.addWidget(btn)
+
         opacity_layout.addRow("透明度:", opacity_h_layout)
+        opacity_layout.addRow("快速设置:", opacity_presets)
         layout.addWidget(opacity_group)
-        
+
         # 尺寸设置
-        size_group = QGroupBox("尺寸设置")
+        size_group = QGroupBox("📏 尺寸设置")
         size_layout = QFormLayout(size_group)
-        
+
+        # 宽度设置
+        width_layout = QHBoxLayout()
         self.width_spin = QSpinBox()
-        self.width_spin.setRange(300, 600)
+        self.width_spin.setRange(250, 800)  # 扩大范围
         self.width_spin.setValue(400)
         self.width_spin.setSuffix(" px")
-        
+        self.width_spin.valueChanged.connect(self.on_setting_changed)
+
+        self.width_slider = QSlider(Qt.Orientation.Horizontal)
+        self.width_slider.setRange(250, 800)
+        self.width_slider.setValue(400)
+        self.width_slider.valueChanged.connect(self.width_spin.setValue)
+        self.width_spin.valueChanged.connect(self.width_slider.setValue)
+
+        width_layout.addWidget(self.width_spin)
+        width_layout.addWidget(self.width_slider)
+
+        # 高度设置
+        height_layout = QHBoxLayout()
         self.height_spin = QSpinBox()
-        self.height_spin.setRange(50, 80)
+        self.height_spin.setRange(40, 120)  # 扩大范围
         self.height_spin.setValue(60)
         self.height_spin.setSuffix(" px")
-        
+        self.height_spin.valueChanged.connect(self.on_setting_changed)
+
+        self.height_slider = QSlider(Qt.Orientation.Horizontal)
+        self.height_slider.setRange(40, 120)
+        self.height_slider.setValue(60)
+        self.height_slider.valueChanged.connect(self.height_spin.setValue)
+        self.height_spin.valueChanged.connect(self.height_slider.setValue)
+
+        height_layout.addWidget(self.height_spin)
+        height_layout.addWidget(self.height_slider)
+
+        # 圆角半径设置
+        radius_layout = QHBoxLayout()
         self.radius_spin = QSpinBox()
-        self.radius_spin.setRange(0, 50)
+        self.radius_spin.setRange(0, 60)  # 扩大范围
         self.radius_spin.setValue(30)
         self.radius_spin.setSuffix(" px")
-        
-        size_layout.addRow("宽度:", self.width_spin)
-        size_layout.addRow("高度:", self.height_spin)
-        size_layout.addRow("圆角半径:", self.radius_spin)
+        self.radius_spin.valueChanged.connect(self.on_setting_changed)
+
+        self.radius_slider = QSlider(Qt.Orientation.Horizontal)
+        self.radius_slider.setRange(0, 60)
+        self.radius_slider.setValue(30)
+        self.radius_slider.valueChanged.connect(self.radius_spin.setValue)
+        self.radius_spin.valueChanged.connect(self.radius_slider.setValue)
+
+        radius_layout.addWidget(self.radius_spin)
+        radius_layout.addWidget(self.radius_slider)
+
+        # 尺寸预设
+        size_presets = QHBoxLayout()
+        presets = [
+            (350, 50, "紧凑"),
+            (400, 60, "标准"),
+            (500, 70, "宽敞"),
+            (600, 80, "大屏")
+        ]
+
+        for width, height, name in presets:
+            btn = QPushButton(name)
+            btn.setStyleSheet("""
+                QPushButton {
+                    padding: 4px 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    background-color: #f8f9fa;
+                }
+                QPushButton:hover {
+                    background-color: #e9ecef;
+                }
+            """)
+            btn.clicked.connect(lambda checked, w=width, h=height: [
+                self.width_spin.setValue(w),
+                self.height_spin.setValue(h)
+            ])
+            size_presets.addWidget(btn)
+
+        size_layout.addRow("宽度:", width_layout)
+        size_layout.addRow("高度:", height_layout)
+        size_layout.addRow("圆角半径:", radius_layout)
+        size_layout.addRow("快速设置:", size_presets)
         layout.addWidget(size_group)
         
         # 主题设置
@@ -717,6 +1012,171 @@ class FloatingSettingsDialog(QDialog):
 
         except Exception as e:
             self.logger.error(f"应用设置到浮窗失败: {e}")
+
+    def on_setting_changed(self) -> None:
+        """设置变更时的回调，用于实时预览"""
+        try:
+            # 如果启用了实时预览，立即应用设置
+            if hasattr(self, 'real_time_preview') and self.real_time_preview:
+                self.apply_settings_preview()
+        except Exception as e:
+            self.logger.debug(f"实时预览更新失败: {e}")
+
+    def apply_settings_preview(self) -> None:
+        """应用设置预览（不保存到配置）"""
+        try:
+            if not self.floating_widget:
+                return
+
+            # 临时应用设置用于预览
+            opacity = self.opacity_slider.value() / 100.0
+            self.floating_widget.setWindowOpacity(opacity)
+
+            width = self.width_spin.value()
+            height = self.height_spin.value()
+            self.floating_widget.setFixedSize(width, height)
+
+            # 更新圆角半径（如果浮窗支持）
+            if hasattr(self.floating_widget, 'set_border_radius'):
+                radius = self.radius_spin.value()
+                self.floating_widget.set_border_radius(radius)
+
+        except Exception as e:
+            self.logger.debug(f"预览应用失败: {e}")
+
+    def refresh_preview(self) -> None:
+        """刷新预览"""
+        try:
+            self.apply_settings_preview()
+            QMessageBox.information(self, "预览", "预览已刷新")
+        except Exception as e:
+            self.logger.error(f"刷新预览失败: {e}")
+
+    def test_position(self) -> None:
+        """测试浮窗位置"""
+        try:
+            if not self.floating_widget:
+                return
+
+            # 临时移动到设置的位置
+            x = self.x_spin.value() if hasattr(self, 'x_spin') else 0
+            y = self.y_spin.value() if hasattr(self, 'y_spin') else 10
+
+            self.floating_widget.move(x, y)
+            self.floating_widget.show()
+
+            QMessageBox.information(self, "位置测试", f"浮窗已移动到位置 ({x}, {y})")
+
+        except Exception as e:
+            self.logger.error(f"测试位置失败: {e}")
+
+    def apply_preset(self, preset_id: str) -> None:
+        """应用预设方案"""
+        try:
+            presets = {
+                'minimal': {
+                    'width': 300,
+                    'height': 50,
+                    'opacity': 85,
+                    'border_radius': 25,
+                    'modules': ['time']
+                },
+                'productivity': {
+                    'width': 450,
+                    'height': 65,
+                    'opacity': 90,
+                    'border_radius': 30,
+                    'modules': ['time', 'schedule', 'system']
+                },
+                'comprehensive': {
+                    'width': 600,
+                    'height': 80,
+                    'opacity': 95,
+                    'border_radius': 35,
+                    'modules': ['time', 'schedule', 'weather', 'system', 'countdown']
+                },
+                'gaming': {
+                    'width': 250,
+                    'height': 40,
+                    'opacity': 70,
+                    'border_radius': 20,
+                    'modules': ['time']
+                },
+                'presentation': {
+                    'width': 500,
+                    'height': 90,
+                    'opacity': 100,
+                    'border_radius': 40,
+                    'modules': ['time', 'schedule']
+                }
+            }
+
+            if preset_id in presets:
+                preset = presets[preset_id]
+
+                # 应用预设设置
+                self.width_spin.setValue(preset['width'])
+                self.height_spin.setValue(preset['height'])
+                self.opacity_slider.setValue(preset['opacity'])
+                self.radius_spin.setValue(preset['border_radius'])
+
+                # 更新模块选择（如果模块列表存在）
+                if hasattr(self, 'modules_list'):
+                    for i in range(self.modules_list.count()):
+                        item = self.modules_list.item(i)
+                        module_id = item.data(Qt.ItemDataRole.UserRole)
+                        if module_id in preset['modules']:
+                            item.setCheckState(Qt.CheckState.Checked)
+                        else:
+                            item.setCheckState(Qt.CheckState.Unchecked)
+
+                QMessageBox.information(self, "预设应用", f"已应用 {preset_id} 预设方案")
+
+        except Exception as e:
+            self.logger.error(f"应用预设失败: {e}")
+
+    def save_custom_preset(self) -> None:
+        """保存自定义预设"""
+        try:
+            name = self.preset_name_edit.text().strip()
+            if not name:
+                QMessageBox.warning(self, "警告", "请输入预设方案名称")
+                return
+
+            # 收集当前设置
+            current_settings = self.collect_settings()
+
+            # 保存到配置（这里可以扩展为保存到文件或数据库）
+            custom_presets = self.app_manager.config_manager.get_config('floating_widget.custom_presets', {})
+            custom_presets[name] = current_settings
+            self.app_manager.config_manager.set_config('floating_widget.custom_presets', custom_presets)
+
+            QMessageBox.information(self, "保存成功", f"自定义预设 '{name}' 已保存")
+            self.preset_name_edit.clear()
+
+        except Exception as e:
+            self.logger.error(f"保存自定义预设失败: {e}")
+
+    def restore_defaults(self) -> None:
+        """恢复默认设置"""
+        try:
+            reply = QMessageBox.question(
+                self, "确认", "确定要恢复默认设置吗？这将清除所有自定义配置。",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # 恢复默认值
+                self.width_spin.setValue(400)
+                self.height_spin.setValue(60)
+                self.opacity_slider.setValue(90)
+                self.radius_spin.setValue(30)
+
+                # 恢复其他默认设置...
+                QMessageBox.information(self, "恢复完成", "已恢复默认设置")
+
+        except Exception as e:
+            self.logger.error(f"恢复默认设置失败: {e}")
 
     def accept_settings(self) -> None:
         """确定按钮处理"""
