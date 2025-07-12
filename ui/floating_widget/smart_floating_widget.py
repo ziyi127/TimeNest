@@ -12,9 +12,12 @@ from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QLabel, QMenu, QApplication
 )
 from PyQt6.QtGui import (
-    QPainter, QColor, QBrush, QPen, QFont, QCursor, 
+    QPainter, QColor, QBrush, QPen, QFont, QCursor,
     QPaintEvent, QMouseEvent, QContextMenuEvent
 )
+
+# 导入安全日志记录器
+from core.safe_logger import get_cached_safe_logger
 
 from .floating_modules import (
     FloatingModule, TimeModule, ScheduleModule, 
@@ -49,7 +52,9 @@ class SmartFloatingWidget(QWidget):
         
         # 依赖注入
         self.app_manager = app_manager
-        self.logger = logging.getLogger(f'{__name__}.SmartFloatingWidget')
+
+        # 使用安全日志记录器
+        self.logger = get_cached_safe_logger(f'{__name__}.SmartFloatingWidget')
         
         # 浮窗配置
         self.config = {}
@@ -115,7 +120,7 @@ class SmartFloatingWidget(QWidget):
         self.init_enhanced_modules()
 
         self.logger.info("智能浮窗初始化完成")
-    
+
     def load_config(self) -> None:
         """加载浮窗配置"""
         try:
@@ -258,12 +263,12 @@ class SmartFloatingWidget(QWidget):
                     
                     self.modules[module_id] = module
                     self.logger.debug(f"模块 {module_id} 初始化完成")
-            
+
             # 启动模块更新
             for module in self.modules.values():
                 module.start_updates(1000)  # 每秒更新一次
                 self.logger.debug(f"模块 {module.module_id} 已启动")
-                
+
         except Exception as e:
             self.logger.error(f"初始化模块失败: {e}")
     
@@ -285,14 +290,14 @@ class SmartFloatingWidget(QWidget):
         try:
             # 应用透明度
             self.setWindowOpacity(self.opacity_value)
-            
+
             # 强制设置到屏幕顶部居中（忽略配置中的位置）
             self.logger.info("强制设置浮窗到屏幕顶部居中")
             self.center_on_screen()
-            
+
             # 应用主题
             self.apply_theme()
-            
+
             # 启动更新定时器
             self.update_timer.start(1000)  # 每秒更新
 
