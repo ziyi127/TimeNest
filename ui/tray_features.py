@@ -333,7 +333,7 @@ class TrayFeatureManager(QObject):
             self.logger.error(f"显示学习统计失败: {e}")
             self._show_error("学习统计", str(e))
 
-    def get_quick_actions(self) -> List[Dict[str, Any]]:
+    def get_quick_actions(self) -> list[Dict[str, Any]]:
         """获取快速操作列表"""
         try:
             # 检查缓存
