@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 智能浮窗组件
 """
@@ -10,7 +21,7 @@ from functools import lru_cache
 
 from PyQt6.QtCore import Qt, QPoint, QTimer, QPropertyAnimation, QEasingCurve, pyqtSignal
 from PyQt6.QtGui import QPainter, QColor, QBrush, QPen, QFont, QScreen
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QApplication
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QApplication
 
 from ..core.app_manager import AppManager
 from ..core.config_manager import ConfigManager
@@ -48,11 +59,24 @@ class TimeModule(FloatingModule):
 
     def __init__(self, app_manager: AppManager, parent: Optional[QWidget] = None):
         super().__init__(app_manager, parent)
-        self.label = QLabel("00:00", self)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 10, 0)
-        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        
+        # 创建时间和日期标签
+        self.time_label = QLabel("00:00", self)
+        self.date_label = QLabel("", self)
+        
+        # 设置布局
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(15, 5, 15, 5)
+        layout.setSpacing(2)
+        
+        # 时间标签设置
+        self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.date_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        layout.addWidget(self.time_label)
+        layout.addWidget(self.date_label)
 
+        # 定时器设置
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_content)
         self.timer.start(1000)
@@ -61,13 +85,54 @@ class TimeModule(FloatingModule):
     def update_content(self):
         """更新时间显示"""
         current_time = self.app_manager.time_manager.get_current_time()
-        self.label.setText(current_time.strftime("%H:%M"))
+        
+        # 获取配置
+        config = self.app_manager.config_manager.get_config('floating_widget', {})
+        time_format = config.get('time_format', '24h')
+        show_seconds = config.get('show_seconds', False)
+        show_date = config.get('show_date', True)
+        
+        # 格式化时间
+        if time_format == '12h':
+            time_str = current_time.strftime("%I:%M")
+            if show_seconds:
+                time_str = current_time.strftime("%I:%M:%S")
+            time_str += current_time.strftime(" %p")
+        else:
+            time_str = current_time.strftime("%H:%M")
+            if show_seconds:
+                time_str = current_time.strftime("%H:%M:%S")
+        
+        self.time_label.setText(time_str)
+        
+        # 更新日期
+        if show_date:
+            date_str = current_time.strftime("%Y年%m月%d日 %A")
+            self.date_label.setText(date_str)
+            self.date_label.show()
+        else:
+            self.date_label.hide()
 
     def apply_theme(self, theme: Theme, config: dict):
         """应用主题"""
         super().apply_theme(theme, config)
-        self.label.setFont(self.font())
-        self.label.setStyleSheet(f"color: {theme.colors.text_primary}; background-color: transparent;")
+        
+        # 设置字体
+        time_font = self.font()
+        time_font.setPointSize(16)
+        time_font.setBold(True)
+        self.time_label.setFont(time_font)
+        
+        date_font = self.font()
+        date_font.setPointSize(10)
+        self.date_label.setFont(date_font)
+        
+        # 设置样式
+        time_style = f"color: {theme.colors.text_primary}; background-color: transparent;"
+        date_style = f"color: {theme.colors.text_secondary}; background-color: transparent;"
+        
+        self.time_label.setStyleSheet(time_style)
+        self.date_label.setStyleSheet(date_style)
 
 
 class FloatingWidget(QWidget):
@@ -82,6 +147,11 @@ class FloatingWidget(QWidget):
 
         self.drag_position: Optional[QPoint] = None
         self.modules: dict[str, FloatingModule] = {}
+        self.auto_hide = False
+        self.auto_hide_timer = QTimer()
+        self.auto_hide_timer.setSingleShot(True)
+        self.auto_hide_timer.timeout.connect(self._auto_hide)
+        self.is_mouse_over = False
 
         self._init_ui()
         self.update_from_config()
@@ -102,12 +172,29 @@ class FloatingWidget(QWidget):
 
     def update_from_config(self):
         """从配置更新浮窗"""
-        config = self.config_manager.get_config('floating_widget', {})
-        self.setFixedSize(config.get('width', 400), config.get('height', 60))
-        self.setWindowOpacity(1.0)  # Opacity is handled in paintEvent for the background
+        config = self.config_manager.get_config('floating_widget', {
+            'width': 450,
+            'height': 70,
+            'opacity': 0.9,
+            'border_radius': 35,
+            'modules': ['time'],
+            'mouse_through': False,
+            'auto_hide': False,
+            'animation_duration': 300
+        })
+        
+        # 设置窗口大小和透明度
+        self.setFixedSize(config.get('width', 450), config.get('height', 70))
+        self.setWindowOpacity(1.0)  # 透明度在paintEvent中处理
 
+        # 鼠标穿透设置
         mouse_through = config.get('mouse_through', False)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, mouse_through)
+
+        # 自动隐藏功能
+        self.auto_hide = config.get('auto_hide', False)
+        if self.auto_hide:
+            self._setup_auto_hide()
 
         self.reposition()
         self.apply_theme()
@@ -180,13 +267,43 @@ class FloatingWidget(QWidget):
 
     def hide_animated(self):
         """带动画隐藏"""
+        config = self.config_manager.get_config('floating_widget', {})
+        duration = config.get('animation_duration', 300)
+        
         self.animation = QPropertyAnimation(self, b"windowOpacity")
-        self.animation.setDuration(300)
+        self.animation.setDuration(duration)
         self.animation.setStartValue(self.windowOpacity())
         self.animation.setEndValue(0.0)
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         self.animation.finished.connect(self.hide)
         self.animation.start()
+
+    def _setup_auto_hide(self):
+        """设置自动隐藏功能"""
+        self.setMouseTracking(True)
+        for module in self.modules.values():
+            module.setMouseTracking(True)
+
+    def _auto_hide(self):
+        """自动隐藏浮窗"""
+        if not self.is_mouse_over:
+            self.hide_animated()
+
+    def enterEvent(self, event):
+        """鼠标进入事件"""
+        self.is_mouse_over = True
+        if self.auto_hide:
+            self.auto_hide_timer.stop()
+            if not self.isVisible():
+                self.show_animated()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        """鼠标离开事件"""
+        self.is_mouse_over = False
+        if self.auto_hide:
+            self.auto_hide_timer.start(2000)  # 2秒后自动隐藏
+        super().leaveEvent(event)
 
     @lru_cache(maxsize=8)
     def _get_cached_paint_data(self, theme_id: str, opacity: float, border_radius: int):
@@ -202,14 +319,29 @@ class FloatingWidget(QWidget):
         """绘制事件，用于绘制圆角背景和阴影（优化版本）"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
 
         config = self.config_manager.get_config('floating_widget', {})
         theme = self.theme_manager.get_current_theme()
         if not theme:
             return
 
-        opacity = config.get('opacity', 0.85)
-        border_radius = config.get('border_radius', 30)
+        opacity = config.get('opacity', 0.9)
+        border_radius = config.get('border_radius', 35)
+        shadow_enabled = config.get('shadow_enabled', True)
+        
+        rect = self.rect()
+        
+        # 绘制阴影
+        if shadow_enabled:
+            shadow_offset = 3
+            shadow_blur = 8
+            shadow_color = QColor(0, 0, 0, 60)
+            
+            shadow_rect = rect.adjusted(shadow_offset, shadow_offset, shadow_offset, shadow_offset)
+            painter.setBrush(QBrush(shadow_color))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(shadow_rect, border_radius, border_radius)
 
         # 使用缓存的绘制数据
         paint_data = self._get_cached_paint_data(theme.metadata.id, opacity, border_radius)
@@ -218,9 +350,19 @@ class FloatingWidget(QWidget):
 
         bg_color, cached_radius = paint_data
 
-        painter.setPen(Qt.PenStyle.NoPen)
+        # 绘制主背景
         painter.setBrush(QBrush(bg_color))
-        painter.drawRoundedRect(self.rect(), cached_radius, cached_radius)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(rect, cached_radius, cached_radius)
+        
+        # 绘制边框（可选）
+        border_enabled = config.get('border_enabled', False)
+        if border_enabled:
+            border_color = QColor(theme.colors.text_primary)
+            border_color.setAlphaF(0.3)
+            painter.setPen(QPen(border_color, 1))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), cached_radius-1, cached_radius-1)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

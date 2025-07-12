@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 智能学习计划生成器
 基于个人习惯、课程安排和目标自动生成学习计划
@@ -218,6 +229,7 @@ class StudyPlannerManager(BaseManager):
             if self.study_assistant:
                 analytics = self.study_assistant.get_learning_analytics()
                 if analytics:
+                    patterns['productive_hours'] = analytics.most_productive_hours:
                     patterns['productive_hours'] = analytics.most_productive_hours
                     patterns['preferred_session_length'] = analytics.average_session_length
             
@@ -265,7 +277,7 @@ class StudyPlannerManager(BaseManager):
             daily_hours = goal.estimated_hours / available_days
             
             # 限制每日最大学习时间
-            max_daily_hours = self.planning_preferences['max_daily_hours']
+            max_daily_hours = self.planning_preferences.get('max_daily_hours')
             if daily_hours > max_daily_hours:
                 daily_hours = max_daily_hours
                 available_days = goal.estimated_hours / daily_hours
@@ -429,6 +441,7 @@ class StudyPlannerManager(BaseManager):
                 # 检查是否有时间重叠
                 prev_end = previous_block.start_time + timedelta(minutes=previous_block.duration)
                 if current_block.start_time < prev_end:
+                    # 调整当前块的开始时间:
                     # 调整当前块的开始时间
                     current_block.start_time = prev_end + timedelta(minutes=15)  # 15分钟休息
             
@@ -465,8 +478,8 @@ class StudyPlannerManager(BaseManager):
                 previous_block = blocks[i-1]
                 
                 # 如果连续两个都是高难度，调整当前块的难度
-                if (previous_block.difficulty == Difficulty.HARD and 
-                    current_block.difficulty == Difficulty.HARD):
+                if (previous_block.difficulty == Difficulty.HARD and:
+                    current_block.difficulty == Difficulty.HARD)
                     current_block.difficulty = Difficulty.MEDIUM
             
             return blocks
@@ -518,6 +531,7 @@ class StudyPlannerManager(BaseManager):
         """获取计划总结"""
         try:
             if plan_id not in self.study_plans:
+                return {'status': 'not_found'}:
                 return {'status': 'not_found'}
             
             plan = self.study_plans[plan_id]
@@ -525,12 +539,13 @@ class StudyPlannerManager(BaseManager):
             # 统计信息
             total_blocks = len(plan.study_blocks)
             completed_blocks = sum(1 for block in plan.study_blocks 
-                                 if block.start_time < datetime.now())
+                                 if block.start_time < datetime.now()):
             
             # 科目分布
             subject_distribution = {}
             for block in plan.study_blocks:
                 subject = block.subject
+                                     subject = block.subject
                 subject_distribution[subject] = subject_distribution.get(subject, 0) + block.duration
             
             # 难度分布

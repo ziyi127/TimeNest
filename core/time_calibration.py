@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 自动时间校准服务
 支持 NTP 时间同步和自动校准功能
@@ -35,7 +46,7 @@ class NTPClient:
     def __init__(self):
         self.logger = logging.getLogger(f'{__name__}.NTPClient')
     
-    def get_ntp_time(self, server: str, port: int = 123, timeout: float = 5.0) -> Optional[Tuple[datetime, float]]:
+    def get_ntp_time(self, server: str, port: int = 123, timeout: float = 5.0) -> Optional[Tuple[datetime, float]]
         """
         从 NTP 服务器获取时间
         
@@ -67,6 +78,7 @@ class NTPClient:
             
             # 解析响应
             if len(response) >= 48:
+                # 提取服务器时间戳 (字节 40-47):
                 # 提取服务器时间戳 (字节 40-47)
                 server_timestamp = struct.unpack('!Q', response[40:48])[0]
                 
@@ -93,7 +105,7 @@ class WebTimeClient:
         self.logger = logging.getLogger(f'{__name__}.WebTimeClient')
     
     def get_web_time(self, url: str = "http://worldtimeapi.org/api/timezone/Asia/Shanghai", 
-                     timeout: float = 5.0) -> Optional[Tuple[datetime, float]]:
+                     timeout: float = 5.0) -> Optional[Tuple[datetime, float]]
         """
         从 Web API 获取时间
         
@@ -109,12 +121,16 @@ class WebTimeClient:
             response = requests.get(url, timeout=timeout)
             end_time = time.time()
             
+            
             if response.status_code == 200:
+                data = response.json()
+            
                 data = response.json()
                 
                 # 解析时间字符串
                 datetime_str = data.get('datetime', '')
                 if datetime_str:
+                    # 移除时区信息进行简单解析:
                     # 移除时区信息进行简单解析
                     if '+' in datetime_str:
                         datetime_str = datetime_str.split('+')[0]
@@ -192,7 +208,10 @@ class TimeCalibrationWorker(QThread):
             
             self.progress_updated.emit(90, "计算最佳时间偏移...")
             
+            
             if successful_syncs:
+                # 计算加权平均偏移量（延迟越小权重越大）:
+            
                 # 计算加权平均偏移量（延迟越小权重越大）
                 total_weight = 0
                 weighted_offset = 0
@@ -256,7 +275,10 @@ class TimeCalibrationService(QObject):
             auto_enabled = settings.get('auto_calibration_enabled', False)
             auto_interval = settings.get('auto_calibration_interval', 3600)  # 1小时
             
-            if auto_enabled:
+            
+            if auto_enabled and hasattr(auto_enabled, "self.auto_calibration_timer"):
+    self.auto_calibration_timer.start(auto_interval * 1000)
+            
                 self.auto_calibration_timer.start(auto_interval * 1000)
                 self.logger.info(f"自动时间校准已启用，间隔: {auto_interval}秒")
             
@@ -331,6 +353,7 @@ class TimeCalibrationService(QObject):
         """校准完成处理"""
         try:
             if success:
+                # 应用时间偏移:
                 # 应用时间偏移
                 if hasattr(self.time_manager, 'set_time_offset'):
                     self.time_manager.set_time_offset(timedelta(seconds=offset))
@@ -365,6 +388,7 @@ class TimeCalibrationService(QObject):
             
             # 只保留最近 50 次记录
             if len(history) > 50:
+                history = history[-50:]:
                 history = history[-50:]
             
             self.config_manager.set_config('calibration_history', history, 'component')
@@ -381,7 +405,8 @@ class TimeCalibrationService(QObject):
     def set_auto_calibration(self, enabled: bool, interval_seconds: int = 3600):
         """设置自动校准"""
         try:
-            if enabled:
+            if enabled and hasattr(enabled, "self.auto_calibration_timer"):
+    self.auto_calibration_timer.start(interval_seconds * 1000)
                 self.auto_calibration_timer.start(interval_seconds * 1000)
                 self.logger.info(f"自动时间校准已启用，间隔: {interval_seconds}秒")
             else:
@@ -416,7 +441,10 @@ class TimeCalibrationService(QObject):
             if self.auto_calibration_timer.isActive():
                 self.auto_calibration_timer.stop()
             
+            
             if self.calibration_worker and self.calibration_worker.isRunning():
+                self.calibration_worker.terminate()
+            
                 self.calibration_worker.terminate()
                 self.calibration_worker.wait()
                 self.calibration_worker.deleteLater()

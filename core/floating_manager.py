@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 浮窗管理器
 负责浮窗的创建、销毁、状态管理和配置更新
@@ -13,6 +24,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 # 避免循环导入，使用 TYPE_CHECKING
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from core.app_manager import AppManager

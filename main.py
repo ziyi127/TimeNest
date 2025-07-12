@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 主应用入口
 一个功能强大的跨平台课程表管理工具
@@ -19,7 +30,7 @@ sys.path.insert(0, str(current_dir))
 
 try:
     from core.app_manager import AppManager
-    from ui.system_tray import SystemTray, SystemTrayManager
+    from ui.system_tray import SystemTray
     from ui.tray_features import TrayFeatureManager
     from ui.tray_status_monitor import TrayStatusManager
 except ImportError as e:
@@ -62,25 +73,37 @@ def setup_application():
     """
     # 设置应用属性
     QApplication.setApplicationName('TimeNest')
-    QApplication.setApplicationVersion('1.0.0')
+    QApplication.setApplicationVersion('2.0')
     QApplication.setOrganizationName('TimeNest Team')
     QApplication.setOrganizationDomain('timenest.org')
-    
-    # 创建应用实例
-    app = QApplication(sys.argv)
-    
-    # 设置应用图标
-    icon_path = Path(__file__).parent / 'resources' / 'icons' / 'app.png'
-    if icon_path.exists():
-        app.setWindowIcon(QIcon(str(icon_path)))
     
     # 设置高DPI支持 (PyQt6 中高DPI缩放默认启用)
     try:
         # PyQt6 中只需要设置高DPI像素图
-        app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+        QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+        # 启用高DPI缩放
+        QApplication.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
     except AttributeError:
         # 如果属性不存在，说明是更新版本的PyQt6，可以忽略
         pass
+    
+    # 创建应用实例
+    app = QApplication(sys.argv)
+    
+    # 设置退出策略
+    app.setQuitOnLastWindowClosed(False)
+    
+    # 设置应用图标
+    icon_paths = [
+        Path(__file__).parent / 'assets' / 'icon.ico',
+        Path(__file__).parent / 'resources' / 'icons' / 'app.png',
+        Path(__file__).parent / 'resources' / 'icons' / 'app.ico'
+    ]
+    
+    for icon_path in icon_paths:
+        if icon_path.exists():
+            app.setWindowIcon(QIcon(str(icon_path)))
+            break
     
     # 设置样式
     app.setStyle('Fusion')  # 使用 Fusion 样式以获得更好的跨平台一致性
@@ -109,6 +132,7 @@ def check_dependencies():
         import pandas
     except ImportError:
         missing_deps.append('pandas')
+    
     
     if missing_deps:
         error_msg = f"缺少必要的依赖包:\n\n{', '.join(missing_deps)}\n\n请运行以下命令安装:\npip install {' '.join(missing_deps)}"
@@ -168,21 +192,48 @@ def create_tray_system(app_manager, logger):
             return None
 
         # 创建托盘管理器
-        tray_manager = SystemTray(
-            floating_manager=app_manager.floating_manager
-        )
+        try:
+            tray_manager = SystemTray(
+                floating_manager=app_manager.floating_manager
+            )
+            logger.debug("托盘管理器创建成功")
+        except Exception as e:
+            logger.error(f"创建托盘管理器失败: {e}")
+            return None
 
         # 创建功能管理器
-        feature_manager = TrayFeatureManager(app_manager)
+        try:
+            feature_manager = TrayFeatureManager(app_manager)
+            logger.debug("功能管理器创建成功")
+        except Exception as e:
+            logger.error(f"创建功能管理器失败: {e}")
+            # 即使功能管理器失败，也要保留基本的托盘功能
+            feature_manager = None
 
         # 创建状态监控器
-        status_monitor = TrayStatusManager()
+        try:
+            status_monitor = TrayStatusManager()
+            logger.debug("状态监控器创建成功")
+        except Exception as e:
+            logger.error(f"创建状态监控器失败: {e}")
+            # 即使状态监控器失败，也要保留基本的托盘功能
+            status_monitor = None
 
         # 设置信号连接
-        setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger)
+        try:
+            setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger)
+            logger.debug("托盘信号连接设置成功")
+        except Exception as e:
+            logger.error(f"设置托盘信号连接失败: {e}")
+            # 信号连接失败不应该阻止托盘系统运行
 
         # 启动状态监控
-        status_monitor.start_monitoring()
+        if status_monitor:
+            try:
+                status_monitor.start_monitoring()
+                logger.debug("状态监控启动成功")
+            except Exception as e:
+                logger.error(f"启动状态监控失败: {e}")
 
         logger.info("托盘系统组件创建完成")
 
@@ -193,32 +244,47 @@ def create_tray_system(app_manager, logger):
         }
 
     except Exception as e:
-        logger.error(f"创建托盘系统失败: {e}")
+        logger.error(f"创建托盘系统失败: {e}", exc_info=True)
         return None
 
 
 def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger):
     """设置托盘系统信号连接"""
     try:
-        # 托盘管理器信号连接 - 修复信号名称
-        tray_manager.toggle_floating_widget_requested.connect(lambda: handle_floating_toggle(app_manager, tray_manager, logger))
-        tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
-        tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
-        tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
-        tray_manager.plugins_module_requested.connect(feature_manager.show_plugin_marketplace)
-        tray_manager.time_calibration_requested.connect(feature_manager.show_time_calibration)
+        # 托盘管理器信号连接
+        if tray_manager:
+            tray_manager.toggle_floating_widget_requested.connect(lambda: handle_floating_toggle(app_manager, tray_manager, logger))
+            
+            # 功能管理器相关连接
+            if feature_manager:
+                tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
+                tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
+                tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
+                tray_manager.plugins_module_requested.connect(feature_manager.show_plugin_marketplace)
+                tray_manager.time_calibration_requested.connect(feature_manager.show_time_calibration)
+            else:
+                # 如果功能管理器不可用，连接到默认处理函数
+                tray_manager.floating_settings_requested.connect(lambda: logger.warning("浮窗设置功能不可用"))
+                tray_manager.schedule_module_requested.connect(lambda: logger.warning("课程表管理功能不可用"))
+                tray_manager.settings_module_requested.connect(lambda: logger.warning("应用设置功能不可用"))
+                tray_manager.plugins_module_requested.connect(lambda: logger.warning("插件市场功能不可用"))
+                tray_manager.time_calibration_requested.connect(lambda: logger.warning("时间校准功能不可用"))
 
         # 状态监控器信号连接
-        status_monitor.alert_triggered.connect(lambda alert_type, message: handle_system_alert(app_manager, alert_type, message, logger))
-        status_monitor.status_changed.connect(lambda status_type, status_data: update_tray_status(tray_manager, status_monitor, status_type, status_data))
+        if status_monitor:
+            status_monitor.alert_triggered.connect(lambda alert_type, message: handle_system_alert(app_manager, alert_type, message, logger))
+            if tray_manager:
+                status_monitor.status_changed.connect(lambda status_type, status_data: update_tray_status(tray_manager, status_monitor, status_type, status_data))
 
         # 功能管理器信号连接
-        feature_manager.notification_sent.connect(lambda title, message: send_tray_notification(app_manager, title, message, logger))
+        if feature_manager:
+            if hasattr(feature_manager, 'notification_sent'):
+                feature_manager.notification_sent.connect(lambda title, message: send_tray_notification(app_manager, title, message, logger))
 
         logger.info("托盘系统信号连接完成")
 
     except Exception as e:
-        logger.error(f"设置托盘信号连接失败: {e}")
+        logger.error(f"设置托盘信号连接失败: {e}", exc_info=True)
 
 
 def handle_floating_toggle(app_manager, tray_manager, logger):
@@ -288,13 +354,13 @@ def cleanup_tray_system(tray_system, logger):
     """清理托盘系统"""
     try:
         if 'status_monitor' in tray_system:
-            tray_system['status_monitor'].cleanup()
+            tray_system.get('status_monitor').cleanup()
 
         if 'feature_manager' in tray_system:
-            tray_system['feature_manager'].cleanup()
+            tray_system.get('feature_manager').cleanup()
 
         if 'tray_manager' in tray_system:
-            tray_system['tray_manager'].cleanup()
+            tray_system.get('tray_manager').cleanup()
 
         logger.info("托盘系统清理完成")
 
@@ -345,7 +411,7 @@ def main():
             sys.exit(1)
 
         # 连接退出信号
-        tray_system['tray_manager'].quit_requested.connect(app.quit)
+        tray_system.get('tray_manager').quit_requested.connect(app.quit)
         logger.info("托盘系统初始化完成")
 
         # 设置应用退出策略 - 关闭最后一个窗口时不退出程序
@@ -364,7 +430,7 @@ def main():
 
         # 更新托盘状态
         if tray_system and floating_visible:
-            tray_system['tray_manager'].update_floating_status(floating_visible)
+            tray_system.get('tray_manager').update_floating_status(floating_visible)
 
         logger.info("系统托盘图标显示成功")
 
@@ -399,6 +465,7 @@ def main():
             print(f"启动失败: {e}")
         
         sys.exit(1)
+
 
 if __name__ == "__main__":
     sys.exit(main())

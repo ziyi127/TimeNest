@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 课程表管理模块
 集成课程表编辑、提醒设置、统计分析、导入导出等功能
@@ -20,7 +31,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QColor, QPalette, QIcon
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager
+else:
     from core.app_manager import AppManager
 
 
@@ -483,6 +497,7 @@ class ScheduleManagementDialog(QDialog):
         """加载数据"""
         try:
             if self.app_manager and self.app_manager.config_manager:
+                # 加载课程表数据:
                 # 加载课程表数据
                 self.schedule_data = self.app_manager.config_manager.get_config('schedule', {}, 'user')
 
@@ -566,6 +581,7 @@ class ScheduleManagementDialog(QDialog):
                 end_week = course.get('end_week', 16)
                 week_type = course.get('week_type', 'all')
 
+
                 if not (start_week <= current_week <= end_week):
                     continue
 
@@ -584,6 +600,7 @@ class ScheduleManagementDialog(QDialog):
                         time_slot_index = i
                         break
 
+
                 if time_slot_index == -1:
                     # 如果找不到精确匹配，使用最接近的时间段
                     for i, (slot_start, slot_end) in enumerate(time_slots):
@@ -595,7 +612,7 @@ class ScheduleManagementDialog(QDialog):
 
                 day = course.get('day', 0)
                 if 0 <= day < 7 and 0 <= time_slot_index < 10:
-                    display_text = f"{course['name']}\n{course.get('teacher', '')}\n{course.get('classroom', '')}"
+                    display_text = f"{course.get('name')}\n{course.get('teacher', '')}\n{course.get('classroom', '')}"
                     item = QTableWidgetItem(display_text)
                     item.setData(Qt.ItemDataRole.UserRole, course)
 
@@ -721,6 +738,7 @@ class ScheduleManagementDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
+
             if reply == QMessageBox.StandardButton.Yes:
                 # 从表格中移除
                 row = self.schedule_table.currentRow()
@@ -731,7 +749,7 @@ class ScheduleManagementDialog(QDialog):
                 course_id = course_data.get('id')
                 if course_id and 'courses' in self.schedule_data:
                     self.schedule_data['courses'] = [
-                        c for c in self.schedule_data['courses']
+                        c for c in self.schedule_data.get('courses', [])
                         if c.get('id') != course_id
                     ]
 
@@ -756,19 +774,19 @@ class ScheduleManagementDialog(QDialog):
             if not course_data.get('id'):
                 import uuid
                 course_data['id'] = str(uuid.uuid4())
-                self.schedule_data['courses'].append(course_data)
+                self.schedule_data.get('courses').append(course_data)
             else:
                 # 更新现有课程
-                for i, course in enumerate(self.schedule_data['courses']):
-                    if course.get('id') == course_data['id']:
-                        self.schedule_data['courses'][i] = course_data
+                for i, course in enumerate(self.schedule_data.get('courses')):
+                    if course['id'] == course_data.get('id'):
+                        self.schedule_data.get('courses')[i] = course_data
                         break
 
             # 更新界面
             self.update_schedule_table()
             self.refresh_statistics()
 
-            self.logger.info(f"课程已保存: {course_data['name']}")
+            self.logger.info(f"课程已保存: {course_data.get('name')}")
 
         except Exception as e:
             self.logger.error(f"保存课程数据失败: {e}")
@@ -784,9 +802,9 @@ class ScheduleManagementDialog(QDialog):
             current_item = self.schedule_table.currentItem()
             if current_item and current_item.data(Qt.ItemDataRole.UserRole):
                 course = current_item.data(Qt.ItemDataRole.UserRole)
-                self.course_name_label.setText(course['name'])
-                self.course_teacher_label.setText(course['teacher'])
-                self.course_classroom_label.setText(course['classroom'])
+                self.course_name_label.setText(course.get('name'))
+                self.course_teacher_label.setText(course.get('teacher'))
+                self.course_classroom_label.setText(course.get('classroom'))
                 self.course_weeks_label.setText("1-16周")
                 self.course_notes_label.setText("无")
 
@@ -845,6 +863,7 @@ class ScheduleManagementDialog(QDialog):
                 item = QListWidgetItem(conflict)
                 item.setIcon(self.style().standardIcon(self.style().StandardPixmap.SP_MessageBoxWarning))
                 self.conflicts_list.addItem(item)
+
 
             if conflicts:
                 QMessageBox.warning(self, "发现冲突", f"检测到 {len(conflicts)} 个冲突，请查看详情")
@@ -914,7 +933,7 @@ class ScheduleManagementDialog(QDialog):
             if self.import_merge_check.isChecked():
                 # 合并模式
                 existing_courses = self.schedule_data.get('courses', [])
-                new_courses = data['courses']
+                new_courses = data.get('courses')
 
                 # 避免重复导入
                 existing_ids = {c.get('id') for c in existing_courses if c.get('id')}
@@ -931,7 +950,7 @@ class ScheduleManagementDialog(QDialog):
             self.update_schedule_table()
             self.refresh_statistics()
 
-            QMessageBox.information(self, "导入成功", f"成功导入 {len(data['courses'])} 门课程")
+            QMessageBox.information(self, "导入成功", f"成功导入 {len(data.get('courses'))} 门课程")
 
         except Exception as e:
             self.logger.error(f"JSON导入失败: {e}")
@@ -973,7 +992,10 @@ class ScheduleManagementDialog(QDialog):
             if self.import_backup_check.isChecked():
                 self.create_backup()
 
+
             if self.import_merge_check.isChecked():
+                existing_courses = self.schedule_data.get('courses', [])
+
                 existing_courses = self.schedule_data.get('courses', [])
                 existing_courses.extend(courses)
                 self.schedule_data['courses'] = existing_courses
@@ -1127,6 +1149,7 @@ class ScheduleManagementDialog(QDialog):
             export_button.clicked.connect(dialog.accept)
             cancel_button.clicked.connect(dialog.reject)
 
+
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 # 获取文件保存路径
                 from PyQt6.QtWidgets import QFileDialog
@@ -1147,6 +1170,7 @@ class ScheduleManagementDialog(QDialog):
                         self, "导出HTML文件", "schedule.html", "HTML文件 (*.html)"
                     )
                     export_format = ExportFormat.HTML
+
 
                 if not file_path:
                     return
@@ -1175,6 +1199,7 @@ class ScheduleManagementDialog(QDialog):
                 # 执行导出
                 exporter = ExcelExportEnhanced()
                 success = exporter.export_schedule(self.schedule_data, file_path, options)
+
 
                 if success:
                     QMessageBox.information(self, "导出成功", f"课程表已导出到: {file_path}")
@@ -1246,6 +1271,7 @@ class ScheduleManagementDialog(QDialog):
                 QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
             )
 
+
             if reply == QMessageBox.StandardButton.Save:
                 self.save_all_changes()
                 event.accept()  # 只关闭窗口，不退出程序
@@ -1263,6 +1289,7 @@ class ScheduleManagementDialog(QDialog):
         try:
             resolution_type = resolution.get('type')
 
+
             if resolution_type == 'keep_existing':
                 # 保留现有课程，不做任何操作
                 return True
@@ -1270,6 +1297,7 @@ class ScheduleManagementDialog(QDialog):
                 # 用新课程替换现有课程
                 existing_course = conflict_data.get('existing_course')
                 new_course = conflict_data.get('new_course')
+
 
                 if existing_course and new_course:
                     # 这里需要实际的课程替换逻辑
@@ -1281,6 +1309,7 @@ class ScheduleManagementDialog(QDialog):
                 new_time = resolution.get('new_time')
                 course = conflict_data.get('new_course')
 
+
                 if new_time and course:
                     # 修改课程时间
                     self.logger.info(f"修改课程时间: {course} -> {new_time}")
@@ -1289,6 +1318,7 @@ class ScheduleManagementDialog(QDialog):
                 # 合并课程
                 existing_course = conflict_data.get('existing_course')
                 new_course = conflict_data.get('new_course')
+
 
                 if existing_course and new_course:
                     # 合并课程逻辑
@@ -1423,6 +1453,7 @@ class ConflictResolutionDialog(QDialog):
     def get_resolution(self) -> Dict[str, Any]:
         """获取解决方案"""
         checked_id = self.solution_group.checkedId()
+
 
         if checked_id == 0:
             return {'type': 'keep_existing'}

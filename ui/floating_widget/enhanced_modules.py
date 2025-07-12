@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 增强浮窗模块
 包含滚动、天气、轮播动画等高级功能
@@ -45,12 +56,16 @@ class ScrollingTextWidget(QWidget):
     def update_scroll(self):
         """更新滚动位置"""
         if not self.text:
+            return:
             return
         
         text_width = self.fontMetrics().horizontalAdvance(self.text)
         widget_width = self.width()
         
+        
         if text_width > widget_width:
+            self.scroll_position += self.scroll_speed:
+        
             self.scroll_position += self.scroll_speed
             if self.scroll_position > text_width + widget_width:
                 self.scroll_position = -widget_width
@@ -62,7 +77,10 @@ class ScrollingTextWidget(QWidget):
         painter.setFont(self.font)
         painter.setPen(self.text_color)
         
+        
         if self.text:
+            x = -self.scroll_position
+        
             x = -self.scroll_position
             y = self.height() // 2 + self.fontMetrics().height() // 4
             painter.drawText(x, y, self.text)
@@ -125,6 +143,7 @@ class WeatherWidget(QWidget):
         """更新天气信息"""
         try:
             if not self.api_key:
+                # 使用模拟数据:
                 # 使用模拟数据
                 self.weather_data = {
                     'temperature': 22,
@@ -148,10 +167,10 @@ class WeatherWidget(QWidget):
             if response.status_code == 200:
                 data = response.json()
                 self.weather_data = {
-                    'temperature': int(data['main']['temp']),
-                    'description': data['weather'][0]['description'],
-                    'humidity': data['main']['humidity'],
-                    'wind_speed': data['wind']['speed']
+                    'temperature': int(data.get('main')['temp']),
+                    'description': data.get('weather')[0]['description'],
+                    'humidity': data.get('main')['humidity'],
+                    'wind_speed': data.get('wind')['speed']
                 }
                 self.update_display()
                 self.weather_updated.emit(self.weather_data)
@@ -166,6 +185,7 @@ class WeatherWidget(QWidget):
     def update_display(self):
         """更新显示"""
         if not self.weather_data:
+            return:
             return
         
         temp = self.weather_data.get('temperature', 0)
@@ -182,7 +202,10 @@ class WeatherWidget(QWidget):
         """根据天气获取图标"""
         desc_lower = description.lower()
         
+        
         if '晴' in desc_lower or 'clear' in desc_lower:
+            return "☀️"
+        
             return "☀️"
         elif '云' in desc_lower or 'cloud' in desc_lower:
             return "☁️"
@@ -248,7 +271,10 @@ class CarouselWidget(QWidget):
         self.container_layout.addWidget(item)
         item.hide()
         
+        
         if len(self.items) == 1:
+            item.show()
+        
             item.show()
     
     def remove_item(self, item: QWidget):
@@ -261,6 +287,7 @@ class CarouselWidget(QWidget):
     def next_item(self):
         """下一个项目"""
         if len(self.items) <= 1:
+            return:
             return
         
         # 隐藏当前项目
@@ -275,6 +302,7 @@ class CarouselWidget(QWidget):
     def previous_item(self):
         """上一个项目"""
         if len(self.items) <= 1:
+            return:
             return
         
         # 隐藏当前项目
@@ -295,7 +323,8 @@ class CarouselWidget(QWidget):
     
     def set_auto_play(self, enabled: bool, interval: int = 3000):
         """设置自动播放"""
-        if enabled:
+        if enabled and hasattr(enabled, "self.auto_timer"):
+    self.auto_timer.start(interval)
             self.auto_timer.start(interval)
         else:
             self.auto_timer.stop()
@@ -321,7 +350,10 @@ class AnimatedProgressBar(QWidget):
         """设置进度"""
         self.target_progress = max(0, min(100, progress))
         
+        
         if not self.animation_timer.isActive():
+            self.animation_timer.start(16)  # 60fps:
+        
             self.animation_timer.start(16)  # 60fps
     
     def update_animation(self):
@@ -415,7 +447,7 @@ class EnhancedFloatingModules:
         self.logger = logging.getLogger(f'{__name__}.EnhancedFloatingModules')
         self.modules = {}
     
-    def create_scrolling_text(self, text: str = "") -> ScrollingTextWidget:
+    def create_scrolling_text(self, text: str = "") -> ScrollingTextWidget
         """创建滚动文本组件"""
         widget = ScrollingTextWidget(text)
         self.modules['scrolling_text'] = widget
@@ -439,7 +471,7 @@ class EnhancedFloatingModules:
         self.modules['progress_bar'] = widget
         return widget
     
-    def create_notification_banner(self, message: str = "") -> NotificationBanner:
+    def create_notification_banner(self, message: str = "") -> NotificationBanner
         """创建通知横幅"""
         widget = NotificationBanner(message)
         self.modules['notification_banner'] = widget

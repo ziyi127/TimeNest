@@ -23,7 +23,10 @@ class TextToSpeech:
         self.logger = logging.getLogger(f'{__name__}.TextToSpeech')
         self.available = self._check_availability()
         
+        
         if self.available:
+            self.logger.info("TTS初始化成功")
+        
             self.logger.info("TTS初始化成功")
         else:
             self.logger.warning("TTS不可用")
@@ -32,6 +35,7 @@ class TextToSpeech:
         """检查TTS是否可用"""
         try:
             if sys.platform.startswith('linux'):
+                # 检查 espeak 或 festival:
                 # 检查 espeak 或 festival
                 try:
                     subprocess.run(['espeak', '--version'], 
@@ -93,6 +97,7 @@ class TextToSpeech:
         if not self.available:
             self.logger.warning("TTS不可用，跳过语音播报")
             return False
+        
         
         if not text.strip():
             return False
@@ -190,6 +195,7 @@ def test_tts():
     
     tts = TextToSpeech()
     
+    
     if tts.is_available():
         print(f"✓ TTS可用，引擎: {tts.get_engine()}")
         
@@ -205,6 +211,8 @@ def test_tts():
         print("- Linux: espeak, festival, 或 speech-dispatcher")
         print("- macOS: 系统自带 say 命令")
         print("- Windows: 系统自带 PowerShell")
+
+
 
 
 if __name__ == "__main__":

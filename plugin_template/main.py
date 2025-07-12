@@ -184,8 +184,7 @@ class MyPlugin(IPlugin):
             self.logger.error(f"插件清理失败: {e}")
             return False
     
-    # ==================== 私有方法 ====================
-    
+    # ==  ==  ==  ==  ==  ==  ==  ==  ==  == 私有方法 ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
     def _load_config(self):
         """加载插件配置"""
         try:
@@ -201,6 +200,7 @@ class MyPlugin(IPlugin):
             # 合并默认配置
             for key, value in default_config.items():
                 if key not in self.config:
+                    self.config[key] = value:
                     self.config[key] = value
             
             self.logger.debug("插件配置加载完成")
@@ -350,8 +350,7 @@ class MyPlugin(IPlugin):
         except Exception as e:
             self.logger.error(f"发布事件失败: {e}")
     
-    # ==================== 事件处理方法 ====================
-    
+    # ==  ==  ==  ==  ==  ==  ==  ==  ==  == 事件处理方法 ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
     def _on_app_started(self, event):
         """处理应用启动事件"""
         self.logger.info("应用已启动")
@@ -367,8 +366,7 @@ class MyPlugin(IPlugin):
         self.logger.info("课程表已变更")
         # 在这里处理课程表变更后需要执行的操作
     
-    # ==================== 公共方法 ====================
-    
+    # ==  ==  ==  ==  ==  ==  ==  ==  ==  == 公共方法 ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
     def get_setting(self, key: str, default=None):
         """
         获取插件设置
@@ -406,8 +404,7 @@ class MyPlugin(IPlugin):
         return self.data_dir / filename
 
 
-# ==================== 插件入口点 ====================
-
+# ==  ==  ==  ==  ==  ==  ==  ==  ==  == 插件入口点 ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
 def create_plugin():
     """
     创建插件实例
@@ -420,8 +417,7 @@ def create_plugin():
     return MyPlugin()
 
 
-# ==================== 插件信息 ====================
-
+# ==  ==  ==  ==  ==  ==  ==  ==  ==  == 插件信息 ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
 def get_plugin_info():
     """
     获取插件信息
@@ -438,7 +434,12 @@ def get_plugin_info():
     }
 
 
+
+
 if __name__ == '__main__':
+    # 用于测试插件的代码:
+
+
     # 用于测试插件的代码
     print("这是一个 TimeNest 插件模板")
     print("插件信息:", get_plugin_info())

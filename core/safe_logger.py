@@ -83,7 +83,6 @@ class SafeLogger:
                 
         except Exception as e:
             self._error_count += 1
-            
             if self.fallback_to_print:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 print(f"[{timestamp}] LOG_ERROR: {self.name} - Failed to log: {message}")

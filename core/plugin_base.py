@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 插件系统
 支持插件加载、管理、联动机制等功能
@@ -336,7 +347,10 @@ class PluginManager(QObject):
             main_module = manifest_data.get('main_module', 'main.py')
             module_file = plugin_dir / main_module
             
+            
             if not module_file.exists():
+                self.logger.error(f"插件主模块不存在: {module_file}")
+            
                 self.logger.error(f"插件主模块不存在: {module_file}")
                 return
             

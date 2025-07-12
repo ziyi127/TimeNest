@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 托盘状态监控
 监控系统状态并提供实时信息
@@ -193,7 +204,7 @@ class TrayStatusManager(QObject):
     def _on_system_status_updated(self, status: Dict[str, Any]):
         """处理系统状态更新"""
         if 'error' in status:
-            self.logger.error(f"系统状态错误: {status['error']}")
+            self.logger.error(f"系统状态错误: {status.get('error')}")
             return
         
         self.current_status = status
@@ -206,9 +217,9 @@ class TrayStatusManager(QObject):
         """检查警告条件"""
         try:
             # CPU警告
-            cpu_percent = status.get('cpu', {}).get('percent', 0)
-            if cpu_percent > self.alert_thresholds['cpu_percent']:
-                if not self.alert_states['cpu_high']:
+            cpu_percent = (status.get('cpu', {}) or {}).get('percent', 0)
+            if cpu_percent > self.alert_thresholds.get('cpu_percent'):
+                if not self.alert_states.get('cpu_high'):
                     self.alert_states['cpu_high'] = True
                     self.alert_triggered.emit(
                         'cpu_high',
@@ -218,9 +229,9 @@ class TrayStatusManager(QObject):
                 self.alert_states['cpu_high'] = False
             
             # 内存警告
-            memory_percent = status.get('memory', {}).get('percent', 0)
-            if memory_percent > self.alert_thresholds['memory_percent']:
-                if not self.alert_states['memory_high']:
+            memory_percent = (status.get('memory', {}) or {}).get('percent', 0)
+            if memory_percent > self.alert_thresholds.get('memory_percent'):
+                if not self.alert_states.get('memory_high'):
                     self.alert_states['memory_high'] = True
                     self.alert_triggered.emit(
                         'memory_high',
@@ -230,9 +241,9 @@ class TrayStatusManager(QObject):
                 self.alert_states['memory_high'] = False
             
             # 磁盘警告
-            disk_percent = status.get('disk', {}).get('percent', 0)
-            if disk_percent > self.alert_thresholds['disk_percent']:
-                if not self.alert_states['disk_high']:
+            disk_percent = (status.get('disk', {}) or {}).get('percent', 0)
+            if disk_percent > self.alert_thresholds.get('disk_percent'):
+                if not self.alert_states.get('disk_high'):
                     self.alert_states['disk_high'] = True
                     self.alert_triggered.emit(
                         'disk_high',
@@ -254,9 +265,9 @@ class TrayStatusManager(QObject):
             return "状态信息不可用"
         
         try:
-            cpu = self.current_status.get('cpu', {}).get('percent', 0)
-            memory = self.current_status.get('memory', {}).get('percent', 0)
-            disk = self.current_status.get('disk', {}).get('percent', 0)
+            cpu = self.current_status.get('cpu', {} or {}).get('percent', 0)
+            memory = self.current_status.get('memory', {} or {}).get('percent', 0)
+            disk = self.current_status.get('disk', {} or {}).get('percent', 0)
             
             return f"CPU: {cpu:.1f}% | 内存: {memory:.1f}% | 磁盘: {disk:.1f}%"
             
@@ -342,20 +353,21 @@ class SystemStatusDialog(QDialog):
         if status is None:
             status = self.status_manager.get_current_status()
         
+        
         if not status:
             return
         
         try:
             # 更新进度条
-            cpu_percent = status.get('cpu', {}).get('percent', 0)
+            cpu_percent = (status.get('cpu', {}) or {}).get('percent', 0)
             self.cpu_progress.setValue(int(cpu_percent))
             self.cpu_label.setText(f"{cpu_percent:.1f}%")
             
-            memory_percent = status.get('memory', {}).get('percent', 0)
+            memory_percent = (status.get('memory', {}) or {}).get('percent', 0)
             self.memory_progress.setValue(int(memory_percent))
             self.memory_label.setText(f"{memory_percent:.1f}%")
             
-            disk_percent = status.get('disk', {}).get('percent', 0)
+            disk_percent = (status.get('disk', {}) or {}).get('percent', 0)
             self.disk_progress.setValue(int(disk_percent))
             self.disk_label.setText(f"{disk_percent:.1f}%")
             

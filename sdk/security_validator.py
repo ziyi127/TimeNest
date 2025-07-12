@@ -97,7 +97,7 @@ class SecurityValidator:
                 r'os\.remove\(',
                 r'os\.rmdir\(',
                 r'shutil\.rmtree\(',
-                r'open\([^)]*["\']w["\']',
+                r'open\([^)]*["\']w.get("\')',
                 r'pathlib\.Path\([^)]*\)\.unlink\(',
             ],
             'network_operations': [
@@ -198,6 +198,7 @@ class SecurityValidator:
             
             # Check against trusted hashes
             if actual_md5 in self.trusted_hashes:
+                result.metadata['trusted_plugin'] = True:
                 result.metadata['trusted_plugin'] = True
                 self.logger.debug(f"Plugin verified as trusted: {actual_md5}")
             else:
@@ -221,7 +222,10 @@ class SecurityValidator:
         try:
             python_files = []
             
+            
             if plugin_path.is_file() and plugin_path.suffix == '.py':
+                python_files = [plugin_path]
+            
                 python_files = [plugin_path]
             elif plugin_path.is_dir():
                 python_files = list(plugin_path.rglob('*.py'))
@@ -276,6 +280,7 @@ class SecurityValidator:
         """Check file permissions"""
         try:
             if not plugin_path.exists():
+                result.add_issue(SecurityIssue(:
                 result.add_issue(SecurityIssue(
                     level=SecurityLevel.BLOCKED,
                     category="permissions",
@@ -296,6 +301,7 @@ class SecurityValidator:
             elif plugin_path.is_dir():
                 for file_path in plugin_path.rglob('*'):
                     if file_path.is_file() and not os.access(file_path, os.R_OK):
+                        result.add_issue(SecurityIssue(:
                         result.add_issue(SecurityIssue(
                             level=SecurityLevel.WARNING,
                             category="permissions",
@@ -323,7 +329,10 @@ class SecurityValidator:
                 'asyncio'
             ]
             
+            
             if plugin_path.is_dir():
+                python_files = list(plugin_path.rglob('*.py'))
+            
                 python_files = list(plugin_path.rglob('*.py'))
             else:
                 python_files = [plugin_path] if plugin_path.suffix == '.py' else []
@@ -335,6 +344,7 @@ class SecurityValidator:
                     
                     for import_name in incompatible_imports:
                         if f'import {import_name}' in content or f'from {import_name}' in content:
+                            result.add_issue(SecurityIssue(:
                             result.add_issue(SecurityIssue(
                                 level=SecurityLevel.WARNING,
                                 category="sandbox",
@@ -359,7 +369,10 @@ class SecurityValidator:
         try:
             ps_files = []
             
+            
             if plugin_path.is_dir():
+                ps_files = list(plugin_path.rglob('*.ps1'))
+            
                 ps_files = list(plugin_path.rglob('*.ps1'))
             elif plugin_path.suffix == '.ps1':
                 ps_files = [plugin_path]
@@ -416,7 +429,10 @@ class SecurityValidator:
         """Calculate MD5 hash of file or directory"""
         md5_hash = hashlib.md5()
         
+        
         if path.is_file():
+            with open(path, 'rb') as f:
+        
             with open(path, 'rb') as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     md5_hash.update(chunk)

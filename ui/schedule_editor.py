@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 课程表编辑器
 提供可视化的课程表编辑功能
@@ -472,7 +483,10 @@ class ScheduleEditor(QDialog):
             subject = self.schedule.get_subject(class_item.subject_id)
             timeslot = self.schedule.get_time_slot(class_item.time_slot_id)
             
+            
             if subject and timeslot:
+                weekday_names = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+            
                 weekday_names = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
                 weekday_name = weekday_names[class_item.day_of_week - 1]
                 
@@ -497,7 +511,10 @@ class ScheduleEditor(QDialog):
             subject = self.schedule.get_subject(class_item.subject_id)
             timeslot = self.schedule.get_time_slot(class_item.time_slot_id)
             
+            
             if subject and timeslot:
+                # 找到时间段在表格中的行:
+            
                 # 找到时间段在表格中的行
                 row = -1
                 for i, ts in enumerate(self.schedule.time_slots):
@@ -505,7 +522,10 @@ class ScheduleEditor(QDialog):
                         row = i
                         break
                 
+                
                 if row >= 0 and row < self.schedule_table.rowCount():
+                    col = class_item.day_of_week - 1
+                
                     col = class_item.day_of_week - 1
                     if col >= 0 and col < self.schedule_table.columnCount():
                         item = QTableWidgetItem(subject.name)
@@ -557,14 +577,20 @@ class ScheduleEditor(QDialog):
                     subject = self.schedule.get_subject(class_item.subject_id)
                     timeslot = self.schedule.get_time_slot(class_item.time_slot_id)
                     
+                    
                     if subject and timeslot:
+                        row = -1
+                    
                         row = -1
                         for i, ts in enumerate(self.schedule.time_slots):
                             if ts.id == timeslot.id:
                                 row = i
                                 break
                         
+                        
                         if row >= 0 and row < self.preview_table.rowCount():
+                            col = class_item.day_of_week - 1
+                        
                             col = class_item.day_of_week - 1
                             if col >= 0 and col < self.preview_table.columnCount():
                                 item_text = f"{subject.name}\n{subject.teacher}\n{subject.location}"
@@ -596,7 +622,10 @@ class ScheduleEditor(QDialog):
                 QMessageBox.StandardButton.Cancel
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                if not self.save_schedule():
+            
                 if not self.save_schedule():
                     return
             elif reply == QMessageBox.StandardButton.Cancel:
@@ -618,7 +647,10 @@ class ScheduleEditor(QDialog):
             "JSON文件 (*.json);;YAML文件 (*.yaml *.yml);;所有文件 (*)"
         )
         
+        
         if file_path:
+            try:
+        
             try:
                 self.schedule = Schedule.load_from_file(file_path)
                 self.original_schedule = self.schedule.copy()
@@ -670,7 +702,10 @@ class ScheduleEditor(QDialog):
             "JSON文件 (*.json);;YAML文件 (*.yaml);;所有文件 (*)"
         )
         
+        
         if file_path:
+            try:
+        
             try:
                 self.apply_form_data()
                 self.schedule.save_to_file(file_path)
@@ -730,6 +765,7 @@ class ScheduleEditor(QDialog):
             "Excel文件 (*.xlsx);;PDF文件 (*.pdf);;图片文件 (*.png);;所有文件 (*)"
         )
         
+        
         if file_path:
             try:
                 self.apply_form_data()
@@ -737,19 +773,127 @@ class ScheduleEditor(QDialog):
                 if file_path.endswith('.xlsx'):
                     self.schedule.export_to_excel(file_path)
                 elif file_path.endswith('.pdf'):
-                    # TODO: 实现PDF导出
-                    QMessageBox.information(self, "提示", "PDF导出功能待实现")
-                    return
+                    self.export_to_pdf(file_path)
                 elif file_path.endswith('.png'):
-                    # TODO: 实现图片导出
-                    QMessageBox.information(self, "提示", "图片导出功能待实现")
-                    return
+                    self.export_to_image(file_path)
                 
                 QMessageBox.information(self, "成功", "课程表导出成功")
                 
             except Exception as e:
                 self.logger.error(f"导出课程表失败: {e}", exc_info=True)
                 QMessageBox.critical(self, "错误", f"导出失败: {str(e)}")
+    
+    def export_to_pdf(self, file_path: str):
+        """导出为PDF"""
+        try:
+            from PyQt6.QtPrintSupport import QPrinter
+            from PyQt6.QtGui import QPainter, QTextDocument
+            from PyQt6.QtCore import QSizeF
+            
+            # 创建HTML内容
+            html_content = self.generate_schedule_html()
+            
+            # 创建文档
+            document = QTextDocument()
+            document.setHtml(html_content)
+            
+            # 创建打印机
+            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+            printer.setOutputFileName(file_path)
+            printer.setPageSize(QPrinter.PageSize.A4)
+            
+            # 打印到PDF
+            document.print(printer)
+            
+        except Exception as e:
+            self.logger.error(f"PDF导出失败: {e}", exc_info=True)
+            raise e
+    
+    def export_to_image(self, file_path: str):
+        """导出为图片"""
+        try:
+            from PyQt6.QtGui import QPainter, QPixmap
+            from PyQt6.QtCore import QSize
+            
+            # 创建课程表的截图
+            widget = self.schedule_table
+            size = QSize(widget.width(), widget.height())
+            
+            # 创建像素图
+            pixmap = QPixmap(size)
+            pixmap.fill()
+            
+            # 绘制widget到像素图
+            painter = QPainter(pixmap)
+            widget.render(painter)
+            painter.end()
+            
+            # 保存图片
+            pixmap.save(file_path, "PNG")
+            
+        except Exception as e:
+            self.logger.error(f"图片导出失败: {e}", exc_info=True)
+            raise e
+    
+    def generate_schedule_html(self) -> str:
+        """生成课程表的HTML内容"""
+        try:
+            html = """<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset='utf-8'>
+                <title>课程表</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    table { border-collapse: collapse; width: 100%; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                    th { background-color: #f2f2f2; }
+                    .class-cell { background-color: #e3f2fd; }
+                </style>
+            </head>
+            <body>
+                <h1>课程表</h1>
+                <table>
+                    <tr>
+                        <th>时间</th>
+                        <th>周一</th>
+                        <th>周二</th>
+                        <th>周三</th>
+                        <th>周四</th>
+                        <th>周五</th>
+                        <th>周六</th>
+                        <th>周日</th>
+                    </tr>
+            """
+            
+            # 获取时间段
+            time_slots = self.schedule.get_time_slots()
+            
+            for time_slot in time_slots:
+                html += f"<tr><td>{time_slot.name}<br>{time_slot.start_time}-{time_slot.end_time}</td>"
+                
+                # 遍历一周的每一天
+                for weekday in range(1, 8):
+                    classes = self.schedule.get_classes_by_time_and_day(time_slot.id, weekday)
+                    if classes:
+                        class_info = classes[0]  # 取第一个课程
+                        subject = self.schedule.get_subject(class_info.subject_id)
+                        html += f"<td class='class-cell'>{subject.name}<br>{subject.teacher}<br>{subject.location}</td>"
+                    else:
+                        html += "<td></td>"
+                
+                html += "</tr>"
+            
+            html += """</table>
+            </body>
+            </html>"""
+            
+            return html
+            
+        except Exception as e:
+            self.logger.error(f"生成HTML失败: {e}", exc_info=True)
+            return "<html><body><h1>生成课程表失败</h1></body></html>"
     
     # 科目管理方法
     def add_subject(self):
@@ -775,6 +919,7 @@ class ScheduleEditor(QDialog):
         subject_id = current_item.data(Qt.ItemDataRole.UserRole)
         subject = self.schedule.get_subject(subject_id)
         
+        
         if subject:
             dialog = SubjectDialog(subject, self)
             if dialog.exec() == QDialog.DialogCode.Accepted:
@@ -799,6 +944,7 @@ class ScheduleEditor(QDialog):
             self, "确认", "确定要删除选中的科目吗？这将同时删除相关的课程。",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
+        
         
         if reply == QMessageBox.StandardButton.Yes:
             self.schedule.remove_subject(subject_id)
@@ -838,6 +984,7 @@ class ScheduleEditor(QDialog):
         timeslot_id = current_item.data(Qt.ItemDataRole.UserRole)
         timeslot = self.schedule.get_time_slot(timeslot_id)
         
+        
         if timeslot:
             dialog = TimeSlotDialog(timeslot, self)
             if dialog.exec() == QDialog.DialogCode.Accepted:
@@ -863,6 +1010,7 @@ class ScheduleEditor(QDialog):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
+        
         if reply == QMessageBox.StandardButton.Yes:
             self.schedule.remove_time_slot(timeslot_id)
             self.update_timeslot_list()
@@ -887,6 +1035,7 @@ class ScheduleEditor(QDialog):
             timeslot_id = self.class_timeslot_combo.currentData()
             weekday = self.class_weekday_combo.currentIndex() + 1
             weeks_text = self.class_weeks_edit.text().strip()
+            
             
             if not subject_id or not timeslot_id:
                 QMessageBox.warning(self, "警告", "请选择科目和时间段")
@@ -939,11 +1088,17 @@ class ScheduleEditor(QDialog):
             weekday = self.class_weekday_combo.currentIndex() + 1
             weeks_text = self.class_weeks_edit.text().strip()
             
+            
             if not subject_id or not timeslot_id:
+                QMessageBox.warning(self, "警告", "请选择科目和时间段")
+            
                 QMessageBox.warning(self, "警告", "请选择科目和时间段")
                 return
             
+            
             if not weeks_text:
+                QMessageBox.warning(self, "警告", "请输入周次")
+            
                 QMessageBox.warning(self, "警告", "请输入周次")
                 return
             
@@ -981,7 +1136,10 @@ class ScheduleEditor(QDialog):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
+        
         if reply == QMessageBox.StandardButton.Yes:
+            class_item = current_item.data(Qt.ItemDataRole.UserRole)
+        
             class_item = current_item.data(Qt.ItemDataRole.UserRole)
             self.schedule.remove_class(class_item)
             self.update_class_list()
@@ -1049,7 +1207,10 @@ class ScheduleEditor(QDialog):
                 QMessageBox.StandardButton.Cancel
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                if not self.save_schedule():
+            
                 if not self.save_schedule():
                     event.ignore()
                     return
@@ -1070,6 +1231,7 @@ class SubjectDialog(QDialog):
         
         self.subject = subject
         self.init_ui()
+        
         
         if subject:
             self.load_subject_data()
@@ -1153,6 +1315,7 @@ class SubjectDialog(QDialog):
         current_color = QColor(self.color_edit.text() or "#3498db")
         color = QColorDialog.getColor(current_color, self, "选择科目颜色")
         
+        
         if color.isValid():
             self.color_edit.setText(color.name())
     
@@ -1186,6 +1349,7 @@ class TimeSlotDialog(QDialog):
         
         self.timeslot = timeslot
         self.init_ui()
+        
         
         if timeslot:
             self.load_timeslot_data()

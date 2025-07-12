@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 组件系统
 支持动态组件加载、管理和布局
@@ -198,7 +209,10 @@ class BaseComponent(QObject, IComponent, metaclass=QObjectABCMeta):
                 self._update_timer.stop()
                 self._update_timer = None
             
+            
             if self._widget:
+                self._widget.deleteLater()
+            
                 self._widget.deleteLater()
                 self._widget = None
                 
@@ -626,6 +640,7 @@ class ScrollingTextWidget(QWidget):
         # 计算移动距离
         move_distance = self.scroll_speed / 20  # 20 FPS
         
+        
         if self.scroll_direction == "left":
             self.scroll_position -= move_distance
             if self.scroll_position < -self.text_width:
@@ -669,6 +684,7 @@ class ScrollingTextWidget(QWidget):
             painter.end()
             return
         
+        
         if not self.text:
             painter.end()
             return
@@ -683,6 +699,7 @@ class ScrollingTextWidget(QWidget):
         font_metrics = painter.fontMetrics()
         text_height = font_metrics.height()
         y = (self.height() + text_height) // 2 - font_metrics.descent()
+        
         
         if self.scroll_direction in ["left", "right"]:
             painter.drawText(int(self.scroll_position), y, self.text)
@@ -748,7 +765,7 @@ class ComponentManager(QObject):
                         
                         # 查找组件类
                         for name, obj in inspect.getmembers(module):
-                            if (inspect.isclass(obj) and 
+                            if (inspect.isclass(obj) and
                                 issubclass(obj, IComponent) and 
                                 obj != IComponent and 
                                 obj != BaseComponent):
@@ -795,6 +812,7 @@ class ComponentManager(QObject):
                     size=component.info.default_size
                 )
             
+            
             if component.initialize(config):
                 self.components[component_id] = component
                 self.component_configs[component_id] = config
@@ -817,6 +835,7 @@ class ComponentManager(QObject):
                 
                 del self.components[component_id]
                 if component_id in self.component_configs:
+                    del self.component_configs[component_id]
                     del self.component_configs[component_id]
                 
                 self.component_removed.emit(component_id)
@@ -846,6 +865,7 @@ class ComponentManager(QObject):
             if component_id in self.components:
                 component = self.components[component_id]
                 if component.configure(settings):
+                    # 更新配置:
                     # 更新配置
                     if component_id in self.component_configs:
                         self.component_configs[component_id].settings = settings

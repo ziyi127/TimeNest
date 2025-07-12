@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Interface Registry for Service Discovery
 Manages plugin service interfaces and enables service discovery between plugins
@@ -49,8 +60,8 @@ class ServiceMethod:
                     'default': param.default if param.default != inspect.Parameter.empty else None,
                     'required': param.default == inspect.Parameter.empty
                 }
-                for name, param in sig.parameters.items()
-                if name != 'self'
+                for name, param in sig.parameters.items():
+                if name != 'self':
             }
             
             if sig.return_annotation != inspect.Signature.empty:
@@ -290,6 +301,7 @@ class PluginInterfaceRegistry(BaseManager):
             with self._lock:
                 services = list(self._services.values())
 
+
                 if service_type:
                     services = [s for s in services if s.service_type == service_type]
 
@@ -394,6 +406,7 @@ class PluginInterfaceRegistry(BaseManager):
         if service_type_key not in self._service_cache:
             self._service_cache[service_type_key] = []
 
+
         if interface.name not in self._service_cache[service_type_key]:
             self._service_cache[service_type_key].append(interface.name)
 
@@ -420,6 +433,7 @@ class PluginInterfaceRegistry(BaseManager):
         """Update call statistics"""
         if service_name not in self._call_stats:
             self._call_stats[service_name] = {}
+
 
         if method_name not in self._call_stats[service_name]:
             self._call_stats[service_name][method_name] = 0

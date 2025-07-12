@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 通知组件UI
 显示和管理通知的用户界面组件
@@ -160,6 +171,7 @@ class NotificationItem(QWidget):
             # 根据通知类型设置图标
             icon_text = "ℹ️"  # 默认信息图标
             
+            
             if self.notification.type == NotificationType.SUCCESS:
                 icon_text = "✅"
             elif self.notification.type == NotificationType.WARNING:
@@ -196,7 +208,10 @@ class NotificationItem(QWidget):
             # 根据优先级设置边框颜色
             border_color = "#e0e0e0"
             
+            
             if self.notification.priority == NotificationPriority.HIGH:
+                border_color = "#e74c3c"
+            
                 border_color = "#e74c3c"
             elif self.notification.priority == NotificationPriority.MEDIUM:
                 border_color = "#f39c12"
@@ -228,7 +243,10 @@ class NotificationItem(QWidget):
                 now = datetime.now()
                 diff = now - self.notification.timestamp
                 
+                
                 if diff.total_seconds() < 60:
+                    return "刚刚"
+                
                     return "刚刚"
                 elif diff.total_seconds() < 3600:
                     minutes = int(diff.total_seconds() / 60)
@@ -411,12 +429,12 @@ class NotificationWidget(QWidget):
                     width: 8px;
                     border-radius: 4px;
                 }
-                QScrollBar::handle:vertical {
+                QScrollBar:handle:vertical {
                     background-color: #c0c0c0;
                     border-radius: 4px;
                     min-height: 20px;
                 }
-                QScrollBar::handle:vertical:hover {
+                QScrollBar:handle:vertical:hover {
                     background-color: #a0a0a0;
                 }
                 QPushButton {

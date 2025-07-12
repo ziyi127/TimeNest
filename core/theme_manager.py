@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 主题管理器
 支持主题加载、切换、市场扩展
@@ -92,7 +103,7 @@ class ThemeManager(QObject):
     theme_loaded = pyqtSignal(int)   # 主题数量
     theme_error = pyqtSignal(str)    # 错误信息
 
-    def __init__(self, theme_dir: str = "themes") -> None:
+    def __init__(self, theme_dir: str = "themes") -> None
         """
         初始化主题管理器
 

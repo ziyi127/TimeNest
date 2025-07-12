@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 事件总线系统
 提供完整的事件驱动架构支持
@@ -185,7 +196,7 @@ class EventBus(QObject):
                 self.event_history.append(event)
             
             # 更新统计
-            self.stats['events_published'] += 1
+            self.stats['events_published'] = stats.get('events_published', 0) + 1
             
             # 发出Qt信号
             self.event_published.emit(event)
@@ -204,7 +215,7 @@ class EventBus(QObject):
     def subscribe(self, event_type: str, handler: Union[EventHandler, AsyncEventHandler], 
                   filter_func: Optional[Callable[[Event], bool]] = None,
                   priority: EventPriority = EventPriority.NORMAL,
-                  async_handler: bool = False, max_retries: int = 3, timeout: float = 30.0) -> str:
+                  async_handler: bool = False, max_retries: int = 3, timeout: float = 30.0) -> str
         """
         订阅事件
         
@@ -237,7 +248,7 @@ class EventBus(QObject):
                 self.subscriptions[event_type].sort(key=lambda s: s.priority.value, reverse=True)
             
             # 更新统计
-            self.stats['subscriptions_count'] += 1
+            self.stats['subscriptions_count'] = stats.get('subscriptions_count', 0) + 1
             
             # 发出信号
             self.subscription_added.emit(subscription.id)
@@ -264,8 +275,9 @@ class EventBus(QObject):
                 for event_type, subscriptions in self.subscriptions.items():
                     for i, subscription in enumerate(subscriptions):
                         if subscription.id == subscription_id:
+                            del subscriptions[i]:
                             del subscriptions[i]
-                            self.stats['subscriptions_count'] -= 1
+                            self.stats['subscriptions_count'] = stats.get('subscriptions_count', 0) - 1
                             self.subscription_removed.emit(subscription_id)
                             self.logger.debug(f"移除订阅: {subscription_id}")
                             return True
@@ -292,7 +304,7 @@ class EventBus(QObject):
                 if event_type in self.subscriptions:
                     count = len(self.subscriptions[event_type])
                     self.subscriptions[event_type].clear()
-                    self.stats['subscriptions_count'] -= count
+                    self.stats['subscriptions_count'] = stats.get('subscriptions_count', 0) - count
                     self.logger.debug(f"移除所有订阅: {event_type} ({count}个)")
                     return count
             
@@ -312,7 +324,7 @@ class EventBus(QObject):
         self.error_handlers.append(handler)
         self.logger.debug("添加错误处理器")
     
-    def get_event_history(self, event_type: str = None, limit: int = None) -> List[Event]:
+    def get_event_history(self, event_type: str = None, limit: int = None) -> List[Event]
         """
         获取事件历史
         
@@ -332,11 +344,12 @@ class EventBus(QObject):
         
         # 限制数量
         if limit:
+            events = events[-limit:]:
             events = events[-limit:]
         
         return events
     
-    def replay_events(self, event_type: str = None, since: datetime = None) -> int:
+    def replay_events(self, event_type: str = None, since: datetime = None) -> int
         """
         重放事件
         
@@ -392,7 +405,10 @@ class EventBus(QObject):
             # 获取订阅者
             subscriptions = self.subscriptions.get(event.type, [])
             
+            
             if not subscriptions:
+                self.logger.debug(f"没有订阅者处理事件: {event.type}")
+            
                 self.logger.debug(f"没有订阅者处理事件: {event.type}")
                 return
             
@@ -401,6 +417,7 @@ class EventBus(QObject):
                 try:
                     # 应用过滤器
                     if subscription.filter_func and not subscription.filter_func(event):
+                        continue:
                         continue
                     
                     # 异步处理
@@ -412,14 +429,14 @@ class EventBus(QObject):
                 except Exception as e:
                     self.logger.error(f"处理事件订阅失败: {subscription.id} - {e}")
                     self._handle_error(e, event)
-                    self.stats['events_failed'] += 1
+                    self.stats['events_failed'] = stats.get('events_failed', 0) + 1
             
             # 记录处理时间
             processing_time = (datetime.now() - start_time).total_seconds()
             self.processing_times.append(processing_time)
             
             # 更新统计
-            self.stats['events_processed'] += 1
+            self.stats['events_processed'] = stats.get('events_processed', 0) + 1
             
             # 发出处理完成信号
             self.event_processed.emit(event.id, True)
@@ -454,6 +471,7 @@ class EventBus(QObject):
         """运行异步处理器"""
         try:
             if asyncio.iscoroutinefunction(subscription.handler):
+                # 协程处理器:
                 # 协程处理器
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -520,7 +538,7 @@ def get_event_bus() -> EventBus:
     return _global_event_bus
 
 
-def publish_event(event_type: str, data: Any = None, **kwargs) -> str:
+def publish_event(event_type: str, data: Any = None, **kwargs) -> str
     """发布事件到全局事件总线"""
     return _global_event_bus.publish(event_type, data, **kwargs)
 

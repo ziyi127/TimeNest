@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Dependency Validation System
 Validates plugin compatibility and dependencies before loading
@@ -84,6 +95,7 @@ class PluginDependency:
         """Check if available version satisfies constraint"""
         try:
             available_ver = version.parse(available)
+            
             
             if constraint.startswith(">="):
                 required_ver = version.parse(constraint[2:])
@@ -237,6 +249,7 @@ class DependencyValidator(BaseManager):
             # Emit signal
             self.validation_completed.emit(plugin_id, result.is_valid)
             
+            
             if not result.is_valid:
                 error_msg = "; ".join(result.errors)
                 self.validation_failed.emit(plugin_id, error_msg)
@@ -375,6 +388,7 @@ class DependencyValidator(BaseManager):
 
                 rec_stack.remove(node)
                 return False
+
 
             if has_cycle(plugin_id):
                 result.add_error(f"Circular dependency detected involving plugin: {plugin_id}")

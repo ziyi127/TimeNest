@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 通知管理器
 负责上下课提醒、音效播放、语音提醒等功能
@@ -41,6 +52,7 @@ from core.notification_service import NotificationPriority, NotificationRequest,
 from models.schedule import ClassItem, Schedule
 from ui.notification_window import NotificationWindow
 from utils.text_to_speech import TextToSpeech
+
 
 if TYPE_CHECKING:
     from core.config_manager import ConfigManager
@@ -950,6 +962,12 @@ class NotificationManager(QObject):
     def _cleanup_expired_timers(self) -> None:
         """清理过期的定时器，防止内存泄漏"""
         try:
+            # 增加计数器
+            self._timer_cleanup_counter += 1
+        except Exception as e:
+            self.logger.error(f"增加计数器失败: {e}")
+            # 增加计数器
+            # 增加计数器
             self._timer_cleanup_counter += 1
 
             # 每100次调用清理一次
@@ -963,7 +981,7 @@ class NotificationManager(QObject):
                 # 移除过期定时器
                 for timer_id in expired_timers:
                     timer = self.reminder_timers.pop(timer_id, None)
-                    if timer:
+                    if timer and hasattr(timer, "deleteLater"):
                         timer.deleteLater()
 
                 if expired_timers:
@@ -1154,7 +1172,7 @@ class NotificationManager(QObject):
 
             for timer_id in expired_timers:
                 timer = self.reminder_timers.pop(timer_id, None)
-                if timer:
+                if timer and hasattr(timer, "deleteLater"):
                     timer.deleteLater()
 
             if expired_timers:
@@ -1191,7 +1209,7 @@ class NotificationManager(QObject):
             return False
         
         try:
-            dnd_settings = self.settings['do_not_disturb']
+            dnd_settings = self.settings.get('do_not_disturb')
             start_time = time.fromisoformat(dnd_settings.get('start_time', '22:00'))
             end_time = time.fromisoformat(dnd_settings.get('end_time', '07:00'))
             current_time_only = current_time.time()
@@ -1212,7 +1230,7 @@ class NotificationManager(QObject):
             if not self.settings.get('class_start_reminder', {}).get('enabled', True):
                 return
             
-            reminder_settings = self.settings['class_start_reminder']
+            reminder_settings = self.settings.get('class_start_reminder')
             
             # 获取科目名称（这里需要从schedule_manager获取）
             subject_name = "课程"  # 临时使用，实际应该从科目ID获取名称
@@ -1240,7 +1258,7 @@ class NotificationManager(QObject):
             if not self.settings.get('class_end_reminder', {}).get('enabled', True):
                 return
             
-            reminder_settings = self.settings['class_end_reminder']
+            reminder_settings = self.settings.get('class_end_reminder')
             
             # 获取科目名称
             subject_name = "课程"  # 临时使用
@@ -1263,7 +1281,7 @@ class NotificationManager(QObject):
                           settings: Dict[str, Any], class_item: Optional[ClassItem] = None):
         """发送通知"""
         # Check priority and emit signal for smart always-on-top
-        if settings.get('priority', 2) >= 3:  # NORMAL >= HIGH
+        if settings.get('priority', 2) >= 3:  # NORMAL >= HIGH:
             self.important_notification_received.emit()
 
         channel_settings = self.settings.get('channels', {})
@@ -1465,7 +1483,7 @@ class NotificationManager(QObject):
             if not self.settings.get('class_start_reminder', {}).get('enabled', True):
                 return
             
-            advance_minutes = self.settings['class_start_reminder'].get('advance_minutes', 5)
+            advance_minutes = self.settings.get('class_start_reminder').get('advance_minutes', 5)
             reminder_time = start_time - timedelta(minutes=advance_minutes)
             
             # 计算延迟时间
@@ -1495,7 +1513,7 @@ class NotificationManager(QObject):
     def _send_advance_reminder(self, class_item: ClassItem):
         """发送提前提醒"""
         try:
-            reminder_settings = self.settings['class_start_reminder']
+            reminder_settings = self.settings.get('class_start_reminder')
             advance_minutes = reminder_settings.get('advance_minutes', 5)
             
             subject_name = "课程"  # 临时使用
@@ -1567,12 +1585,12 @@ class NotificationManager(QObject):
             # 更新音频设置
             sound_config = self.settings.get('channels', {}).get('sound', {})
             if 'volume' in sound_config:
-                self.audio_output.setVolume(sound_config['volume'])
+                self.audio_output.setVolume(sound_config.get('volume'))
 
             # 更新通道配置
             for channel_name, channel in self.channels.items():
                 channel_config = self.settings.get('channels', {}).get(channel_name, {})
-                if channel_config:
+                if channel_config and hasattr(channel, "configure"):
                     channel.configure(channel_config)
                     channel.set_enabled(channel_config.get('enabled', True))
 

@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 应用设置模块
 集成浮窗设置、通知设置、主题设置、时间校准、系统集成等功能
@@ -18,7 +29,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QColor, QPalette
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager
+else:
     from core.app_manager import AppManager
 
 
@@ -478,6 +492,7 @@ class AppSettingsDialog(QDialog):
         """加载设置"""
         try:
             if self.app_manager and self.app_manager.config_manager:
+                # 加载各种设置:
                 # 加载各种设置
                 floating_settings = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
 
@@ -638,6 +653,7 @@ class AppSettingsDialog(QDialog):
             self.calibration_progress.setVisible(False)
             self.calibrate_button.setEnabled(True)
 
+
             if success:
                 self.calibration_status.setText(f"校准成功: {message}")
 
@@ -716,7 +732,10 @@ class AppSettingsDialog(QDialog):
                 QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
             )
 
+
             if reply == QMessageBox.StandardButton.Save:
+                self.apply_settings()
+
                 self.apply_settings()
                 event.accept()  # 只关闭窗口，不退出程序
             elif reply == QMessageBox.StandardButton.Discard:

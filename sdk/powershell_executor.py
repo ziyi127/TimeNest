@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 PowerShell Executor for Plugin SDK
 Provides secure PowerShell script execution during plugin installation/setup
@@ -56,7 +67,10 @@ class PowerShellCommand:
         if not self.script_content.strip():
             raise ValueError("Script content cannot be empty")
         
+        
         if self.timeout_seconds <= 0:
+            raise ValueError("Timeout must be positive")
+        
             raise ValueError("Timeout must be positive")
 
 
@@ -78,7 +92,7 @@ class PowerShellExecutor(QObject):
     PowerShell Executor for Plugin SDK
     
     Provides secure PowerShell script execution during plugin installation/setup
-    with proper sandboxing, validation, and monitoring capabilities.
+    with proper sandboxing, validation, and monitoring capabilities.:
     """
     
     # Signals
@@ -256,6 +270,7 @@ class PowerShellExecutor(QObject):
             # Start process
             with self._execution_lock:
                 if command.id in self._command_results:
+                    # Command was cancelled before starting:
                     # Command was cancelled before starting
                     return
                 
@@ -280,7 +295,10 @@ class PowerShellExecutor(QObject):
                 result.stdout = stdout
                 result.stderr = stderr
                 
+                
                 if process.returncode == 0:
+                    result.status = CommandStatus.COMPLETED
+                
                     result.status = CommandStatus.COMPLETED
                 else:
                     result.status = CommandStatus.FAILED
@@ -298,6 +316,7 @@ class PowerShellExecutor(QObject):
             # Clean up
             with self._execution_lock:
                 if command.id in self._active_commands:
+                    del self._active_commands[command.id]:
                     del self._active_commands[command.id]
                 self._command_results[command.id] = result
             
@@ -320,6 +339,7 @@ class PowerShellExecutor(QObject):
             
             with self._execution_lock:
                 if command.id in self._active_commands:
+                    del self._active_commands[command.id]:
                     del self._active_commands[command.id]
                 self._command_results[command.id] = result
             

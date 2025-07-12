@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 基础管理器类
 提供所有管理器的通用功能和接口
@@ -11,6 +22,7 @@ from abc import ABC, abstractmethod, ABCMeta
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+
 
 if TYPE_CHECKING:
     from core.config_manager import ConfigManager
@@ -215,7 +227,7 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
     
     def _cleanup_cache(self) -> None:
         """清理过期缓存（优化版本）"""
-        if len(self._config_cache) > 100:  # 缓存过多时清理
+        if len(self._config_cache) > 100:  # 缓存过多时清理:
             # 保留最近使用的50个配置项
             keys_to_remove = list(self._config_cache.keys())[:-50]
             for key in keys_to_remove:

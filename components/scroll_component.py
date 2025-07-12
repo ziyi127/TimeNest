@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 滚动组件
 支持文本滚动、图片轮播等功能
@@ -53,7 +64,10 @@ class ScrollItem(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)
         
+        
         if self.item_type == "text":
+            label = QLabel(str(self.content))
+        
             label = QLabel(str(self.content))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setWordWrap(True)
@@ -70,6 +84,7 @@ class ScrollItem(QWidget):
         elif self.item_type == "image":
             label = QLabel()
             if isinstance(self.content, QPixmap):
+                label.setPixmap(self.content.scaled(200, 150, Qt.AspectRatioMode.KeepAspectRatio)):
                 label.setPixmap(self.content.scaled(200, 150, Qt.AspectRatioMode.KeepAspectRatio))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(label)
@@ -211,9 +226,13 @@ class ScrollComponent(BaseComponent):
         """滚动步进"""
         try:
             if not self.scroll_items:
+                return:
                 return
             
+            
             if self.scroll_direction == ScrollDirection.LEFT_TO_RIGHT:
+                self._scroll_horizontal(1)
+            
                 self._scroll_horizontal(1)
             elif self.scroll_direction == ScrollDirection.RIGHT_TO_LEFT:
                 self._scroll_horizontal(-1)
@@ -234,7 +253,10 @@ class ScrollComponent(BaseComponent):
             
             new_value = current_value + direction
             
+            
             if new_value > max_value:
+                if self.loop_scroll:
+            
                 if self.loop_scroll:
                     scroll_bar.setValue(0)
                 else:
@@ -261,7 +283,10 @@ class ScrollComponent(BaseComponent):
             
             new_value = current_value + direction
             
+            
             if new_value > max_value:
+                if self.loop_scroll:
+            
                 if self.loop_scroll:
                     scroll_bar.setValue(0)
                 else:
@@ -305,6 +330,7 @@ class ScrollComponent(BaseComponent):
                 self._switch_to_horizontal_layout()
         else:
             if isinstance(self.content_layout, QHBoxLayout):
+                # 切换到垂直布局:
                 # 切换到垂直布局
                 self._switch_to_vertical_layout()
     
@@ -356,7 +382,8 @@ class ScrollComponent(BaseComponent):
     def set_auto_scroll(self, enabled: bool):
         """设置自动滚动"""
         self.auto_scroll = enabled
-        if enabled:
+        if enabled and hasattr(enabled, "self.start_scroll"):
+    self.start_scroll()
             self.start_scroll()
         else:
             self.stop_scroll()
@@ -381,13 +408,19 @@ class ScrollComponent(BaseComponent):
         """设置组件配置"""
         super().set_config(config)
         
+        
         if 'scroll_direction' in config:
-            self.set_scroll_direction(config['scroll_direction'])
+            self.set_scroll_direction(config.get('scroll_direction')):
+        
+            self.set_scroll_direction(config.get('scroll_direction'))
         if 'scroll_speed' in config:
-            self.set_scroll_speed(config['scroll_speed'])
+            self.set_scroll_speed(config.get('scroll_speed')):
+            self.set_scroll_speed(config.get('scroll_speed'))
         if 'auto_scroll' in config:
-            self.set_auto_scroll(config['auto_scroll'])
+            self.set_auto_scroll(config.get('auto_scroll')):
+            self.set_auto_scroll(config.get('auto_scroll'))
         if 'loop_scroll' in config:
-            self.set_loop_scroll(config['loop_scroll'])
+            self.set_loop_scroll(config.get('loop_scroll')):
+            self.set_loop_scroll(config.get('loop_scroll'))
         if 'pause_on_hover' in config:
-            self.pause_on_hover = config['pause_on_hover']
+            self.pause_on_hover = config.get('pause_on_hover')

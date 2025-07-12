@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 组件基类
 定义所有组件的通用接口和行为
@@ -92,11 +103,11 @@ class BaseComponent(QObject, ABC, metaclass=QObjectABCMeta):
             # 应用大小配置
             size_config = self.config.get('size', {})
             if 'width' in size_config and 'height' in size_config:
-                self.widget.setFixedSize(size_config['width'], size_config['height'])
+                self.widget.setFixedSize(size_config.get('width'), size_config.get('height'))
             elif 'width' in size_config:
-                self.widget.setFixedWidth(size_config['width'])
+                self.widget.setFixedWidth(size_config.get('width'))
             elif 'height' in size_config:
-                self.widget.setFixedHeight(size_config['height'])
+                self.widget.setFixedHeight(size_config.get('height'))
             
             # 应用可见性
             self.widget.setVisible(self.is_enabled and self.is_visible)
@@ -118,20 +129,20 @@ class BaseComponent(QObject, ABC, metaclass=QObjectABCMeta):
             
             # 背景色
             if 'background_color' in style_config:
-                style_parts.append(f"background-color: {style_config['background_color']}")
+                style_parts.append(f"background-color: {style_config.get('background_color')}")
             
             # 边框
             if 'border_color' in style_config:
                 border_width = style_config.get('border_width', 1)
-                style_parts.append(f"border: {border_width}px solid {style_config['border_color']}")
+                style_parts.append(f"border: {border_width}px solid {style_config.get('border_color')}")
             
             # 圆角
             if 'border_radius' in style_config:
-                style_parts.append(f"border-radius: {style_config['border_radius']}px")
+                style_parts.append(f"border-radius: {style_config.get('border_radius')}px")
             
             # 透明度
             if 'opacity' in style_config:
-                opacity = max(0.0, min(1.0, style_config['opacity']))
+                opacity = max(0.0, min(1.0, style_config.get('opacity')))
                 self.widget.setWindowOpacity(opacity)
             
             # 应用样式

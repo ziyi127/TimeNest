@@ -1,0 +1,41 @@
+{
+  "floating_widget": {
+    "width": 480,
+    "height": 80,
+    "opacity": 0.92,
+    "border_radius": 40,
+    "shadow_enabled": true,
+    "border_enabled": false,
+    "modules": ["time"],
+    "mouse_through": false,
+    "auto_hide": false,
+    "animation_duration": 350,
+    "time_format": "24h",
+    "show_seconds": false,
+    "show_date": true,
+    "position": {
+      "x": "center",
+      "y": 15
+    },
+    "theme": {
+      "use_system_accent": true,
+      "custom_colors": {
+        "background": "rgba(30, 30, 30, 0.92)",
+        "text_primary": "#ffffff",
+        "text_secondary": "#cccccc",
+        "accent": "#007acc"
+      }
+    },
+    "performance": {
+      "enable_caching": true,
+      "update_interval": 1000,
+      "smooth_animations": true,
+      "hardware_acceleration": true
+    },
+    "accessibility": {
+      "high_contrast": false,
+      "large_text": false,
+      "screen_reader_support": true
+    }
+  }
+}

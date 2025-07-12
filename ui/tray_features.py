@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 托盘程序功能模块
 实现托盘程序的各种功能
@@ -56,7 +67,10 @@ class TrayFeatureManager(QObject):
         try:
             self.logger.info("显示课程表管理被调用")
 
+
             if not self.app_manager:
+                self._show_feature_unavailable("课程表管理", "应用管理器不可用")
+
                 self._show_feature_unavailable("课程表管理", "应用管理器不可用")
                 return
 
@@ -127,7 +141,10 @@ class TrayFeatureManager(QObject):
         try:
             self.logger.info("显示浮窗设置被调用")
 
+
             if not self.app_manager:
+                self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
+
                 self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
                 return
 
@@ -275,6 +292,7 @@ class TrayFeatureManager(QObject):
                     estimated_duration=25
                 )
 
+
                 if task_id:
                     # 开始学习会话
                     session_id = self.app_manager.study_assistant.schedule_enhancement.start_study_session(task_id)
@@ -328,7 +346,7 @@ class TrayFeatureManager(QObject):
                     # 创建简单的统计显示对话框
                     from PyQt6.QtWidgets import QMessageBox
 
-                    stats_text = f"""学习统计信息:
+                    stats_text = f"""学习统计信息
 
 总学习时间: {analytics.total_study_time} 分钟
 平均会话长度: {analytics.average_session_length:.1f} 分钟
@@ -450,6 +468,7 @@ class TrayFeatureManager(QObject):
                     "所有文件 (*.*)"
                 )
 
+
                 if file_path:
                     # 获取科目
                     subject, ok = QInputDialog.getText(None, "添加资源", "科目:", text="通用")
@@ -479,6 +498,7 @@ class TrayFeatureManager(QObject):
                         file_path=file_path
                     )
 
+
                     if resource_id:
                         self.send_notification("资源添加成功", f"已添加资源: {title}")
                         self.feature_activated.emit("quick_add_resource")
@@ -494,6 +514,7 @@ class TrayFeatureManager(QObject):
                             subject="通用",
                             url=url
                         )
+
 
                         if resource_id:
                             self.send_notification("资源添加成功", f"已添加链接: {title}")
@@ -548,6 +569,7 @@ class TrayFeatureManager(QObject):
                     end_date=end_date
                 )
 
+
                 if plan_id:
                     self.send_notification("学习计划创建成功", f"已创建计划: {plan_name}")
                     self.feature_activated.emit("create_study_plan")
@@ -572,7 +594,8 @@ class TrayFeatureManager(QObject):
                 # 获取环境总结
                 summary = self.app_manager.environment_optimizer.get_environment_summary()
 
-                if summary.get('status') == 'success':
+
+                if summary['status'] == 'success':
                     score = summary.get('overall_score', 0.0)
                     grade = summary.get('grade', '未知')
                     suggestions_count = summary.get('suggestions_count', 0)
@@ -580,7 +603,7 @@ class TrayFeatureManager(QObject):
                     # 显示环境状态
                     from PyQt6.QtWidgets import QMessageBox
 
-                    message = f"""当前学习环境状态:
+                    message = f"""当前学习环境状态
 
 评分: {score:.1%}
 等级: {grade}
@@ -595,6 +618,7 @@ class TrayFeatureManager(QObject):
                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                     )
 
+
                     if reply == QMessageBox.StandardButton.Yes:
                         # 执行自动优化
                         from core.environment_optimizer import EnvironmentFactor
@@ -603,8 +627,8 @@ class TrayFeatureManager(QObject):
                         if score < 0.7:
                             # 尝试优化系统性能
                             if self.app_manager.environment_optimizer.apply_auto_optimization(
-                                EnvironmentFactor.SYSTEM_PERFORMANCE
-                            ):
+                                 EnvironmentFactor.SYSTEM_PERFORMANCE
+                             ):
                                 optimized = True
 
                             # 尝试优化网络
@@ -612,6 +636,7 @@ class TrayFeatureManager(QObject):
                                 EnvironmentFactor.NETWORK_QUALITY
                             ):
                                 optimized = True
+
 
                         if optimized:
                             self.send_notification("环境优化完成", "学习环境已优化")
@@ -639,6 +664,7 @@ class TrayFeatureManager(QObject):
             if hasattr(self.app_manager, 'study_assistant'):
                 daily_summary = self.app_manager.study_assistant.get_daily_study_summary()
 
+
                 if daily_summary:
                     from PyQt6.QtWidgets import QMessageBox
 
@@ -648,7 +674,7 @@ class TrayFeatureManager(QObject):
                     tasks_total = daily_summary.get('tasks_total', 0)
                     goal_progress = daily_summary.get('goal_progress', 0.0)
 
-                    summary_text = f"""今日学习总结:
+                    summary_text = f"""今日学习总结
 
 📚 学习时间: {total_time} 分钟
 🎯 学习会话: {session_count} 次
@@ -715,6 +741,7 @@ class TrayFeatureManager(QObject):
                 save_button.clicked.connect(dialog.accept)
                 layout.addWidget(save_button)
 
+
                 if dialog.exec() == QDialog.DialogCode.Accepted:
                     content = content_edit.toPlainText()
                     if content.strip():
@@ -724,6 +751,7 @@ class TrayFeatureManager(QObject):
                             content=content,
                             subject="通用"
                         )
+
 
                         if note_id:
                             self.send_notification("笔记保存成功", f"已保存笔记: {title}")

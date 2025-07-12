@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 插件商城管理器
 负责插件的下载、安装、更新等功能
@@ -195,50 +206,34 @@ class PluginMarketplace(QObject):
         
         # 下载管理
         self.active_downloads: Dict[str, PluginDownloader] = {}
-        self.download_dir = Path.home() / '.timenest' / 'downloads'
-        self.download_dir.mkdir(parents=True, exist_ok=True)
+        self.download_dir = Path("downloads/plugins")
         
         # 缓存管理
-        self.cache_dir = Path.home() / '.timenest' / 'cache'
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.cache_file = self.cache_dir / 'marketplace_cache.json'
-        self.cache_expiry = 3600  # 1小时缓存过期
-        
-        # 定时器
-        self.refresh_timer = QTimer()
-        self.refresh_timer.timeout.connect(self.refresh_plugins)
-        self.refresh_timer.start(300000)  # 5分钟刷新一次
-        
-        # 加载配置
-        self._load_config()
+        self.cache_file = Path("cache/marketplace_cache.json")
+        self.cache_expiry = 3600  # 1小时
         
         # 初始化
+        self._load_config()
         self._load_cache()
     
     def _load_config(self):
-        """加载配置"""
+        """加载商城配置"""
         try:
             if self.config_manager:
                 # 从配置管理器加载商城配置
                 marketplace_config = self.config_manager.get_config(
-                    'plugin_marketplace', {}, 'main'
+                    'marketplace', {}
                 )
                 
                 # 更新商城URL
                 if 'marketplace_url' in marketplace_config:
-                    self.marketplace_url = marketplace_config['marketplace_url']
-                
-                # 更新API URL
-                if 'api_base_url' in marketplace_config:
-                    self.api_base_url = marketplace_config['api_base_url']
-                
-                # 更新Raw URL
-                if 'raw_base_url' in marketplace_config:
-                    self.raw_base_url = marketplace_config['raw_base_url']
+                    self.marketplace_url = marketplace_config.get('marketplace_url')
+                    self.api_base_url = f"https://api.github.com/repos/{marketplace_config.get('marketplace_url').split('/')[-2:]}"
+                    self.raw_base_url = f"https://raw.githubusercontent.com/{marketplace_config.get('marketplace_url').split('/')[-2:]}/main"
                 
                 # 更新缓存过期时间
                 if 'cache_expiry' in marketplace_config:
-                    self.cache_expiry = marketplace_config['cache_expiry']
+                    self.cache_expiry = marketplace_config.get('cache_expiry')
             
             self.logger.info(f"插件商城配置加载完成: {self.marketplace_url}")
             
@@ -308,6 +303,9 @@ class PluginMarketplace(QObject):
                     for plugin in self.available_plugins
                 ]
             }
+            
+            # 确保缓存目录存在
+            self.cache_file.parent.mkdir(parents=True, exist_ok=True)
             
             with open(self.cache_file, 'w', encoding='utf-8') as f:
                 json.dump(cache_data, f, ensure_ascii=False, indent=2)
@@ -474,37 +472,24 @@ class PluginMarketplace(QObject):
                 self.logger.error(f"插件不存在: {plugin_id}")
                 return False
 
-            # 创建插件安装目录
-            install_dir = self.plugin_manager.plugins_dir / plugin_id
-            if install_dir.exists():
-                shutil.rmtree(install_dir)
-            install_dir.mkdir(parents=True, exist_ok=True)
-
             # 解压插件文件
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(install_dir)
-
-            # 验证插件结构
-            if not self._validate_plugin_structure(install_dir):
-                shutil.rmtree(install_dir)
-                error_msg = "插件结构无效"
-                self.plugin_install_failed.emit(plugin_id, error_msg)
-                return False
-
-            # 加载插件
-            self.plugin_manager._load_plugin_from_directory(install_dir)
-
-            # 清理下载文件
-            try:
-                os.remove(file_path)
-            except:
-                pass
-
-            # 发出安装完成信号
-            self.plugin_installed.emit(plugin_id)
-
-            self.logger.info(f"插件安装成功: {plugin.name}")
-            return True
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                    zip_ref.extractall(temp_dir)
+                
+                # 安装插件
+                if self.plugin_manager:
+                    success = self.plugin_manager.install_plugin_from_path(temp_dir)
+                    if success:
+                        self.plugin_installed.emit(plugin_id)
+                        self.logger.info(f"插件安装成功: {plugin.name}")
+                        return True
+                    else:
+                        self.plugin_install_failed.emit(plugin_id, "插件安装失败")
+                        return False
+                else:
+                    self.logger.error("插件管理器不可用")
+                    return False
 
         except Exception as e:
             error_msg = f"安装插件失败: {e}"
@@ -512,96 +497,32 @@ class PluginMarketplace(QObject):
             self.plugin_install_failed.emit(plugin_id, error_msg)
             return False
 
-    def _validate_plugin_structure(self, plugin_dir: Path) -> bool:
-        """验证插件结构"""
-        try:
-            # 检查必需文件
-            manifest_file = plugin_dir / 'plugin.json'
-            if not manifest_file.exists():
-                return False
-
-            # 验证清单文件
-            with open(manifest_file, 'r', encoding='utf-8') as f:
-                manifest_data = json.load(f)
-
-            # 检查必需字段
-            required_fields = ['id', 'name', 'version', 'main_module']
-            for field in required_fields:
-                if field not in manifest_data:
-                    return False
-
-            # 检查主模块文件
-            main_module = manifest_data.get('main_module', 'main.py')
-            module_file = plugin_dir / main_module
-            if not module_file.exists():
-                return False
-
-            return True
-
-        except Exception as e:
-            self.logger.error(f"验证插件结构失败: {e}")
-            return False
-
-    def cancel_download(self, plugin_id: str) -> bool:
+    def cancel_download(self, plugin_id: str):
         """取消下载"""
-        try:
-            if plugin_id in self.active_downloads:
-                downloader = self.active_downloads[plugin_id]
-                downloader.cancel()
-                downloader.wait()  # 等待线程结束
-                del self.active_downloads[plugin_id]
-                return True
-            return False
-
-        except Exception as e:
-            self.logger.error(f"取消下载失败: {e}")
-            return False
+        if plugin_id in self.active_downloads:
+            self.active_downloads[plugin_id].cancel()
+            del self.active_downloads[plugin_id]
+            self.logger.info(f"取消下载插件: {plugin_id}")
 
     def get_download_progress(self, plugin_id: str) -> int:
         """获取下载进度"""
         if plugin_id in self.active_downloads:
-            # 这里可以实现更详细的进度跟踪
+            # 这里可以实现获取具体进度的逻辑
             return 0
         return -1
 
-    def is_plugin_installed(self, plugin_id: str) -> bool:
-        """检查插件是否已安装"""
-        return self.plugin_manager.get_plugin(plugin_id) is not None
-
-    def get_installed_version(self, plugin_id: str) -> Optional[str]:
-        """获取已安装插件的版本"""
-        plugin = self.plugin_manager.get_plugin(plugin_id)
-        if plugin:
-            metadata = plugin.get_metadata()
-            if metadata:
-                return metadata.version
-        return None
-
-    def has_update(self, plugin_id: str) -> bool:
-        """检查插件是否有更新"""
-        try:
-            marketplace_plugin = self.get_plugin_by_id(plugin_id)
-            if not marketplace_plugin:
-                return False
-
-            installed_version = self.get_installed_version(plugin_id)
-            if not installed_version:
-                return False
-
-            # 简单的版本比较（实际应该使用更复杂的版本比较逻辑）
-            return marketplace_plugin.version != installed_version
-
-        except Exception as e:
-            self.logger.error(f"检查更新失败: {e}")
-            return False
-
-    def get_categories(self) -> List[str]:
-        """获取所有插件分类"""
-        categories = set()
-        for plugin in self.available_plugins:
-            categories.add(plugin.category)
-        return sorted(list(categories))
+    def is_downloading(self, plugin_id: str) -> bool:
+        """检查是否正在下载"""
+        return plugin_id in self.active_downloads
 
     def get_status(self) -> PluginMarketplaceStatus:
         """获取商城状态"""
         return self.status
+
+    def cleanup(self):
+        """清理资源"""
+        # 取消所有下载
+        for plugin_id in list(self.active_downloads.keys()):
+            self.cancel_download(plugin_id)
+        
+        self.logger.info("插件商城清理完成")

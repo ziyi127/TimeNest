@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 时钟组件
 显示当前时间和日期信息
@@ -28,6 +39,7 @@ class ClockComponent(BaseComponent):
         """初始化时钟组件"""
         try:
             if not self.widget or not self.layout:
+                return:
                 return
             
             # 获取设置
@@ -134,6 +146,7 @@ class ClockComponent(BaseComponent):
             
             # 更新日期显示
             if self.date_label and settings.get('show_date', True):
+                # 获取星期几的中文名称:
                 # 获取星期几的中文名称
                 weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
                 weekday_name = weekdays[now.weekday()]
@@ -181,7 +194,10 @@ class ClockComponent(BaseComponent):
                 old_settings.get('show_seconds') != new_settings.get('show_seconds')
             )
             
+            
             if ui_changed:
+                # 重新初始化组件:
+            
                 # 重新初始化组件
                 self.initialize_component()
             else:

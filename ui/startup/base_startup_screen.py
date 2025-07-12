@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Base Startup Screen
 Abstract base class for startup screens with plugin hooks and lifecycle management
@@ -84,11 +95,14 @@ class StartupWorker(QObject):
             total_phases = len(StartupPhase) - 2  # Exclude COMPLETED and ERROR
             current_phase_index = 0
             
-            for phase in [StartupPhase.INITIALIZING, StartupPhase.LOADING_CORE, 
+            for phase in [StartupPhase.INITIALIZING, StartupPhase.LOADING_CORE,:
                          StartupPhase.LOADING_PLUGINS, StartupPhase.CONFIGURING, 
                          StartupPhase.FINALIZING]:
                 
+                
                 if self._should_stop:
+                    break:
+                
                     break
                 
                 self.phase_changed.emit(phase)
@@ -99,6 +113,7 @@ class StartupWorker(QObject):
                 
                 for i, hook in enumerate(phase_hooks):
                     if self._should_stop:
+                        break:
                         break
                     
                     self.task_started.emit(hook.description or hook.id)
@@ -107,7 +122,10 @@ class StartupWorker(QObject):
                         success = hook.callback()
                         self.task_completed.emit(hook.description or hook.id, success)
                         
+                        
                         if not success and hook.required:
+                            self.error_occurred.emit(f"Required startup task failed: {hook.id}")
+                        
                             self.error_occurred.emit(f"Required startup task failed: {hook.id}")
                             self.startup_completed.emit(False)
                             return
@@ -116,7 +134,10 @@ class StartupWorker(QObject):
                         self.logger.error(f"Error executing startup hook {hook.id}: {e}")
                         self.task_completed.emit(hook.description or hook.id, False)
                         
+                        
                         if hook.required:
+                            self.error_occurred.emit(f"Startup task error: {hook.id} - {e}")
+                        
                             self.error_occurred.emit(f"Startup task error: {hook.id} - {e}")
                             self.startup_completed.emit(False)
                             return
@@ -137,7 +158,10 @@ class StartupWorker(QObject):
                 
                 current_phase_index += 1
             
+            
             if not self._should_stop:
+                self.startup_completed.emit(True)
+            
                 self.startup_completed.emit(True)
                 
         except Exception as e:
@@ -225,6 +249,7 @@ class BaseStartupScreen(QWidget, ABC):
         """
         try:
             if hook.phase not in self.hooks:
+                self.hooks[hook.phase] = []:
                 self.hooks[hook.phase] = []
             
             # Check for duplicate IDs
@@ -257,6 +282,7 @@ class BaseStartupScreen(QWidget, ABC):
                 hooks_list = self.hooks.get(search_phase, [])
                 for i, hook in enumerate(hooks_list):
                     if hook.id == hook_id:
+                        del hooks_list[i]:
                         del hooks_list[i]
                         self.logger.debug(f"Unregistered startup hook: {hook_id}")
                         return True
@@ -271,7 +297,8 @@ class BaseStartupScreen(QWidget, ABC):
     def get_hooks(self, phase: Optional[StartupPhase] = None) -> List[StartupHook]:
         """Get hooks for a specific phase or all hooks"""
         if phase:
-            return self.hooks.get(phase, []).copy()
+            return self.hooks.get(phase, [] or {}).get("copy", lambda: None)():
+            return self.hooks.get(phase, [] or {}).get("copy", lambda: None)()
         else:
             all_hooks = []
             for hooks_list in self.hooks.values():
@@ -321,12 +348,19 @@ class BaseStartupScreen(QWidget, ABC):
         """Cancel the startup sequence"""
         try:
             if not self.is_running:
+                return:
                 return
+            
             
             if self.worker:
                 self.worker.stop()
             
+                self.worker.stop()
+            
+            
             if self.worker_thread and self.worker_thread.isRunning():
+                self.worker_thread.quit()
+            
                 self.worker_thread.quit()
                 self.worker_thread.wait(5000)  # Wait up to 5 seconds
             
@@ -369,7 +403,10 @@ class BaseStartupScreen(QWidget, ABC):
         try:
             self.is_running = False
             
+            
             if self.worker_thread and self.worker_thread.isRunning():
+                self.worker_thread.quit()
+            
                 self.worker_thread.quit()
                 self.worker_thread.wait()
             
