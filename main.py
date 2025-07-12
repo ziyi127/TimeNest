@@ -19,7 +19,9 @@ sys.path.insert(0, str(current_dir))
 
 try:
     from core.app_manager import AppManager
-    from ui.system_tray import SystemTray
+    from ui.system_tray import SystemTray, SystemTrayManager
+    from ui.tray_features import TrayFeatureManager
+    from ui.tray_status_monitor import TrayStatusManager
 except ImportError as e:
     print(f"导入错误: {e}")
     print("请确保所有依赖已正确安装")
@@ -155,6 +157,144 @@ def _show_message(title: str, message: str):
     except Exception as e:
         print(f"{title}: {message} (错误: {e})")
 
+
+def create_tray_system(app_manager, logger):
+    """创建完整的托盘系统"""
+    try:
+        # 检查系统托盘支持
+        from PyQt6.QtWidgets import QSystemTrayIcon
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            logger.error("系统托盘不可用")
+            return None
+
+        # 创建托盘管理器
+        tray_manager = SystemTrayManager(
+            floating_manager=app_manager.floating_manager
+        )
+
+        # 创建功能管理器
+        feature_manager = TrayFeatureManager()
+
+        # 创建状态监控器
+        status_monitor = TrayStatusManager()
+
+        # 设置信号连接
+        setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger)
+
+        # 启动状态监控
+        status_monitor.start_monitoring()
+
+        logger.info("托盘系统组件创建完成")
+
+        return {
+            'tray_manager': tray_manager,
+            'feature_manager': feature_manager,
+            'status_monitor': status_monitor
+        }
+
+    except Exception as e:
+        logger.error(f"创建托盘系统失败: {e}")
+        return None
+
+
+def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger):
+    """设置托盘系统信号连接"""
+    try:
+        # 托盘管理器信号连接
+        tray_manager.floating_toggled.connect(lambda visible: toggle_floating_widget(app_manager, visible, logger))
+        tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
+        tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
+        tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
+        tray_manager.plugins_module_requested.connect(feature_manager.show_plugin_marketplace)
+        tray_manager.time_calibration_requested.connect(feature_manager.show_time_calibration)
+
+        # 状态监控器信号连接
+        status_monitor.alert_triggered.connect(lambda alert_type, message: handle_system_alert(app_manager, alert_type, message, logger))
+        status_monitor.status_changed.connect(lambda status_type, status_data: update_tray_status(tray_manager, status_monitor, status_type, status_data))
+
+        # 功能管理器信号连接
+        feature_manager.notification_sent.connect(lambda title, message: send_tray_notification(app_manager, title, message, logger))
+
+        logger.info("托盘系统信号连接完成")
+
+    except Exception as e:
+        logger.error(f"设置托盘信号连接失败: {e}")
+
+
+def toggle_floating_widget(app_manager, visible, logger):
+    """切换浮窗显示状态"""
+    try:
+        if app_manager.floating_manager:
+            if visible:
+                app_manager.floating_manager.show_widget()
+            else:
+                app_manager.floating_manager.hide_widget()
+            logger.debug(f"浮窗状态切换: {visible}")
+        else:
+            logger.warning("浮窗管理器不可用")
+    except Exception as e:
+        logger.error(f"切换浮窗状态失败: {e}")
+
+
+def handle_system_alert(app_manager, alert_type, message, logger):
+    """处理系统警告"""
+    try:
+        # 发送通知
+        if app_manager.notification_manager:
+            app_manager.notification_manager.send_notification(
+                title="系统警告",
+                message=message,
+                notification_type="warning",
+                duration=5000
+            )
+
+        logger.warning(f"系统警告 [{alert_type}]: {message}")
+
+    except Exception as e:
+        logger.error(f"处理系统警告失败: {e}")
+
+
+def update_tray_status(tray_manager, status_monitor, status_type, status_data):
+    """更新托盘状态显示"""
+    try:
+        if status_type == 'system':
+            # 更新托盘提示文本
+            summary = status_monitor.get_status_summary()
+            tray_manager.set_tooltip(f"TimeNest - {summary}")
+    except Exception as e:
+        pass  # 静默处理状态更新错误
+
+
+def send_tray_notification(app_manager, title, message, logger):
+    """发送托盘通知"""
+    try:
+        if app_manager.notification_manager:
+            app_manager.notification_manager.send_notification(
+                title=title,
+                message=message,
+                notification_type="info"
+            )
+    except Exception as e:
+        logger.error(f"发送托盘通知失败: {e}")
+
+
+def cleanup_tray_system(tray_system, logger):
+    """清理托盘系统"""
+    try:
+        if 'status_monitor' in tray_system:
+            tray_system['status_monitor'].cleanup()
+
+        if 'feature_manager' in tray_system:
+            tray_system['feature_manager'].cleanup()
+
+        if 'tray_manager' in tray_system:
+            tray_system['tray_manager'].cleanup()
+
+        logger.info("托盘系统清理完成")
+
+    except Exception as e:
+        logger.error(f"清理托盘系统失败: {e}")
+
 def main():
     """
     主函数
@@ -187,49 +327,38 @@ def main():
             )
             sys.exit(1)
         
-        # 创建系统托盘（纯托盘模式）
-        system_tray = SystemTray()
+        # 创建完整的托盘系统
+        tray_system = create_tray_system(app_manager, logger)
+        if not tray_system:
+            logger.error("托盘系统创建失败")
+            QMessageBox.critical(
+                None,
+                "TimeNest - 托盘错误",
+                "系统托盘不可用或创建失败。"
+            )
+            sys.exit(1)
 
-        # 连接托盘信号到模块管理器
-        if hasattr(app_manager, 'module_manager') and app_manager.module_manager:
-            system_tray.schedule_module_requested.connect(app_manager.module_manager.open_schedule_module)
-            system_tray.settings_module_requested.connect(app_manager.module_manager.open_settings_module)
-            system_tray.plugins_module_requested.connect(app_manager.module_manager.open_plugins_module)
-            system_tray.floating_settings_requested.connect(app_manager.module_manager.open_floating_settings)
-            system_tray.time_calibration_requested.connect(app_manager.module_manager.open_time_calibration)
-            logger.info("托盘信号已连接到模块管理器")
-        else:
-            logger.warning("模块管理器不可用，使用备用处理方法")
-            # 备用处理方法
-            system_tray.schedule_module_requested.connect(lambda: _show_message("课程表管理", "课程表管理功能正在开发中..."))
-            system_tray.settings_module_requested.connect(lambda: _show_message("应用设置", "应用设置功能正在开发中..."))
-            system_tray.plugins_module_requested.connect(lambda: _show_message("插件市场", "插件市场功能正在开发中..."))
-            system_tray.floating_settings_requested.connect(lambda: _show_message("浮窗设置", "浮窗设置功能正在开发中..."))
-            system_tray.time_calibration_requested.connect(lambda: _show_message("时间校准", "时间校准功能正在开发中..."))
-
-        # 连接浮窗控制信号
-        if app_manager.floating_manager:
-            system_tray.toggle_floating_widget_requested.connect(app_manager.floating_manager.toggle_widget)
-            logger.info("浮窗控制信号已连接")
-        else:
-            logger.warning("浮窗管理器不可用")
-            system_tray.toggle_floating_widget_requested.connect(lambda: _show_message("浮窗控制", "浮窗功能不可用"))
-
-        # 连接退出信号 - 只有托盘退出按钮能退出程序
-        system_tray.quit_requested.connect(app.quit)
-        logger.info("退出信号已连接")
+        # 连接退出信号
+        tray_system['tray_manager'].quit_requested.connect(app.quit)
+        logger.info("托盘系统初始化完成")
 
         # 设置应用退出策略 - 关闭最后一个窗口时不退出程序
         app.setQuitOnLastWindowClosed(False)
 
         # 启动智能浮窗系统
+        floating_visible = False
         if app_manager.floating_manager:
             # 自动创建并显示智能浮窗
             if app_manager.floating_manager.create_widget():
                 app_manager.floating_manager.show_widget()
+                floating_visible = True
                 logger.info("智能浮窗启动成功")
             else:
                 logger.warning("智能浮窗启动失败")
+
+        # 更新托盘状态
+        if tray_system and floating_visible:
+            tray_system['tray_manager'].update_floating_status(floating_visible)
 
         logger.info("系统托盘图标显示成功")
 
@@ -240,6 +369,12 @@ def main():
         
         # 清理资源
         logger.info("TimeNest 正在关闭...")
+
+        # 清理托盘系统
+        if tray_system:
+            cleanup_tray_system(tray_system, logger)
+
+        # 清理应用管理器
         app_manager.cleanup()
         logger.info("TimeNest 已关闭")
         
