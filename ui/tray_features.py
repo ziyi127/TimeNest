@@ -369,6 +369,34 @@ class TrayFeatureManager(QObject):
                     'icon': '📋',
                     'action': 'daily_summary',
                     'shortcut': 'Ctrl+D'
+                },
+                {
+                    'name': '添加资源',
+                    'description': '快速添加学习资源',
+                    'icon': '📁',
+                    'action': 'quick_add_resource',
+                    'shortcut': 'Ctrl+R'
+                },
+                {
+                    'name': '创建计划',
+                    'description': '创建学习计划',
+                    'icon': '📅',
+                    'action': 'create_study_plan',
+                    'shortcut': 'Ctrl+P'
+                },
+                {
+                    'name': '环境优化',
+                    'description': '优化学习环境',
+                    'icon': '🔧',
+                    'action': 'optimize_environment',
+                    'shortcut': 'Ctrl+E'
+                },
+                {
+                    'name': '快速笔记',
+                    'description': '记录学习笔记',
+                    'icon': '📝',
+                    'action': 'quick_note',
+                    'shortcut': 'Ctrl+N'
                 }
             ]
 
@@ -381,6 +409,317 @@ class TrayFeatureManager(QObject):
         except Exception as e:
             self.logger.error(f"获取快速操作失败: {e}")
             return []
+
+    def quick_add_resource(self):
+        """快速添加学习资源"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("快速添加资源", "应用管理器不可用")
+                return
+
+            # 检查是否有资源管理器
+            if hasattr(self.app_manager, 'resource_manager'):
+                from PyQt6.QtWidgets import QInputDialog, QFileDialog
+
+                # 获取资源标题
+                title, ok = QInputDialog.getText(None, "添加资源", "资源标题:")
+                if not ok or not title:
+                    return
+
+                # 选择文件
+                file_path, _ = QFileDialog.getOpenFileName(
+                    None,
+                    "选择资源文件",
+                    "",
+                    "所有文件 (*.*)"
+                )
+
+                if file_path:
+                    # 获取科目
+                    subject, ok = QInputDialog.getText(None, "添加资源", "科目:", text="通用")
+                    if not ok:
+                        subject = "通用"
+
+                    # 添加资源
+                    from core.resource_manager import ResourceType
+
+                    # 根据文件扩展名确定类型
+                    ext = Path(file_path).suffix.lower()
+                    if ext in {'.pdf', '.doc', '.docx', '.txt'}:
+                        resource_type = ResourceType.DOCUMENT
+                    elif ext in {'.mp4', '.avi', '.mkv'}:
+                        resource_type = ResourceType.VIDEO
+                    elif ext in {'.mp3', '.wav', '.flac'}:
+                        resource_type = ResourceType.AUDIO
+                    elif ext in {'.jpg', '.png', '.gif'}:
+                        resource_type = ResourceType.IMAGE
+                    else:
+                        resource_type = ResourceType.DOCUMENT
+
+                    resource_id = self.app_manager.resource_manager.add_resource(
+                        title=title,
+                        resource_type=resource_type,
+                        subject=subject,
+                        file_path=file_path
+                    )
+
+                    if resource_id:
+                        self.send_notification("资源添加成功", f"已添加资源: {title}")
+                        self.feature_activated.emit("quick_add_resource")
+                    else:
+                        self._show_error("添加资源", "资源添加失败")
+                else:
+                    # 添加链接资源
+                    url, ok = QInputDialog.getText(None, "添加资源", "资源链接 (可选):")
+                    if ok and url:
+                        resource_id = self.app_manager.resource_manager.add_resource(
+                            title=title,
+                            resource_type=ResourceType.LINK,
+                            subject="通用",
+                            url=url
+                        )
+
+                        if resource_id:
+                            self.send_notification("资源添加成功", f"已添加链接: {title}")
+                            self.feature_activated.emit("quick_add_resource")
+            else:
+                self._show_feature_unavailable("快速添加资源", "资源管理器功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"快速添加资源失败: {e}")
+            self._show_error("快速添加资源", str(e))
+
+    def create_study_plan(self):
+        """创建学习计划"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("创建学习计划", "应用管理器不可用")
+                return
+
+            # 检查是否有学习计划器
+            if hasattr(self.app_manager, 'study_planner'):
+                from PyQt6.QtWidgets import QInputDialog, QMessageBox
+                from datetime import date, timedelta
+
+                # 获取计划名称
+                plan_name, ok = QInputDialog.getText(None, "创建学习计划", "计划名称:")
+                if not ok or not plan_name:
+                    return
+
+                # 获取计划时长
+                duration_options = ["1周", "2周", "1个月", "3个月"]
+                duration, ok = QInputDialog.getItem(None, "创建学习计划", "计划时长:", duration_options, 0, False)
+                if not ok:
+                    return
+
+                # 计算结束日期
+                start_date = date.today()
+                if duration == "1周":
+                    end_date = start_date + timedelta(weeks=1)
+                elif duration == "2周":
+                    end_date = start_date + timedelta(weeks=2)
+                elif duration == "1个月":
+                    end_date = start_date + timedelta(days=30)
+                else:  # 3个月
+                    end_date = start_date + timedelta(days=90)
+
+                # 创建计划
+                from core.study_planner import PlanType
+                plan_id = self.app_manager.study_planner.generate_study_plan(
+                    plan_name=plan_name,
+                    plan_type=PlanType.CUSTOM,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+
+                if plan_id:
+                    self.send_notification("学习计划创建成功", f"已创建计划: {plan_name}")
+                    self.feature_activated.emit("create_study_plan")
+                else:
+                    self._show_error("创建学习计划", "计划创建失败")
+            else:
+                self._show_feature_unavailable("创建学习计划", "学习计划器功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"创建学习计划失败: {e}")
+            self._show_error("创建学习计划", str(e))
+
+    def optimize_environment(self):
+        """优化学习环境"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("环境优化", "应用管理器不可用")
+                return
+
+            # 检查是否有环境优化器
+            if hasattr(self.app_manager, 'environment_optimizer'):
+                # 获取环境总结
+                summary = self.app_manager.environment_optimizer.get_environment_summary()
+
+                if summary.get('status') == 'success':
+                    score = summary.get('overall_score', 0.0)
+                    grade = summary.get('grade', '未知')
+                    suggestions_count = summary.get('suggestions_count', 0)
+
+                    # 显示环境状态
+                    from PyQt6.QtWidgets import QMessageBox
+
+                    message = f"""当前学习环境状态:
+
+评分: {score:.1%}
+等级: {grade}
+优化建议: {suggestions_count} 条
+
+是否执行自动优化?"""
+
+                    reply = QMessageBox.question(
+                        None,
+                        "学习环境优化",
+                        message,
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                    )
+
+                    if reply == QMessageBox.StandardButton.Yes:
+                        # 执行自动优化
+                        from core.environment_optimizer import EnvironmentFactor
+
+                        optimized = False
+                        if score < 0.7:
+                            # 尝试优化系统性能
+                            if self.app_manager.environment_optimizer.apply_auto_optimization(
+                                EnvironmentFactor.SYSTEM_PERFORMANCE
+                            ):
+                                optimized = True
+
+                            # 尝试优化网络
+                            if self.app_manager.environment_optimizer.apply_auto_optimization(
+                                EnvironmentFactor.NETWORK_QUALITY
+                            ):
+                                optimized = True
+
+                        if optimized:
+                            self.send_notification("环境优化完成", "学习环境已优化")
+                        else:
+                            self.send_notification("环境优化", "当前环境状态良好，无需优化")
+
+                        self.feature_activated.emit("optimize_environment")
+                else:
+                    self._show_feature_unavailable("环境优化", "环境数据不可用")
+            else:
+                self._show_feature_unavailable("环境优化", "环境优化器功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"优化学习环境失败: {e}")
+            self._show_error("环境优化", str(e))
+
+    def show_daily_summary(self):
+        """显示今日学习总结"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("今日总结", "应用管理器不可用")
+                return
+
+            # 检查是否有学习助手
+            if hasattr(self.app_manager, 'study_assistant'):
+                daily_summary = self.app_manager.study_assistant.get_daily_study_summary()
+
+                if daily_summary:
+                    from PyQt6.QtWidgets import QMessageBox
+
+                    total_time = daily_summary.get('total_study_time', 0)
+                    session_count = daily_summary.get('session_count', 0)
+                    tasks_completed = daily_summary.get('tasks_completed', 0)
+                    tasks_total = daily_summary.get('tasks_total', 0)
+                    goal_progress = daily_summary.get('goal_progress', 0.0)
+
+                    summary_text = f"""今日学习总结:
+
+📚 学习时间: {total_time} 分钟
+🎯 学习会话: {session_count} 次
+✅ 完成任务: {tasks_completed}/{tasks_total}
+📊 目标进度: {goal_progress:.1%}
+
+{self._get_encouragement_message(goal_progress)}"""
+
+                    QMessageBox.information(None, "今日学习总结", summary_text)
+                    self.feature_activated.emit("daily_summary")
+                else:
+                    self._show_feature_unavailable("今日总结", "暂无今日学习数据")
+            else:
+                self._show_feature_unavailable("今日总结", "学习助手功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"显示今日总结失败: {e}")
+            self._show_error("今日总结", str(e))
+
+    def _get_encouragement_message(self, progress: float) -> str:
+        """获取鼓励消息"""
+        if progress >= 1.0:
+            return "🎉 恭喜！今日目标已完成！"
+        elif progress >= 0.8:
+            return "💪 很棒！即将完成今日目标！"
+        elif progress >= 0.5:
+            return "👍 不错！已完成一半目标！"
+        elif progress >= 0.2:
+            return "🌟 加油！继续保持学习节奏！"
+        else:
+            return "🚀 开始学习吧！每一步都是进步！"
+
+    def quick_note(self):
+        """快速记笔记"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("快速笔记", "应用管理器不可用")
+                return
+
+            # 检查是否有资源管理器
+            if hasattr(self.app_manager, 'resource_manager'):
+                from PyQt6.QtWidgets import QInputDialog, QTextEdit, QDialog, QVBoxLayout, QPushButton
+
+                # 创建笔记对话框
+                dialog = QDialog()
+                dialog.setWindowTitle("快速笔记")
+                dialog.setFixedSize(400, 300)
+
+                layout = QVBoxLayout(dialog)
+
+                # 标题输入
+                title_input = QInputDialog()
+                title, ok = QInputDialog.getText(dialog, "快速笔记", "笔记标题:")
+                if not ok or not title:
+                    return
+
+                # 内容输入
+                content_edit = QTextEdit()
+                content_edit.setPlaceholderText("在这里输入笔记内容...")
+                layout.addWidget(content_edit)
+
+                # 按钮
+                save_button = QPushButton("保存笔记")
+                save_button.clicked.connect(dialog.accept)
+                layout.addWidget(save_button)
+
+                if dialog.exec() == QDialog.DialogCode.Accepted:
+                    content = content_edit.toPlainText()
+                    if content.strip():
+                        # 保存笔记
+                        note_id = self.app_manager.resource_manager.add_note(
+                            title=title,
+                            content=content,
+                            subject="通用"
+                        )
+
+                        if note_id:
+                            self.send_notification("笔记保存成功", f"已保存笔记: {title}")
+                            self.feature_activated.emit("quick_note")
+                        else:
+                            self._show_error("快速笔记", "笔记保存失败")
+            else:
+                self._show_feature_unavailable("快速笔记", "资源管理器功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"快速记笔记失败: {e}")
+            self._show_error("快速笔记", str(e))
 
 
 class QuickActionDialog(QDialog):

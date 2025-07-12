@@ -75,6 +75,11 @@ class AppManager(QObject):
         self.notification_enhancement = None
         self.study_assistant = None
 
+        # 新增细分功能组件
+        self.environment_optimizer = None
+        self.study_planner = None
+        self.resource_manager = None
+
         # 定时器用于定期更新
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self._periodic_update)
@@ -239,7 +244,41 @@ class AppManager(QObject):
             except Exception as e:
                 self.logger.error(f"智能学习助手初始化失败: {e}")
 
-            self.logger.info("增强功能组件初始化完成")
+            # 4. 初始化学习环境优化器
+            try:
+                from core.environment_optimizer import EnvironmentOptimizer
+                self.environment_optimizer = EnvironmentOptimizer(self.config_manager)
+                self.logger.info("学习环境优化器初始化成功")
+            except ImportError:
+                self.logger.warning("学习环境优化器模块不可用")
+            except Exception as e:
+                self.logger.error(f"学习环境优化器初始化失败: {e}")
+
+            # 5. 初始化学习计划生成器
+            try:
+                from core.study_planner import StudyPlannerManager
+                self.study_planner = StudyPlannerManager(
+                    self.config_manager,
+                    self.schedule_enhancement,
+                    self.study_assistant
+                )
+                self.logger.info("学习计划生成器初始化成功")
+            except ImportError:
+                self.logger.warning("学习计划生成器模块不可用")
+            except Exception as e:
+                self.logger.error(f"学习计划生成器初始化失败: {e}")
+
+            # 6. 初始化学习资源管理器
+            try:
+                from core.resource_manager import ResourceManager
+                self.resource_manager = ResourceManager(self.config_manager)
+                self.logger.info("学习资源管理器初始化成功")
+            except ImportError:
+                self.logger.warning("学习资源管理器模块不可用")
+            except Exception as e:
+                self.logger.error(f"学习资源管理器初始化失败: {e}")
+
+            self.logger.info("所有增强功能组件初始化完成")
 
         except Exception as e:
             self.logger.error(f"初始化增强功能组件失败: {e}")
