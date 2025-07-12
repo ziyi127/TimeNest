@@ -234,12 +234,12 @@ class SmartFloatingWidget(QWidget):
     def init_ui(self) -> None:
         """初始化UI"""
         try:
-            # 设置窗口属性 - 确保不在任务栏显示且始终置顶
+            # 设置窗口属性 - 真正的悬浮窗，不在任务栏显示
             window_flags = (
                 Qt.WindowType.FramelessWindowHint |
                 Qt.WindowType.WindowStaysOnTopHint |
-                Qt.WindowType.Tool |
-                Qt.WindowType.BypassWindowManagerHint
+                Qt.WindowType.Popup |  # 使用Popup类型实现真正的悬浮效果
+                Qt.WindowType.NoDropShadowWindowHint
             )
 
             # 添加鼠标穿透标志（仅在启用时）
@@ -249,10 +249,17 @@ class SmartFloatingWidget(QWidget):
             self.setWindowFlags(window_flags)
             self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-            # 确保始终置顶，但允许交互
+            # 设置悬浮窗属性
             self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
-            if self.mouse_transparent:
-                self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            self.setAttribute(Qt.WidgetAttribute.WA_X11NetWmWindowTypeDesktop, False)
+
+            # 确保不在任务栏显示
+            self.setWindowFlag(Qt.WindowType.WindowDoesNotAcceptFocus, False)
+
+            # 设置窗口级别
+            if hasattr(self, 'setWindowLevel'):
+                self.setWindowLevel(1)  # 浮动级别
             
             # 设置大小
             self.setFixedSize(self.default_width, self.default_height)
@@ -982,7 +989,8 @@ class SmartFloatingWidget(QWidget):
             window_flags = (
                 Qt.WindowType.FramelessWindowHint |
                 Qt.WindowType.WindowStaysOnTopHint |
-                Qt.WindowType.Tool
+                Qt.WindowType.Popup |
+                Qt.WindowType.NoDropShadowWindowHint
             )
 
             if self.mouse_transparent:
