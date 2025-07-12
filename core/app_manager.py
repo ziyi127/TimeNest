@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
+from functools import lru_cache
 
 # 第三方库
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
@@ -178,17 +179,30 @@ class AppManager(QObject):
                 return False
 
     def _initialize_enhanced_features(self):
-        """初始化增强功能"""
+        """初始化增强功能（延迟加载优化）"""
         try:
-            self.logger.info("初始化增强功能...")
-            
-            # 使用通用方法初始化各功能
-            self._initialize_feature(
-                "模块管理器", 
-                "core.module_manager", 
-                "ModuleManager", 
-                (self,)
-            )
+            self.logger.info("准备增强功能（延迟加载）...")
+
+            # 标记增强功能未初始化，将在需要时加载
+            self._enhanced_features_loaded = False
+            self._feature_loading_cache = {}
+
+        except Exception as e:
+            self.logger.error(f"准备增强功能失败: {e}")
+
+    def _load_enhanced_feature(self, feature_name: str):
+        """按需加载增强功能"""
+        if feature_name in self._feature_loading_cache:
+            return self._feature_loading_cache[feature_name]
+
+        try:
+            if feature_name == "模块管理器":
+                result = self._initialize_feature(
+                    "模块管理器",
+                    "core.module_manager",
+                    "ModuleManager",
+                    (self,)
+                )
             
             self._initialize_feature(
                 "主题市场", 

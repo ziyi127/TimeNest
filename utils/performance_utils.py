@@ -122,29 +122,41 @@ def lru_cache(max_size: int = 128, ttl: Optional[float] = None):
     return decorator
 
 
-def timing_decorator(func: F) -> F:
+def timing_decorator(threshold_ms: float = 100.0):
     """
     性能计时装饰器
     记录函数执行时间
+
+    Args:
+        threshold_ms: 警告阈值（毫秒），超过此时间会记录警告
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        try:
-            result = func(*args, **kwargs)
-            return result
-        finally:
-            end_time = time.perf_counter()
-            execution_time = (end_time - start_time) * 1000  # 转换为毫秒
-            
-            # 记录到日志或统计系统
-            func_name = f"{func.__module__}.{func.__qualname__}"
-            if execution_time > 100:  # 超过100ms的调用记录警告
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"慢函数调用: {func_name} 耗时 {execution_time:.2f}ms")
-    
-    return wrapper
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.perf_counter()
+            try:
+                result = func(*args, **kwargs)
+                return result
+            finally:
+                end_time = time.perf_counter()
+                execution_time = (end_time - start_time) * 1000  # 转换为毫秒
+
+                # 只在超过阈值时记录
+                if execution_time > threshold_ms:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    func_name = f"{func.__module__}.{func.__qualname__}"
+                    logger.warning(f"慢函数调用: {func_name} 耗时 {execution_time:.2f}ms")
+
+        return wrapper
+
+    # 支持直接使用 @timing_decorator 或 @timing_decorator()
+    if callable(threshold_ms):
+        func = threshold_ms
+        threshold_ms = 100.0
+        return decorator(func)
+
+    return decorator
 
 
 def debounce(wait: float):
@@ -273,7 +285,7 @@ def batch_processor(batch_size: int = 100, flush_interval: float = 1.0):
     """
     批处理装饰器
     将多个调用批量处理以提高性能
-    
+
     Args:
         batch_size: 批处理大小
         flush_interval: 强制刷新间隔（秒）
@@ -282,36 +294,44 @@ def batch_processor(batch_size: int = 100, flush_interval: float = 1.0):
         batch = []
         last_flush = time.time()
         lock = threading.Lock()
-        
+
         def flush_batch():
             nonlocal batch, last_flush
             if batch:
                 # 批量处理
-                func(batch.copy())
-                batch.clear()
-                last_flush = time.time()
-        
+                try:
+                    func(batch.copy())
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"批处理失败: {e}")
+                finally:
+                    batch.clear()
+                    last_flush = time.time()
+
         @functools.wraps(func)
         def wrapper(item):
             nonlocal batch, last_flush
-            
+
             with lock:
                 batch.append(item)
-                
+
                 # 检查是否需要刷新
                 should_flush = (
                     len(batch) >= batch_size or
                     time.time() - last_flush >= flush_interval
                 )
-                
+
                 if should_flush:
                     flush_batch()
-        
-        # 添加手动刷新方法
+
+        # 添加手动刷新方法和状态查询
         wrapper.flush = lambda: flush_batch()
-        
+        wrapper.get_batch_size = lambda: len(batch)
+        wrapper.clear_batch = lambda: batch.clear()
+
         return wrapper
-    
+
     return decorator
 
 

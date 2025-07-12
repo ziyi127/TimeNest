@@ -252,14 +252,19 @@ class PerformanceMonitor(QThread):
         while self.running:
             try:
                 metrics = self._collect_metrics()
+
+                # 限制历史记录长度以节省内存
+                if len(self.metrics_history) >= 1000:
+                    self.metrics_history = self.metrics_history[-500:]  # 保留最近500条
+
                 self.metrics_history.append(metrics)
                 self.metrics_updated.emit(metrics)
-                
+
                 # 检查性能警告
                 self._check_performance_warnings(metrics)
-                
+
                 time.sleep(self.interval_seconds)
-                
+
             except Exception as e:
                 self.logger.error(f"性能监控错误: {e}")
                 time.sleep(self.interval_seconds)
@@ -466,6 +471,10 @@ class PerformanceManager(QObject):
         try:
             # 清理过期缓存
             self._cleanup_expired_cache()
+
+            # 清理性能监控历史记录
+            if hasattr(self.monitor, 'metrics_history') and len(self.monitor.metrics_history) > 500:
+                self.monitor.metrics_history = self.monitor.metrics_history[-200:]
 
             # 执行垃圾回收
             if datetime.now() - self.last_gc_time > self.gc_interval:

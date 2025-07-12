@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
 from enum import Enum
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QPalette, QColor
@@ -239,16 +240,22 @@ class ThemeManager(QObject):
     def _load_custom_themes(self):
         """加载自定义主题"""
         try:
-            for theme_file in self.themes_dir.glob("*.json"):
+            theme_files = list(self.themes_dir.glob("*.json"))
+            for theme_file in theme_files:
                 try:
+                    # 检查文件大小，避免加载过大的文件
+                    if theme_file.stat().st_size > 1024 * 1024:  # 1MB限制
+                        self.logger.warning(f"主题文件过大，跳过: {theme_file}")
+                        continue
+
                     with open(theme_file, 'r', encoding='utf-8') as f:
                         theme_data = json.load(f)
-                    
+
                     theme = Theme.from_dict(theme_data)
                     self.themes[theme.metadata.id] = theme
-                    
+
                     self.logger.debug(f"加载自定义主题: {theme.metadata.name}")
-                    
+
                 except Exception as e:
                     self.logger.error(f"加载主题文件失败 {theme_file}: {e}")
             

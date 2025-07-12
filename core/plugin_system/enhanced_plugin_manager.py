@@ -8,6 +8,7 @@ Integrates all plugin system components for comprehensive plugin management
 import logging
 from typing import Dict, List, Optional, Any
 from pathlib import Path
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.base_manager import BaseManager
@@ -347,6 +348,11 @@ class EnhancedPluginManager(BaseManager):
             manifest_file = plugin_dir / "plugin.json"
             if not manifest_file.exists():
                 self.logger.warning(f"No plugin.json found in {plugin_dir}")
+                return None
+
+            # 检查文件大小
+            if manifest_file.stat().st_size > 1024 * 100:  # 100KB限制
+                self.logger.warning(f"Plugin manifest too large: {manifest_file}")
                 return None
 
             import json

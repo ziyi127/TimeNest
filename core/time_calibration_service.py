@@ -12,6 +12,7 @@ import struct
 import threading
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional, Dict, Any
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt6.QtCore import QUrl
@@ -54,9 +55,9 @@ class TimeCalibrationService(BaseManager):
             "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Shanghai"
         ]
         
-        # 网络管理器
-        self.network_manager = QNetworkAccessManager()
-        
+        # 网络管理器（延迟初始化）
+        self._network_manager = None
+
         # 校准状态
         self.is_calibrating = False
         self.last_calibration_time = None
@@ -73,7 +74,14 @@ class TimeCalibrationService(BaseManager):
         self.calibration_timeout = 10  # 10秒超时
         
         self.logger.info("时间校准服务初始化完成")
-    
+
+    @property
+    def network_manager(self) -> QNetworkAccessManager:
+        """延迟初始化网络管理器"""
+        if self._network_manager is None:
+            self._network_manager = QNetworkAccessManager()
+        return self._network_manager
+
     def initialize(self) -> bool:
         """初始化服务"""
         try:
@@ -223,10 +231,12 @@ class TimeCalibrationService(BaseManager):
             self._finish_calibration(False, 0.0, f"校准失败: {e}")
     
     def _get_ntp_times(self) -> List[float]:
-        """获取NTP时间"""
+        """获取NTP时间（优化版本）"""
         times = []
-        
-        for server in self.ntp_servers[:3]:  # 只尝试前3个服务器
+        max_attempts = min(3, len(self.ntp_servers))
+
+        for i in range(max_attempts):
+            server = self.ntp_servers[i]
             try:
                 ntp_time = self._query_ntp_server(server)
                 if ntp_time:
@@ -236,7 +246,7 @@ class TimeCalibrationService(BaseManager):
             except Exception as e:
                 self.logger.debug(f"NTP服务器 {server} 查询失败: {e}")
                 continue
-        
+
         return times
     
     def _query_ntp_server(self, server: str, timeout: int = 5) -> Optional[float]:

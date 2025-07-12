@@ -10,6 +10,7 @@ import yaml
 from typing import List, Dict, Optional, Any
 from datetime import datetime, date, time, timedelta
 from pathlib import Path
+from functools import lru_cache
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.schedule import Schedule, ClassItem, TimeSlot, Subject
@@ -304,7 +305,7 @@ class ScheduleManager(QObject):
 
         current_date = current_time.date()
         current_time_only = current_time.time()
-        weekday = self._get_weekday_name(current_date)
+        weekday = self._get_weekday_name(current_date.weekday())
 
         # 获取当天的课程
         today_classes = self.current_schedule.get_classes_by_weekday(weekday)
@@ -329,7 +330,7 @@ class ScheduleManager(QObject):
         
         current_date = current_time.date()
         current_time_only = current_time.time()
-        weekday = self._get_weekday_name(current_date)
+        weekday = self._get_weekday_name(current_date.weekday())
         
         today_classes = self.current_schedule.get_classes_by_weekday(weekday)
         
@@ -352,10 +353,11 @@ class ScheduleManager(QObject):
                 self.class_status_cache[class_item.id] = status
                 self.class_status_changed.emit(class_item.id, status)
     
-    def _get_weekday_name(self, date_obj: date) -> str:
-        """获取星期名称"""
+    @lru_cache(maxsize=7)
+    def _get_weekday_name(self, weekday_index: int) -> str:
+        """获取星期名称（缓存版本）"""
         weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-        return weekdays[date_obj.weekday()]
+        return weekdays[weekday_index]
     
     def get_current_class(self) -> Optional[ClassItem]:
         """获取当前课程"""
@@ -367,7 +369,7 @@ class ScheduleManager(QObject):
             return []
         
         today = date.today()
-        weekday = self._get_weekday_name(today)
+        weekday = self._get_weekday_name(today.weekday())
         return self.current_schedule.get_classes_by_weekday(weekday)
     
     def get_tomorrow_schedule(self) -> List[ClassItem]:
@@ -376,7 +378,7 @@ class ScheduleManager(QObject):
             return []
         
         tomorrow = date.today() + timedelta(days=1)
-        weekday = self._get_weekday_name(tomorrow)
+        weekday = self._get_weekday_name(tomorrow.weekday())
         return self.current_schedule.get_classes_by_weekday(weekday)
     
     def get_schedule(self) -> Optional[Schedule]:
