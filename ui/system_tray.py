@@ -13,6 +13,10 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 
+# 导入错误处理
+from core.error_handler import error_handler, safe_call_method, safe_getattr
+from core.safe_logger import get_cached_safe_logger
+
 
 class SystemTray(QObject):
     """
@@ -44,7 +48,7 @@ class SystemTray(QObject):
 
     def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
-        self.logger = logging.getLogger(f'{__name__}.SystemTray')
+        self.logger = get_cached_safe_logger(f'{__name__}.SystemTray')
         self.tray_icon: Optional[QSystemTrayIcon] = None
 
         if QSystemTrayIcon.isSystemTrayAvailable():
