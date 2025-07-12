@@ -180,7 +180,11 @@ class SystemTray(QObject):
             self.logger.info("系统托盘已清理")
 
 
-class SystemTrayManager(QObject):
+# 向后兼容的别名 - 统一使用 SystemTray 类
+SystemTrayManager = SystemTray
+
+
+class _LegacySystemTrayManager(QObject):
     """
     系统托盘管理器 - 完整版本
 

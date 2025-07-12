@@ -1004,11 +1004,29 @@ class FloatingSettingsDialog(QDialog):
             rotation_interval = self.settings.get('rotation_interval', 5000)
             self.floating_widget.set_auto_rotate(auto_rotate, rotation_interval)
 
-            # 重新加载模块配置
-            self.floating_widget.load_config()
+            # 强制刷新浮窗显示
+            if hasattr(self.floating_widget, 'force_refresh_display'):
+                self.floating_widget.force_refresh_display()
+            else:
+                # 兼容旧版本的方法
+                # 应用模块配置
+                modules_config = self.settings.get('modules', {})
+                if modules_config:
+                    # 更新浮窗的模块配置
+                    self.floating_widget.config['modules'] = modules_config
 
-            # 应用主题
-            self.floating_widget.apply_theme()
+                    # 重新初始化模块
+                    if hasattr(self.floating_widget, 'reinitialize_modules'):
+                        self.floating_widget.reinitialize_modules()
+
+                # 重新加载配置
+                self.floating_widget.load_config()
+
+                # 应用主题
+                self.floating_widget.apply_theme()
+
+                # 强制更新显示
+                self.floating_widget.update_display()
 
         except Exception as e:
             self.logger.error(f"应用设置到浮窗失败: {e}")

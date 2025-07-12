@@ -142,13 +142,18 @@ class SmartFloatingWidget(QWidget):
                 
                 # 加载模块配置
                 modules_config = self.config.get('modules', {})
+                self.logger.debug(f"从配置加载的模块配置: {modules_config}")
+
                 self.enabled_modules = [
                     module_id for module_id, config in modules_config.items()
                     if config.get('enabled', True)
                 ]
 
+                self.logger.debug(f"解析出的启用模块: {self.enabled_modules}")
+
                 # 如果没有启用的模块，使用默认模块
                 if not self.enabled_modules:
+                    self.logger.warning("没有启用的模块，使用默认配置")
                     self.enabled_modules = ['time', 'schedule']
                     # 保存默认模块配置
                     default_modules_config = {
@@ -156,23 +161,45 @@ class SmartFloatingWidget(QWidget):
                         'schedule': {'enabled': True, 'order': 1}
                     }
                     self.config['modules'] = default_modules_config
+                    # 立即保存默认配置
+                    self.save_config()
 
                 # 按顺序排序
                 self.module_order = sorted(
                     self.enabled_modules,
                     key=lambda x: modules_config.get(x, {}).get('order', 0)
                 )
+
+                self.logger.info(f"最终模块配置 - 启用: {self.enabled_modules}, 顺序: {self.module_order}")
                 
         except Exception as e:
             self.logger.warning(f"加载配置失败: {e}")
             # 使用默认配置
             self.enabled_modules = ['time', 'schedule']
             self.module_order = ['time', 'schedule']
+            self.logger.info(f"使用默认模块配置: {self.enabled_modules}")
     
     def save_config(self) -> None:
         """保存浮窗配置"""
         try:
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
+                # 构建模块配置
+                modules_config = {}
+                for i, module_id in enumerate(self.enabled_modules):
+                    modules_config[module_id] = {
+                        'enabled': True,
+                        'order': i
+                    }
+
+                # 添加未启用的模块
+                all_available_modules = ['time', 'schedule', 'countdown', 'weather', 'system']
+                for module_id in all_available_modules:
+                    if module_id not in modules_config:
+                        modules_config[module_id] = {
+                            'enabled': False,
+                            'order': len(modules_config)
+                        }
+
                 self.config.update({
                     'width': self.width(),
                     'height': self.height(),
@@ -182,7 +209,8 @@ class SmartFloatingWidget(QWidget):
                     'mouse_transparent': self.mouse_transparent,
                     'fixed_position': self.fixed_position,
                     'auto_rotate_content': self.auto_rotate_content,
-                    'rotation_interval': self.rotation_interval
+                    'rotation_interval': self.rotation_interval,
+                    'modules': modules_config
                 })
                 
                 self.app_manager.config_manager.set_config('floating_widget', self.config, 'component')
@@ -272,7 +300,79 @@ class SmartFloatingWidget(QWidget):
 
         except Exception as e:
             self.logger.error(f"初始化模块失败: {e}")
-    
+
+    def reinitialize_modules(self) -> None:
+        """重新初始化模块（用于设置更改后）"""
+        try:
+            self.logger.info("重新初始化模块...")
+
+            # 停止并清理现有模块
+            for module in self.modules.values():
+                module.stop_updates()
+                module.cleanup()
+
+            # 清空模块字典
+            self.modules.clear()
+
+            # 重新加载模块配置
+            modules_config = self.config.get('modules', {})
+            self.enabled_modules = [
+                module_id for module_id, config in modules_config.items()
+                if config.get('enabled', True)
+            ]
+
+            # 如果没有启用的模块，使用默认模块
+            if not self.enabled_modules:
+                self.enabled_modules = ['time', 'schedule']
+                # 保存默认模块配置
+                default_modules_config = {
+                    'time': {'enabled': True, 'order': 0},
+                    'schedule': {'enabled': True, 'order': 1}
+                }
+                self.config['modules'] = default_modules_config
+
+            # 按顺序排序
+            self.module_order = sorted(
+                self.enabled_modules,
+                key=lambda x: modules_config.get(x, {}).get('order', 0)
+            )
+
+            # 重新初始化模块
+            self.init_modules()
+
+            # 保存配置
+            self.save_config()
+
+            self.logger.info(f"模块重新初始化完成，启用模块: {self.enabled_modules}")
+
+        except Exception as e:
+            self.logger.error(f"重新初始化模块失败: {e}")
+
+    def force_refresh_display(self) -> None:
+        """强制刷新显示（用于设置更改后）"""
+        try:
+            self.logger.info("强制刷新浮窗显示...")
+
+            # 重新加载配置
+            self.load_config()
+
+            # 重新初始化模块
+            self.reinitialize_modules()
+
+            # 应用配置
+            self.apply_config()
+
+            # 更新显示
+            self.update_display()
+
+            # 强制重绘
+            self.update()
+
+            self.logger.info("浮窗显示刷新完成")
+
+        except Exception as e:
+            self.logger.error(f"强制刷新显示失败: {e}")
+
     def init_animations(self) -> None:
         """初始化动画管理器"""
         try:
@@ -452,10 +552,22 @@ class SmartFloatingWidget(QWidget):
         try:
             self.logger.debug(f"更新显示 - 模块数量: {len(self.modules)}, 启用模块: {self.enabled_modules}")
 
-            if not self.modules:
-                self.logger.warning("没有可用的模块")
-                self.content_label.setText("TimeNest - 无模块")
+            # 检查内容标签是否存在
+            if not self.content_label:
+                self.logger.error("内容标签不存在")
                 return
+
+            if not self.modules:
+                self.logger.warning(f"没有可用的模块，尝试重新初始化。启用模块列表: {self.enabled_modules}")
+
+                # 尝试重新初始化模块
+                if self.enabled_modules:
+                    self.init_modules()
+
+                # 如果还是没有模块，显示错误信息
+                if not self.modules:
+                    self.content_label.setText("TimeNest - 模块加载失败")
+                    return
 
             if self.auto_rotate_content and len(self.enabled_modules) > 1:
                 # 轮播模式：只显示当前轮播的模块
@@ -466,7 +578,8 @@ class SmartFloatingWidget(QWidget):
 
         except Exception as e:
             self.logger.error(f"更新显示失败: {e}")
-            self.content_label.setText("TimeNest - 显示错误")
+            if self.content_label:
+                self.content_label.setText("TimeNest - 显示错误")
 
     def display_all_content(self) -> None:
         """显示所有模块内容"""
