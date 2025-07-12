@@ -6,12 +6,18 @@ TimeNest 托盘状态监控
 """
 
 import logging
-import psutil
 import platform
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar, QTextEdit
+
+# 尝试导入psutil，如果失败则使用简化版本
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 
 class SystemStatusMonitor(QThread):
@@ -51,58 +57,96 @@ class SystemStatusMonitor(QThread):
     def _collect_system_status(self) -> Dict[str, Any]:
         """收集系统状态信息"""
         try:
-            # CPU使用率
-            cpu_percent = psutil.cpu_percent(interval=1)
-            
-            # 内存使用情况
-            memory = psutil.virtual_memory()
-            memory_percent = memory.percent
-            memory_used = memory.used / (1024**3)  # GB
-            memory_total = memory.total / (1024**3)  # GB
-            
-            # 磁盘使用情况
-            disk = psutil.disk_usage('/')
-            disk_percent = (disk.used / disk.total) * 100
-            disk_used = disk.used / (1024**3)  # GB
-            disk_total = disk.total / (1024**3)  # GB
-            
-            # 网络状态
-            network = psutil.net_io_counters()
-            
-            # 系统信息
-            boot_time = datetime.fromtimestamp(psutil.boot_time())
-            uptime = datetime.now() - boot_time
-            
-            return {
-                'timestamp': datetime.now(),
-                'cpu': {
-                    'percent': cpu_percent,
-                    'count': psutil.cpu_count()
-                },
-                'memory': {
-                    'percent': memory_percent,
-                    'used_gb': round(memory_used, 2),
-                    'total_gb': round(memory_total, 2)
-                },
-                'disk': {
-                    'percent': round(disk_percent, 1),
-                    'used_gb': round(disk_used, 2),
-                    'total_gb': round(disk_total, 2)
-                },
-                'network': {
-                    'bytes_sent': network.bytes_sent,
-                    'bytes_recv': network.bytes_recv
-                },
-                'system': {
-                    'platform': platform.system(),
-                    'uptime': str(uptime).split('.')[0],  # 去掉微秒
-                    'boot_time': boot_time.strftime('%Y-%m-%d %H:%M:%S')
-                }
-            }
-            
+            if PSUTIL_AVAILABLE:
+                return self._collect_with_psutil()
+            else:
+                return self._collect_basic_info()
+
         except Exception as e:
             self.logger.error(f"收集系统状态失败: {e}")
             return {'error': str(e)}
+
+    def _collect_with_psutil(self) -> Dict[str, Any]:
+        """使用psutil收集详细系统信息"""
+        # CPU使用率
+        cpu_percent = psutil.cpu_percent(interval=1)
+
+        # 内存使用情况
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        memory_used = memory.used / (1024**3)  # GB
+        memory_total = memory.total / (1024**3)  # GB
+
+        # 磁盘使用情况
+        disk = psutil.disk_usage('/')
+        disk_percent = (disk.used / disk.total) * 100
+        disk_used = disk.used / (1024**3)  # GB
+        disk_total = disk.total / (1024**3)  # GB
+
+        # 网络状态
+        network = psutil.net_io_counters()
+
+        # 系统信息
+        boot_time = datetime.fromtimestamp(psutil.boot_time())
+        uptime = datetime.now() - boot_time
+
+        return {
+            'timestamp': datetime.now(),
+            'cpu': {
+                'percent': cpu_percent,
+                'count': psutil.cpu_count()
+            },
+            'memory': {
+                'percent': memory_percent,
+                'used_gb': round(memory_used, 2),
+                'total_gb': round(memory_total, 2)
+            },
+            'disk': {
+                'percent': round(disk_percent, 1),
+                'used_gb': round(disk_used, 2),
+                'total_gb': round(disk_total, 2)
+            },
+            'network': {
+                'bytes_sent': network.bytes_sent,
+                'bytes_recv': network.bytes_recv
+            },
+            'system': {
+                'platform': platform.system(),
+                'uptime': str(uptime).split('.')[0],  # 去掉微秒
+                'boot_time': boot_time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+        }
+
+    def _collect_basic_info(self) -> Dict[str, Any]:
+        """收集基本系统信息（不依赖psutil）"""
+        import os
+
+        return {
+            'timestamp': datetime.now(),
+            'cpu': {
+                'percent': 0.0,  # 无法获取
+                'count': os.cpu_count() or 1
+            },
+            'memory': {
+                'percent': 0.0,  # 无法获取
+                'used_gb': 0.0,
+                'total_gb': 0.0
+            },
+            'disk': {
+                'percent': 0.0,  # 无法获取
+                'used_gb': 0.0,
+                'total_gb': 0.0
+            },
+            'network': {
+                'bytes_sent': 0,
+                'bytes_recv': 0
+            },
+            'system': {
+                'platform': platform.system(),
+                'uptime': 'Unknown',
+                'boot_time': 'Unknown'
+            }
+        }
 
 
 class TrayStatusManager(QObject):
