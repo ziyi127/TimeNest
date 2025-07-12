@@ -6,6 +6,7 @@ TimeNest 智能浮窗组件
 
 import logging
 from typing import Optional
+from functools import lru_cache
 
 from PyQt6.QtCore import Qt, QPoint, QTimer, QPropertyAnimation, QEasingCurve, pyqtSignal
 from PyQt6.QtGui import QPainter, QColor, QBrush, QPen, QFont, QScreen
@@ -187,8 +188,18 @@ class FloatingWidget(QWidget):
         self.animation.finished.connect(self.hide)
         self.animation.start()
 
+    @lru_cache(maxsize=8)
+    def _get_cached_paint_data(self, theme_id: str, opacity: float, border_radius: int):
+        """缓存绘制数据"""
+        theme = self.theme_manager.get_current_theme()
+        if not theme:
+            return None
+        bg_color = QColor(theme.colors.surface)
+        bg_color.setAlphaF(opacity)
+        return bg_color, border_radius
+
     def paintEvent(self, event):
-        """绘制事件，用于绘制圆角背景和阴影"""
+        """绘制事件，用于绘制圆角背景和阴影（优化版本）"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -197,15 +208,19 @@ class FloatingWidget(QWidget):
         if not theme:
             return
 
-        bg_color = QColor(theme.colors.surface)
         opacity = config.get('opacity', 0.85)
-        bg_color.setAlphaF(opacity)
-
         border_radius = config.get('border_radius', 30)
+
+        # 使用缓存的绘制数据
+        paint_data = self._get_cached_paint_data(theme.metadata.id, opacity, border_radius)
+        if not paint_data:
+            return
+
+        bg_color, cached_radius = paint_data
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(bg_color))
-        painter.drawRoundedRect(self.rect(), border_radius, border_radius)
+        painter.drawRoundedRect(self.rect(), cached_radius, cached_radius)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

@@ -7,10 +7,11 @@ TimeNest 应用设置模块
 
 import logging
 from typing import Dict, List, Optional, Any, TYPE_CHECKING
+from functools import lru_cache
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
-    QPushButton, QLabel, QComboBox, QSpinBox, QCheckBox, 
+    QPushButton, QLabel, QComboBox, QSpinBox, QCheckBox,
     QGroupBox, QFormLayout, QSlider, QColorDialog, QFontDialog,
     QMessageBox, QProgressBar, QTextEdit, QLineEdit, QFrame,
     QListWidget, QListWidgetItem, QSplitter, QScrollArea

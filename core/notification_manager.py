@@ -433,9 +433,8 @@ class NotificationManager(QObject):
         """连接信号和槽"""
         try:
             # 连接配置管理器信号
-            if self.config_manager:
-                # 这里应该连接配置变更信号
-                pass
+            if self.config_manager and hasattr(self.config_manager, 'config_changed'):
+                self.config_manager.config_changed.connect(self._on_config_changed)
 
             # 连接主题管理器信号
             if self.theme_manager and hasattr(self.theme_manager, 'theme_changed'):
@@ -882,6 +881,38 @@ class NotificationManager(QObject):
 
         except Exception as e:
             self.logger.error(f"应用通知主题失败: {e}")
+
+    def _on_config_changed(self, section: str, config: Dict[str, Any]) -> None:
+        """处理配置变更"""
+        try:
+            if section == 'notification':
+                self.logger.debug("处理通知配置变更")
+
+                # 更新通知设置
+                for key, value in config.items():
+                    if key in self.settings:
+                        self.settings[key] = value
+
+                # 重新加载通道配置
+                self._reload_channels()
+
+                self.logger.debug("通知配置已更新")
+
+        except Exception as e:
+            self.logger.error(f"处理配置变更失败: {e}")
+
+    def _reload_channels(self) -> None:
+        """重新加载通知通道"""
+        try:
+            # 重新配置现有通道
+            for channel in self.channels.values():
+                if hasattr(channel, 'configure'):
+                    channel.configure(self.settings)
+
+            self.logger.debug("通知通道已重新加载")
+
+        except Exception as e:
+            self.logger.error(f"重新加载通知通道失败: {e}")
 
     def setup_schedule_notifications(self, schedule: Schedule) -> None:
         """
