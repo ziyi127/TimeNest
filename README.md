@@ -42,7 +42,7 @@ TimeNest 是一个基于 Python 和 PyQt6 开发的现代化课程表管理工�
 | **存储空间** | 500MB | 1GB+ |
 | **显示器** | 1024x768 | 1920x1080+ |
 
-### 一键安装
+### 快速安装
 
 ```bash
 # 克隆项目
@@ -63,59 +63,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### 多种安装方式
-
-<details>
-<summary>📦 标准安装（推荐）</summary>
-
-```bash
-# 完整功能安装
-pip install -r requirements.txt
-```
-包含所有核心功能，适合大多数用户。
-</details>
-
-<details>
-<summary>🔧 开发环境安装</summary>
-
-```bash
-# 开发者完整工具链
-pip install -r requirements-dev.txt
-```
-包含测试、构建、文档生成等开发工具。
-</details>
-
-<details>
-<summary>⚡ 最小安装</summary>
-
-```bash
-# 仅核心功能
-pip install -r requirements-minimal.txt
-```
-适合资源受限环境或只需要基本功能的用户。
-</details>
-
-<details>
-<summary>🏭 生产环境安装</summary>
-
-```bash
-# 固定版本，适合生产部署
-pip install -r requirements-prod.txt
-```
-使用固定版本号，确保部署稳定性。
-</details>
-
 ### 验证安装
 
 ```bash
-# 检查依赖
-python check_dependencies.py
-
 # 运行应用
 python main.py
-
-# 运行测试（开发环境）
-pytest tests/
 ```
 
 ## ✨ 核心功能
@@ -343,14 +295,11 @@ python -m venv dev-env
 source dev-env/bin/activate  # Linux/macOS
 # dev-env\Scripts\activate   # Windows
 
-# 3. 安装开发依赖
-pip install -r requirements-dev.txt
+# 3. 安装依赖
+pip install -r requirements.txt
 
-# 4. 安装 pre-commit 钩子
-pre-commit install
-
-# 5. 运行测试
-pytest tests/ --cov=.
+# 4. 运行应用
+python main.py
 ```
 
 ### 项目架构
@@ -364,15 +313,18 @@ TimeNest/
 │   ├── floating_manager.py     # 浮窗管理
 │   ├── schedule_manager.py     # 课程表管理
 │   ├── theme_manager.py        # 主题管理
-│   └── plugin_system.py        # 插件系统
+│   ├── plugin_base.py          # 插件基础
+│   ├── plugin_marketplace.py   # 插件市场
+│   └── plugin_system/          # 插件系统
 ├── 📁 models/                  # 📊 数据模型
 │   ├── schedule.py             # 课程表模型
 │   ├── notification.py         # 通知模型
 │   └── theme.py                # 主题模型
 ├── 📁 ui/                      # 🎨 用户界面
-│   ├── main_window.py          # 主窗口
-│   ├── settings_dialog.py      # 设置对话框
 │   ├── floating_widget/        # 浮窗组件
+│   ├── modules/                # 功能模块
+│   ├── plugin_settings/        # 插件设置
+│   ├── startup/                # 启动界面
 │   └── system_tray.py          # 系统托盘
 ├── 📁 components/              # 🧩 UI组件
 │   ├── base_component.py       # 基础组件
@@ -380,38 +332,33 @@ TimeNest/
 │   ├── clock_component.py      # 时钟组件
 │   └── weather_component.py    # 天气组件
 ├── 📁 utils/                   # 🔧 工具函数
-│   ├── excel_exporter.py       # Excel 导出
+│   ├── excel_exporter_v2.py    # Excel 导出
+│   ├── performance_utils.py    # 性能工具
 │   └── text_to_speech.py       # 语音合成
-├── 📁 tests/                   # 🧪 测试文件
-│   ├── unit_tests/             # 单元测试
-│   └── integration_tests/      # 集成测试
+├── 📁 sdk/                     # 🛠️ 开发工具包
+│   ├── powershell_executor.py  # PowerShell 执行器
+│   └── security_validator.py   # 安全验证器
 ├── 📁 resources/               # 📦 资源文件
-│   ├── icons/                  # 图标文件
-│   ├── sounds/                 # 音效文件
-│   └── themes/                 # 主题文件
-└── 📁 docs/                    # 📖 文档
-    ├── api/                    # API 文档
-    ├── user_guide/             # 用户指南
-    └── developer_guide/        # 开发指南
+│   └── icons/                  # 图标文件
+├── 📁 config/                  # ⚙️ 配置文件
+│   ├── config.json             # 主配置文件
+│   └── floating_widget_optimized.json # 浮窗配置
+└── 📁 plugin_template/         # 🔌 插件模板
+    ├── main.py                 # 模板主文件
+    ├── plugin.json             # 插件配置
+    └── README.md               # 模板说明
 ```
 
 ### 代码规范
 
+项目遵循 PEP 8 Python 代码规范，建议使用以下工具进行代码检查：
+
 ```bash
-# 代码格式化
+# 代码格式化（可选）
 black . --line-length 88
-isort . --profile black
 
-# 代码检查
+# 代码检查（可选）
 flake8 . --max-line-length 88
-mypy . --ignore-missing-imports
-
-# 安全检查
-bandit -r . -f json
-safety check --json
-
-# 测试覆盖率
-pytest tests/ --cov=. --cov-report=html
 ```
 
 ### 提交规范
@@ -455,9 +402,9 @@ Closes #123
 发现 bug 或有功能建议？
 
 1. 查看 [现有 Issues](https://github.com/ziyi127/TimeNest/issues) 避免重复
-2. 使用 [Issue 模板](https://github.com/ziyi127/TimeNest/issues/new/choose) 创建新问题
+2. 创建新的 Issue 描述问题
 3. 提供详细的复现步骤和环境信息
-4. 添加相关的标签和里程碑
+4. 添加相关的标签
 
 ### 💻 代码贡献
 
@@ -466,8 +413,8 @@ Closes #123
 1. **Fork** 项目到您的 GitHub 账户
 2. **Clone** 您的 fork 到本地
 3. 创建新的功能分支：`git checkout -b feature/amazing-feature`
-4. 进行您的修改并添加测试
-5. 确保所有测试通过：`pytest tests/`
+4. 进行您的修改
+5. 确保代码符合规范
 6. 提交您的更改：`git commit -m 'feat: add amazing feature'`
 7. 推送到分支：`git push origin feature/amazing-feature`
 8. 创建 **Pull Request**
