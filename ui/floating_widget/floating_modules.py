@@ -54,6 +54,9 @@ class FloatingModule(QObject, ABC, metaclass=QObjectABCMeta):
         self.enabled = True
         self.visible = True
         self.order = 0
+        self.compact_mode = False
+        self.auto_hide = False
+        self.priority = 0
         
         # 更新定时器
         self.update_timer = QTimer()
@@ -538,3 +541,454 @@ class SystemStatusModule(FloatingModule):
     def start_updates(self, interval_ms: int = None) -> None:
         """开始系统状态更新"""
         super().start_updates(5000)  # 5秒更新一次
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取系统状态快速操作"""
+        return [
+            {
+                'name': '打开任务管理器',
+                'icon': '🖥️',
+                'action': 'open_task_manager'
+            },
+            {
+                'name': '系统信息',
+                'icon': 'ℹ️',
+                'action': 'show_system_info'
+            }
+        ]
+
+
+class StudyProgressModule(FloatingModule):
+    """学习进度模块"""
+
+    def __init__(self, module_id: str, app_manager=None):
+        super().__init__(module_id, "学习进度", app_manager)
+        self.study_assistant = getattr(app_manager, 'study_assistant', None) if app_manager else None
+
+        # 进度数据
+        self.current_session = None
+        self.daily_progress = 0.0
+        self.weekly_progress = 0.0
+
+    def create_content(self) -> QWidget:
+        """创建学习进度内容"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(4)
+
+        # 当前会话
+        self.session_label = QLabel("无活动会话")
+        self.session_label.setStyleSheet("font-weight: bold; color: #333;")
+        layout.addWidget(self.session_label)
+
+        # 今日进度
+        self.daily_label = QLabel("今日: 0分钟")
+        layout.addWidget(self.daily_label)
+
+        # 本周进度
+        self.weekly_label = QLabel("本周: 0分钟")
+        layout.addWidget(self.weekly_label)
+
+        # 进度条
+        from PyQt6.QtWidgets import QProgressBar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                text-align: center;
+                height: 16px;
+            }
+            QProgressBar::chunk {
+                background-color: #4CAF50;
+                border-radius: 2px;
+            }
+        """)
+        layout.addWidget(self.progress_bar)
+
+        return widget
+
+    def update_content(self):
+        """更新学习进度内容"""
+        try:
+            if not self.study_assistant:
+                return
+
+            # 获取今日总结
+            daily_summary = self.study_assistant.get_daily_study_summary()
+            if daily_summary:
+                daily_time = daily_summary.get('total_study_time', 0)
+                goal_progress = daily_summary.get('goal_progress', 0.0)
+
+                self.daily_label.setText(f"今日: {daily_time}分钟")
+                self.progress_bar.setValue(int(goal_progress * 100))
+
+            # 获取学习分析
+            analytics = self.study_assistant.get_learning_analytics()
+            if analytics:
+                # 计算本周时间（简化计算）
+                weekly_time = analytics.total_study_time
+                self.weekly_label.setText(f"本周: {weekly_time}分钟")
+
+            # 检查活动会话
+            if (hasattr(self.study_assistant, 'schedule_enhancement') and
+                self.study_assistant.schedule_enhancement.active_session):
+                session = self.study_assistant.schedule_enhancement.active_session
+                task = self.study_assistant.schedule_enhancement.get_task_by_id(session.task_id)
+                if task:
+                    elapsed = (datetime.now() - session.start_time).total_seconds() / 60
+                    self.session_label.setText(f"学习中: {task.title} ({elapsed:.0f}分钟)")
+                else:
+                    self.session_label.setText("学习会话进行中")
+            else:
+                self.session_label.setText("无活动会话")
+
+        except Exception as e:
+            self.logger.error(f"更新学习进度失败: {e}")
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取学习进度快速操作"""
+        return [
+            {
+                'name': '开始学习',
+                'icon': '📚',
+                'action': 'start_study'
+            },
+            {
+                'name': '查看统计',
+                'icon': '📊',
+                'action': 'show_statistics'
+            },
+            {
+                'name': '设置目标',
+                'icon': '🎯',
+                'action': 'set_goal'
+            }
+        ]
+
+
+class EnvironmentModule(FloatingModule):
+    """学习环境模块"""
+
+    def __init__(self, module_id: str, app_manager=None):
+        super().__init__(module_id, "学习环境", app_manager)
+        self.environment_optimizer = getattr(app_manager, 'environment_optimizer', None) if app_manager else None
+
+        # 环境数据
+        self.environment_score = 0.0
+        self.environment_grade = "未知"
+
+    def create_content(self) -> QWidget:
+        """创建学习环境内容"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(4)
+
+        # 环境评分
+        self.score_label = QLabel("环境评分: --")
+        self.score_label.setStyleSheet("font-weight: bold; color: #333;")
+        layout.addWidget(self.score_label)
+
+        # 环境等级
+        self.grade_label = QLabel("等级: 未知")
+        layout.addWidget(self.grade_label)
+
+        # 建议数量
+        self.suggestions_label = QLabel("建议: 0条")
+        layout.addWidget(self.suggestions_label)
+
+        # 状态指示器
+        self.status_widget = QWidget()
+        self.status_widget.setFixedHeight(8)
+        self.status_widget.setStyleSheet("background-color: #ccc; border-radius: 4px;")
+        layout.addWidget(self.status_widget)
+
+        return widget
+
+    def update_content(self):
+        """更新学习环境内容"""
+        try:
+            if not self.environment_optimizer:
+                return
+
+            # 获取环境总结
+            summary = self.environment_optimizer.get_environment_summary()
+            if summary.get('status') == 'success':
+                score = summary.get('overall_score', 0.0)
+                grade = summary.get('grade', '未知')
+                color = summary.get('color', 'gray')
+                suggestions_count = summary.get('suggestions_count', 0)
+
+                self.score_label.setText(f"环境评分: {score:.1%}")
+                self.grade_label.setText(f"等级: {grade}")
+                self.suggestions_label.setText(f"建议: {suggestions_count}条")
+
+                # 更新状态颜色
+                self.status_widget.setStyleSheet(f"background-color: {color}; border-radius: 4px;")
+            else:
+                self.score_label.setText("环境评分: 检测中...")
+                self.grade_label.setText("等级: --")
+                self.suggestions_label.setText("建议: --")
+
+        except Exception as e:
+            self.logger.error(f"更新学习环境失败: {e}")
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取环境模块快速操作"""
+        return [
+            {
+                'name': '优化环境',
+                'icon': '🔧',
+                'action': 'optimize_environment'
+            },
+            {
+                'name': '查看建议',
+                'icon': '💡',
+                'action': 'show_suggestions'
+            },
+            {
+                'name': '刷新检测',
+                'icon': '🔄',
+                'action': 'refresh_detection'
+            }
+        ]
+
+
+class ResourceQuickAccessModule(FloatingModule):
+    """资源快速访问模块"""
+
+    def __init__(self, module_id: str, app_manager=None):
+        super().__init__(module_id, "快速资源", app_manager)
+        self.resource_manager = getattr(app_manager, 'resource_manager', None) if app_manager else None
+
+        # 最近资源
+        self.recent_resources = []
+        self.favorite_resources = []
+
+    def create_content(self) -> QWidget:
+        """创建资源快速访问内容"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(4)
+
+        # 最近使用
+        recent_label = QLabel("最近使用:")
+        recent_label.setStyleSheet("font-weight: bold; color: #333; font-size: 11px;")
+        layout.addWidget(recent_label)
+
+        self.recent_list = QLabel("暂无资源")
+        self.recent_list.setStyleSheet("color: #666; font-size: 10px;")
+        self.recent_list.setWordWrap(True)
+        layout.addWidget(self.recent_list)
+
+        # 收藏资源
+        favorite_label = QLabel("收藏资源:")
+        favorite_label.setStyleSheet("font-weight: bold; color: #333; font-size: 11px;")
+        layout.addWidget(favorite_label)
+
+        self.favorite_list = QLabel("暂无收藏")
+        self.favorite_list.setStyleSheet("color: #666; font-size: 10px;")
+        self.favorite_list.setWordWrap(True)
+        layout.addWidget(self.favorite_list)
+
+        return widget
+
+    def update_content(self):
+        """更新资源快速访问内容"""
+        try:
+            if not self.resource_manager:
+                return
+
+            # 获取最近访问的资源
+            recent_resources = sorted(
+                [r for r in self.resource_manager.resources.values() if r.last_accessed],
+                key=lambda r: r.last_accessed,
+                reverse=True
+            )[:3]
+
+            if recent_resources:
+                recent_text = "\n".join([f"• {r.title[:20]}..." if len(r.title) > 20 else f"• {r.title}"
+                                       for r in recent_resources])
+                self.recent_list.setText(recent_text)
+            else:
+                self.recent_list.setText("暂无最近资源")
+
+            # 获取高评分资源作为"收藏"
+            favorite_resources = sorted(
+                [r for r in self.resource_manager.resources.values() if r.rating >= 4],
+                key=lambda r: r.rating,
+                reverse=True
+            )[:3]
+
+            if favorite_resources:
+                favorite_text = "\n".join([f"⭐ {r.title[:20]}..." if len(r.title) > 20 else f"⭐ {r.title}"
+                                         for r in favorite_resources])
+                self.favorite_list.setText(favorite_text)
+            else:
+                self.favorite_list.setText("暂无收藏资源")
+
+        except Exception as e:
+            self.logger.error(f"更新资源快速访问失败: {e}")
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取资源快速操作"""
+        return [
+            {
+                'name': '添加资源',
+                'icon': '➕',
+                'action': 'add_resource'
+            },
+            {
+                'name': '搜索资源',
+                'icon': '🔍',
+                'action': 'search_resources'
+            },
+            {
+                'name': '资源管理',
+                'icon': '📁',
+                'action': 'manage_resources'
+            }
+        ]
+
+
+class FocusModeModule(FloatingModule):
+    """专注模式模块"""
+
+    def __init__(self, module_id: str, app_manager=None):
+        super().__init__(module_id, "专注模式", app_manager)
+        self.notification_enhancement = getattr(app_manager, 'notification_enhancement', None) if app_manager else None
+
+        # 专注状态
+        self.is_focus_active = False
+        self.focus_remaining = 0
+
+    def create_content(self) -> QWidget:
+        """创建专注模式内容"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(4)
+
+        # 专注状态
+        self.status_label = QLabel("专注模式: 未激活")
+        self.status_label.setStyleSheet("font-weight: bold; color: #333;")
+        layout.addWidget(self.status_label)
+
+        # 剩余时间
+        self.time_label = QLabel("--:--")
+        self.time_label.setStyleSheet("font-size: 16px; color: #007ACC;")
+        self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.time_label)
+
+        # 控制按钮
+        from PyQt6.QtWidgets import QPushButton
+        self.control_button = QPushButton("开始专注")
+        self.control_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        self.control_button.clicked.connect(self._toggle_focus_mode)
+        layout.addWidget(self.control_button)
+
+        return widget
+
+    def update_content(self):
+        """更新专注模式内容"""
+        try:
+            if not self.notification_enhancement:
+                return
+
+            # 获取专注模式状态
+            status = self.notification_enhancement.get_focus_mode_status()
+
+            if status.get('active'):
+                self.is_focus_active = True
+                remaining = status.get('remaining_minutes', 0)
+
+                self.status_label.setText("专注模式: 激活中")
+                self.time_label.setText(f"{int(remaining):02d}:{int((remaining % 1) * 60):02d}")
+                self.control_button.setText("结束专注")
+                self.control_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f44336;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        font-size: 11px;
+                    }
+                    QPushButton:hover {
+                        background-color: #da190b;
+                    }
+                """)
+            else:
+                self.is_focus_active = False
+                self.status_label.setText("专注模式: 未激活")
+                self.time_label.setText("--:--")
+                self.control_button.setText("开始专注")
+                self.control_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        font-size: 11px;
+                    }
+                    QPushButton:hover {
+                        background-color: #45a049;
+                    }
+                """)
+
+        except Exception as e:
+            self.logger.error(f"更新专注模式失败: {e}")
+
+    def _toggle_focus_mode(self):
+        """切换专注模式"""
+        try:
+            if not self.notification_enhancement:
+                return
+
+            if self.is_focus_active:
+                # 结束专注模式
+                self.notification_enhancement.end_focus_mode()
+            else:
+                # 开始专注模式
+                self.notification_enhancement.start_focus_mode(duration=25)
+
+        except Exception as e:
+            self.logger.error(f"切换专注模式失败: {e}")
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取专注模式快速操作"""
+        return [
+            {
+                'name': '25分钟专注',
+                'icon': '🍅',
+                'action': 'focus_25'
+            },
+            {
+                'name': '45分钟专注',
+                'icon': '⏰',
+                'action': 'focus_45'
+            },
+            {
+                'name': '自定义时长',
+                'icon': '⚙️',
+                'action': 'custom_focus'
+            }
+        ]
