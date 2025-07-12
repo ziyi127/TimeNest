@@ -200,8 +200,8 @@ def create_tray_system(app_manager, logger):
 def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_manager, logger):
     """设置托盘系统信号连接"""
     try:
-        # 托盘管理器信号连接
-        tray_manager.floating_toggled.connect(lambda visible: handle_floating_toggle(app_manager, tray_manager, logger))
+        # 托盘管理器信号连接 - 修复信号名称
+        tray_manager.toggle_floating_widget_requested.connect(lambda: handle_floating_toggle(app_manager, tray_manager, logger))
         tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
         tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
         tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
@@ -230,7 +230,10 @@ def handle_floating_toggle(app_manager, tray_manager, logger):
 
             # 获取当前状态并更新托盘
             current_visible = app_manager.floating_manager._is_visible
-            tray_manager.update_floating_status(current_visible)
+            if hasattr(tray_manager, 'update_floating_status'):
+                tray_manager.update_floating_status(current_visible)
+            if hasattr(tray_manager, 'update_floating_widget_action'):
+                tray_manager.update_floating_widget_action(current_visible)
 
             logger.debug(f"浮窗状态切换: {current_visible}")
         else:

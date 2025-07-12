@@ -54,6 +54,8 @@ class TrayFeatureManager(QObject):
     def show_schedule_management(self):
         """显示课程表管理"""
         try:
+            self.logger.info("显示课程表管理被调用")
+
             if not self.app_manager:
                 self._show_feature_unavailable("课程表管理", "应用管理器不可用")
                 return
@@ -62,6 +64,7 @@ class TrayFeatureManager(QObject):
             dialog = ScheduleManagementDialog(self.app_manager)
             dialog.exec()
             self.feature_activated.emit("schedule_management")
+            self.logger.info("课程表管理对话框已显示")
         except ImportError:
             self._show_feature_unavailable("课程表管理")
         except Exception as e:
@@ -122,10 +125,23 @@ class TrayFeatureManager(QObject):
     def show_floating_settings(self):
         """显示浮窗设置"""
         try:
+            self.logger.info("显示浮窗设置被调用")
+
             if not self.app_manager:
                 self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
                 return
 
+            # 尝试使用浮窗管理器的设置对话框
+            if hasattr(self.app_manager, 'floating_manager') and self.app_manager.floating_manager:
+                try:
+                    self.app_manager.floating_manager.show_settings_dialog()
+                    self.feature_activated.emit("floating_settings")
+                    self.logger.info("浮窗设置对话框已显示")
+                    return
+                except Exception as e:
+                    self.logger.warning(f"使用浮窗管理器设置失败，尝试备用方法: {e}")
+
+            # 备用方法：使用独立的设置对话框
             from ui.floating_settings_tab import FloatingSettingsTab
             dialog = QDialog()
             dialog.setWindowTitle("浮窗设置")

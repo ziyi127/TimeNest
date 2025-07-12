@@ -227,19 +227,24 @@ class SmartFloatingWidget(QWidget):
                 })
                 
                 self.app_manager.config_manager.set_config('floating_widget', self.config, 'component')
-                
+
+                # 强制保存到文件
+                if hasattr(self.app_manager.config_manager, 'save_config'):
+                    self.app_manager.config_manager.save_config()
+                    self.logger.info("配置已保存到文件")
+
         except Exception as e:
             self.logger.warning(f"保存配置失败: {e}")
     
     def init_ui(self) -> None:
         """初始化UI"""
         try:
-            # 设置窗口属性 - 确保不在任务栏显示且始终置顶
+            # 设置窗口属性 - 真正的悬浮窗，不在任务栏显示
             window_flags = (
                 Qt.WindowType.FramelessWindowHint |
                 Qt.WindowType.WindowStaysOnTopHint |
-                Qt.WindowType.Tool |
-                Qt.WindowType.BypassWindowManagerHint
+                Qt.WindowType.Popup |  # 使用Popup类型实现真正的悬浮效果
+                Qt.WindowType.NoDropShadowWindowHint
             )
 
             # 添加鼠标穿透标志（仅在启用时）
@@ -439,9 +444,17 @@ class SmartFloatingWidget(QWidget):
         if 0.0 <= opacity <= 1.0:
             self.setWindowOpacity(opacity)
 
-        # 强制设置到屏幕顶部居中（忽略配置中的位置）
-        self.logger.info("强制设置浮窗到屏幕顶部居中")
-        safe_call_method(self, 'center_on_screen')
+        # 应用位置配置
+        position = self.config.get('position', {})
+        if position and 'x' in position and 'y' in position:
+            x = position.get('x', 0)
+            y = position.get('y', 10)
+            self.move(x, y)
+            self.logger.info(f"应用配置位置: ({x}, {y})")
+        else:
+            # 默认设置到屏幕顶部居中
+            self.logger.info("使用默认位置：屏幕顶部居中")
+            safe_call_method(self, 'center_on_screen')
 
         # 应用主题
         safe_call_method(self, 'apply_theme')
