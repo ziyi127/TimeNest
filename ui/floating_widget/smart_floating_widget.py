@@ -72,9 +72,9 @@ class SmartFloatingWidget(QWidget):
         self.opacity_value = 0.9
 
         # 交互配置
-        self.mouse_transparent = True  # 默认启用鼠标穿透
-        self.fixed_position = True     # 固定位置，不可拖拽
-        self.auto_rotate_content = True  # 自动轮播内容
+        self.mouse_transparent = False  # 默认禁用鼠标穿透，允许交互
+        self.fixed_position = True      # 固定位置，不可拖拽
+        self.auto_rotate_content = True # 自动轮播内容
         
         # 模块管理
         self.modules: Dict[str, FloatingModule] = {}
@@ -239,20 +239,20 @@ class SmartFloatingWidget(QWidget):
                 Qt.WindowType.FramelessWindowHint |
                 Qt.WindowType.WindowStaysOnTopHint |
                 Qt.WindowType.Tool |
-                Qt.WindowType.WindowDoesNotAcceptFocus |
                 Qt.WindowType.BypassWindowManagerHint
             )
 
-            # 添加鼠标穿透标志
+            # 添加鼠标穿透标志（仅在启用时）
             if self.mouse_transparent:
                 window_flags |= Qt.WindowType.WindowTransparentForInput
 
             self.setWindowFlags(window_flags)
             self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-            # 确保始终置顶
+            # 确保始终置顶，但允许交互
             self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
-            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            if self.mouse_transparent:
+                self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
             
             # 设置大小
             self.setFixedSize(self.default_width, self.default_height)
