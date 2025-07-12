@@ -24,9 +24,10 @@ class TrayFeatureManager(QObject):
     feature_activated = pyqtSignal(str)  # 功能激活
     notification_sent = pyqtSignal(str, str)  # 通知发送
     
-    def __init__(self, parent=None):
+    def __init__(self, app_manager=None, parent=None):
         super().__init__(parent)
         self.logger = logging.getLogger(f'{__name__}.TrayFeatureManager')
+        self.app_manager = app_manager
         
         # 功能状态
         self.features_enabled = {
@@ -49,8 +50,12 @@ class TrayFeatureManager(QObject):
     def show_schedule_management(self):
         """显示课程表管理"""
         try:
+            if not self.app_manager:
+                self._show_feature_unavailable("课程表管理", "应用管理器不可用")
+                return
+
             from ui.modules.schedule_management_dialog import ScheduleManagementDialog
-            dialog = ScheduleManagementDialog()
+            dialog = ScheduleManagementDialog(self.app_manager)
             dialog.exec()
             self.feature_activated.emit("schedule_management")
         except ImportError:
@@ -62,8 +67,12 @@ class TrayFeatureManager(QObject):
     def show_app_settings(self):
         """显示应用设置"""
         try:
+            if not self.app_manager:
+                self._show_feature_unavailable("应用设置", "应用管理器不可用")
+                return
+
             from ui.modules.app_settings_dialog import AppSettingsDialog
-            dialog = AppSettingsDialog()
+            dialog = AppSettingsDialog(self.app_manager)
             dialog.exec()
             self.feature_activated.emit("app_settings")
         except ImportError:
@@ -75,8 +84,12 @@ class TrayFeatureManager(QObject):
     def show_plugin_marketplace(self):
         """显示插件市场"""
         try:
+            if not self.app_manager:
+                self._show_feature_unavailable("插件市场", "应用管理器不可用")
+                return
+
             from ui.modules.plugin_marketplace_dialog import PluginMarketplaceDialog
-            dialog = PluginMarketplaceDialog()
+            dialog = PluginMarketplaceDialog(self.app_manager)
             dialog.exec()
             self.feature_activated.emit("plugin_marketplace")
         except ImportError:
@@ -88,8 +101,12 @@ class TrayFeatureManager(QObject):
     def show_time_calibration(self):
         """显示时间校准"""
         try:
+            if not self.app_manager:
+                self._show_feature_unavailable("时间校准", "应用管理器不可用")
+                return
+
             from ui.modules.time_calibration_dialog import TimeCalibrationDialog
-            dialog = TimeCalibrationDialog()
+            dialog = TimeCalibrationDialog(self.app_manager)
             dialog.exec()
             self.feature_activated.emit("time_calibration")
         except ImportError:
@@ -101,15 +118,19 @@ class TrayFeatureManager(QObject):
     def show_floating_settings(self):
         """显示浮窗设置"""
         try:
+            if not self.app_manager:
+                self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
+                return
+
             from ui.floating_settings_tab import FloatingSettingsTab
             dialog = QDialog()
             dialog.setWindowTitle("浮窗设置")
             dialog.setFixedSize(500, 400)
-            
+
             layout = QVBoxLayout(dialog)
-            settings_widget = FloatingSettingsTab()
+            settings_widget = FloatingSettingsTab(self.app_manager.config_manager, self.app_manager.theme_manager)
             layout.addWidget(settings_widget)
-            
+
             dialog.exec()
             self.feature_activated.emit("floating_settings")
         except ImportError:
@@ -165,12 +186,17 @@ class TrayFeatureManager(QObject):
         except Exception as e:
             self.logger.error(f"检查课程提醒失败: {e}")
     
-    def _show_feature_unavailable(self, feature_name: str):
+    def _show_feature_unavailable(self, feature_name: str, reason: str = None):
         """显示功能不可用消息"""
+        if reason:
+            message = f"{feature_name}功能暂不可用：{reason}"
+        else:
+            message = f"{feature_name}功能正在开发中，敬请期待！"
+
         QMessageBox.information(
             None,
             "功能暂不可用",
-            f"{feature_name}功能正在开发中，敬请期待！"
+            message
         )
     
     def _show_error(self, feature_name: str, error_msg: str):

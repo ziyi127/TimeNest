@@ -183,10 +183,6 @@ class SystemTrayManager(QObject):
     提供完整的系统托盘功能，包括状态管理、消息通知、动态菜单等
     """
 
-    # 主窗口控制信号
-    show_main_window = pyqtSignal()
-    hide_main_window = pyqtSignal()
-
     # 浮窗控制信号
     floating_toggled = pyqtSignal(bool)  # 浮窗显示/隐藏
     floating_settings_requested = pyqtSignal()
@@ -209,7 +205,6 @@ class SystemTrayManager(QObject):
 
         # 状态管理
         self.floating_visible = True
-        self.main_window_visible = False
 
         # 托盘组件
         self.tray_icon = None
@@ -217,7 +212,6 @@ class SystemTrayManager(QObject):
 
         # 动态菜单项
         self.toggle_floating_action = None
-        self.toggle_main_window_action = None
 
         # 初始化
         self._init_tray_system()
@@ -275,13 +269,6 @@ class SystemTrayManager(QObject):
     def _create_context_menu(self):
         """创建右键菜单"""
         self.context_menu = QMenu()
-
-        # 主窗口控制
-        self.toggle_main_window_action = QAction("📱 显示主窗口", self)
-        self.toggle_main_window_action.triggered.connect(self._toggle_main_window)
-        self.context_menu.addAction(self.toggle_main_window_action)
-
-        self.context_menu.addSeparator()
 
         # 浮窗控制区域
         floating_label = QAction("🎈 浮窗控制", self)
@@ -347,29 +334,19 @@ class SystemTrayManager(QObject):
     def _on_tray_activated(self, reason):
         """托盘图标激活事件"""
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-            self._toggle_main_window()
+            self._toggle_floating()
         elif reason == QSystemTrayIcon.ActivationReason.MiddleClick:
             self._toggle_floating()
 
     def _on_message_clicked(self):
         """托盘消息点击事件"""
-        self.show_main_window.emit()
-
-    def _toggle_main_window(self):
-        """切换主窗口显示状态"""
-        self.main_window_visible = not self.main_window_visible
-        if self.main_window_visible:
-            self.show_main_window.emit()
-            self.toggle_main_window_action.setText("📱 隐藏主窗口")
-        else:
-            self.hide_main_window.emit()
-            self.toggle_main_window_action.setText("📱 显示主窗口")
+        # 点击消息时切换浮窗
+        self._toggle_floating()
 
     def _toggle_floating(self):
         """切换浮窗显示状态"""
-        self.floating_visible = not self.floating_visible
-        self.floating_toggled.emit(self.floating_visible)
-        self._update_floating_menu_text()
+        # 发送切换信号，不传递状态参数
+        self.floating_toggled.emit(True)  # 参数不重要，只是触发切换
 
     def _update_floating_menu_text(self):
         """更新浮窗菜单文本"""
@@ -413,12 +390,7 @@ class SystemTrayManager(QObject):
         self._update_floating_menu_text()
         self.logger.debug(f"浮窗状态更新: {is_visible}")
 
-    def update_main_window_status(self, is_visible: bool):
-        """更新主窗口状态"""
-        self.main_window_visible = is_visible
-        if self.toggle_main_window_action:
-            text = "📱 隐藏主窗口" if is_visible else "📱 显示主窗口"
-            self.toggle_main_window_action.setText(text)
+
 
     def set_tooltip(self, tooltip: str):
         """设置托盘提示文本"""

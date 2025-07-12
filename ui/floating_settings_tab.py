@@ -33,17 +33,23 @@ class FloatingSettingsTab(QWidget):
     settings_changed = pyqtSignal(dict)  # 设置变化信号
     preview_requested = pyqtSignal(dict)  # 预览请求信号
 
-    def __init__(self, parent=None):
+    def __init__(self, config_manager=None, theme_manager=None, parent=None):
         """
         初始化浮窗设置标签页
 
         Args:
+            config_manager: 配置管理器
+            theme_manager: 主题管理器
             parent: 父窗口
         """
         super().__init__(parent)
 
         # 设置日志
         self.logger = logging.getLogger(f'{__name__}.FloatingSettingsTab')
+
+        # 管理器引用
+        self.config_manager = config_manager
+        self.theme_manager = theme_manager
 
         # 预览相关
         self.preview_widget: Optional[FloatingWidget] = None

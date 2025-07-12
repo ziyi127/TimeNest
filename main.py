@@ -173,7 +173,7 @@ def create_tray_system(app_manager, logger):
         )
 
         # 创建功能管理器
-        feature_manager = TrayFeatureManager()
+        feature_manager = TrayFeatureManager(app_manager)
 
         # 创建状态监控器
         status_monitor = TrayStatusManager()
@@ -201,7 +201,7 @@ def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_ma
     """设置托盘系统信号连接"""
     try:
         # 托盘管理器信号连接
-        tray_manager.floating_toggled.connect(lambda visible: toggle_floating_widget(app_manager, visible, logger))
+        tray_manager.floating_toggled.connect(lambda visible: handle_floating_toggle(app_manager, tray_manager, logger))
         tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
         tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
         tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
@@ -221,15 +221,18 @@ def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_ma
         logger.error(f"设置托盘信号连接失败: {e}")
 
 
-def toggle_floating_widget(app_manager, visible, logger):
-    """切换浮窗显示状态"""
+def handle_floating_toggle(app_manager, tray_manager, logger):
+    """处理浮窗切换请求"""
     try:
         if app_manager.floating_manager:
-            if visible:
-                app_manager.floating_manager.show_widget()
-            else:
-                app_manager.floating_manager.hide_widget()
-            logger.debug(f"浮窗状态切换: {visible}")
+            # 使用toggle方法切换状态
+            app_manager.floating_manager.toggle_widget()
+
+            # 获取当前状态并更新托盘
+            current_visible = app_manager.floating_manager._is_visible
+            tray_manager.update_floating_status(current_visible)
+
+            logger.debug(f"浮窗状态切换: {current_visible}")
         else:
             logger.warning("浮窗管理器不可用")
     except Exception as e:
