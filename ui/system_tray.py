@@ -80,10 +80,6 @@ class SystemTray(QObject):
         self.toggle_floater_action.triggered.connect(self.toggle_floating_widget_requested)
         menu.addAction(self.toggle_floater_action)
 
-        floating_settings_action = QAction("⚙️ 浮窗设置", self)
-        floating_settings_action.triggered.connect(self.floating_settings_requested)
-        menu.addAction(floating_settings_action)
-
         menu.addSeparator()
 
         # 核心功能模块区域
@@ -110,6 +106,10 @@ class SystemTray(QObject):
         tools_label.setEnabled(False)  # 作为标题，不可点击
         menu.addAction(tools_label)
 
+        floating_settings_action = QAction("⚙️ 浮窗设置", self)
+        floating_settings_action.triggered.connect(self.floating_settings_requested)
+        menu.addAction(floating_settings_action)
+
         calibration_action = QAction("⏰ 时间校准", self)
         calibration_action.triggered.connect(self.time_calibration_requested)
         menu.addAction(calibration_action)
@@ -120,6 +120,9 @@ class SystemTray(QObject):
         quit_action = QAction("❌ 退出 TimeNest", self)
         quit_action.triggered.connect(self.quit_requested)
         menu.addAction(quit_action)
+
+        # 确保菜单可以正常工作
+        menu.setEnabled(True)
 
         self.tray_icon.setContextMenu(menu)
         self.tray_icon.activated.connect(self.on_activated)
@@ -299,10 +302,6 @@ class SystemTrayManagerLegacy(QObject):
         self.toggle_floating_action.setChecked(self.floating_visible)
         self.toggle_floating_action.triggered.connect(self._toggle_floating)
         self.context_menu.addAction(self.toggle_floating_action)
-
-        floating_settings_action = QAction("⚙️ 浮窗设置", self)
-        floating_settings_action.triggered.connect(self.floating_settings_requested)
-        self.context_menu.addAction(floating_settings_action)
 
         self.context_menu.addSeparator()
 
