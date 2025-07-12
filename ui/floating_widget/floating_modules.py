@@ -54,6 +54,9 @@ class FloatingModule(QObject, ABC, metaclass=QObjectABCMeta):
         self.enabled = True
         self.visible = True
         self.order = 0
+        self.compact_mode = False
+        self.auto_hide = False
+        self.priority = 0
         
         # 更新定时器
         self.update_timer = QTimer()
@@ -538,3 +541,18 @@ class SystemStatusModule(FloatingModule):
     def start_updates(self, interval_ms: int = None) -> None:
         """开始系统状态更新"""
         super().start_updates(5000)  # 5秒更新一次
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取系统状态快速操作"""
+        return [
+            {
+                'name': '打开任务管理器',
+                'icon': '🖥️',
+                'action': 'open_task_manager'
+            },
+            {
+                'name': '系统信息',
+                'icon': 'ℹ️',
+                'action': 'show_system_info'
+            }
+        ]

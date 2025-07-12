@@ -70,6 +70,11 @@ class AppManager(QObject):
         self.time_calibration_service = None
         self.plugin_interaction_manager = None
 
+        # 增强功能组件
+        self.schedule_enhancement = None
+        self.notification_enhancement = None
+        self.study_assistant = None
+
         # 定时器用于定期更新
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self._periodic_update)
@@ -187,8 +192,57 @@ class AppManager(QObject):
             self._enhanced_features_loaded = False
             self._feature_loading_cache = {}
 
+            # 初始化新增的增强功能
+            self._initialize_new_enhancements()
+
         except Exception as e:
             self.logger.error(f"准备增强功能失败: {e}")
+
+    def _initialize_new_enhancements(self):
+        """初始化新增的增强功能"""
+        try:
+            self.logger.info("初始化增强功能组件...")
+
+            # 1. 初始化课程表增强功能
+            try:
+                from core.schedule_enhancements import ScheduleEnhancementManager
+                self.schedule_enhancement = ScheduleEnhancementManager(self.config_manager)
+                self.logger.info("课程表增强功能初始化成功")
+            except ImportError:
+                self.logger.warning("课程表增强功能模块不可用")
+            except Exception as e:
+                self.logger.error(f"课程表增强功能初始化失败: {e}")
+
+            # 2. 初始化通知增强功能
+            try:
+                from core.notification_enhancements import NotificationEnhancementManager
+                self.notification_enhancement = NotificationEnhancementManager(
+                    self.config_manager,
+                    self.notification_manager
+                )
+                self.logger.info("通知增强功能初始化成功")
+            except ImportError:
+                self.logger.warning("通知增强功能模块不可用")
+            except Exception as e:
+                self.logger.error(f"通知增强功能初始化失败: {e}")
+
+            # 3. 初始化智能学习助手
+            try:
+                from core.study_assistant import StudyAssistantManager
+                self.study_assistant = StudyAssistantManager(
+                    self.config_manager,
+                    self.schedule_enhancement
+                )
+                self.logger.info("智能学习助手初始化成功")
+            except ImportError:
+                self.logger.warning("智能学习助手模块不可用")
+            except Exception as e:
+                self.logger.error(f"智能学习助手初始化失败: {e}")
+
+            self.logger.info("增强功能组件初始化完成")
+
+        except Exception as e:
+            self.logger.error(f"初始化增强功能组件失败: {e}")
 
     def _load_enhanced_feature(self, feature_name: str):
         """按需加载增强功能"""

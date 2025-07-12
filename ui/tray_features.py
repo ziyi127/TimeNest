@@ -45,6 +45,10 @@ class TrayFeatureManager(QObject):
         # 通知窗口池
         self.notification_windows = []
         
+        # 快速操作缓存
+        self.quick_actions_cache = {}
+        self.last_cache_update = None
+
         self.logger.info("托盘功能管理器初始化完成")
     
     def show_schedule_management(self):
@@ -234,9 +238,149 @@ class TrayFeatureManager(QObject):
             self.notification_windows.clear()
             
             self.logger.info("托盘功能管理器已清理")
-            
+
         except Exception as e:
             self.logger.error(f"托盘功能管理器清理失败: {e}")
+
+    def start_quick_study_session(self, subject: str = "通用"):
+        """快速开始学习会话"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("快速学习", "应用管理器不可用")
+                return
+
+            # 检查是否有学习助手
+            if hasattr(self.app_manager, 'study_assistant'):
+                # 创建快速任务
+                task_id = self.app_manager.study_assistant.schedule_enhancement.add_study_task(
+                    title=f"快速学习 - {subject}",
+                    subject=subject,
+                    due_date=datetime.now() + timedelta(hours=2),
+                    estimated_duration=25
+                )
+
+                if task_id:
+                    # 开始学习会话
+                    session_id = self.app_manager.study_assistant.schedule_enhancement.start_study_session(task_id)
+                    if session_id:
+                        self.send_notification("学习会话开始", f"已开始 {subject} 学习会话")
+                        self.feature_activated.emit("quick_study_session")
+                    else:
+                        self._show_error("快速学习", "无法开始学习会话")
+                else:
+                    self._show_error("快速学习", "无法创建学习任务")
+            else:
+                self._show_feature_unavailable("快速学习", "学习助手功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"快速开始学习会话失败: {e}")
+            self._show_error("快速学习", str(e))
+
+    def start_focus_mode(self, duration: int = 25):
+        """启动专注模式"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("专注模式", "应用管理器不可用")
+                return
+
+            # 检查是否有通知增强功能
+            if hasattr(self.app_manager, 'notification_enhancement'):
+                success = self.app_manager.notification_enhancement.start_focus_mode(duration)
+                if success:
+                    self.send_notification("专注模式", f"专注模式已启动，持续 {duration} 分钟")
+                    self.feature_activated.emit("focus_mode")
+                else:
+                    self._show_error("专注模式", "无法启动专注模式")
+            else:
+                self._show_feature_unavailable("专注模式", "通知增强功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"启动专注模式失败: {e}")
+            self._show_error("专注模式", str(e))
+
+    def show_study_statistics(self):
+        """显示学习统计"""
+        try:
+            if not self.app_manager:
+                self._show_feature_unavailable("学习统计", "应用管理器不可用")
+                return
+
+            # 检查是否有学习助手
+            if hasattr(self.app_manager, 'study_assistant'):
+                analytics = self.app_manager.study_assistant.get_learning_analytics()
+                if analytics:
+                    # 创建简单的统计显示对话框
+                    from PyQt6.QtWidgets import QMessageBox
+
+                    stats_text = f"""学习统计信息:
+
+总学习时间: {analytics.total_study_time} 分钟
+平均会话长度: {analytics.average_session_length:.1f} 分钟
+任务完成率: {analytics.completion_rate:.1%}
+连续学习天数: {analytics.streak_days} 天
+
+最高效时间段: {', '.join(f'{h}:00' for h in analytics.most_productive_hours[:3])}
+"""
+
+                    QMessageBox.information(None, "学习统计", stats_text)
+                    self.feature_activated.emit("study_statistics")
+                else:
+                    self._show_feature_unavailable("学习统计", "暂无足够的学习数据")
+            else:
+                self._show_feature_unavailable("学习统计", "学习助手功能未启用")
+
+        except Exception as e:
+            self.logger.error(f"显示学习统计失败: {e}")
+            self._show_error("学习统计", str(e))
+
+    def get_quick_actions(self) -> List[Dict[str, Any]]:
+        """获取快速操作列表"""
+        try:
+            # 检查缓存
+            if (self.last_cache_update and
+                datetime.now() - self.last_cache_update < timedelta(minutes=5)):
+                return self.quick_actions_cache.get('actions', [])
+
+            actions = [
+                {
+                    'name': '快速学习',
+                    'description': '开始25分钟学习会话',
+                    'icon': '📚',
+                    'action': 'start_quick_study',
+                    'shortcut': 'Ctrl+Q'
+                },
+                {
+                    'name': '专注模式',
+                    'description': '启动专注模式',
+                    'icon': '🎯',
+                    'action': 'start_focus_mode',
+                    'shortcut': 'Ctrl+F'
+                },
+                {
+                    'name': '学习统计',
+                    'description': '查看学习数据',
+                    'icon': '📊',
+                    'action': 'show_statistics',
+                    'shortcut': 'Ctrl+S'
+                },
+                {
+                    'name': '今日总结',
+                    'description': '查看今日学习总结',
+                    'icon': '📋',
+                    'action': 'daily_summary',
+                    'shortcut': 'Ctrl+D'
+                }
+            ]
+
+            # 更新缓存
+            self.quick_actions_cache['actions'] = actions
+            self.last_cache_update = datetime.now()
+
+            return actions
+
+        except Exception as e:
+            self.logger.error(f"获取快速操作失败: {e}")
+            return []
 
 
 class QuickActionDialog(QDialog):
