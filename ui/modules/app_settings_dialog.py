@@ -53,24 +53,20 @@ class AppSettingsDialog(QDialog):
         
         # 创建选项卡
         self.tab_widget = QTabWidget()
-        
-        # 1. 浮窗设置选项卡
-        self.floating_tab = self.create_floating_settings_tab()
-        self.tab_widget.addTab(self.floating_tab, "🎈 浮窗设置")
-        
-        # 2. 通知设置选项卡
+
+        # 1. 通知设置选项卡
         self.notification_tab = self.create_notification_settings_tab()
         self.tab_widget.addTab(self.notification_tab, "🔔 通知设置")
-        
-        # 3. 主题设置选项卡
+
+        # 2. 主题设置选项卡
         self.theme_tab = self.create_theme_settings_tab()
         self.tab_widget.addTab(self.theme_tab, "🎨 主题设置")
-        
-        # 4. 时间校准选项卡
+
+        # 3. 时间校准选项卡
         self.time_tab = self.create_time_calibration_tab()
         self.tab_widget.addTab(self.time_tab, "⏰ 时间校准")
-        
-        # 5. 系统集成选项卡
+
+        # 4. 系统集成选项卡
         self.system_tab = self.create_system_integration_tab()
         self.tab_widget.addTab(self.system_tab, "⚙️ 系统集成")
         
@@ -105,125 +101,7 @@ class AppSettingsDialog(QDialog):
         
         layout.addLayout(button_layout)
     
-    def create_floating_settings_tab(self) -> QWidget:
-        """创建浮窗设置选项卡"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # 外观设置
-        appearance_group = QGroupBox("外观设置")
-        appearance_layout = QFormLayout(appearance_group)
-        
-        # 透明度
-        self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
-        self.opacity_slider.setRange(10, 100)
-        self.opacity_slider.setValue(90)
-        self.opacity_label = QLabel("90%")
-        opacity_layout = QHBoxLayout()
-        opacity_layout.addWidget(self.opacity_slider)
-        opacity_layout.addWidget(self.opacity_label)
-        self.opacity_slider.valueChanged.connect(lambda v: self.opacity_label.setText(f"{v}%"))
-        appearance_layout.addRow("透明度:", opacity_layout)
-        
-        # 尺寸设置
-        size_layout = QHBoxLayout()
-        self.width_spin = QSpinBox()
-        self.width_spin.setRange(200, 800)
-        self.width_spin.setValue(400)
-        self.width_spin.setSuffix(" px")
-        size_layout.addWidget(QLabel("宽度:"))
-        size_layout.addWidget(self.width_spin)
-        
-        self.height_spin = QSpinBox()
-        self.height_spin.setRange(40, 200)
-        self.height_spin.setValue(60)
-        self.height_spin.setSuffix(" px")
-        size_layout.addWidget(QLabel("高度:"))
-        size_layout.addWidget(self.height_spin)
-        appearance_layout.addRow("尺寸:", size_layout)
-        
-        # 圆角
-        self.border_radius_spin = QSpinBox()
-        self.border_radius_spin.setRange(0, 50)
-        self.border_radius_spin.setValue(30)
-        self.border_radius_spin.setSuffix(" px")
-        appearance_layout.addRow("圆角:", self.border_radius_spin)
-        
-        layout.addWidget(appearance_group)
-        
-        # 位置设置
-        position_group = QGroupBox("位置设置")
-        position_layout = QFormLayout(position_group)
-        
-        self.position_preset_combo = QComboBox()
-        self.position_preset_combo.addItems([
-            "屏幕顶部居中", "屏幕顶部左侧", "屏幕顶部右侧",
-            "屏幕底部居中", "自定义位置"
-        ])
-        position_layout.addRow("位置预设:", self.position_preset_combo)
-        
-        # 自定义坐标
-        coord_layout = QHBoxLayout()
-        self.x_spin = QSpinBox()
-        self.x_spin.setRange(0, 9999)
-        self.x_spin.setValue(100)
-        coord_layout.addWidget(QLabel("X:"))
-        coord_layout.addWidget(self.x_spin)
-        
-        self.y_spin = QSpinBox()
-        self.y_spin.setRange(0, 9999)
-        self.y_spin.setValue(10)
-        coord_layout.addWidget(QLabel("Y:"))
-        coord_layout.addWidget(self.y_spin)
-        position_layout.addRow("自定义坐标:", coord_layout)
-        
-        layout.addWidget(position_group)
-        
-        # 模块管理
-        modules_group = QGroupBox("模块管理")
-        modules_layout = QVBoxLayout(modules_group)
-        
-        self.modules_list = QListWidget()
-        self.modules_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
-        
-        # 添加模块项
-        modules = [
-            ("time", "时间显示", True),
-            ("schedule", "课程表", True),
-            ("weather", "天气信息", False),
-            ("calendar", "日历", False),
-            ("tasks", "任务提醒", False)
-        ]
-        
-        for module_id, module_name, enabled in modules:
-            item = QListWidgetItem(module_name)
-            item.setData(Qt.ItemDataRole.UserRole, module_id)
-            item.setCheckState(Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked)
-            self.modules_list.addItem(item)
-        
-        modules_layout.addWidget(QLabel("拖拽调整显示顺序，勾选启用模块:"))
-        modules_layout.addWidget(self.modules_list)
-        
-        layout.addWidget(modules_group)
-        
-        # 交互设置
-        interaction_group = QGroupBox("交互设置")
-        interaction_layout = QFormLayout(interaction_group)
-        
-        self.mouse_transparent_check = QCheckBox("鼠标穿透")
-        self.mouse_transparent_check.setChecked(True)
-        interaction_layout.addRow(self.mouse_transparent_check)
-        
-        self.auto_hide_check = QCheckBox("自动隐藏")
-        interaction_layout.addRow(self.auto_hide_check)
-        
-        self.always_on_top_check = QCheckBox("总是置顶")
-        self.always_on_top_check.setChecked(True)
-        interaction_layout.addRow(self.always_on_top_check)
-        
-        layout.addWidget(interaction_group)
-        
-        return tab
+
     
     def create_notification_settings_tab(self) -> QWidget:
         """创建通知设置选项卡"""

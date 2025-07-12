@@ -40,6 +40,9 @@ class FloatingManager(QObject):
         self.floating_widget: Optional[FloatingWidget] = None
         self._is_visible = False
 
+        # 浮窗设置对话框
+        self.settings_dialog = None
+
         self._initialize_widget()
 
         # 连接信号
@@ -155,3 +158,79 @@ class FloatingManager(QObject):
             # In case signals were already disconnected
             pass
         self.logger.info("浮窗管理器清理完成。")
+
+    def show_settings_dialog(self):
+        """显示浮窗设置对话框"""
+        try:
+            if self.settings_dialog is None:
+                from ui.floating_settings_dialog import FloatingSettingsDialog
+                self.settings_dialog = FloatingSettingsDialog(
+                    config_manager=self.config_manager,
+                    theme_manager=self.theme_manager,
+                    floating_manager=self
+                )
+
+                # 连接信号
+                self.settings_dialog.settings_applied.connect(self.on_settings_applied)
+                self.settings_dialog.dialog_closed.connect(self.on_settings_dialog_closed)
+
+            # 显示对话框
+            self.settings_dialog.show()
+            self.settings_dialog.raise_()
+            self.settings_dialog.activateWindow()
+
+            self.logger.info("浮窗设置对话框已显示")
+
+        except Exception as e:
+            self.logger.error(f"显示浮窗设置对话框失败: {e}")
+
+    def on_settings_applied(self):
+        """设置应用后的处理"""
+        try:
+            # 重新加载浮窗配置
+            if self.floating_widget:
+                self.floating_widget.load_config()
+                self.floating_widget.apply_config()
+
+            self.logger.info("浮窗设置已应用")
+
+        except Exception as e:
+            self.logger.error(f"应用浮窗设置失败: {e}")
+
+    def on_settings_dialog_closed(self):
+        """设置对话框关闭后的处理"""
+        try:
+            # 可以在这里添加清理逻辑
+            self.logger.info("浮窗设置对话框已关闭")
+
+        except Exception as e:
+            self.logger.error(f"处理设置对话框关闭失败: {e}")
+
+    def apply_settings(self, settings: dict):
+        """应用设置到浮窗"""
+        try:
+            if self.floating_widget:
+                # 应用透明度
+                if "opacity" in settings:
+                    self.floating_widget.setWindowOpacity(settings["opacity"])
+
+                # 应用尺寸
+                if "width" in settings and "height" in settings:
+                    self.floating_widget.resize(settings["width"], settings["height"])
+
+                # 应用位置
+                if "x" in settings and "y" in settings:
+                    self.floating_widget.move(settings["x"], settings["y"])
+
+                # 应用其他设置
+                if "always_on_top" in settings:
+                    self.floating_widget.set_always_on_top(settings["always_on_top"])
+
+                # 重新加载配置
+                self.floating_widget.load_config()
+                self.floating_widget.apply_config()
+
+            self.logger.info("浮窗设置已应用")
+
+        except Exception as e:
+            self.logger.error(f"应用浮窗设置失败: {e}")

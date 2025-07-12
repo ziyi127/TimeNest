@@ -122,19 +122,13 @@ class TrayFeatureManager(QObject):
                 self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
                 return
 
-            from ui.floating_settings_tab import FloatingSettingsTab
-            dialog = QDialog()
-            dialog.setWindowTitle("浮窗设置")
-            dialog.setFixedSize(500, 400)
+            # 使用浮窗管理器的独立设置对话框
+            if hasattr(self.app_manager, 'floating_manager') and self.app_manager.floating_manager:
+                self.app_manager.floating_manager.show_settings_dialog()
+                self.feature_activated.emit("floating_settings")
+            else:
+                self._show_feature_unavailable("浮窗设置", "浮窗管理器不可用")
 
-            layout = QVBoxLayout(dialog)
-            settings_widget = FloatingSettingsTab(self.app_manager.config_manager, self.app_manager.theme_manager)
-            layout.addWidget(settings_widget)
-
-            dialog.exec()
-            self.feature_activated.emit("floating_settings")
-        except ImportError:
-            self._show_feature_unavailable("浮窗设置")
         except Exception as e:
             self.logger.error(f"显示浮窗设置失败: {e}")
             self._show_error("浮窗设置", str(e))

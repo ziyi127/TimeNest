@@ -235,3 +235,108 @@ class FloatingWidget(QWidget):
     def mouseReleaseEvent(self, event):
         self.drag_position = None
         event.accept()
+
+    def load_config(self):
+        """重新加载配置"""
+        try:
+            self.update_from_config()
+            self.logger.info("浮窗配置已重新加载")
+        except Exception as e:
+            self.logger.error(f"重新加载浮窗配置失败: {e}")
+
+    def apply_config(self):
+        """应用配置更改"""
+        try:
+            config = self.config_manager.get_config('floating_widget', {})
+
+            # 应用尺寸
+            width = config.get('width', 400)
+            height = config.get('height', 60)
+            self.setFixedSize(width, height)
+
+            # 应用透明度
+            opacity = config.get('opacity', 0.85)
+            self.setWindowOpacity(1.0)  # 透明度在paintEvent中处理
+
+            # 应用位置
+            self.reposition()
+
+            # 应用鼠标穿透
+            mouse_through = config.get('mouse_through', False)
+            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, mouse_through)
+
+            # 应用置顶设置
+            always_on_top = config.get('always_on_top', True)
+            self.set_always_on_top(always_on_top)
+
+            # 更新模块
+            modules = config.get('modules', ['time'])
+            self.update_modules(modules)
+
+            # 应用主题
+            self.apply_theme()
+
+            # 强制重绘
+            self.update()
+
+            self.logger.info("浮窗配置已应用")
+
+        except Exception as e:
+            self.logger.error(f"应用浮窗配置失败: {e}")
+
+    def set_always_on_top(self, always_on_top: bool):
+        """设置是否总是置顶"""
+        try:
+            flags = self.windowFlags()
+            if always_on_top:
+                flags |= Qt.WindowType.WindowStaysOnTopHint
+            else:
+                flags &= ~Qt.WindowType.WindowStaysOnTopHint
+
+            # 保存当前状态
+            was_visible = self.isVisible()
+
+            # 应用新的窗口标志
+            self.setWindowFlags(flags)
+
+            # 恢复可见状态
+            if was_visible:
+                self.show()
+
+        except Exception as e:
+            self.logger.error(f"设置置顶状态失败: {e}")
+
+    def contextMenuEvent(self, event):
+        """右键菜单事件"""
+        try:
+            from PyQt6.QtWidgets import QMenu
+
+            menu = QMenu(self)
+
+            # 添加设置选项
+            settings_action = menu.addAction("🎈 浮窗设置")
+            settings_action.triggered.connect(self.show_settings)
+
+            menu.addSeparator()
+
+            # 添加隐藏选项
+            hide_action = menu.addAction("🙈 隐藏浮窗")
+            hide_action.triggered.connect(self.hide_animated)
+
+            # 显示菜单
+            menu.exec(event.globalPos())
+
+        except Exception as e:
+            self.logger.error(f"显示右键菜单失败: {e}")
+
+    def show_settings(self):
+        """显示设置对话框"""
+        try:
+            # 通过应用管理器获取浮窗管理器并显示设置
+            if hasattr(self.app_manager, 'floating_manager') and self.app_manager.floating_manager:
+                self.app_manager.floating_manager.show_settings_dialog()
+            else:
+                self.logger.warning("浮窗管理器不可用")
+
+        except Exception as e:
+            self.logger.error(f"显示浮窗设置失败: {e}")
