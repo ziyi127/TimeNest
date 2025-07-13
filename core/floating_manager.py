@@ -17,7 +17,7 @@ TimeNest 浮窗管理器
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from functools import lru_cache
 
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -137,17 +137,16 @@ class FloatingManager(QObject):
         """检查浮窗是否可见"""
         return self._is_visible
 
-    def get_current_config(self) -> Dict[str, Any]:
-        """获取当前配置"""
-        try:
-            if not self.config_manager:
-                return {}
+def get_current_config(self) -> Dict[str, Any]:
+    """获取当前配置"""
+    if not self.config_manager:
+        return {}
 
-            return self.config_manager.get_config('floating_widget', {})
-
-        except Exception as e:
-            self.logger.error(f"获取当前配置失败: {e}")
-            return {}
+    try:
+        return self.config_manager.get_config('floating_widget', {})
+    except (AttributeError, KeyError) as e:
+        self.logger.error(f"获取当前配置失败: {e}", exc_info=True)
+        return {}
 
     def apply_config(self, config: Dict[str, Any]):
         """应用配置"""
