@@ -28,11 +28,7 @@ jobs:
       run: |
         python -m py_compile main.py
         python -c "import py_compile; import os; [py_compile.compile(os.path.join(root, file), doraise=True) for root, dirs, files in os.walk('.') if 'venv' not in root and '__pycache__' not in root for file in files if file.endswith('.py')]"
-        
-    - name: Test run
-      run: |
-        python main.py --help || echo "Application started successfully"
-        
+
     - name: Build executable (if on main branch)
       if: github.ref == 'refs/heads/main'
       run: |
