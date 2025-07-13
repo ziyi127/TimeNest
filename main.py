@@ -95,20 +95,63 @@ def setup_application():
     
     # 设置应用图标
     icon_paths = [
+        Path(__file__).parent / 'resources' / 'icons' / 'app_icon.png',
+        Path(__file__).parent / 'resources' / 'icons' / 'tray_icon_256x256.png',
+        Path(__file__).parent / 'resources' / 'icons' / 'tray_icon_128x128.png',
         Path(__file__).parent / 'assets' / 'icon.ico',
-        Path(__file__).parent / 'resources' / 'icons' / 'app.png',
-        Path(__file__).parent / 'resources' / 'icons' / 'app.ico'
+        Path(__file__).parent / 'resources' / 'icons' / 'app.png'
     ]
-    
+
     for icon_path in icon_paths:
         if icon_path.exists():
             app.setWindowIcon(QIcon(str(icon_path)))
+            # logger在这里还没有初始化，先不记录
             break
     
     # 设置样式
     app.setStyle('Fusion')  # 使用 Fusion 样式以获得更好的跨平台一致性
-    
+
+    # 预加载MiSans-Light字体
+    _preload_fonts(app)
+
     return app
+
+
+def _preload_fonts(app):
+    """预加载字体"""
+    try:
+        import logging
+        logger = logging.getLogger('TimeNest.FontLoader')
+
+        from PyQt6.QtGui import QFontDatabase
+        from pathlib import Path
+
+        # 字体文件路径
+        fonts_dir = Path(__file__).parent / 'resources' / 'fonts'
+        misans_font = fonts_dir / 'MiSans-Light.ttf'
+
+        if misans_font.exists():
+            font_id = QFontDatabase.addApplicationFont(str(misans_font))
+
+            if font_id != -1:
+                font_families = QFontDatabase.applicationFontFamilies(font_id)
+                logger.info(f"MiSans-Light字体已加载: {font_families}")
+
+                # 设置应用默认字体
+                from PyQt6.QtGui import QFont
+                default_font = QFont('MiSans-Light', 12)
+                app.setFont(default_font)
+                logger.info("应用默认字体已设置为MiSans-Light")
+            else:
+                logger.warning("MiSans-Light字体加载失败")
+        else:
+            logger.warning(f"MiSans-Light字体文件不存在: {misans_font}")
+            logger.info("请将MiSans-Light.ttf文件放置在 resources/fonts/ 目录下")
+
+    except Exception as e:
+        import logging
+        logger = logging.getLogger('TimeNest.FontLoader')
+        logger.error(f"预加载字体失败: {e}")
 
 
 def check_dependencies():

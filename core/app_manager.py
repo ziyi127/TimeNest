@@ -119,6 +119,11 @@ class AppManager(QObject):
             self.logger.info("初始化时间管理器...")
             self.time_manager = TimeManager(self.config_manager)
 
+            # 2.5. 初始化字体管理器
+            self.logger.info("初始化字体管理器...")
+            from core.font_manager import FontManager
+            self.font_manager = FontManager(self.config_manager)
+
             # 3. 初始化主题管理器
             self.logger.info("初始化主题管理器...")
             self.theme_manager = ThemeManager(self.config_manager)

@@ -349,18 +349,69 @@ class ConfigManager(QObject):
         return value
 
     def get_config(self, key: str, default: Any = None, config_type: str = 'main') -> Any:
-        """获取配置值（优化版本）"""
+        """获取配置值（增强版本，支持优先级合并）"""
         try:
-            # 使用缓存获取
-            value = self._get_config_cached(key, config_type)
-            return value if value is not None else default
+            # 如果指定了特定配置类型，直接获取
+            if config_type != 'auto':
+                value = self._get_config_cached(key, config_type)
+                return value if value is not None else default
+
+            # 自动模式：按优先级合并配置
+            # 优先级：user > main > component > layout
+            for cfg_type in ['user', 'main', 'component', 'layout']:
+                value = self._get_config_cached(key, cfg_type)
+                if value is not None:
+                    return value
+
+            return default
 
         except Exception as e:
             self.logger.error(f"获取配置失败: {e}")
             return default
+
+    def get_merged_config(self, key: str, default: Any = None) -> Any:
+        """获取合并后的配置值（所有配置类型按优先级合并）"""
+        try:
+            # 按优先级顺序合并配置
+            # 优先级：user > main > component > layout
+            result = default
+
+            # 从低优先级开始，逐步覆盖
+            for cfg_type in ['layout', 'component', 'main', 'user']:
+                value = self._get_config_cached(key, cfg_type)
+                if value is not None:
+                    if isinstance(value, dict) and isinstance(result, dict):
+                        # 字典类型进行深度合并
+                        result = self._deep_merge_dict(result, value)
+                    else:
+                        # 非字典类型直接覆盖
+                        result = value
+
+            return result
+
+        except Exception as e:
+            self.logger.error(f"获取合并配置失败: {e}")
+            return default
+
+    def _deep_merge_dict(self, base_dict: dict, override_dict: dict) -> dict:
+        """深度合并字典"""
+        try:
+            result = base_dict.copy()
+
+            for key, value in override_dict.items():
+                if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                    result[key] = self._deep_merge_dict(result[key], value)
+                else:
+                    result[key] = value
+
+            return result
+
+        except Exception as e:
+            self.logger.error(f"深度合并字典失败: {e}")
+            return base_dict
     
     def set_config(self, key: str, value: Any, config_type: str = 'main', save: bool = True):
-        """设置配置值"""
+        """设置配置值（增强版）"""
         try:
             if config_type == 'user':
                 config_dict = self.user_config
@@ -370,42 +421,47 @@ class ConfigManager(QObject):
                 config_dict = self.layout_config
             else:
                 config_dict = self.main_config
-            
+
             # 获取旧值
             old_value = self.get_config(key, None, config_type)
-            
+
+            # 验证配置值
+            if not self._validate_config_value(key, value):
+                self.logger.warning(f"配置值可能无效: {key} = {value}")
+
             # 支持嵌套键设置
             keys = key.split('.')
             current_dict = config_dict
-            
+
             for k in keys[:-1]:
                 if k not in current_dict:
                     current_dict[k] = {}
                 current_dict = current_dict[k]
-            
+
             current_dict[keys[-1]] = value
 
             # 清除缓存
             self._get_config_cached.cache_clear()
 
-            # 保存配置
+            # 保存配置（增强版）
             if save:
-                if config_type == 'user':
-                    self.save_user_config()
-                elif config_type == 'component':
-                    self.save_component_config()
-                elif config_type == 'layout':
-                    self.save_layout_config()
-                else:
-                    self.save_main_config()
-            
+                success = self._save_config_with_backup(config_type)
+                if not success:
+                    self.logger.error(f"配置保存失败: {config_type}")
+                    return False
+
             # 发送配置变更信号
             self.config_changed.emit(key, old_value, value)
-            
-            self.logger.debug(f"设置配置: {key} = {value}")
-            
+
+            # 记录配置变更历史
+            self._record_config_change(key, old_value, value, config_type)
+
+            self.logger.debug(f"设置配置: {key} = {value} ({config_type})")
+            return True
+
         except Exception as e:
             self.logger.error(f"设置配置失败: {e}")
+            return False
     
     def remove_config(self, key: str, config_type: str = 'main', save: bool = True) -> bool:
         """移除配置项"""
@@ -552,6 +608,325 @@ class ConfigManager(QObject):
         except Exception as e:
             self.logger.error(f"导入配置失败: {e}")
             return False
+
+    def _validate_config_value(self, key: str, value: Any) -> bool:
+        """验证配置值的有效性"""
+        try:
+            # 基本类型验证
+            if value is None:
+                return True
+
+            # 特定键的验证规则
+            validation_rules = {
+                'floating_widget.opacity': lambda v: isinstance(v, (int, float)) and 0.0 <= v <= 1.0,
+                'floating_widget.width': lambda v: isinstance(v, int) and 100 <= v <= 2000,
+                'floating_widget.height': lambda v: isinstance(v, int) and 50 <= v <= 1000,
+                'floating_widget.border_radius': lambda v: isinstance(v, int) and 0 <= v <= 50,
+                'notification.advance_minutes': lambda v: isinstance(v, int) and 0 <= v <= 60,
+                'theme.name': lambda v: isinstance(v, str) and len(v) > 0,
+                'floating_widget.position': lambda v: isinstance(v, (str, dict)),
+            }
+
+            # 检查特定规则
+            for rule_key, validator in validation_rules.items():
+                if key.startswith(rule_key) or key == rule_key:
+                    return validator(value)
+
+            # 通用验证：检查是否为可序列化的类型
+            import json
+            json.dumps(value)
+            return True
+
+        except Exception as e:
+            self.logger.warning(f"配置值验证失败: {key} = {value}, 错误: {e}")
+            return False
+
+    def _save_config_with_backup(self, config_type: str) -> bool:
+        """带备份的配置保存"""
+        try:
+            # 创建备份
+            backup_success = self._create_config_backup(config_type)
+            if not backup_success:
+                self.logger.warning(f"创建配置备份失败: {config_type}")
+
+            # 保存配置
+            if config_type == 'user':
+                self.save_user_config()
+            elif config_type == 'component':
+                self.save_component_config()
+            elif config_type == 'layout':
+                self.save_layout_config()
+            else:
+                self.save_main_config()
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"保存配置失败: {config_type}, 错误: {e}")
+            # 尝试恢复备份
+            self._restore_config_backup(config_type)
+            return False
+
+    def _create_config_backup(self, config_type: str) -> bool:
+        """创建配置备份"""
+        try:
+            # 获取配置文件路径
+            config_files = {
+                'main': self.main_config_file,
+                'user': self.user_config_file,
+                'component': self.component_config_file,
+                'layout': self.layout_config_file
+            }
+
+            config_file = config_files.get(config_type)
+            if not config_file or not config_file.exists():
+                return False
+
+            # 创建备份目录
+            backup_dir = self.config_dir / 'backups'
+            backup_dir.mkdir(exist_ok=True)
+
+            # 生成备份文件名（包含时间戳）
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_file = backup_dir / f"{config_type}_{timestamp}.json"
+
+            # 复制配置文件
+            import shutil
+            shutil.copy2(config_file, backup_file)
+
+            # 保留最近10个备份
+            self._cleanup_old_backups(backup_dir, config_type)
+
+            self.logger.debug(f"配置备份已创建: {backup_file}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"创建配置备份失败: {e}")
+            return False
+
+    def _cleanup_old_backups(self, backup_dir: Path, config_type: str):
+        """清理旧的备份文件"""
+        try:
+            # 获取该类型的所有备份文件
+            backup_files = list(backup_dir.glob(f"{config_type}_*.json"))
+
+            # 按修改时间排序，保留最新的10个
+            backup_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+            # 删除多余的备份
+            for old_backup in backup_files[10:]:
+                old_backup.unlink()
+                self.logger.debug(f"删除旧备份: {old_backup}")
+
+        except Exception as e:
+            self.logger.warning(f"清理旧备份失败: {e}")
+
+    def _restore_config_backup(self, config_type: str) -> bool:
+        """恢复配置备份"""
+        try:
+            backup_dir = self.config_dir / 'backups'
+            if not backup_dir.exists():
+                return False
+
+            # 找到最新的备份文件
+            backup_files = list(backup_dir.glob(f"{config_type}_*.json"))
+            if not backup_files:
+                return False
+
+            latest_backup = max(backup_files, key=lambda f: f.stat().st_mtime)
+
+            # 获取目标配置文件
+            config_files = {
+                'main': self.main_config_file,
+                'user': self.user_config_file,
+                'component': self.component_config_file,
+                'layout': self.layout_config_file
+            }
+
+            config_file = config_files.get(config_type)
+            if not config_file:
+                return False
+
+            # 恢复备份
+            import shutil
+            shutil.copy2(latest_backup, config_file)
+
+            # 清除缓存并重新加载配置
+            self._get_config_cached.cache_clear()
+
+            # 重新加载对应的配置
+            if config_type == 'main':
+                self.load_main_config()
+            elif config_type == 'user':
+                self.load_user_config()
+            elif config_type == 'component':
+                self.load_component_config()
+            elif config_type == 'layout':
+                self.load_layout_config()
+
+            self.logger.info(f"配置已从备份恢复并重新加载: {latest_backup}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"恢复配置备份失败: {e}")
+            return False
+
+    def _record_config_change(self, key: str, old_value: Any, new_value: Any, config_type: str):
+        """记录配置变更历史"""
+        try:
+            # 创建变更记录
+            from datetime import datetime
+            change_record = {
+                'timestamp': datetime.now().isoformat(),
+                'key': key,
+                'old_value': old_value,
+                'new_value': new_value,
+                'config_type': config_type
+            }
+
+            # 保存到变更历史文件
+            history_file = self.config_dir / 'config_history.json'
+
+            # 读取现有历史
+            history = []
+            if history_file.exists():
+                try:
+                    with open(history_file, 'r', encoding='utf-8') as f:
+                        history = json.load(f)
+                except:
+                    history = []
+
+            # 添加新记录
+            history.insert(0, change_record)
+
+            # 保留最近100条记录
+            history = history[:100]
+
+            # 保存历史
+            with open(history_file, 'w', encoding='utf-8') as f:
+                json.dump(history, f, indent=2, ensure_ascii=False)
+
+        except Exception as e:
+            self.logger.warning(f"记录配置变更历史失败: {e}")
+
+    def apply_config_to_components(self, key: str, value: Any):
+        """将配置变更立即应用到相关组件"""
+        try:
+            # 根据配置键确定需要通知的组件
+            component_mapping = {
+                'floating_widget': ['floating_manager', 'floating_widget'],
+                'notification': ['notification_manager'],
+                'theme': ['theme_manager'],
+                'system': ['app_manager'],
+                'time': ['time_manager']
+            }
+
+            # 确定配置类别
+            config_category = key.split('.')[0]
+            target_components = component_mapping.get(config_category, [])
+
+            # 发送配置更新信号给相关组件
+            for component in target_components:
+                self.config_changed.emit(f"{component}.{key}", None, value)
+
+            self.logger.debug(f"配置已应用到组件: {key} -> {target_components}")
+
+        except Exception as e:
+            self.logger.warning(f"应用配置到组件失败: {e}")
+
+    def force_save_all_configs(self):
+        """强制保存所有配置"""
+        try:
+            self.save_main_config()
+            self.save_user_config()
+            self.save_component_config()
+            self.save_layout_config()
+
+            self.logger.info("所有配置强制保存完成")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"强制保存所有配置失败: {e}")
+            return False
+
+    def get_config_summary(self) -> Dict[str, Any]:
+        """获取配置摘要信息"""
+        try:
+            summary = {
+                'config_files': {
+                    'main': {
+                        'path': str(self.main_config_file),
+                        'exists': self.main_config_file.exists(),
+                        'size': self.main_config_file.stat().st_size if self.main_config_file.exists() else 0
+                    },
+                    'user': {
+                        'path': str(self.user_config_file),
+                        'exists': self.user_config_file.exists(),
+                        'size': self.user_config_file.stat().st_size if self.user_config_file.exists() else 0
+                    },
+                    'component': {
+                        'path': str(self.component_config_file),
+                        'exists': self.component_config_file.exists(),
+                        'size': self.component_config_file.stat().st_size if self.component_config_file.exists() else 0
+                    },
+                    'layout': {
+                        'path': str(self.layout_config_file),
+                        'exists': self.layout_config_file.exists(),
+                        'size': self.layout_config_file.stat().st_size if self.layout_config_file.exists() else 0
+                    }
+                },
+                'config_keys': {
+                    'main': list(self._get_all_keys(self.main_config)),
+                    'user': list(self._get_all_keys(self.user_config)),
+                    'component': list(self._get_all_keys(self.component_config)),
+                    'layout': list(self._get_all_keys(self.layout_config))
+                },
+                'backup_info': self._get_backup_info()
+            }
+
+            return summary
+
+        except Exception as e:
+            self.logger.error(f"获取配置摘要失败: {e}")
+            return {}
+
+    def _get_all_keys(self, config_dict: dict, prefix: str = '') -> List[str]:
+        """递归获取配置字典中的所有键"""
+        keys = []
+        for key, value in config_dict.items():
+            full_key = f"{prefix}.{key}" if prefix else key
+            keys.append(full_key)
+            if isinstance(value, dict):
+                keys.extend(self._get_all_keys(value, full_key))
+        return keys
+
+    def _get_backup_info(self) -> Dict[str, Any]:
+        """获取备份信息"""
+        try:
+            backup_dir = self.config_dir / 'backups'
+            if not backup_dir.exists():
+                return {'backup_count': 0, 'latest_backup': None}
+
+            backup_files = list(backup_dir.glob('*.json'))
+            backup_count = len(backup_files)
+
+            latest_backup = None
+            if backup_files:
+                latest_file = max(backup_files, key=lambda f: f.stat().st_mtime)
+                latest_backup = {
+                    'file': str(latest_file),
+                    'timestamp': latest_file.stat().st_mtime
+                }
+
+            return {
+                'backup_count': backup_count,
+                'latest_backup': latest_backup
+            }
+
+        except Exception as e:
+            self.logger.warning(f"获取备份信息失败: {e}")
+            return {'backup_count': 0, 'latest_backup': None}
     
     def reset_config(self, config_type: str = 'all'):
         """重置配置为默认值"""

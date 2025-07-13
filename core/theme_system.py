@@ -211,7 +211,12 @@ class ThemeManager(QObject):
                     author="TimeNest Team",
                     theme_type=ThemeType.LIGHT
                 ),
-                colors=ThemeColors()  # 使用默认浅色配置
+                colors=ThemeColors(),  # 使用默认浅色配置
+                fonts={
+                    'family': 'MiSans-Light',
+                    'size': 12,
+                    'weight': 'normal'
+                }
             )
             
             # 深色主题
@@ -237,7 +242,12 @@ class ThemeManager(QObject):
                     author="TimeNest Team",
                     theme_type=ThemeType.DARK
                 ),
-                colors=dark_colors
+                colors=dark_colors,
+                fonts={
+                    'family': 'MiSans-Light',
+                    'size': 12,
+                    'weight': 'normal'
+                }
             )
             
             self.themes["builtin_light"] = light_theme
@@ -374,19 +384,27 @@ class ThemeManager(QObject):
         """生成样式表"""
         try:
             colors = theme.colors
-            
+
+            # 获取字体设置
+            font_family = theme.fonts.get('family', 'MiSans-Light')
+            font_size = theme.fonts.get('size', 12)
+
             # 基础样式
             stylesheet = f"""
             QMainWindow {{
                 background-color: {colors.background};
                 color: {colors.text_primary};
+                font-family: '{font_family}';
+                font-size: {font_size}px;
             }}
-            
+
             QWidget {{
                 background-color: {colors.background};
                 color: {colors.text_primary};
+                font-family: '{font_family}';
+                font-size: {font_size}px;
             }}
-            
+
             QPushButton {{
                 background-color: {colors.primary};
                 color: {colors.background};
@@ -394,22 +412,26 @@ class ThemeManager(QObject):
                 padding: 8px 16px;
                 border-radius: 4px;
                 font-weight: bold;
+                font-family: '{font_family}';
+                font-size: {font_size}px;
             }}
-            
+
             QPushButton:hover {{
                 background-color: {colors.secondary};
             }}
-            
+
             QPushButton:pressed {{
                 background-color: {colors.accent};
             }}
-            
+
             QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox {{
                 background-color: {colors.surface};
                 color: {colors.text_primary};
                 border: 1px solid {colors.border};
                 padding: 4px 8px;
                 border-radius: 4px;
+                font-family: '{font_family}';
+                font-size: {font_size}px;
             }}
             
             QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{

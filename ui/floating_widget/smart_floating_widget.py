@@ -143,16 +143,17 @@ class SmartFloatingWidget(QWidget):
 
 
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
-                # 首先加载组件配置
-                component_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
-                # 然后加载主配置
-                main_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'main')
+                # 使用增强的配置合并方法，确保正确的优先级
+                self.config = self.app_manager.config_manager.get_merged_config('floating_widget', {})
+                self.logger.debug(f"从配置管理器加载的合并配置: {self.config}")
 
-                # 合并配置，主配置优先
-                self.config = {**component_config, **main_config}
-                self.logger.debug(f"从配置管理器加载的配置: {self.config}")
+                # 调试：显示各个配置源
+                component_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
+                main_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'main')
+                user_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'user')
                 self.logger.debug(f"组件配置: {component_config}")
                 self.logger.debug(f"主配置: {main_config}")
+                self.logger.debug(f"用户配置: {user_config}")
 
                 # 加载基本配置
                 self.default_width = self.config.get('width', 400)
@@ -305,8 +306,9 @@ class SmartFloatingWidget(QWidget):
             self.content_label.setStyleSheet("""
                 QLabel {
                     color: white;
+                    font-family: 'MiSans-Light';
                     font-size: 12px;
-                    font-weight: bold;
+                    font-weight: normal;
                     background: transparent;
                 }
             """)
@@ -619,8 +621,9 @@ class SmartFloatingWidget(QWidget):
                         self.content_label.setStyleSheet("""
                             QLabel {
                                 color: white;
+                                font-family: 'MiSans-Light';
                                 font-size: 12px;
-                                font-weight: bold;
+                                font-weight: normal;
                                 background: transparent;
                             }
                         """)
@@ -628,8 +631,9 @@ class SmartFloatingWidget(QWidget):
                         self.content_label.setStyleSheet("""
                             QLabel {
                                 color: #333333;
+                                font-family: 'MiSans-Light';
                                 font-size: 12px;
-                                font-weight: bold;
+                                font-weight: normal;
                                 background: transparent;
                             }
                         """)

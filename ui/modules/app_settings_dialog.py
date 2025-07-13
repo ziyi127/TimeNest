@@ -100,7 +100,25 @@ class AppSettingsDialog(QDialog):
         self.reset_button = QPushButton("重置默认")
         self.reset_button.clicked.connect(self.reset_to_defaults)
         button_layout.addWidget(self.reset_button)
-        
+
+        # 导入导出按钮
+        self.import_button = QPushButton("导入设置")
+        self.import_button.clicked.connect(self.import_settings)
+        button_layout.addWidget(self.import_button)
+
+        self.export_button = QPushButton("导出设置")
+        self.export_button.clicked.connect(self.export_settings)
+        button_layout.addWidget(self.export_button)
+
+        # 备份恢复按钮
+        self.backup_button = QPushButton("创建备份")
+        self.backup_button.clicked.connect(self.create_backup)
+        button_layout.addWidget(self.backup_button)
+
+        self.restore_button = QPushButton("恢复备份")
+        self.restore_button.clicked.connect(self.restore_backup)
+        button_layout.addWidget(self.restore_button)
+
         button_layout.addStretch()
         
         self.apply_button = QPushButton("应用")
@@ -352,6 +370,15 @@ class AppSettingsDialog(QDialog):
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(["跟随系统", "浅色主题", "深色主题", "自定义"])
         theme_layout.addRow("主题:", self.theme_combo)
+
+        # 实时预览开关
+        self.live_preview_check = QCheckBox("实时预览主题变化")
+        self.live_preview_check.setChecked(True)
+        theme_layout.addRow(self.live_preview_check)
+
+        # 自动切换开关
+        self.auto_theme_check = QCheckBox("根据时间自动切换主题")
+        theme_layout.addRow(self.auto_theme_check)
         
         layout.addWidget(theme_group)
         
@@ -489,21 +516,159 @@ class AppSettingsDialog(QDialog):
         return tab
 
     def load_settings(self):
-        """加载设置"""
+        """加载设置（完整版）"""
         try:
-            if self.app_manager and self.app_manager.config_manager:
-                # 加载各种设置:
-                # 加载各种设置
-                floating_settings = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
+            if not self.app_manager or not self.app_manager.config_manager:
+                self.logger.warning("配置管理器不可用，使用默认设置")
+                return
 
-                # 应用到界面
-                if floating_settings:
-                    self.opacity_slider.setValue(int(floating_settings.get('opacity', 0.9) * 100))
-                    self.width_spin.setValue(floating_settings.get('width', 400))
-                    self.height_spin.setValue(floating_settings.get('height', 60))
+            config_manager = self.app_manager.config_manager
+
+            # 1. 加载浮窗设置
+            self._load_floating_settings(config_manager)
+
+            # 2. 加载通知设置
+            self._load_notification_settings(config_manager)
+
+            # 3. 加载主题设置
+            self._load_theme_settings(config_manager)
+
+            # 4. 加载时间校准设置
+            self._load_time_settings(config_manager)
+
+            # 5. 加载系统集成设置
+            self._load_system_settings(config_manager)
+
+            self.logger.info("所有设置已加载到界面")
 
         except Exception as e:
             self.logger.error(f"加载设置失败: {e}")
+
+    def _load_floating_settings(self, config_manager):
+        """加载浮窗设置"""
+        try:
+            # 使用合并配置，优先级：user > main > component
+            floating_config = config_manager.get_merged_config('floating_widget', {})
+
+            # 基本设置
+            if hasattr(self, 'width_spin'):
+                self.width_spin.setValue(floating_config.get('width', 400))
+            if hasattr(self, 'height_spin'):
+                self.height_spin.setValue(floating_config.get('height', 60))
+            if hasattr(self, 'opacity_slider'):
+                opacity = floating_config.get('opacity', 0.9)
+                self.opacity_slider.setValue(int(opacity * 100))
+            if hasattr(self, 'radius_slider'):
+                self.radius_slider.setValue(floating_config.get('border_radius', 30))
+
+            # 交互设置
+            if hasattr(self, 'mouse_transparent_check'):
+                self.mouse_transparent_check.setChecked(floating_config.get('mouse_transparent', False))
+            if hasattr(self, 'always_on_top_check'):
+                self.always_on_top_check.setChecked(floating_config.get('always_on_top', True))
+            if hasattr(self, 'auto_hide_check'):
+                self.auto_hide_check.setChecked(floating_config.get('auto_hide', False))
+
+            # 模块设置
+            enabled_modules = floating_config.get('enabled_modules', ['time', 'schedule'])
+            if hasattr(self, 'modules_list'):
+                for i in range(self.modules_list.count()):
+                    item = self.modules_list.item(i)
+                    module_id = item.data(Qt.ItemDataRole.UserRole)
+                    if module_id:
+                        item.setCheckState(
+                            Qt.CheckState.Checked if module_id in enabled_modules else Qt.CheckState.Unchecked
+                        )
+
+            self.logger.debug("浮窗设置已加载")
+
+        except Exception as e:
+            self.logger.error(f"加载浮窗设置失败: {e}")
+
+    def _load_notification_settings(self, config_manager):
+        """加载通知设置"""
+        try:
+            notification_config = config_manager.get_merged_config('notification', {})
+
+            if hasattr(self, 'notification_enabled_check'):
+                self.notification_enabled_check.setChecked(notification_config.get('enabled', True))
+            if hasattr(self, 'sound_enabled_check'):
+                self.sound_enabled_check.setChecked(notification_config.get('sound_enabled', True))
+            if hasattr(self, 'voice_enabled_check'):
+                self.voice_enabled_check.setChecked(notification_config.get('voice_enabled', False))
+            if hasattr(self, 'popup_enabled_check'):
+                self.popup_enabled_check.setChecked(notification_config.get('popup_enabled', True))
+            if hasattr(self, 'advance_minutes_spin'):
+                self.advance_minutes_spin.setValue(notification_config.get('advance_minutes', 5))
+
+            self.logger.debug("通知设置已加载")
+
+        except Exception as e:
+            self.logger.error(f"加载通知设置失败: {e}")
+
+    def _load_theme_settings(self, config_manager):
+        """加载主题设置"""
+        try:
+            theme_config = config_manager.get_merged_config('theme', {})
+
+            if hasattr(self, 'theme_combo'):
+                # 映射主题名称
+                theme_name = theme_config.get('current', 'builtin_light')
+                theme_mapping = {
+                    'builtin_light': '浅色主题',
+                    'builtin_dark': '深色主题',
+                    'builtin_auto': '跟随系统',
+                    'custom': '自定义'
+                }
+                display_name = theme_mapping.get(theme_name, '浅色主题')
+
+                index = self.theme_combo.findText(display_name)
+                if index >= 0:
+                    self.theme_combo.setCurrentIndex(index)
+                    # 触发主题预览更新
+                    self.on_theme_changed(display_name)
+
+            if hasattr(self, 'auto_theme_check'):
+                self.auto_theme_check.setChecked(theme_config.get('auto_switch', False))
+
+            self.logger.debug("主题设置已加载")
+
+        except Exception as e:
+            self.logger.error(f"加载主题设置失败: {e}")
+
+    def _load_time_settings(self, config_manager):
+        """加载时间校准设置"""
+        try:
+            time_config = config_manager.get_merged_config('time', {})
+
+            if hasattr(self, 'time_offset_check'):
+                self.time_offset_check.setChecked(time_config.get('offset_enabled', False))
+            if hasattr(self, 'time_offset_spin'):
+                self.time_offset_spin.setValue(time_config.get('offset_minutes', 0))
+            if hasattr(self, 'time_speed_spin'):
+                self.time_speed_spin.setValue(time_config.get('speed_factor', 1.0))
+
+            self.logger.debug("时间校准设置已加载")
+
+        except Exception as e:
+            self.logger.error(f"加载时间校准设置失败: {e}")
+
+    def _load_system_settings(self, config_manager):
+        """加载系统集成设置"""
+        try:
+            system_config = config_manager.get_merged_config('system', {})
+
+            if hasattr(self, 'auto_start_check'):
+                self.auto_start_check.setChecked(system_config.get('auto_start', False))
+            if hasattr(self, 'minimize_tray_check'):
+                self.minimize_tray_check.setChecked(system_config.get('minimize_to_tray', True))
+            if hasattr(self, 'check_updates_check'):
+                self.check_updates_check.setChecked(system_config.get('check_updates', True))
+
+            self.logger.debug("系统集成设置已加载")
+
+        except Exception as e:
+            self.logger.error(f"加载系统集成设置失败: {e}")
 
     def connect_signals(self):
         """连接信号"""
@@ -515,7 +680,7 @@ class AppSettingsDialog(QDialog):
             self.logger.error(f"连接信号失败: {e}")
 
     def on_theme_changed(self, theme_name):
-        """主题变化处理"""
+        """主题变化处理（增强版）"""
         try:
             # 更新预览
             if theme_name == "深色主题":
@@ -526,6 +691,7 @@ class AppSettingsDialog(QDialog):
                         padding: 20px;
                         border-radius: 10px;
                         font-size: 14px;
+                        border: 2px solid #555555;
                     }
                 """)
             elif theme_name == "浅色主题":
@@ -536,11 +702,86 @@ class AppSettingsDialog(QDialog):
                         padding: 20px;
                         border-radius: 10px;
                         font-size: 14px;
+                        border: 2px solid #cccccc;
+                    }
+                """)
+            elif theme_name == "跟随系统":
+                # 检测系统主题
+                system_dark = self._is_system_dark_theme()
+                if system_dark:
+                    self.theme_preview_label.setStyleSheet("""
+                        QLabel {
+                            background-color: #2b2b2b;
+                            color: #ffffff;
+                            padding: 20px;
+                            border-radius: 10px;
+                            font-size: 14px;
+                            border: 2px dashed #888888;
+                        }
+                    """)
+                else:
+                    self.theme_preview_label.setStyleSheet("""
+                        QLabel {
+                            background-color: #f0f0f0;
+                            color: #333333;
+                            padding: 20px;
+                            border-radius: 10px;
+                            font-size: 14px;
+                            border: 2px dashed #888888;
+                        }
+                    """)
+            elif theme_name == "自定义":
+                self.theme_preview_label.setStyleSheet("""
+                    QLabel {
+                        background-color: #e8f4fd;
+                        color: #1976d2;
+                        padding: 20px;
+                        border-radius: 10px;
+                        font-size: 14px;
+                        border: 2px solid #2196F3;
                     }
                 """)
 
+            # 立即应用主题（如果启用了实时预览）
+            if hasattr(self, 'live_preview_check') and self.live_preview_check.isChecked():
+                self._apply_theme_immediately(theme_name)
+
         except Exception as e:
             self.logger.error(f"处理主题变化失败: {e}")
+
+    def _is_system_dark_theme(self) -> bool:
+        """检测系统是否使用深色主题"""
+        try:
+            from PyQt6.QtWidgets import QApplication
+            palette = QApplication.palette()
+            window_color = palette.color(QPalette.ColorRole.Window)
+            # 如果窗口背景色较暗，则认为是深色主题
+            return window_color.lightness() < 128
+        except:
+            return False
+
+    def _apply_theme_immediately(self, theme_name: str):
+        """立即应用主题（实时预览）"""
+        try:
+            if self.app_manager and self.app_manager.theme_manager:
+                # 映射主题名称
+                theme_mapping = {
+                    '跟随系统': 'builtin_auto',
+                    '浅色主题': 'builtin_light',
+                    '深色主题': 'builtin_dark',
+                    '自定义': 'custom'
+                }
+                actual_theme_name = theme_mapping.get(theme_name, theme_name)
+
+                # 应用主题
+                success = self.app_manager.theme_manager.apply_theme(actual_theme_name)
+                if success:
+                    self.logger.debug(f"实时预览主题: {theme_name}")
+                    # 发送主题变更信号
+                    self.theme_changed.emit(actual_theme_name)
+
+        except Exception as e:
+            self.logger.warning(f"实时预览主题失败: {e}")
 
     # 颜色选择方法
     def choose_background_color(self):
@@ -769,52 +1010,174 @@ class AppSettingsDialog(QDialog):
             return 'top_center'
 
     def _save_settings_to_config(self, settings: Dict[str, Any]):
-        """保存设置到配置文件"""
+        """保存设置到配置文件（增强版）"""
         try:
             config_manager = self.app_manager.config_manager
 
-            # 保存到主配置
-            for category, data in settings.items():
-                config_manager.set_config(category, data, 'main', save=False)
+            # 创建配置备份
+            backup_success = config_manager._create_config_backup('main')
+            if backup_success:
+                self.logger.debug("配置备份已创建")
 
-            # 一次性保存所有配置
-            config_manager.save_all_configs()
-            self.logger.info("设置已保存到配置文件")
+            # 保存到主配置，使用增强的set_config方法
+            saved_categories = []
+            for category, data in settings.items():
+                try:
+                    # 逐个保存配置项，确保每个都能正确保存
+                    for key, value in data.items():
+                        config_key = f"{category}.{key}"
+                        success = config_manager.set_config(config_key, value, 'main', save=False)
+                        if not success:
+                            self.logger.warning(f"配置项保存失败: {config_key}")
+
+                    saved_categories.append(category)
+                    self.logger.debug(f"配置类别已保存: {category}")
+
+                except Exception as e:
+                    self.logger.error(f"保存配置类别失败 {category}: {e}")
+
+            # 强制保存所有配置文件
+            save_success = config_manager.force_save_all_configs()
+            if save_success:
+                self.logger.info(f"设置已保存到配置文件，保存类别: {saved_categories}")
+
+                # 验证保存结果
+                self._verify_saved_settings(settings, config_manager)
+            else:
+                raise Exception("配置文件保存失败")
 
         except Exception as e:
             self.logger.error(f"保存设置到配置文件失败: {e}")
+            # 尝试恢复备份
+            try:
+                config_manager._restore_config_backup('main')
+                self.logger.info("已恢复配置备份")
+            except:
+                pass
             raise
 
-    def _apply_settings_to_components(self, settings: Dict[str, Any]):
-        """立即应用设置到相关组件"""
+    def _verify_saved_settings(self, original_settings: Dict[str, Any], config_manager):
+        """验证设置是否正确保存"""
         try:
-            # 应用浮窗设置
+            verification_failed = []
+
+            for category, data in original_settings.items():
+                saved_config = config_manager.get_merged_config(category, {})
+
+                for key, expected_value in data.items():
+                    actual_value = saved_config.get(key)
+
+                    # 对于浮点数，允许小的误差
+                    if isinstance(expected_value, float) and isinstance(actual_value, (int, float)):
+                        if abs(expected_value - actual_value) > 0.01:
+                            verification_failed.append(f"{category}.{key}: 期望 {expected_value}, 实际 {actual_value}")
+                    elif actual_value != expected_value:
+                        verification_failed.append(f"{category}.{key}: 期望 {expected_value}, 实际 {actual_value}")
+
+            if verification_failed:
+                self.logger.warning(f"设置验证失败的项目: {verification_failed}")
+            else:
+                self.logger.info("所有设置验证通过")
+
+        except Exception as e:
+            self.logger.warning(f"设置验证失败: {e}")
+
+    def _apply_settings_to_components(self, settings: Dict[str, Any]):
+        """立即应用设置到相关组件（增强版）"""
+        try:
+            applied_components = []
+
+            # 1. 应用浮窗设置
             if 'floating_widget' in settings and self.app_manager.floating_manager:
-                floating_config = settings['floating_widget']
-                self.app_manager.floating_manager.apply_config(floating_config)
+                try:
+                    floating_config = settings['floating_widget']
+                    self.app_manager.floating_manager.apply_config(floating_config)
+                    applied_components.append("浮窗管理器")
+                    self.logger.debug("浮窗设置已应用")
+                except Exception as e:
+                    self.logger.error(f"应用浮窗设置失败: {e}")
 
-            # 应用通知设置
+            # 2. 应用通知设置
             if 'notification' in settings and self.app_manager.notification_manager:
-                notification_config = settings['notification']
-                self.app_manager.notification_manager.apply_config(notification_config)
+                try:
+                    notification_config = settings['notification']
+                    if hasattr(self.app_manager.notification_manager, 'apply_config'):
+                        self.app_manager.notification_manager.apply_config(notification_config)
+                        applied_components.append("通知管理器")
+                        self.logger.debug("通知设置已应用")
+                except Exception as e:
+                    self.logger.error(f"应用通知设置失败: {e}")
 
-            # 应用主题设置
+            # 3. 应用主题设置
             if 'theme' in settings and self.app_manager.theme_manager:
-                theme_config = settings['theme']
-                if 'name' in theme_config:
-                    self.app_manager.theme_manager.set_theme(theme_config['name'])
+                try:
+                    theme_config = settings['theme']
+                    if 'name' in theme_config:
+                        # 映射主题名称
+                        theme_name = theme_config['name']
+                        theme_mapping = {
+                            '跟随系统': 'builtin_auto',
+                            '浅色主题': 'builtin_light',
+                            '深色主题': 'builtin_dark',
+                            '自定义': 'custom'
+                        }
+                        actual_theme_name = theme_mapping.get(theme_name, theme_name)
+                        success = self.app_manager.theme_manager.apply_theme(actual_theme_name)
+                        if success:
+                            applied_components.append("主题管理器")
+                            self.logger.debug(f"主题已切换: {theme_name} -> {actual_theme_name}")
+                            # 发送主题变更信号
+                            self.theme_changed.emit(actual_theme_name)
+                        else:
+                            self.logger.warning(f"主题切换失败: {theme_name}")
+                except Exception as e:
+                    self.logger.error(f"应用主题设置失败: {e}")
 
-            # 应用时间校准设置
+            # 4. 应用时间校准设置
             if 'time' in settings and hasattr(self.app_manager, 'time_manager'):
-                time_config = settings['time']
-                if hasattr(self.app_manager.time_manager, 'apply_config'):
-                    self.app_manager.time_manager.apply_config(time_config)
+                try:
+                    time_config = settings['time']
+                    if hasattr(self.app_manager.time_manager, 'apply_config'):
+                        self.app_manager.time_manager.apply_config(time_config)
+                        applied_components.append("时间管理器")
+                        self.logger.debug("时间校准设置已应用")
+                except Exception as e:
+                    self.logger.error(f"应用时间校准设置失败: {e}")
 
-            self.logger.info("设置已应用到相关组件")
+            # 5. 应用系统集成设置
+            if 'system' in settings:
+                try:
+                    system_config = settings['system']
+
+                    # 处理开机自启动
+                    if 'auto_start' in system_config:
+                        self._handle_auto_start_setting(system_config['auto_start'])
+
+                    # 处理其他系统设置
+                    if hasattr(self.app_manager, '_handle_system_config_change'):
+                        for key, value in system_config.items():
+                            self.app_manager._handle_system_config_change(f'system.{key}', value)
+
+                    applied_components.append("系统集成")
+                    self.logger.debug("系统集成设置已应用")
+                except Exception as e:
+                    self.logger.error(f"应用系统集成设置失败: {e}")
+
+            self.logger.info(f"设置已应用到组件: {applied_components}")
 
         except Exception as e:
             self.logger.error(f"应用设置到组件失败: {e}")
             # 不抛出异常，因为保存已经成功
+
+    def _handle_auto_start_setting(self, enabled: bool):
+        """处理开机自启动设置"""
+        try:
+            if hasattr(self.app_manager, '_handle_auto_start_setting'):
+                self.app_manager._handle_auto_start_setting(enabled)
+            else:
+                self.logger.debug(f"开机自启动设置: {enabled} (功能未实现)")
+        except Exception as e:
+            self.logger.warning(f"处理开机自启动设置失败: {e}")
 
     def preview_settings(self):
         """预览设置"""
@@ -987,6 +1350,163 @@ class AppSettingsDialog(QDialog):
         except Exception as e:
             self.logger.error(f"关闭事件处理失败: {e}")
             super().closeEvent(event)
+
+    def import_settings(self):
+        """导入设置"""
+        try:
+            from PyQt6.QtWidgets import QFileDialog
+
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "导入设置文件", "", "JSON文件 (*.json);;所有文件 (*)"
+            )
+
+            if file_path:
+                # 导入配置
+                if self.app_manager and self.app_manager.config_manager:
+                    success = self.app_manager.config_manager.import_config(file_path)
+                    if success:
+                        # 重新加载界面
+                        self._load_current_settings()
+                        QMessageBox.information(self, "导入成功", "设置已成功导入并应用")
+                        self.logger.info(f"设置已从文件导入: {file_path}")
+                    else:
+                        QMessageBox.warning(self, "导入失败", "导入设置文件失败，请检查文件格式")
+                else:
+                    QMessageBox.warning(self, "导入失败", "配置管理器不可用")
+
+        except Exception as e:
+            self.logger.error(f"导入设置失败: {e}")
+            QMessageBox.critical(self, "导入失败", f"导入设置时发生错误: {e}")
+
+    def export_settings(self):
+        """导出设置"""
+        try:
+            from PyQt6.QtWidgets import QFileDialog
+            from datetime import datetime
+
+            # 生成默认文件名
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            default_filename = f"timenest_settings_{timestamp}.json"
+
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "导出设置文件", default_filename, "JSON文件 (*.json);;所有文件 (*)"
+            )
+
+            if file_path:
+                # 导出配置
+                if self.app_manager and self.app_manager.config_manager:
+                    success = self.app_manager.config_manager.export_config(file_path)
+                    if success:
+                        QMessageBox.information(self, "导出成功", f"设置已成功导出到:\n{file_path}")
+                        self.logger.info(f"设置已导出到文件: {file_path}")
+                    else:
+                        QMessageBox.warning(self, "导出失败", "导出设置文件失败")
+                else:
+                    QMessageBox.warning(self, "导出失败", "配置管理器不可用")
+
+        except Exception as e:
+            self.logger.error(f"导出设置失败: {e}")
+            QMessageBox.critical(self, "导出失败", f"导出设置时发生错误: {e}")
+
+    def create_backup(self):
+        """创建配置备份"""
+        try:
+            if self.app_manager and self.app_manager.config_manager:
+                # 创建所有配置的备份
+                backup_success = True
+                for config_type in ['main', 'user', 'component', 'layout']:
+                    if not self.app_manager.config_manager._create_config_backup(config_type):
+                        backup_success = False
+
+                if backup_success:
+                    QMessageBox.information(self, "备份成功", "配置备份已创建")
+                    self.logger.info("配置备份已创建")
+                else:
+                    QMessageBox.warning(self, "备份警告", "部分配置备份创建失败")
+            else:
+                QMessageBox.warning(self, "备份失败", "配置管理器不可用")
+
+        except Exception as e:
+            self.logger.error(f"创建备份失败: {e}")
+            QMessageBox.critical(self, "备份失败", f"创建备份时发生错误: {e}")
+
+    def restore_backup(self):
+        """恢复配置备份"""
+        try:
+            if not self.app_manager or not self.app_manager.config_manager:
+                QMessageBox.warning(self, "恢复失败", "配置管理器不可用")
+                return
+
+            # 获取备份信息
+            backup_info = self.app_manager.config_manager._get_backup_info()
+            if backup_info['backup_count'] == 0:
+                QMessageBox.information(self, "无备份", "没有找到可用的配置备份")
+                return
+
+            # 确认恢复
+            reply = QMessageBox.question(
+                self, "确认恢复",
+                f"确定要恢复最近的配置备份吗？\n"
+                f"这将覆盖当前的所有设置。\n\n"
+                f"备份数量: {backup_info['backup_count']}",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # 恢复所有配置类型的备份
+                restore_success = True
+                for config_type in ['main', 'user', 'component', 'layout']:
+                    if not self.app_manager.config_manager._restore_config_backup(config_type):
+                        restore_success = False
+
+                if restore_success:
+                    # 重新加载配置和界面
+                    self.app_manager.config_manager.load_all_configs()
+                    self._load_current_settings()
+                    QMessageBox.information(self, "恢复成功", "配置已从备份恢复")
+                    self.logger.info("配置已从备份恢复")
+                else:
+                    QMessageBox.warning(self, "恢复警告", "部分配置恢复失败")
+
+        except Exception as e:
+            self.logger.error(f"恢复备份失败: {e}")
+            QMessageBox.critical(self, "恢复失败", f"恢复备份时发生错误: {e}")
+
+    def _load_current_settings(self):
+        """加载当前设置到界面"""
+        try:
+            if not self.app_manager or not self.app_manager.config_manager:
+                return
+
+            # 重新加载浮窗设置
+            floating_config = self.app_manager.config_manager.get_merged_config('floating_widget', {})
+
+            # 更新界面控件
+            if hasattr(self, 'width_spin'):
+                self.width_spin.setValue(floating_config.get('width', 400))
+            if hasattr(self, 'height_spin'):
+                self.height_spin.setValue(floating_config.get('height', 60))
+            if hasattr(self, 'opacity_slider'):
+                opacity = floating_config.get('opacity', 0.9)
+                self.opacity_slider.setValue(int(opacity * 100))
+
+            # 重新加载通知设置
+            notification_config = self.app_manager.config_manager.get_merged_config('notification', {})
+            if hasattr(self, 'notification_enabled_check'):
+                self.notification_enabled_check.setChecked(notification_config.get('enabled', True))
+
+            # 重新加载主题设置
+            theme_config = self.app_manager.config_manager.get_merged_config('theme', {})
+            if hasattr(self, 'theme_combo'):
+                theme_name = theme_config.get('current', 'builtin_light')
+                index = self.theme_combo.findText(theme_name)
+                if index >= 0:
+                    self.theme_combo.setCurrentIndex(index)
+
+            self.logger.info("当前设置已重新加载到界面")
+
+        except Exception as e:
+            self.logger.error(f"加载当前设置失败: {e}")
 
     def accept_settings(self):
         """确定并关闭"""

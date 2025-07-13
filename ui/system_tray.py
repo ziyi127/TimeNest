@@ -76,13 +76,26 @@ class SystemTray(QObject):
         try:
             self.tray_icon = QSystemTrayIcon(self)
             
-            # 设置托盘图标
-            icon_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png')
-            if os.path.exists(icon_path):
-                self.tray_icon.setIcon(QIcon(icon_path))
-                self.logger.debug(f"使用自定义托盘图标: {icon_path}")
-            else:
+            # 设置托盘图标 - 优先使用PNG格式
+            icon_paths = [
+                os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_32x32.png'),
+                os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_24x24.png'),
+                os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_16x16.png'),
+                os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'app_icon.png'),
+                os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png')
+            ]
+
+            icon_set = False
+            for icon_path in icon_paths:
+                if os.path.exists(icon_path):
+                    self.tray_icon.setIcon(QIcon(icon_path))
+                    self.logger.debug(f"使用托盘图标: {os.path.basename(icon_path)}")
+                    icon_set = True
+                    break
+
+            if not icon_set:
                 self.tray_icon.setIcon(QApplication.style().standardIcon(QApplication.style().StandardPixmap.SP_ComputerIcon))
+                self.logger.warning("使用系统默认托盘图标")
                 self.logger.debug("使用默认托盘图标")
 
             self.tray_icon.setToolTip("TimeNest")
@@ -307,6 +320,10 @@ class SystemTrayManagerLegacy(QObject):
     def _get_icon_path(self):
         """获取图标路径（缓存）"""
         possible_paths = [
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_32x32.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_24x24.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_16x16.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'app_icon.png'),
             os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png'),
             os.path.join(os.path.dirname(__file__), '..', 'resources', 'tray_icon.png'),
             os.path.join(os.path.dirname(__file__), '..', 'icons', 'tray_icon.png'),
