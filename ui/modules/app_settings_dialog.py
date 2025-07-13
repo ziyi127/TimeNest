@@ -681,42 +681,312 @@ class AppSettingsDialog(QDialog):
     def apply_settings(self):
         """应用设置"""
         try:
-            # 收集设置
-            settings = {
-                'floating_widget': {
-                    'opacity': self.opacity_slider.value() / 100.0,
-                    'width': self.width_spin.value(),
-                    'height': self.height_spin.value(),
-                    'mouse_transparent': self.mouse_transparent_check.isChecked(),
-                    'always_on_top': self.always_on_top_check.isChecked()
-                }
-            }
+            # 收集所有设置
+            settings = self._collect_all_settings()
 
-            # 保存设置
+            # 保存设置到配置管理器
             if self.app_manager and self.app_manager.config_manager:
-                for category, data in settings.items():
-                    self.app_manager.config_manager.set_config(category, data, 'component')
+                self._save_settings_to_config(settings)
 
-                self.app_manager.config_manager.save_all_configs()
+                # 立即应用设置到相关组件
+                self._apply_settings_to_components(settings)
 
-                QMessageBox.information(self, "成功", "设置已应用")
+                QMessageBox.information(self, "成功", "设置已应用并生效")
+                self.logger.info("设置已成功应用")
 
         except Exception as e:
             self.logger.error(f"应用设置失败: {e}")
             QMessageBox.critical(self, "错误", f"应用设置失败: {e}")
 
+    def _collect_all_settings(self) -> Dict[str, Any]:
+        """收集所有设置"""
+        try:
+            # 获取已启用模块
+            enabled_modules = []
+            for i in range(self.modules_list.count()):
+                item = self.modules_list.item(i)
+                if item.checkState() == Qt.CheckState.Checked:
+                    module_id = item.data(Qt.ItemDataRole.UserRole)
+                    if module_id:
+                        enabled_modules.append(module_id)
+
+            settings = {
+                # 浮窗设置
+                'floating_widget': {
+                    'enabled': True,
+                    'width': self.width_spin.value(),
+                    'height': self.height_spin.value(),
+                    'opacity': self.opacity_slider.value() / 100.0,
+                    'border_radius': getattr(self, 'radius_slider', None).value() if hasattr(self, 'radius_slider') else 30,
+                    'mouse_transparent': self.mouse_transparent_check.isChecked(),
+                    'always_on_top': self.always_on_top_check.isChecked(),
+                    'auto_hide': self.auto_hide_check.isChecked(),
+                    'enabled_modules': enabled_modules,
+                    'position': self._get_position_setting()
+                },
+                # 通知设置
+                'notification': {
+                    'enabled': getattr(self, 'notification_enabled_check', None).isChecked() if hasattr(self, 'notification_enabled_check') else True,
+                    'sound_enabled': getattr(self, 'sound_enabled_check', None).isChecked() if hasattr(self, 'sound_enabled_check') else True,
+                    'voice_enabled': getattr(self, 'voice_enabled_check', None).isChecked() if hasattr(self, 'voice_enabled_check') else False,
+                    'popup_enabled': getattr(self, 'popup_enabled_check', None).isChecked() if hasattr(self, 'popup_enabled_check') else True,
+                    'advance_minutes': getattr(self, 'advance_minutes_spin', None).value() if hasattr(self, 'advance_minutes_spin') else 5
+                },
+                # 主题设置
+                'theme': {
+                    'name': getattr(self, 'theme_combo', None).currentText() if hasattr(self, 'theme_combo') else 'default',
+                    'auto_switch': getattr(self, 'auto_theme_check', None).isChecked() if hasattr(self, 'auto_theme_check') else False
+                },
+                # 时间校准设置
+                'time': {
+                    'offset_enabled': getattr(self, 'time_offset_check', None).isChecked() if hasattr(self, 'time_offset_check') else False,
+                    'offset_minutes': getattr(self, 'time_offset_spin', None).value() if hasattr(self, 'time_offset_spin') else 0,
+                    'speed_factor': getattr(self, 'time_speed_spin', None).value() if hasattr(self, 'time_speed_spin') else 1.0
+                },
+                # 系统集成设置
+                'system': {
+                    'auto_start': getattr(self, 'auto_start_check', None).isChecked() if hasattr(self, 'auto_start_check') else False,
+                    'minimize_to_tray': getattr(self, 'minimize_tray_check', None).isChecked() if hasattr(self, 'minimize_tray_check') else True,
+                    'check_updates': getattr(self, 'check_updates_check', None).isChecked() if hasattr(self, 'check_updates_check') else True
+                }
+            }
+
+            return settings
+
+        except Exception as e:
+            self.logger.error(f"收集设置失败: {e}")
+            return {}
+
+    def _get_position_setting(self) -> str:
+        """获取位置设置"""
+        try:
+            if hasattr(self, 'position_group'):
+                checked_id = self.position_group.checkedId()
+                position_map = {0: 'top_center', 1: 'top_left', 2: 'top_right', 3: 'custom'}
+                return position_map.get(checked_id, 'top_center')
+            return 'top_center'
+        except Exception:
+            return 'top_center'
+
+    def _save_settings_to_config(self, settings: Dict[str, Any]):
+        """保存设置到配置文件"""
+        try:
+            config_manager = self.app_manager.config_manager
+
+            # 保存到主配置
+            for category, data in settings.items():
+                config_manager.set_config(category, data, 'main', save=False)
+
+            # 一次性保存所有配置
+            config_manager.save_all_configs()
+            self.logger.info("设置已保存到配置文件")
+
+        except Exception as e:
+            self.logger.error(f"保存设置到配置文件失败: {e}")
+            raise
+
+    def _apply_settings_to_components(self, settings: Dict[str, Any]):
+        """立即应用设置到相关组件"""
+        try:
+            # 应用浮窗设置
+            if 'floating_widget' in settings and self.app_manager.floating_manager:
+                floating_config = settings['floating_widget']
+                self.app_manager.floating_manager.apply_config(floating_config)
+
+            # 应用通知设置
+            if 'notification' in settings and self.app_manager.notification_manager:
+                notification_config = settings['notification']
+                self.app_manager.notification_manager.apply_config(notification_config)
+
+            # 应用主题设置
+            if 'theme' in settings and self.app_manager.theme_manager:
+                theme_config = settings['theme']
+                if 'name' in theme_config:
+                    self.app_manager.theme_manager.set_theme(theme_config['name'])
+
+            # 应用时间校准设置
+            if 'time' in settings and hasattr(self.app_manager, 'time_manager'):
+                time_config = settings['time']
+                if hasattr(self.app_manager.time_manager, 'apply_config'):
+                    self.app_manager.time_manager.apply_config(time_config)
+
+            self.logger.info("设置已应用到相关组件")
+
+        except Exception as e:
+            self.logger.error(f"应用设置到组件失败: {e}")
+            # 不抛出异常，因为保存已经成功
+
     def preview_settings(self):
         """预览设置"""
-        QMessageBox.information(self, "预览", "设置预览功能正在开发中...")
+        try:
+            # 收集当前设置
+            settings = self._collect_all_settings()
+
+            # 创建预览浮窗
+            if hasattr(self, 'preview_widget') and self.preview_widget:
+                self.preview_widget.close()
+                self.preview_widget = None
+
+            # 临时应用设置进行预览
+            if self.app_manager.floating_manager:
+                # 保存当前配置
+                self.original_config = self.app_manager.floating_manager.get_current_config()
+
+                # 应用预览配置
+                floating_config = settings.get('floating_widget', {})
+                self.app_manager.floating_manager.apply_config(floating_config)
+
+                # 显示预览提示
+                QMessageBox.information(
+                    self,
+                    "预览模式",
+                    "预览效果已应用到浮窗。\n点击'应用'保存设置，或点击'取消'恢复原设置。"
+                )
+
+                self.logger.info("设置预览已应用")
+            else:
+                QMessageBox.warning(self, "预览失败", "浮窗管理器不可用，无法预览设置")
+
+        except Exception as e:
+            self.logger.error(f"预览设置失败: {e}")
+            QMessageBox.critical(self, "预览失败", f"预览设置时发生错误: {e}")
 
     def reset_to_defaults(self):
         """重置为默认设置"""
-        reply = QMessageBox.question(
-            self, "确认重置", "确定要重置所有设置为默认值吗？",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            QMessageBox.information(self, "功能开发中", "重置功能正在开发中...")
+        try:
+            reply = QMessageBox.question(
+                self, "确认重置",
+                "确定要重置所有设置为默认值吗？\n这将清除您的所有自定义设置。",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # 获取默认配置
+                default_config = self._get_default_settings()
+
+                # 重置界面控件
+                self._reset_ui_to_defaults(default_config)
+
+                # 保存默认配置
+                if self.app_manager and self.app_manager.config_manager:
+                    self._save_settings_to_config(default_config)
+                    self._apply_settings_to_components(default_config)
+
+                QMessageBox.information(self, "重置完成", "所有设置已重置为默认值")
+                self.logger.info("设置已重置为默认值")
+
+        except Exception as e:
+            self.logger.error(f"重置设置失败: {e}")
+            QMessageBox.critical(self, "重置失败", f"重置设置时发生错误: {e}")
+
+    def _get_default_settings(self) -> Dict[str, Any]:
+        """获取默认设置"""
+        return {
+            'floating_widget': {
+                'enabled': True,
+                'width': 400,
+                'height': 60,
+                'opacity': 0.9,
+                'border_radius': 30,
+                'mouse_transparent': False,
+                'always_on_top': True,
+                'auto_hide': False,
+                'enabled_modules': ['time', 'schedule'],
+                'position': 'top_center'
+            },
+            'notification': {
+                'enabled': True,
+                'sound_enabled': True,
+                'voice_enabled': False,
+                'popup_enabled': True,
+                'advance_minutes': 5
+            },
+            'theme': {
+                'name': 'default',
+                'auto_switch': False
+            },
+            'time': {
+                'offset_enabled': False,
+                'offset_minutes': 0,
+                'speed_factor': 1.0
+            },
+            'system': {
+                'auto_start': False,
+                'minimize_to_tray': True,
+                'check_updates': True
+            }
+        }
+
+    def _reset_ui_to_defaults(self, default_config: Dict[str, Any]):
+        """重置界面控件为默认值"""
+        try:
+            # 重置浮窗设置
+            floating_config = default_config.get('floating_widget', {})
+            self.width_spin.setValue(floating_config.get('width', 400))
+            self.height_spin.setValue(floating_config.get('height', 60))
+            self.opacity_slider.setValue(int(floating_config.get('opacity', 0.9) * 100))
+            self.mouse_transparent_check.setChecked(floating_config.get('mouse_transparent', False))
+            self.always_on_top_check.setChecked(floating_config.get('always_on_top', True))
+            self.auto_hide_check.setChecked(floating_config.get('auto_hide', False))
+
+            # 重置模块列表
+            enabled_modules = floating_config.get('enabled_modules', ['time', 'schedule'])
+            for i in range(self.modules_list.count()):
+                item = self.modules_list.item(i)
+                module_id = item.data(Qt.ItemDataRole.UserRole)
+                item.setCheckState(
+                    Qt.CheckState.Checked if module_id in enabled_modules else Qt.CheckState.Unchecked
+                )
+
+            # 重置其他设置控件
+            if hasattr(self, 'notification_enabled_check'):
+                notification_config = default_config.get('notification', {})
+                self.notification_enabled_check.setChecked(notification_config.get('enabled', True))
+
+            if hasattr(self, 'auto_start_check'):
+                system_config = default_config.get('system', {})
+                self.auto_start_check.setChecked(system_config.get('auto_start', False))
+
+            self.logger.info("界面控件已重置为默认值")
+
+        except Exception as e:
+            self.logger.error(f"重置界面控件失败: {e}")
+
+    def accept_settings(self):
+        """确定并应用设置"""
+        try:
+            self.apply_settings()
+            self.accept()
+        except Exception as e:
+            self.logger.error(f"确定设置失败: {e}")
+
+    def reject(self):
+        """取消设置"""
+        try:
+            # 如果有预览配置，恢复原始配置
+            if hasattr(self, 'original_config') and self.original_config:
+                if self.app_manager.floating_manager:
+                    self.app_manager.floating_manager.apply_config(self.original_config)
+                    self.logger.info("已恢复原始配置")
+
+            super().reject()
+        except Exception as e:
+            self.logger.error(f"取消设置失败: {e}")
+            super().reject()
+
+    def closeEvent(self, event):
+        """关闭事件处理"""
+        try:
+            # 如果有预览配置，恢复原始配置
+            if hasattr(self, 'original_config') and self.original_config:
+                if self.app_manager.floating_manager:
+                    self.app_manager.floating_manager.apply_config(self.original_config)
+                    self.logger.info("关闭时已恢复原始配置")
+
+            super().closeEvent(event)
+        except Exception as e:
+            self.logger.error(f"关闭事件处理失败: {e}")
+            super().closeEvent(event)
 
     def accept_settings(self):
         """确定并关闭"""

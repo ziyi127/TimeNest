@@ -2,8 +2,9 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'  # 触发条件：推送版本标签
+    branches: [ main, develop ]  # 任何推送到main或develop分支都触发
+  pull_request:
+    branches: [ main ]  # PR合并也触发
   workflow_dispatch:  # 手动触发
 
 jobs:

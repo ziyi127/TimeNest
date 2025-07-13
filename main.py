@@ -253,38 +253,84 @@ def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_ma
     try:
         # 托盘管理器信号连接
         if tray_manager:
-            tray_manager.toggle_floating_widget_requested.connect(lambda: handle_floating_toggle(app_manager, tray_manager, logger))
-            
+            # 检查托盘管理器类型并连接相应的信号
+            if hasattr(tray_manager, 'toggle_floating_widget_requested'):
+                tray_manager.toggle_floating_widget_requested.connect(
+                    lambda: handle_floating_toggle(app_manager, tray_manager, logger)
+                )
+                logger.debug("连接 toggle_floating_widget_requested 信号")
+
+            # 检查是否有floating_toggled信号（SystemTrayManager）
+            if hasattr(tray_manager, 'floating_toggled'):
+                tray_manager.floating_toggled.connect(
+                    lambda visible: handle_floating_toggle(app_manager, tray_manager, logger)
+                )
+                logger.debug("连接 floating_toggled 信号")
+
             # 功能管理器相关连接
             if feature_manager:
-                tray_manager.floating_settings_requested.connect(feature_manager.show_floating_settings)
-                tray_manager.schedule_module_requested.connect(feature_manager.show_schedule_management)
-                tray_manager.settings_module_requested.connect(feature_manager.show_app_settings)
-                tray_manager.plugins_module_requested.connect(feature_manager.show_plugin_marketplace)
-                tray_manager.time_calibration_requested.connect(feature_manager.show_time_calibration)
+                # 安全连接各个功能信号
+                _safe_connect_signal(tray_manager, 'floating_settings_requested',
+                                   feature_manager.show_floating_settings, logger)
+                _safe_connect_signal(tray_manager, 'schedule_module_requested',
+                                   feature_manager.show_schedule_management, logger)
+                _safe_connect_signal(tray_manager, 'settings_module_requested',
+                                   feature_manager.show_app_settings, logger)
+                _safe_connect_signal(tray_manager, 'plugins_module_requested',
+                                   feature_manager.show_plugin_marketplace, logger)
+                _safe_connect_signal(tray_manager, 'time_calibration_requested',
+                                   feature_manager.show_time_calibration, logger)
             else:
                 # 如果功能管理器不可用，连接到默认处理函数
-                tray_manager.floating_settings_requested.connect(lambda: logger.warning("浮窗设置功能不可用"))
-                tray_manager.schedule_module_requested.connect(lambda: logger.warning("课程表管理功能不可用"))
-                tray_manager.settings_module_requested.connect(lambda: logger.warning("应用设置功能不可用"))
-                tray_manager.plugins_module_requested.connect(lambda: logger.warning("插件市场功能不可用"))
-                tray_manager.time_calibration_requested.connect(lambda: logger.warning("时间校准功能不可用"))
+                _safe_connect_signal(tray_manager, 'floating_settings_requested',
+                                   lambda: logger.warning("浮窗设置功能不可用"), logger)
+                _safe_connect_signal(tray_manager, 'schedule_module_requested',
+                                   lambda: logger.warning("课程表管理功能不可用"), logger)
+                _safe_connect_signal(tray_manager, 'settings_module_requested',
+                                   lambda: logger.warning("应用设置功能不可用"), logger)
+                _safe_connect_signal(tray_manager, 'plugins_module_requested',
+                                   lambda: logger.warning("插件市场功能不可用"), logger)
+                _safe_connect_signal(tray_manager, 'time_calibration_requested',
+                                   lambda: logger.warning("时间校准功能不可用"), logger)
 
         # 状态监控器信号连接
         if status_monitor:
-            status_monitor.alert_triggered.connect(lambda alert_type, message: handle_system_alert(app_manager, alert_type, message, logger))
-            if tray_manager:
-                status_monitor.status_changed.connect(lambda status_type, status_data: update_tray_status(tray_manager, status_monitor, status_type, status_data))
+            if hasattr(status_monitor, 'alert_triggered'):
+                status_monitor.alert_triggered.connect(
+                    lambda alert_type, message: handle_system_alert(app_manager, alert_type, message, logger)
+                )
+                logger.debug("连接 alert_triggered 信号")
+
+            if tray_manager and hasattr(status_monitor, 'status_changed'):
+                status_monitor.status_changed.connect(
+                    lambda status_type, status_data: update_tray_status(tray_manager, status_monitor, status_type, status_data)
+                )
+                logger.debug("连接 status_changed 信号")
 
         # 功能管理器信号连接
-        if feature_manager:
-            if hasattr(feature_manager, 'notification_sent'):
-                feature_manager.notification_sent.connect(lambda title, message: send_tray_notification(app_manager, title, message, logger))
+        if feature_manager and hasattr(feature_manager, 'notification_sent'):
+            feature_manager.notification_sent.connect(
+                lambda title, message: send_tray_notification(app_manager, title, message, logger)
+            )
+            logger.debug("连接 notification_sent 信号")
 
         logger.info("托盘系统信号连接完成")
 
     except Exception as e:
         logger.error(f"设置托盘信号连接失败: {e}", exc_info=True)
+
+
+def _safe_connect_signal(obj, signal_name, slot, logger):
+    """安全地连接信号"""
+    try:
+        if hasattr(obj, signal_name):
+            signal = getattr(obj, signal_name)
+            signal.connect(slot)
+            logger.debug(f"成功连接信号: {signal_name}")
+        else:
+            logger.warning(f"对象 {type(obj).__name__} 没有信号: {signal_name}")
+    except Exception as e:
+        logger.error(f"连接信号 {signal_name} 失败: {e}")
 
 
 def handle_floating_toggle(app_manager, tray_manager, logger):

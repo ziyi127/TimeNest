@@ -1737,3 +1737,28 @@ class NotificationManager(QObject):
 
         except Exception as e:
             self.logger.error(f"清理通知管理器失败: {e}")
+
+    def apply_config(self, config: Dict[str, Any]):
+        """应用通知配置"""
+        try:
+            if not config:
+                return
+
+            # 更新设置
+            self.settings.update(config)
+
+            # 应用到各个通道
+            for channel_name, channel in self.channels.items():
+                if hasattr(channel, 'configure'):
+                    channel_config = config.get('channels', {}).get(channel_name, {})
+                    if channel_config:
+                        channel.configure(channel_config)
+
+            # 保存配置
+            if self.config_manager:
+                self.config_manager.set_config('notification', config, save=True)
+
+            self.logger.info("通知配置已应用")
+
+        except Exception as e:
+            self.logger.error(f"应用通知配置失败: {e}")

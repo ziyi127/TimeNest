@@ -501,3 +501,4 @@ class SystemTrayManagerLegacy(QObject):
 
 # 向后兼容的别名
 SystemTrayIcon = SystemTray
+SystemTrayManager = SystemTrayManagerLegacy

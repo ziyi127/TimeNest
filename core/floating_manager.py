@@ -137,6 +137,36 @@ class FloatingManager(QObject):
         """检查浮窗是否可见"""
         return self._is_visible
 
+    def get_current_config(self) -> Dict[str, Any]:
+        """获取当前配置"""
+        try:
+            if not self.config_manager:
+                return {}
+
+            return self.config_manager.get_config('floating_widget', {})
+
+        except Exception as e:
+            self.logger.error(f"获取当前配置失败: {e}")
+            return {}
+
+    def apply_config(self, config: Dict[str, Any]):
+        """应用配置"""
+        try:
+            if not config:
+                return
+
+            # 保存配置到配置管理器
+            if self.config_manager:
+                self.config_manager.set_config('floating_widget', config, save=True)
+
+            # 立即应用到浮窗
+            if self.floating_widget:
+                self.floating_widget.update_from_config()
+                self.logger.info("配置已应用到浮窗")
+
+        except Exception as e:
+            self.logger.error(f"应用配置失败: {e}")
+
     def show_settings_dialog(self):
         """显示浮窗设置对话框"""
         try:

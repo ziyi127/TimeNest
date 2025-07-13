@@ -67,20 +67,20 @@ class TrayFeatureManager(QObject):
         try:
             self.logger.info("显示课程表管理被调用")
 
-
             if not self.app_manager:
-                self._show_feature_unavailable("课程表管理", "应用管理器不可用")
-
                 self._show_feature_unavailable("课程表管理", "应用管理器不可用")
                 return
 
-            from ui.modules.schedule_management_dialog import ScheduleManagementDialog
-            dialog = ScheduleManagementDialog(self.app_manager)
-            dialog.exec()
-            self.feature_activated.emit("schedule_management")
-            self.logger.info("课程表管理对话框已显示")
-        except ImportError:
-            self._show_feature_unavailable("课程表管理")
+            try:
+                from ui.modules.schedule_management_dialog import ScheduleManagementDialog
+                dialog = ScheduleManagementDialog(self.app_manager)
+                dialog.exec()
+                self.feature_activated.emit("schedule_management")
+                self.logger.info("课程表管理对话框已显示")
+            except ImportError as e:
+                self.logger.error(f"导入课程表管理组件失败: {e}")
+                self._show_feature_unavailable("课程表管理", "管理组件不可用")
+
         except Exception as e:
             self.logger.error(f"显示课程表管理失败: {e}")
             self._show_error("课程表管理", str(e))
@@ -88,33 +88,45 @@ class TrayFeatureManager(QObject):
     def show_app_settings(self):
         """显示应用设置"""
         try:
+            self.logger.info("显示应用设置被调用")
+
             if not self.app_manager:
                 self._show_feature_unavailable("应用设置", "应用管理器不可用")
                 return
 
-            from ui.modules.app_settings_dialog import AppSettingsDialog
-            dialog = AppSettingsDialog(self.app_manager)
-            dialog.exec()
-            self.feature_activated.emit("app_settings")
-        except ImportError:
-            self._show_feature_unavailable("应用设置")
+            try:
+                from ui.modules.app_settings_dialog import AppSettingsDialog
+                dialog = AppSettingsDialog(self.app_manager)
+                dialog.exec()
+                self.feature_activated.emit("app_settings")
+                self.logger.info("应用设置对话框已显示")
+            except ImportError as e:
+                self.logger.error(f"导入应用设置组件失败: {e}")
+                self._show_feature_unavailable("应用设置", "设置组件不可用")
+
         except Exception as e:
             self.logger.error(f"显示应用设置失败: {e}")
             self._show_error("应用设置", str(e))
-    
+
     def show_plugin_marketplace(self):
         """显示插件市场"""
         try:
+            self.logger.info("显示插件市场被调用")
+
             if not self.app_manager:
                 self._show_feature_unavailable("插件市场", "应用管理器不可用")
                 return
 
-            from ui.modules.plugin_marketplace_dialog import PluginMarketplaceDialog
-            dialog = PluginMarketplaceDialog(self.app_manager)
-            dialog.exec()
-            self.feature_activated.emit("plugin_marketplace")
-        except ImportError:
-            self._show_feature_unavailable("插件市场")
+            try:
+                from ui.modules.plugin_marketplace_dialog import PluginMarketplaceDialog
+                dialog = PluginMarketplaceDialog(self.app_manager)
+                dialog.exec()
+                self.feature_activated.emit("plugin_marketplace")
+                self.logger.info("插件市场对话框已显示")
+            except ImportError as e:
+                self.logger.error(f"导入插件市场组件失败: {e}")
+                self._show_feature_unavailable("插件市场", "市场组件不可用")
+
         except Exception as e:
             self.logger.error(f"显示插件市场失败: {e}")
             self._show_error("插件市场", str(e))
@@ -122,16 +134,22 @@ class TrayFeatureManager(QObject):
     def show_time_calibration(self):
         """显示时间校准"""
         try:
+            self.logger.info("显示时间校准被调用")
+
             if not self.app_manager:
                 self._show_feature_unavailable("时间校准", "应用管理器不可用")
                 return
 
-            from ui.modules.time_calibration_dialog import TimeCalibrationDialog
-            dialog = TimeCalibrationDialog(self.app_manager)
-            dialog.exec()
-            self.feature_activated.emit("time_calibration")
-        except ImportError:
-            self._show_feature_unavailable("时间校准")
+            try:
+                from ui.modules.time_calibration_dialog import TimeCalibrationDialog
+                dialog = TimeCalibrationDialog(self.app_manager)
+                dialog.exec()
+                self.feature_activated.emit("time_calibration")
+                self.logger.info("时间校准对话框已显示")
+            except ImportError as e:
+                self.logger.error(f"导入时间校准组件失败: {e}")
+                self._show_feature_unavailable("时间校准", "校准组件不可用")
+
         except Exception as e:
             self.logger.error(f"显示时间校准失败: {e}")
             self._show_error("时间校准", str(e))
@@ -141,10 +159,7 @@ class TrayFeatureManager(QObject):
         try:
             self.logger.info("显示浮窗设置被调用")
 
-
             if not self.app_manager:
-                self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
-
                 self._show_feature_unavailable("浮窗设置", "应用管理器不可用")
                 return
 
@@ -159,19 +174,29 @@ class TrayFeatureManager(QObject):
                     self.logger.warning(f"使用浮窗管理器设置失败，尝试备用方法: {e}")
 
             # 备用方法：使用独立的设置对话框
-            from ui.floating_settings_tab import FloatingSettingsTab
-            dialog = QDialog()
-            dialog.setWindowTitle("浮窗设置")
-            dialog.setFixedSize(500, 400)
+            try:
+                from ui.floating_settings_tab import FloatingSettingsTab
+                from PyQt6.QtWidgets import QDialog, QVBoxLayout
 
-            layout = QVBoxLayout(dialog)
-            settings_widget = FloatingSettingsTab(self.app_manager.config_manager, self.app_manager.theme_manager)
-            layout.addWidget(settings_widget)
+                dialog = QDialog()
+                dialog.setWindowTitle("浮窗设置")
+                dialog.setFixedSize(500, 400)
 
-            dialog.exec()
-            self.feature_activated.emit("floating_settings")
-        except ImportError:
-            self._show_feature_unavailable("浮窗设置")
+                layout = QVBoxLayout(dialog)
+                settings_widget = FloatingSettingsTab(
+                    self.app_manager.config_manager,
+                    self.app_manager.theme_manager
+                )
+                layout.addWidget(settings_widget)
+
+                dialog.exec()
+                self.feature_activated.emit("floating_settings")
+                self.logger.info("备用浮窗设置对话框已显示")
+
+            except ImportError as e:
+                self.logger.error(f"导入浮窗设置组件失败: {e}")
+                self._show_feature_unavailable("浮窗设置", "设置组件不可用")
+
         except Exception as e:
             self.logger.error(f"显示浮窗设置失败: {e}")
             self._show_error("浮窗设置", str(e))

@@ -139,10 +139,14 @@ class AppManager(QObject):
             # 7. 初始化新增功能
             self._initialize_enhanced_features()
 
-            # 8. 连接信号
+            # 8. 加载和应用保存的配置
+            self.logger.info("加载和应用保存的配置...")
+            self._load_and_apply_configs()
+
+            # 9. 连接信号
             self._connect_signals()
 
-            # 9. 启动定期更新
+            # 10. 启动定期更新
             self._start_periodic_update()
 
             self._initialized = True
@@ -384,7 +388,7 @@ class AppManager(QObject):
         连接各组件之间的信号
         """
         try:
-            # 配置变化信号
+            # 配置变化信号 - 实现即时生效
             self.config_manager.config_changed.connect(self._on_config_changed)
 
             # 性能警告信号
@@ -395,6 +399,71 @@ class AppManager(QObject):
 
         except Exception as e:
             self.logger.error(f"信号连接失败: {e}", exc_info=True)
+
+    def _load_and_apply_configs(self):
+        """加载和应用保存的配置"""
+        try:
+            # 应用浮窗配置
+            self._apply_floating_widget_config()
+
+            # 应用通知配置
+            self._apply_notification_config()
+
+            # 应用主题配置
+            self._apply_theme_config()
+
+            # 应用时间配置
+            self._apply_time_config()
+
+            self.logger.info("所有保存的配置已加载并应用")
+
+        except Exception as e:
+            self.logger.error(f"加载和应用配置失败: {e}")
+
+    def _apply_floating_widget_config(self):
+        """应用浮窗配置"""
+        try:
+            if self.floating_manager and self.config_manager:
+                floating_config = self.config_manager.get_config('floating_widget', {})
+                if floating_config:
+                    self.floating_manager.apply_config(floating_config)
+                    self.logger.debug("浮窗配置已应用")
+        except Exception as e:
+            self.logger.error(f"应用浮窗配置失败: {e}")
+
+    def _apply_notification_config(self):
+        """应用通知配置"""
+        try:
+            if self.notification_manager and self.config_manager:
+                notification_config = self.config_manager.get_config('notification', {})
+                if notification_config:
+                    self.notification_manager.apply_config(notification_config)
+                    self.logger.debug("通知配置已应用")
+        except Exception as e:
+            self.logger.error(f"应用通知配置失败: {e}")
+
+    def _apply_theme_config(self):
+        """应用主题配置"""
+        try:
+            if self.theme_manager and self.config_manager:
+                theme_config = self.config_manager.get_config('theme', {})
+                theme_name = theme_config.get('name', 'default')
+                if theme_name != 'default':
+                    self.theme_manager.set_theme(theme_name)
+                    self.logger.debug(f"主题配置已应用: {theme_name}")
+        except Exception as e:
+            self.logger.error(f"应用主题配置失败: {e}")
+
+    def _apply_time_config(self):
+        """应用时间配置"""
+        try:
+            if self.time_manager and self.config_manager:
+                time_config = self.config_manager.get_config('time', {})
+                if time_config and hasattr(self.time_manager, 'apply_config'):
+                    self.time_manager.apply_config(time_config)
+                    self.logger.debug("时间配置已应用")
+        except Exception as e:
+            self.logger.error(f"应用时间配置失败: {e}")
 
     def _start_periodic_update(self):
         """
@@ -441,27 +510,108 @@ class AppManager(QObject):
         except Exception as e:
             self.logger.error(f"定期更新失败: {e}", exc_info=True)
 
-    def _on_config_changed(self, section: str, config: dict):
+    def _on_config_changed(self, key: str, old_value: Any, new_value: Any):
         """
-        配置变化处理
+        配置变化处理 - 实现即时生效
 
         Args:
-            section: 配置部分
-            config: 配置字典
+            key: 配置键
+            old_value: 旧值
+            new_value: 新值
         """
         try:
-            self.logger.debug(f"配置变化: {section}")
+            self.logger.debug(f"配置变化: {key} = {new_value}")
 
-            # 根据配置键进行相应处理
-            if section == 'notifications' and self.notification_manager:
-                self.notification_manager.update_settings(config)
-            elif section == 'theme' and self.theme_manager:
-                theme_id = config.get('current') if config else None
-                if theme_id:
-                    self.theme_manager.apply_theme(theme_id)
+            # 根据配置键进行相应处理，实现即时生效
+            if key.startswith('floating_widget.'):
+                self._handle_floating_widget_config_change(key, new_value)
+            elif key.startswith('notification.'):
+                self._handle_notification_config_change(key, new_value)
+            elif key.startswith('theme.'):
+                self._handle_theme_config_change(key, new_value)
+            elif key.startswith('time.'):
+                self._handle_time_config_change(key, new_value)
+            elif key.startswith('system.'):
+                self._handle_system_config_change(key, new_value)
 
         except Exception as e:
             self.logger.error(f"处理配置变化失败: {e}", exc_info=True)
+
+    def _handle_floating_widget_config_change(self, key: str, value: Any):
+        """处理浮窗配置变化"""
+        try:
+            if self.floating_manager:
+                # 获取完整的浮窗配置
+                floating_config = self.config_manager.get_config('floating_widget', {})
+                # 立即应用到浮窗
+                self.floating_manager.apply_config(floating_config)
+                self.logger.debug(f"浮窗配置已即时应用: {key}")
+        except Exception as e:
+            self.logger.error(f"处理浮窗配置变化失败: {e}")
+
+    def _handle_notification_config_change(self, key: str, value: Any):
+        """处理通知配置变化"""
+        try:
+            if self.notification_manager:
+                # 获取完整的通知配置
+                notification_config = self.config_manager.get_config('notification', {})
+                # 立即应用到通知管理器
+                self.notification_manager.apply_config(notification_config)
+                self.logger.debug(f"通知配置已即时应用: {key}")
+        except Exception as e:
+            self.logger.error(f"处理通知配置变化失败: {e}")
+
+    def _handle_theme_config_change(self, key: str, value: Any):
+        """处理主题配置变化"""
+        try:
+            if self.theme_manager and key == 'theme.name':
+                # 立即切换主题
+                self.theme_manager.set_theme(value)
+                self.logger.debug(f"主题已即时切换: {value}")
+        except Exception as e:
+            self.logger.error(f"处理主题配置变化失败: {e}")
+
+    def _handle_time_config_change(self, key: str, value: Any):
+        """处理时间配置变化"""
+        try:
+            if self.time_manager and hasattr(self.time_manager, 'apply_config'):
+                # 获取完整的时间配置
+                time_config = self.config_manager.get_config('time', {})
+                # 立即应用到时间管理器
+                self.time_manager.apply_config(time_config)
+                self.logger.debug(f"时间配置已即时应用: {key}")
+        except Exception as e:
+            self.logger.error(f"处理时间配置变化失败: {e}")
+
+    def _handle_system_config_change(self, key: str, value: Any):
+        """处理系统配置变化"""
+        try:
+            if key == 'system.auto_start':
+                # 处理开机自启动设置
+                self._handle_auto_start_setting(value)
+            elif key == 'system.minimize_to_tray':
+                # 处理最小化到托盘设置
+                self._handle_minimize_to_tray_setting(value)
+            self.logger.debug(f"系统配置已即时应用: {key}")
+        except Exception as e:
+            self.logger.error(f"处理系统配置变化失败: {e}")
+
+    def _handle_auto_start_setting(self, enabled: bool):
+        """处理开机自启动设置"""
+        try:
+            # 这里可以添加设置开机自启动的逻辑
+            # 例如在Windows上创建/删除注册表项
+            self.logger.info(f"开机自启动设置: {enabled}")
+        except Exception as e:
+            self.logger.error(f"设置开机自启动失败: {e}")
+
+    def _handle_minimize_to_tray_setting(self, enabled: bool):
+        """处理最小化到托盘设置"""
+        try:
+            # 这里可以添加处理最小化到托盘的逻辑
+            self.logger.info(f"最小化到托盘设置: {enabled}")
+        except Exception as e:
+            self.logger.error(f"设置最小化到托盘失败: {e}")
 
     def _on_performance_warning(self, warning_type: str, value: float) -> None:
         """

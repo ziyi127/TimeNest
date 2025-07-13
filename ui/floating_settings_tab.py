@@ -355,13 +355,15 @@ class FloatingSettingsTab(QWidget):
     def _on_setting_changed(self) -> None:
         """设置变化处理"""
         if self.preview_btn.isChecked():
-            # 延迟应用预览，避免频繁更新:
             # 延迟应用预览，避免频繁更新
             self.preview_timer.start(500)
 
         # 发送设置变化信号
         config = self.get_config()
         self.settings_changed.emit(config)
+
+        # 自动保存设置
+        self._auto_save_settings(config)
 
     def _toggle_preview(self, enabled: bool) -> None:
         """切换预览模式"""
@@ -617,7 +619,65 @@ class FloatingSettingsTab(QWidget):
         except Exception as e:
             self.logger.error(f"加载已启用模块失败: {e}")
 
+    def _auto_save_settings(self, config: Dict[str, Any]):
+        """自动保存设置"""
+        try:
+            if self.config_manager:
+                # 保存到浮窗配置
+                self.config_manager.set_config('floating_widget', config, save=True)
+                self.logger.debug("设置已自动保存")
+        except Exception as e:
+            self.logger.error(f"自动保存设置失败: {e}")
+
+    def save_settings(self) -> bool:
+        """手动保存设置"""
+        try:
+            config = self.get_config()
+
+            if self.config_manager:
+                # 保存到配置文件
+                self.config_manager.set_config('floating_widget', config, save=True)
+
+                # 立即应用到浮窗
+                if hasattr(self, 'floating_manager') and self.floating_manager:
+                    self.floating_manager.apply_config(config)
+
+                self.logger.info("设置已保存并应用")
+                return True
+            else:
+                self.logger.warning("配置管理器不可用")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"保存设置失败: {e}")
+            return False
+
+    def apply_settings(self):
+        """应用设置"""
+        try:
+            config = self.get_config()
+
+            # 立即应用到浮窗
+            if hasattr(self, 'floating_manager') and self.floating_manager:
+                self.floating_manager.apply_config(config)
+                self.logger.info("设置已应用到浮窗")
+
+            # 保存设置
+            self.save_settings()
+
+        except Exception as e:
+            self.logger.error(f"应用设置失败: {e}")
+
     def closeEvent(self, event) -> None:
         """关闭事件处理"""
-        self._destroy_preview_widget()
-        super().closeEvent(event)
+        try:
+            # 保存当前设置
+            self.save_settings()
+
+            # 清理预览浮窗
+            self._destroy_preview_widget()
+
+            super().closeEvent(event)
+        except Exception as e:
+            self.logger.error(f"关闭事件处理失败: {e}")
+            super().closeEvent(event)
