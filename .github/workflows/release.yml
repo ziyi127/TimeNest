@@ -15,9 +15,9 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
         
     - name: Install dependencies
       run: |
@@ -60,13 +60,9 @@ jobs:
         echo "tag=$tag" >> $env:GITHUB_OUTPUT
         
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ steps.release_info.outputs.tag }}
-        release_name: TimeNest ${{ steps.release_info.outputs.version }}
+        name: TimeNest ${{ steps.release_info.outputs.version }}
         body: |
           ## TimeNest ${{ steps.release_info.outputs.version }}
           
@@ -92,13 +88,5 @@ jobs:
           这是一个预览版本，可能包含未完成的功能或已知问题。建议在非生产环境中使用。
         draft: false
         prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
-        
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./TimeNest-${{ github.ref_name }}-windows.zip
-        asset_name: TimeNest-${{ github.ref_name }}-windows.zip
-        asset_content_type: application/zip
+        files: |
+          TimeNest-${{ github.ref_name }}-windows.zip
