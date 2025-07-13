@@ -143,8 +143,16 @@ class SmartFloatingWidget(QWidget):
 
 
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
-                self.config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
+                # 首先加载组件配置
+                component_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
+                # 然后加载主配置
+                main_config = self.app_manager.config_manager.get_config('floating_widget', {}, 'main')
+
+                # 合并配置，主配置优先
+                self.config = {**component_config, **main_config}
                 self.logger.debug(f"从配置管理器加载的配置: {self.config}")
+                self.logger.debug(f"组件配置: {component_config}")
+                self.logger.debug(f"主配置: {main_config}")
 
                 # 加载基本配置
                 self.default_width = self.config.get('width', 400)
@@ -273,6 +281,9 @@ class SmartFloatingWidget(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
             self.setAttribute(Qt.WidgetAttribute.WA_X11NetWmWindowTypeDesktop, False)
 
+            # Wayland兼容性设置
+            self._setup_wayland_compatibility()
+
             # 确保不在任务栏显示
             self.setWindowFlag(Qt.WindowType.WindowDoesNotAcceptFocus, False)
 
@@ -306,6 +317,34 @@ class SmartFloatingWidget(QWidget):
             
         except Exception as e:
             self.logger.error(f"初始化UI失败: {e}")
+
+    def _setup_wayland_compatibility(self):
+        """设置Wayland兼容性"""
+        try:
+            # 检查是否在Wayland环境下运行
+            import os
+            if os.environ.get('WAYLAND_DISPLAY') or os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+                self.logger.debug("检测到Wayland环境，应用兼容性设置")
+
+                # 为Wayland设置合适的窗口类型
+                # 避免使用Popup类型，改用Tool类型
+                window_flags = (
+                    Qt.WindowType.FramelessWindowHint |
+                    Qt.WindowType.WindowStaysOnTopHint |
+                    Qt.WindowType.Tool |  # 使用Tool类型替代Popup
+                    Qt.WindowType.NoDropShadowWindowHint
+                )
+
+                if self.mouse_transparent:
+                    window_flags |= Qt.WindowType.WindowTransparentForInput
+
+                self.setWindowFlags(window_flags)
+
+                # 设置窗口属性以避免抓取问题
+                self.setAttribute(Qt.WidgetAttribute.WA_X11DoNotAcceptFocus, True)
+
+        except Exception as e:
+            self.logger.warning(f"Wayland兼容性设置失败: {e}")
     
     def init_modules(self) -> None:
         """初始化功能模块"""
@@ -466,16 +505,7 @@ class SmartFloatingWidget(QWidget):
             self.setWindowOpacity(opacity)
 
         # 应用位置配置
-        position = self.config.get('position', {})
-        if position and 'x' in position and 'y' in position:
-            x = position.get('x', 0)
-            y = position.get('y', 10)
-            self.move(x, y)
-            self.logger.info(f"应用配置位置: ({x}, {y})")
-        else:
-            # 默认设置到屏幕顶部居中
-            self.logger.info("使用默认位置：屏幕顶部居中")
-            safe_call_method(self, 'center_on_screen')
+        self._apply_position_config()
 
         # 应用主题
         safe_call_method(self, 'apply_theme')
@@ -606,7 +636,7 @@ class SmartFloatingWidget(QWidget):
         except Exception as e:
             self.logger.warning(f"应用主题失败: {e}")
     
-    def center_on_screen(self) -> None:
+    def center_on_screen(self, save_config: bool = False) -> None:
         """将浮窗居中到屏幕顶部"""
         try:
             screen = QApplication.primaryScreen()
@@ -620,13 +650,93 @@ class SmartFloatingWidget(QWidget):
                 self.move(x, y)
                 self.logger.info(f"浮窗位置设置为: ({x}, {y})")
 
-                # 保存位置到配置
-                self.config['position'] = {'x': x, 'y': y}
-                self.save_config()
+                # 可选择性保存位置到配置
+                if save_config:
+                    self.config['position'] = {'x': x, 'y': y}
+                    self.save_config()
 
         except Exception as e:
             self.logger.warning(f"设置浮窗位置失败: {e}")
-    
+
+    def _apply_position_config(self):
+        """应用位置配置"""
+        try:
+            position = self.config.get('position', {})
+
+            # 处理字符串格式的位置设置
+            if isinstance(position, str):
+                self._apply_string_position(position)
+            # 处理对象格式的位置设置
+            elif isinstance(position, dict) and 'x' in position and 'y' in position:
+                x = position.get('x', 0)
+                y = position.get('y', 10)
+                self.move(x, y)
+                self.logger.info(f"应用配置位置: ({x}, {y})")
+            else:
+                # 默认设置到屏幕顶部居中
+                self.logger.info("使用默认位置：屏幕顶部居中")
+                self.center_on_screen()
+
+        except Exception as e:
+            self.logger.error(f"应用位置配置失败: {e}")
+            # 降级到默认位置
+            self.center_on_screen()
+
+    def _apply_string_position(self, position_str: str):
+        """应用字符串格式的位置设置"""
+        try:
+            position_str = position_str.lower()
+
+            screen = QApplication.primaryScreen()
+            if not screen:
+                self.logger.warning("无法获取屏幕信息")
+                return
+
+            screen_geometry = screen.availableGeometry()
+            widget_width = self.width()
+            widget_height = self.height()
+
+            # 计算位置
+            if position_str == 'top_center':
+                x = screen_geometry.x() + (screen_geometry.width() - widget_width) // 2
+                y = screen_geometry.y() + 10
+            elif position_str == 'top_left':
+                x = screen_geometry.x() + 10
+                y = screen_geometry.y() + 10
+            elif position_str == 'top_right':
+                x = screen_geometry.x() + screen_geometry.width() - widget_width - 10
+                y = screen_geometry.y() + 10
+            elif position_str == 'center':
+                x = screen_geometry.x() + (screen_geometry.width() - widget_width) // 2
+                y = screen_geometry.y() + (screen_geometry.height() - widget_height) // 2
+            elif position_str == 'bottom_center':
+                x = screen_geometry.x() + (screen_geometry.width() - widget_width) // 2
+                y = screen_geometry.y() + screen_geometry.height() - widget_height - 10
+            elif position_str == 'bottom_left':
+                x = screen_geometry.x() + 10
+                y = screen_geometry.y() + screen_geometry.height() - widget_height - 10
+            elif position_str == 'bottom_right':
+                x = screen_geometry.x() + screen_geometry.width() - widget_width - 10
+                y = screen_geometry.y() + screen_geometry.height() - widget_height - 10
+            else:
+                # 默认为顶部居中
+                x = screen_geometry.x() + (screen_geometry.width() - widget_width) // 2
+                y = screen_geometry.y() + 10
+                self.logger.warning(f"未知位置设置: {position_str}，使用默认位置")
+
+            self.move(x, y)
+            self.logger.info(f"应用字符串位置 '{position_str}': ({x}, {y})")
+
+            # 验证最终位置
+            final_pos = self.pos()
+            self.logger.info(f"浮窗最终位置: ({final_pos.x()}, {final_pos.y()})")
+
+            # 更新配置为具体坐标，以便后续使用
+            self.config['position'] = {'x': x, 'y': y}
+
+        except Exception as e:
+            self.logger.error(f"应用字符串位置失败: {e}")
+
     def update_display(self) -> None:
         """更新显示内容"""
         try:
@@ -1053,8 +1163,9 @@ class SmartFloatingWidget(QWidget):
             self.fixed_position = fixed
             if fixed:
                 # 固定到屏幕顶部中央
-                self.center_on_screen()
-            self.save_config()
+                self.center_on_screen(save_config=True)
+            else:
+                self.save_config()
 
         except Exception as e:
             self.logger.error(f"设置固定位置失败: {e}")

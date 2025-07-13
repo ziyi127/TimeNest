@@ -447,9 +447,9 @@ class AppManager(QObject):
         try:
             if self.theme_manager and self.config_manager:
                 theme_config = self.config_manager.get_config('theme', {})
-                theme_name = theme_config.get('name', 'default')
-                if theme_name != 'default':
-                    self.theme_manager.set_theme(theme_name)
+                theme_name = theme_config.get('current', 'builtin_light')
+                if theme_name != 'builtin_light':
+                    self.theme_manager.apply_theme(theme_name)
                     self.logger.debug(f"主题配置已应用: {theme_name}")
         except Exception as e:
             self.logger.error(f"应用主题配置失败: {e}")
@@ -566,7 +566,7 @@ class AppManager(QObject):
         try:
             if self.theme_manager and key == 'theme.name':
                 # 立即切换主题
-                self.theme_manager.set_theme(value)
+                self.theme_manager.apply_theme(value)
                 self.logger.debug(f"主题已即时切换: {value}")
         except Exception as e:
             self.logger.error(f"处理主题配置变化失败: {e}")
