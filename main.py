@@ -34,8 +34,8 @@ try:
     from ui.tray_features import TrayFeatureManager
     from ui.tray_status_monitor import TrayStatusManager
 except ImportError as e:
-    print(f"导入错误: {e}")
-    print("请确保所有依赖已正确安装")
+    print(f"Import error: {e}")
+    print("Please ensure all dependencies are properly installed")
     sys.exit(1)
 
 
