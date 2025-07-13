@@ -95,13 +95,13 @@ class StartupWorker(QObject):
             total_phases = len(StartupPhase) - 2  # Exclude COMPLETED and ERROR
             current_phase_index = 0
             
-            for phase in [StartupPhase.INITIALIZING, StartupPhase.LOADING_CORE,:
-                         StartupPhase.LOADING_PLUGINS, StartupPhase.CONFIGURING, 
+            for phase in [StartupPhase.INITIALIZING, StartupPhase.LOADING_CORE,
+                         StartupPhase.LOADING_PLUGINS, StartupPhase.CONFIGURING,
                          StartupPhase.FINALIZING]:
                 
                 
                 if self._should_stop:
-                    break:
+                    break
                 
                     break
                 
@@ -113,7 +113,7 @@ class StartupWorker(QObject):
                 
                 for i, hook in enumerate(phase_hooks):
                     if self._should_stop:
-                        break:
+                        break
                         break
                     
                     self.task_started.emit(hook.description or hook.id)
@@ -249,7 +249,6 @@ class BaseStartupScreen(QWidget, ABC):
         """
         try:
             if hook.phase not in self.hooks:
-                self.hooks[hook.phase] = []:
                 self.hooks[hook.phase] = []
             
             # Check for duplicate IDs
@@ -282,7 +281,6 @@ class BaseStartupScreen(QWidget, ABC):
                 hooks_list = self.hooks.get(search_phase, [])
                 for i, hook in enumerate(hooks_list):
                     if hook.id == hook_id:
-                        del hooks_list[i]:
                         del hooks_list[i]
                         self.logger.debug(f"Unregistered startup hook: {hook_id}")
                         return True
@@ -297,8 +295,7 @@ class BaseStartupScreen(QWidget, ABC):
     def get_hooks(self, phase: Optional[StartupPhase] = None) -> List[StartupHook]:
         """Get hooks for a specific phase or all hooks"""
         if phase:
-            return self.hooks.get(phase, [] or {}).get("copy", lambda: None)():
-            return self.hooks.get(phase, [] or {}).get("copy", lambda: None)()
+            return self.hooks.get(phase, []).copy()
         else:
             all_hooks = []
             for hooks_list in self.hooks.values():
@@ -348,7 +345,6 @@ class BaseStartupScreen(QWidget, ABC):
         """Cancel the startup sequence"""
         try:
             if not self.is_running:
-                return:
                 return
             
             

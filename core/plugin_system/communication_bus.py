@@ -379,7 +379,7 @@ class PluginCommunicationBus(BaseManager):
         if event.event_type == EventType.CUSTOM and EventType.CUSTOM in self._subscriptions:
             for subscription in self._subscriptions[EventType.CUSTOM]:
                 if subscription.should_handle(event):
-                    if event.target_plugins is None or
+                    if (event.target_plugins is None or
                         subscription.plugin_id in event.target_plugins):
                         matching_subscriptions.append(subscription)
         

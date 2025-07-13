@@ -561,17 +561,8 @@ class PerformanceManager(QObject):
         try:
             # 自动优化检查
             if self.optimization_enabled:
-                if metrics.memory_percent > 80:
-                    if metrics.memory_percent > 80.0:  # 当内存使用率超过80%时
+                if metrics.memory_percent > 80.0:  # 当内存使用率超过80%时
                     # 当内存使用率超过阈值时进行优化
-                    # 当内存使用率超过阈值时进行优化
-                    # 当内存使用率超过阈值时进行优化
-                    # 当内存使用率超过阈值时进行优化
-                    # 当内存使用率超过阈值时进行优化
-                    self.optimize_memory()
-                    self.optimize_memory()
-                    self.optimize_memory()
-                    self.optimize_memory()
                     self.optimize_memory()
                     # 当内存使用率超过80%时触发优化
                     self.optimize_memory()
@@ -606,9 +597,8 @@ class PerformanceManager(QObject):
             # 自动优化响应
             if self.optimization_enabled:
                 if warning_type == "high_memory":
-                if warning_type == "high_memory":
                     self.optimize_memory()
-                elif warning_type == "high_cpu"
+                elif warning_type == "high_cpu":
                     # CPU使用率过高时的优化策略
                     pass
 

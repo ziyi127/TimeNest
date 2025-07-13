@@ -46,7 +46,7 @@ class ThemeInfo:
         return asdict(self)
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeInfo'
+    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeInfo':
         return cls(**data)
 
 
@@ -79,8 +79,7 @@ class ThemeDownloader(QThread):
             
             with open(self.download_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
-                    if chunk and hasattr(chunk, "f.write"):
-    f.write(chunk)
+                    if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
                         
@@ -144,8 +143,8 @@ class ThemeMarketplace(QObject):
         """保存已安装主题信息"""
         try:
             installed_data = {
-                theme_id: theme_info.to_dict() 
-                for theme_id, theme_info in self.installed_themes.items():
+                theme_id: theme_info.to_dict()
+                for theme_id, theme_info in self.installed_themes.items()
             }
             self.config_manager.set_config('installed_themes', installed_data, 'component')
             self.config_manager.save_all_configs()
@@ -153,7 +152,7 @@ class ThemeMarketplace(QObject):
         except Exception as e:
             self.logger.error(f"保存已安装主题失败: {e}")
     
-    def fetch_themes(self, category: str = "all", sort_by: str = "downloads") -> None
+    def fetch_themes(self, category: str = "all", sort_by: str = "downloads") -> None:
         """获取主题列表"""
         try:
             self.logger.info("正在获取主题市场数据...")
@@ -264,9 +263,7 @@ class ThemeMarketplace(QObject):
             downloader.deleteLater()
         
         
-        if success and hasattr(success, "self.logger"):
-    self.logger.info(f"主题 {theme_id} 下载成功")
-        
+        if success and hasattr(self, "logger"):
             self.logger.info(f"主题 {theme_id} 下载成功")
             self._install_theme(theme_id)
         else:
@@ -293,8 +290,6 @@ class ThemeMarketplace(QObject):
             
             
             if not theme_info:
-                raise ValueError(f"未找到主题信息: {theme_id}")
-            
                 raise ValueError(f"未找到主题信息: {theme_id}")
             
             # 解压和安装主题文件（这里简化处理）
@@ -368,8 +363,8 @@ class ThemeMarketplace(QObject):
         results = []
         
         for theme in self.themes_cache:
-            if (query in theme.name.lower() or:
-                query in theme.description.lower() or 
+            if (query in theme.name.lower() or
+                query in theme.description.lower() or
                 query in theme.author.lower() or
                 any(query in tag.lower() for tag in theme.tags)):
                 results.append(theme)

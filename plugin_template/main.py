@@ -200,7 +200,6 @@ class MyPlugin(IPlugin):
             # 合并默认配置
             for key, value in default_config.items():
                 if key not in self.config:
-                    self.config[key] = value:
                     self.config[key] = value
             
             self.logger.debug("插件配置加载完成")

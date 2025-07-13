@@ -23,8 +23,6 @@ from PyQt6.QtWidgets import QDialog, QMessageBox
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
 
 
@@ -192,8 +190,7 @@ class ModuleManager(QObject):
                 
                 def on_completed(success, offset, message):
                     progress.close()
-                    if success and hasattr(success, "QMessageBox.information"):
-    QMessageBox.information(None, "校准完成", message)
+                    if success and hasattr(QMessageBox, "information"):
                         QMessageBox.information(None, "校准完成", message)
                     else:
                         QMessageBox.warning(None, "校准失败", message)
@@ -216,7 +213,6 @@ class ModuleManager(QObject):
         """模块关闭处理"""
         try:
             if module_id in self.active_dialogs:
-                del self.active_dialogs[module_id]:
                 del self.active_dialogs[module_id]
             
             self.module_closed.emit(module_id)

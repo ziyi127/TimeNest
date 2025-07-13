@@ -97,7 +97,7 @@ class DataImportExportManager(QObject):
             self.import_completed.emit(False, error_msg)
             return None
     
-    def export_schedule(self, schedule: Schedule, file_path: str, format_type: str = None) -> bool
+    def export_schedule(self, schedule: Schedule, file_path: str, format_type: str = None) -> bool:
         """
         导出课程表数据
         
@@ -135,9 +135,7 @@ class DataImportExportManager(QObject):
                 raise ValueError(f"不支持的导出格式: {extension}")
             
             
-            if success and hasattr(success, "self.export_completed"):
-    self.export_completed.emit(True, f"成功导出课程表到: {file_path}")
-            
+            if success and hasattr(self, "export_completed"):
                 self.export_completed.emit(True, f"成功导出课程表到: {file_path}")
                 self.logger.info(f"课程表导出完成: {file_path}")
             else:
@@ -248,7 +246,6 @@ class DataImportExportManager(QObject):
             
             for col_idx, col_name in enumerate(df.columns):
                 if col_idx >= len(weekdays):
-                    break:
                     break
                 
                 weekday = weekdays[col_idx]
@@ -444,8 +441,6 @@ class DataImportExportManager(QObject):
 
                 if time_slot_id:
                     class_item = ClassItem(
-
-                    class_item = ClassItem(
                         id=f"class_{weekday}_{time_slot_index}",
                         subject_id=class_data.get('Subject', ''),
                         time_slot_id=time_slot_id,
@@ -483,9 +478,7 @@ class DataImportExportManager(QObject):
             success = self._export_to_json(schedule, backup_file)
 
 
-            if success and hasattr(success, "self.logger"):
-    self.logger.info(f"课程表备份完成: {backup_file}")
-
+            if success and hasattr(self, "logger"):
                 self.logger.info(f"课程表备份完成: {backup_file}")
 
             return success

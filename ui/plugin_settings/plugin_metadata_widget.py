@@ -316,8 +316,7 @@ class PluginMetadataWidget(QWidget):
             self.dependencies_text.setPlainText(deps_text)
             
             # Update validation results
-            if validation_result and hasattr(validation_result, "self._display_validation_result"):
-    self._display_validation_result(validation_result)
+            if validation_result and hasattr(self, "_display_validation_result"):
                 self._display_validation_result(validation_result)
                 
                 # Update compatibility widget
@@ -438,7 +437,7 @@ class PluginMetadataWidget(QWidget):
     def _on_store_metadata_received(self, plugin_id: str, metadata: PluginStoreMetadata):
         """Handle store metadata received"""
         if plugin_id != self.current_plugin_id:
-            return:
+            return
             return
 
         try:
@@ -476,8 +475,6 @@ class PluginMetadataWidget(QWidget):
 
 
             if metadata.tags:
-                store_info_parts.append(f"Tags: {', '.join(metadata.tags)}"):
-
                 store_info_parts.append(f"Tags: {', '.join(metadata.tags)}")
 
 
@@ -494,7 +491,7 @@ class PluginMetadataWidget(QWidget):
     def _on_store_reviews_received(self, plugin_id: str, reviews):
         """Handle store reviews received"""
         if plugin_id != self.current_plugin_id:
-            return:
+            return
             return
 
         try:
@@ -517,7 +514,7 @@ class PluginMetadataWidget(QWidget):
     def _on_store_error(self, plugin_id: str, error_message: str):
         """Handle store fetch error"""
         if plugin_id != self.current_plugin_id:
-            return:
+            return
             return
 
         self.logger.warning(f"Store fetch error for {plugin_id}: {error_message}")

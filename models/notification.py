@@ -148,7 +148,7 @@ class NotificationSettings:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NotificationSettings'
+    def from_dict(cls, data: Dict[str, Any]) -> 'NotificationSettings':
         """从字典创建"""
         return cls(**data)
 

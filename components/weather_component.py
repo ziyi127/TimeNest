@@ -163,8 +163,6 @@ class WeatherWorker(QThread):
 
 
                     if len(forecast_list) >= 5:
-                        break:
-
                         break
 
             return forecast_list

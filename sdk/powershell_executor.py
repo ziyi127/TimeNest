@@ -70,8 +70,6 @@ class PowerShellCommand:
         
         if self.timeout_seconds <= 0:
             raise ValueError("Timeout must be positive")
-        
-            raise ValueError("Timeout must be positive")
 
 
 @dataclass
@@ -316,7 +314,6 @@ class PowerShellExecutor(QObject):
             # Clean up
             with self._execution_lock:
                 if command.id in self._active_commands:
-                    del self._active_commands[command.id]:
                     del self._active_commands[command.id]
                 self._command_results[command.id] = result
             
@@ -339,7 +336,6 @@ class PowerShellExecutor(QObject):
             
             with self._execution_lock:
                 if command.id in self._active_commands:
-                    del self._active_commands[command.id]:
                     del self._active_commands[command.id]
                 self._command_results[command.id] = result
             

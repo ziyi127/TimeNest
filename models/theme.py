@@ -61,7 +61,7 @@ class ThemeColors:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, str]) -> 'ThemeColors'
+    def from_dict(cls, data: Dict[str, str]) -> 'ThemeColors':
         """从字典创建"""
         return cls(**data)
 
@@ -84,7 +84,7 @@ class ThemeFont:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeFont'
+    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeFont':
         """从字典创建"""
         return cls(**data)
 
@@ -109,7 +109,7 @@ class ThemeSpacing:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, int]) -> 'ThemeSpacing'
+    def from_dict(cls, data: Dict[str, int]) -> 'ThemeSpacing':
         """从字典创建"""
         return cls(**data)
 
@@ -154,7 +154,7 @@ class Theme:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Theme'
+    def from_dict(cls, data: Dict[str, Any]) -> 'Theme':
         """从字典创建"""
         # 处理嵌套对象
         colors_data = data.get('colors', {})
@@ -239,7 +239,7 @@ class ThemeSettings:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeSettings'
+    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeSettings':
         """从字典创建"""
         return cls(**data)
 

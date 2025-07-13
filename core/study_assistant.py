@@ -149,7 +149,6 @@ class StudyAssistantManager(BaseManager):
             
             # 更新用户档案
             if detected_pattern != self.user_profile.get('study_pattern'):
-                self.user_profile['study_pattern'] = detected_pattern:
                 self.user_profile['study_pattern'] = detected_pattern
                 self.pattern_detected.emit(detected_pattern.value, f"检测到学习模式: {detected_pattern.value}")
             
@@ -168,7 +167,6 @@ class StudyAssistantManager(BaseManager):
                 if session.end_time and session.efficiency_rating:
                     hour = session.start_time.hour
                     if hour not in hour_productivity:
-                        hour_productivity[hour] = []:
                         hour_productivity[hour] = []
                     hour_productivity[hour].append(session.efficiency_rating)
             
@@ -228,22 +226,18 @@ class StudyAssistantManager(BaseManager):
             
             
             if pattern == StudyPattern.MORNING_PERSON:
-                recommendations.extend(self._generate_morning_recommendations()):
-            
                 recommendations.extend(self._generate_morning_recommendations())
             elif pattern == StudyPattern.NIGHT_OWL:
                 recommendations.extend(self._generate_evening_recommendations())
             
             # 基于科目分布生成建议
             subject_dist = analysis.get('subject_distribution', {})
-            if subject_dist and hasattr(subject_dist, "recommendations.extend"):
-    recommendations.extend(self._generate_subject_balance_recommendations(subject_dist)):
+            if subject_dist and hasattr(self, "_generate_subject_balance_recommendations"):
                 recommendations.extend(self._generate_subject_balance_recommendations(subject_dist))
             
             # 基于学习时长生成建议
             avg_length = analysis.get('average_session_length', 0)
             if avg_length > 0:
-                recommendations.extend(self._generate_duration_recommendations(avg_length)):
                 recommendations.extend(self._generate_duration_recommendations(avg_length))
             
             # 存储建议
@@ -297,8 +291,6 @@ class StudyAssistantManager(BaseManager):
         if not subject_dist:
             return recommendations
         
-            return recommendations
-        
         total_time = sum(subject_dist.values())
         subjects = list(subject_dist.keys())
         
@@ -328,8 +320,6 @@ class StudyAssistantManager(BaseManager):
         
         
         if avg_length < 20:
-            recommendations.append(:
-        
             recommendations.append(
                 StudyRecommendation(
                     id=f"duration_short_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -360,13 +350,13 @@ class StudyAssistantManager(BaseManager):
         
         return recommendations
     
-    def get_learning_analytics(self, force_refresh: bool = False) -> Optional[LearningAnalytics]
+    def get_learning_analytics(self, force_refresh: bool = False) -> Optional[LearningAnalytics]:
         """获取学习分析数据"""
         try:
             # 检查缓存
-            if (not force_refresh and self.analytics_cache and:
-                self.last_analytics_update and 
-                datetime.now() - self.last_analytics_update < timedelta(hours=1))
+            if (not force_refresh and self.analytics_cache and
+                self.last_analytics_update and
+                datetime.now() - self.last_analytics_update < timedelta(hours=1)):
                 return self.analytics_cache
             
             
@@ -404,8 +394,8 @@ class StudyAssistantManager(BaseManager):
             
             # 效率趋势（最近7天）
             recent_sessions = [
-                s for s in completed_sessions 
-                if s.start_time >= datetime.now() - timedelta(days=7):
+                s for s in completed_sessions
+                if s.start_time >= datetime.now() - timedelta(days=7)
             ]
             efficiency_trend = [
                 s.efficiency_rating or 3 for s in recent_sessions[-10:]  # 最近10次会话
@@ -457,7 +447,6 @@ class StudyAssistantManager(BaseManager):
             
             for study_date in sorted_dates:
                 if study_date == current_date or study_date == current_date - timedelta(days=streak):
-                    streak += 1:
                     streak += 1
                     current_date = study_date
                 else:
@@ -469,7 +458,7 @@ class StudyAssistantManager(BaseManager):
             self.logger.error(f"计算学习连续天数失败: {e}")
             return 0
     
-    def get_daily_study_summary(self, target_date: datetime = None) -> Dict[str, Any]
+    def get_daily_study_summary(self, target_date: datetime = None) -> Dict[str, Any]:
         """获取每日学习总结"""
         try:
             if target_date is None:
@@ -486,13 +475,13 @@ class StudyAssistantManager(BaseManager):
             # 获取当日会话
             daily_sessions = [
                 s for s in self.schedule_enhancement.study_sessions.values()
-                if s.start_time.date() == target_date and s.end_time:
+                if s.start_time.date() == target_date and s.end_time
             ]
             
             # 获取当日任务
             daily_tasks = [
                 t for t in self.schedule_enhancement.tasks.values()
-                if (t.created_at.date() == target_date or:
+                if (t.created_at.date() == target_date or
                     (t.completed_at and t.completed_at.date() == target_date))
             ]
             

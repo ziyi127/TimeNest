@@ -111,9 +111,9 @@ class ComponentManager(QObject):
             return
             
         self.component_configs = {
-            comp_id: config 
-            for comp_id, config in instances_config.items():
-            if self._validate_component_config(config):
+            comp_id: config
+            for comp_id, config in instances_config.items()
+            if self._validate_component_config(config)
         }
         
     def _load_layout_config(self, layout_config: dict):
@@ -151,8 +151,6 @@ class ComponentManager(QObject):
             
             
         if config.get('type') not in self.component_types:
-            self.logger.warning(f"组件类型 {config.get('type')} 未注册"):
-            
             self.logger.warning(f"组件类型 {config.get('type')} 未注册")
             return False
             
@@ -322,7 +320,6 @@ class ComponentManager(QObject):
             
             # 从配置中移除
             if component_id in self.component_configs:
-                del self.component_configs[component_id]:
                 del self.component_configs[component_id]
             
             # 从布局中移除
@@ -387,7 +384,7 @@ class ComponentManager(QObject):
         
         return component_list
     
-    def enable_component(self, component_id: str, enabled: bool = True) -> bool
+    def enable_component(self, component_id: str, enabled: bool = True) -> bool:
         """启用/禁用组件"""
         try:
             if component_id not in self.component_configs:

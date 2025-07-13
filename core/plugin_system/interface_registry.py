@@ -60,8 +60,8 @@ class ServiceMethod:
                     'default': param.default if param.default != inspect.Parameter.empty else None,
                     'required': param.default == inspect.Parameter.empty
                 }
-                for name, param in sig.parameters.items():
-                if name != 'self':
+                for name, param in sig.parameters.items()
+                if name != 'self'
             }
             
             if sig.return_annotation != inspect.Signature.empty:

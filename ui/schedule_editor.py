@@ -625,8 +625,6 @@ class ScheduleEditor(QDialog):
             
             if reply == QMessageBox.StandardButton.Yes:
                 if not self.save_schedule():
-            
-                if not self.save_schedule():
                     return
             elif reply == QMessageBox.StandardButton.Cancel:
                 return
@@ -649,8 +647,6 @@ class ScheduleEditor(QDialog):
         
         
         if file_path:
-            try:
-        
             try:
                 self.schedule = Schedule.load_from_file(file_path)
                 self.original_schedule = self.schedule.copy()
@@ -704,8 +700,6 @@ class ScheduleEditor(QDialog):
         
         
         if file_path:
-            try:
-        
             try:
                 self.apply_form_data()
                 self.schedule.save_to_file(file_path)
@@ -1209,8 +1203,6 @@ class ScheduleEditor(QDialog):
             
             
             if reply == QMessageBox.StandardButton.Yes:
-                if not self.save_schedule():
-            
                 if not self.save_schedule():
                     event.ignore()
                     return

@@ -169,7 +169,7 @@ class CourseEditorDialog(QDialog):
     def load_course_data(self):
         """加载课程数据"""
         if not self.course_data:
-            return:
+            return
             return
         
         try:
@@ -256,7 +256,7 @@ class CourseEditorDialog(QDialog):
         """保存课程"""
         try:
             if not self.validate_input():
-                return:
+                return
                 return
             
             # 确定周次类型

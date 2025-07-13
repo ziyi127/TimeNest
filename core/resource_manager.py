@@ -184,8 +184,7 @@ class ResourceManager(BaseManager):
                 
                 # 检查重复文件
                 existing_resource = self._find_resource_by_hash(file_hash)
-                if existing_resource and hasattr(existing_resource, "self.logger"):
-    self.logger.warning(f"文件已存在: {existing_resource.title}")
+                if existing_resource and hasattr(self, "logger"):
                     self.logger.warning(f"文件已存在: {existing_resource.title}")
                     return existing_resource.id
             else:
@@ -333,21 +332,21 @@ class ResourceManager(BaseManager):
             for resource in self.resources.values():
                 # 检查类型过滤
                 if resource_type and resource.resource_type != resource_type:
-                    continue:
+                    continue
                     continue
                 
                 # 检查科目过滤
                 if subject and resource.subject != subject:
-                    continue:
+                    continue
                     continue
                 
                 # 检查标签过滤
                 if tags and not tags.intersection(resource.tags):
-                    continue:
+                    continue
                     continue
                 
                 # 检查关键词匹配
-                if (query_lower in resource.title.lower() or:
+                if (query_lower in resource.title.lower() or
                     query_lower in resource.description.lower() or
                     any(query_lower in tag.lower() for tag in resource.tags)):
                     results.append(resource)
@@ -366,15 +365,15 @@ class ResourceManager(BaseManager):
             return []
     
     def get_resource_recommendations(self, subject: str = None,
-                                   current_resource_id: str = None) -> List[StudyResource]
+                                   current_resource_id: str = None) -> List[StudyResource]:
         """获取资源推荐"""
         try:
             recommendations = []
             
             # 基于科目推荐
             if subject:
-                subject_resources = [r for r in self.resources.values() 
-                                   if r.subject == subject and r.rating >= 3]:
+                subject_resources = [r for r in self.resources.values()
+                                   if r.subject == subject and r.rating >= 3]
                 recommendations.extend(subject_resources[:5])
             
             # 基于当前资源推荐相关资源
@@ -388,7 +387,7 @@ class ResourceManager(BaseManager):
                 
                 # 基于标签推荐
                 for resource in self.resources.values():
-                    if (resource.id != current_resource_id and:
+                    if (resource.id != current_resource_id and
                         resource.tags.intersection(current_resource.tags)):
                         recommendations.append(resource)
             
@@ -479,8 +478,8 @@ class ResourceManager(BaseManager):
                 if resource.status == ResourceStatus.IN_USE:
                     # 如果长时间未访问，改为可用状态:
                     # 如果长时间未访问，改为可用状态
-                    if (resource.last_accessed and:
-                        datetime.now() - resource.last_accessed > timedelta(hours=1))
+                    if (resource.last_accessed and
+                        datetime.now() - resource.last_accessed > timedelta(hours=1)):
                         resource.status = ResourceStatus.AVAILABLE
                         organized += 1
             
@@ -494,7 +493,7 @@ class ResourceManager(BaseManager):
             self.logger.error(f"整理资源失败: {e}")
             return {'error': str(e)}
     
-    def export_resource_list(self, format_type: str = "json") -> str
+    def export_resource_list(self, format_type: str = "json") -> str:
         """导出资源列表"""
         try:
             import json

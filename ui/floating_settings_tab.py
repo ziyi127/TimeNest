@@ -347,7 +347,6 @@ class FloatingSettingsTab(QWidget):
         """选择背景颜色"""
         color = QColorDialog.getColor(QColor("#323232"), self, "选择背景颜色")
         if color.isValid():
-            self.bg_color_btn.setStyleSheet(:
             self.bg_color_btn.setStyleSheet(
                 f"background-color: {color.name()}; border: 1px solid #666;"
             )
@@ -366,8 +365,7 @@ class FloatingSettingsTab(QWidget):
 
     def _toggle_preview(self, enabled: bool) -> None:
         """切换预览模式"""
-        if enabled and hasattr(enabled, "self._create_preview_widget"):
-    self._create_preview_widget()
+        if enabled and hasattr(self, "_create_preview_widget"):
             self._create_preview_widget()
         else:
             self._destroy_preview_widget()
@@ -559,8 +557,7 @@ class FloatingSettingsTab(QWidget):
             }
             if position in position_map:
                 button = self.position_group.button(position_map[position])
-                if button and hasattr(button, "button.setChecked"):
-    button.setChecked(True)
+                if button and hasattr(button, "setChecked"):
                     button.setChecked(True)
 
             # 显示内容

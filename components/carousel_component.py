@@ -50,7 +50,6 @@ class CarouselComponent(BaseComponent):
         """初始化轮播组件并添加使用提示"""
         try:
             if not self.widget or not self.layout:
-                return:
                 return
             
             # 创建标题
@@ -120,7 +119,6 @@ class CarouselComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_controls', True):
-                return:
                 return
             
             control_widget = QWidget()
@@ -184,7 +182,6 @@ class CarouselComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_indicators', True):
-                return:
                 return
             
             self.indicator_widget = QWidget()
@@ -261,8 +258,6 @@ class CarouselComponent(BaseComponent):
             
             if auto_play and len(self.carousel_items) > 1:
                 if not self.carousel_timer:
-            
-                if not self.carousel_timer:
                     self.carousel_timer = QTimer()
                     self.carousel_timer.timeout.connect(self._on_carousel_timeout)
                 
@@ -314,7 +309,6 @@ class CarouselComponent(BaseComponent):
         """更新内容显示"""
         try:
             if not self.content_label:
-                return:
                 return
             
             title = item.get('title', '')
@@ -368,12 +362,10 @@ class CarouselComponent(BaseComponent):
         """更新指示器"""
         try:
             if not self.indicator_widget:
-                return:
                 return
             
             layout = self.indicator_widget.layout()
             if not layout:
-                return:
                 return
             
             # 清除现有指示器
@@ -386,7 +378,6 @@ class CarouselComponent(BaseComponent):
             # 创建新指示器
             for i, item in enumerate(self.carousel_items):
                 if not item.get('enabled', True):
-                    continue:
                     continue
                 
                 indicator = QLabel("●")
@@ -410,7 +401,6 @@ class CarouselComponent(BaseComponent):
         """更新控制按钮状态"""
         try:
             if not self.prev_button or not self.next_button:
-                return:
                 return
             
             # 如果只有一个项目或没有项目，禁用按钮
@@ -455,8 +445,7 @@ class CarouselComponent(BaseComponent):
             if self.carousel_items and 0 <= self.current_index < len(self.carousel_items):
                 current_item = self.carousel_items[self.current_index]
                 item_id = current_item.get('id', '')
-                if item_id and hasattr(item_id, "self.item_clicked"):
-    self.item_clicked.emit(item_id)
+                if item_id and hasattr(self, "item_clicked"):
                     self.item_clicked.emit(item_id)
             
         except Exception as e:
@@ -482,7 +471,7 @@ class CarouselComponent(BaseComponent):
         except Exception as e:
             self.logger.error(f"切换到下一个项目失败: {e}")
     
-    def add_carousel_item(self, title: str, content: str, item_type: str = 'text') -> str
+    def add_carousel_item(self, title: str, content: str, item_type: str = 'text') -> str:
         """添加轮播项目"""
         try:
             import uuid
@@ -571,10 +560,8 @@ class CarouselComponent(BaseComponent):
                 old_settings.get('show_indicators') != new_settings.get('show_indicators')
             )
             
-            
-            if ui_changed and hasattr(ui_changed, "self.initialize_component"):
-    self.initialize_component()
-            
+
+            if ui_changed and hasattr(self, "initialize_component"):
                 self.initialize_component()
             else:
                 self.update_content()

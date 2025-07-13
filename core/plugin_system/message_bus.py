@@ -190,7 +190,7 @@ class MessageDeliveryTracker:
             current_time = time.time()
             expired_ids = [
                 msg_id for msg_id, status in self._delivery_status.items()
-                if current_time - status.get('timestamp') > max_age_seconds:
+                if current_time - status.get('timestamp') > max_age_seconds
             ]
             
             for msg_id in expired_ids:
@@ -389,7 +389,7 @@ class PluginMessageBus(BaseManager):
                 self._message_queue.append(message)
 
                 # Update statistics
-                self._stats['messages_sent'] = _stats.get('messages_sent', 0) + 1
+                self._stats['messages_sent'] = self._stats.get('messages_sent', 0) + 1
 
                 # Emit signal
                 self.message_sent.emit(message.id, message.topic)
@@ -436,7 +436,7 @@ class PluginMessageBus(BaseManager):
 
             def response_handler(msg: Message):
                 nonlocal response_message
-                if (msg.message_type == MessageType.RESPONSE and:
+                if (msg.message_type == MessageType.RESPONSE and
                     msg.correlation_id == request.correlation_id):
                     response_message = msg
                     response_received.set()
@@ -597,7 +597,7 @@ class PluginMessageBus(BaseManager):
                 self._delivery_tracker.mark_delivered(message.id, handler.plugin_id)
 
             # Update statistics
-            self._stats['messages_delivered'] = _stats.get('messages_delivered', 0) + 1
+            self._stats['messages_delivered'] = self._stats.get('messages_delivered', 0) + 1
 
             # Emit signal
             self.message_delivered.emit(message.id, handler.plugin_id)

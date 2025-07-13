@@ -332,7 +332,7 @@ class EnhancedPluginManager(BaseManager):
         """Get list of active plugin IDs"""
         return [
             plugin_id for plugin_id, plugin in self.plugins.items()
-            if plugin.get_status() == PluginStatus.ENABLED:
+            if plugin.get_status() == PluginStatus.ENABLED
         ]
     
     def get_plugin_status(self, plugin_id: str) -> Optional[PluginStatus]:
@@ -521,7 +521,7 @@ class EnhancedPluginManager(BaseManager):
             plugin_class = None
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (isinstance(attr, type) and:
+                if (isinstance(attr, type) and
                     issubclass(attr, IPlugin) and
                     attr != IPlugin):
                     plugin_class = attr

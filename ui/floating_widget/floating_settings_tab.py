@@ -29,8 +29,6 @@ from PyQt6.QtGui import QFont, QColor, QPalette
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
     from .smart_floating_widget import SmartFloatingWidget
 
@@ -270,7 +268,6 @@ class FloatingSettingsTabWidget(QWidget):
         """选择边框颜色"""
         color = QColorDialog.getColor(Qt.GlobalColor.black, self)
         if color.isValid():
-            self.border_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.border_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def get_settings(self) -> Dict[str, Any]:

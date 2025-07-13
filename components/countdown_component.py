@@ -44,7 +44,6 @@ class CountdownComponent(BaseComponent):
         """初始化倒计时组件"""
         try:
             if not self.widget or not self.layout:
-                return:
                 return
             
             # 创建标题
@@ -150,7 +149,6 @@ class CountdownComponent(BaseComponent):
         """更新倒计时内容"""
         try:
             if not self.events_container:
-                return:
                 return
             
             # 清除现有内容
@@ -169,13 +167,11 @@ class CountdownComponent(BaseComponent):
             active_events = []
             for event in self.countdown_events:
                 if not event.get('enabled', True):
-                    continue:
                     continue
                 
                 try:
                     target_time = datetime.fromisoformat(event.get('target_time'))
                     if target_time > now:
-                        active_events.append((event, target_time)):
                         active_events.append((event, target_time))
                 except ValueError:
                     self.logger.warning(f"无效的时间格式: {event.get('target_time')}")
@@ -265,8 +261,6 @@ class CountdownComponent(BaseComponent):
             if delta.total_seconds() <= 0:
                 return "已到期"
             
-                return "已到期"
-            
             days = delta.days
             hours, remainder = divmod(delta.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
@@ -316,7 +310,7 @@ class CountdownComponent(BaseComponent):
             self.logger.error(f"计算倒计时失败: {e}")
             return "计算错误"
     
-    def add_countdown_event(self, name: str, target_time: datetime, color: str = '#4caf50') -> str
+    def add_countdown_event(self, name: str, target_time: datetime, color: str = '#4caf50') -> str:
         """添加倒计时事件"""
         try:
             import uuid

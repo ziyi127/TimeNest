@@ -84,7 +84,6 @@ class ScrollItem(QWidget):
         elif self.item_type == "image":
             label = QLabel()
             if isinstance(self.content, QPixmap):
-                label.setPixmap(self.content.scaled(200, 150, Qt.AspectRatioMode.KeepAspectRatio)):
                 label.setPixmap(self.content.scaled(200, 150, Qt.AspectRatioMode.KeepAspectRatio))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(label)
@@ -226,7 +225,6 @@ class ScrollComponent(BaseComponent):
         """滚动步进"""
         try:
             if not self.scroll_items:
-                return:
                 return
             
             
@@ -256,8 +254,6 @@ class ScrollComponent(BaseComponent):
             
             if new_value > max_value:
                 if self.loop_scroll:
-            
-                if self.loop_scroll:
                     scroll_bar.setValue(0)
                 else:
                     self.stop_scroll()
@@ -285,8 +281,6 @@ class ScrollComponent(BaseComponent):
             
             
             if new_value > max_value:
-                if self.loop_scroll:
-            
                 if self.loop_scroll:
                     scroll_bar.setValue(0)
                 else:
@@ -382,8 +376,7 @@ class ScrollComponent(BaseComponent):
     def set_auto_scroll(self, enabled: bool):
         """设置自动滚动"""
         self.auto_scroll = enabled
-        if enabled and hasattr(enabled, "self.start_scroll"):
-    self.start_scroll()
+        if enabled and hasattr(self, "start_scroll"):
             self.start_scroll()
         else:
             self.stop_scroll()
@@ -410,17 +403,12 @@ class ScrollComponent(BaseComponent):
         
         
         if 'scroll_direction' in config:
-            self.set_scroll_direction(config.get('scroll_direction')):
-        
             self.set_scroll_direction(config.get('scroll_direction'))
         if 'scroll_speed' in config:
-            self.set_scroll_speed(config.get('scroll_speed')):
             self.set_scroll_speed(config.get('scroll_speed'))
         if 'auto_scroll' in config:
-            self.set_auto_scroll(config.get('auto_scroll')):
             self.set_auto_scroll(config.get('auto_scroll'))
         if 'loop_scroll' in config:
-            self.set_loop_scroll(config.get('loop_scroll')):
             self.set_loop_scroll(config.get('loop_scroll'))
         if 'pause_on_hover' in config:
             self.pause_on_hover = config.get('pause_on_hover')

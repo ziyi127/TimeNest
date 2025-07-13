@@ -31,8 +31,6 @@ from PyQt6.QtGui import QFont
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
 
 
@@ -273,7 +271,7 @@ class TaskManagerDialog(QDialog):
             
             for i, (name, task_type, days) in enumerate(quick_tasks):
                 button = QPushButton(name)
-                button.clicked.connect(lambda checked, n=name, t=task_type, d=days
+                button.clicked.connect(lambda checked, n=name, t=task_type, d=days:
                                      self.quick_add_task(n, t, d))
                 quick_button_layout.addWidget(button, i // 3, i % 3)
             
@@ -328,7 +326,7 @@ class TaskManagerDialog(QDialog):
             for task_id, task, target_date in sorted_tasks:
                 # 应用过滤器
                 if not self.should_show_task(task, target_date, current_time, current_filter):
-                    continue:
+                    continue
                     continue
                 
                 # 计算剩余时间
@@ -447,7 +445,7 @@ class TaskManagerDialog(QDialog):
         """添加任务"""
         try:
             if not self.validate_form():
-                return:
+                return
                 return
             
             # 生成任务ID
@@ -482,7 +480,7 @@ class TaskManagerDialog(QDialog):
         """更新任务"""
         try:
             if not self.validate_form():
-                return:
+                return
                 return
             
             current_item = self.task_list.currentItem()
@@ -517,7 +515,7 @@ class TaskManagerDialog(QDialog):
         try:
             current_item = self.task_list.currentItem()
             if not current_item:
-                return:
+                return
                 return
             
             reply = QMessageBox.question(
@@ -533,7 +531,6 @@ class TaskManagerDialog(QDialog):
                 
                 # 删除任务
                 if task_id in self.tasks_data:
-                    del self.tasks_data[task_id]:
                     del self.tasks_data[task_id]
                 
                 # 刷新列表
@@ -846,7 +843,6 @@ class TaskManagerDialog(QDialog):
         try:
             current_item = self.task_list.currentItem()
             if not current_item:
-                return:
                 return
 
             task_id = current_item.data(Qt.ItemDataRole.UserRole)

@@ -46,7 +46,7 @@ class NTPClient:
     def __init__(self):
         self.logger = logging.getLogger(f'{__name__}.NTPClient')
     
-    def get_ntp_time(self, server: str, port: int = 123, timeout: float = 5.0) -> Optional[Tuple[datetime, float]]
+    def get_ntp_time(self, server: str, port: int = 123, timeout: float = 5.0) -> Optional[Tuple[datetime, float]]:
         """
         从 NTP 服务器获取时间
         
@@ -104,8 +104,8 @@ class WebTimeClient:
     def __init__(self):
         self.logger = logging.getLogger(f'{__name__}.WebTimeClient')
     
-    def get_web_time(self, url: str = "http://worldtimeapi.org/api/timezone/Asia/Shanghai", 
-                     timeout: float = 5.0) -> Optional[Tuple[datetime, float]]
+    def get_web_time(self, url: str = "http://worldtimeapi.org/api/timezone/Asia/Shanghai",
+                     timeout: float = 5.0) -> Optional[Tuple[datetime, float]]:
         """
         从 Web API 获取时间
         
@@ -276,9 +276,7 @@ class TimeCalibrationService(QObject):
             auto_interval = settings.get('auto_calibration_interval', 3600)  # 1小时
             
             
-            if auto_enabled and hasattr(auto_enabled, "self.auto_calibration_timer"):
-    self.auto_calibration_timer.start(auto_interval * 1000)
-            
+            if auto_enabled and hasattr(self, "auto_calibration_timer"):
                 self.auto_calibration_timer.start(auto_interval * 1000)
                 self.logger.info(f"自动时间校准已启用，间隔: {auto_interval}秒")
             
@@ -388,7 +386,6 @@ class TimeCalibrationService(QObject):
             
             # 只保留最近 50 次记录
             if len(history) > 50:
-                history = history[-50:]:
                 history = history[-50:]
             
             self.config_manager.set_config('calibration_history', history, 'component')
@@ -405,8 +402,7 @@ class TimeCalibrationService(QObject):
     def set_auto_calibration(self, enabled: bool, interval_seconds: int = 3600):
         """设置自动校准"""
         try:
-            if enabled and hasattr(enabled, "self.auto_calibration_timer"):
-    self.auto_calibration_timer.start(interval_seconds * 1000)
+            if enabled and hasattr(self, "auto_calibration_timer"):
                 self.auto_calibration_timer.start(interval_seconds * 1000)
                 self.logger.info(f"自动时间校准已启用，间隔: {interval_seconds}秒")
             else:

@@ -103,7 +103,7 @@ class ThemeManager(QObject):
     theme_loaded = pyqtSignal(int)   # 主题数量
     theme_error = pyqtSignal(str)    # 错误信息
 
-    def __init__(self, theme_dir: str = "themes") -> None
+    def __init__(self, theme_dir: str = "themes") -> None:
         """
         初始化主题管理器
 

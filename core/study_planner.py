@@ -229,7 +229,6 @@ class StudyPlannerManager(BaseManager):
             if self.study_assistant:
                 analytics = self.study_assistant.get_learning_analytics()
                 if analytics:
-                    patterns['productive_hours'] = analytics.most_productive_hours:
                     patterns['productive_hours'] = analytics.most_productive_hours
                     patterns['preferred_session_length'] = analytics.average_session_length
             
@@ -478,8 +477,8 @@ class StudyPlannerManager(BaseManager):
                 previous_block = blocks[i-1]
                 
                 # 如果连续两个都是高难度，调整当前块的难度
-                if (previous_block.difficulty == Difficulty.HARD and:
-                    current_block.difficulty == Difficulty.HARD)
+                if (previous_block.difficulty == Difficulty.HARD and
+                    current_block.difficulty == Difficulty.HARD):
                     current_block.difficulty = Difficulty.MEDIUM
             
             return blocks
@@ -531,21 +530,19 @@ class StudyPlannerManager(BaseManager):
         """获取计划总结"""
         try:
             if plan_id not in self.study_plans:
-                return {'status': 'not_found'}:
                 return {'status': 'not_found'}
             
             plan = self.study_plans[plan_id]
             
             # 统计信息
             total_blocks = len(plan.study_blocks)
-            completed_blocks = sum(1 for block in plan.study_blocks 
-                                 if block.start_time < datetime.now()):
+            completed_blocks = sum(1 for block in plan.study_blocks
+                                 if block.start_time < datetime.now())
             
             # 科目分布
             subject_distribution = {}
             for block in plan.study_blocks:
                 subject = block.subject
-                                     subject = block.subject
                 subject_distribution[subject] = subject_distribution.get(subject, 0) + block.duration
             
             # 难度分布

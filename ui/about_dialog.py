@@ -409,8 +409,6 @@ class AboutDialog(QDialog):
         
         
         if 'email' in author_info:
-            email_label = QLabel(f'<a href="mailto:{author_info.get("email")}">📧 邮箱</a>'):
-        
             email_label = QLabel(f'<a href="mailto:{author_info.get("email")}">📧 邮箱</a>')
             email_label.setOpenExternalLinks(True)
             contact_layout.addWidget(email_label)

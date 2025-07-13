@@ -29,8 +29,6 @@ from PyQt6.QtGui import QFont
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
 
 
@@ -301,7 +299,7 @@ class ScheduleEditorDialog(QDialog):
         """添加课程"""
         try:
             if not self.validate_form():
-                return:
+                return
                 return
             
             current_item = self.schedule_table.currentItem()
@@ -323,12 +321,11 @@ class ScheduleEditorDialog(QDialog):
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
                 if reply != QMessageBox.StandardButton.Yes:
-                    return:
+                    return
                     return
             
             # 添加课程
             if day not in self.schedule_data:
-                self.schedule_data[day] = {}:
                 self.schedule_data[day] = {}
             
             self.schedule_data[day][time_key] = {
@@ -353,12 +350,12 @@ class ScheduleEditorDialog(QDialog):
         """更新课程"""
         try:
             if not self.validate_form():
-                return:
+                return
                 return
             
             current_item = self.schedule_table.currentItem()
             if not current_item:
-                return:
+                return
                 return
             
             row = self.schedule_table.currentRow()
@@ -370,7 +367,6 @@ class ScheduleEditorDialog(QDialog):
             
             # 更新课程
             if day in self.schedule_data and time_key in self.schedule_data[day]:
-                self.schedule_data[day][time_key].update({:
                 self.schedule_data[day][time_key].update({
                     'name': self.course_name_edit.text().strip(),
                     'classroom': self.classroom_edit.text().strip(),
@@ -393,7 +389,7 @@ class ScheduleEditorDialog(QDialog):
         try:
             current_item = self.schedule_table.currentItem()
             if not current_item:
-                return:
+                return
                 return
             
             reply = QMessageBox.question(
@@ -414,12 +410,10 @@ class ScheduleEditorDialog(QDialog):
                 
                 # 删除课程
                 if day in self.schedule_data and time_key in self.schedule_data[day]:
-                    del self.schedule_data[day][time_key]:
                     del self.schedule_data[day][time_key]
                     
                     # 如果该天没有课程了，删除整天
                     if not self.schedule_data[day]:
-                        del self.schedule_data[day]:
                         del self.schedule_data[day]
                 
                 # 更新显示
@@ -511,8 +505,6 @@ class ScheduleEditorDialog(QDialog):
 
             if file_path:
                 if file_path.endswith('.json'):
-
-                if file_path.endswith('.json'):
                     self.import_from_json(file_path)
                 elif file_path.endswith('.csv'):
                     self.import_from_csv(file_path)
@@ -575,8 +567,6 @@ class ScheduleEditorDialog(QDialog):
 
                     if day and time_slot and course_name:
                         if day not in new_schedule:
-
-                        if day not in new_schedule:
                             new_schedule[day] = {}
 
                         new_schedule[day][time_slot] = {
@@ -630,8 +620,6 @@ class ScheduleEditorDialog(QDialog):
 
 
             if file_path:
-                if "JSON" in file_filter or file_path.endswith('.json'):
-
                 if "JSON" in file_filter or file_path.endswith('.json'):
                     self.export_to_json(file_path)
                 elif "CSV" in file_filter or file_path.endswith('.csv'):

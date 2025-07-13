@@ -212,10 +212,10 @@ class EventBus(QObject):
             self._handle_error(e, None)
             raise
     
-    def subscribe(self, event_type: str, handler: Union[EventHandler, AsyncEventHandler], 
+    def subscribe(self, event_type: str, handler: Union[EventHandler, AsyncEventHandler],
                   filter_func: Optional[Callable[[Event], bool]] = None,
                   priority: EventPriority = EventPriority.NORMAL,
-                  async_handler: bool = False, max_retries: int = 3, timeout: float = 30.0) -> str
+                  async_handler: bool = False, max_retries: int = 3, timeout: float = 30.0) -> str:
         """
         订阅事件
         
@@ -275,7 +275,6 @@ class EventBus(QObject):
                 for event_type, subscriptions in self.subscriptions.items():
                     for i, subscription in enumerate(subscriptions):
                         if subscription.id == subscription_id:
-                            del subscriptions[i]:
                             del subscriptions[i]
                             self.stats['subscriptions_count'] = stats.get('subscriptions_count', 0) - 1
                             self.subscription_removed.emit(subscription_id)
@@ -324,7 +323,7 @@ class EventBus(QObject):
         self.error_handlers.append(handler)
         self.logger.debug("添加错误处理器")
     
-    def get_event_history(self, event_type: str = None, limit: int = None) -> List[Event]
+    def get_event_history(self, event_type: str = None, limit: int = None) -> List[Event]:
         """
         获取事件历史
         
@@ -344,12 +343,11 @@ class EventBus(QObject):
         
         # 限制数量
         if limit:
-            events = events[-limit:]:
             events = events[-limit:]
         
         return events
     
-    def replay_events(self, event_type: str = None, since: datetime = None) -> int
+    def replay_events(self, event_type: str = None, since: datetime = None) -> int:
         """
         重放事件
         
@@ -417,7 +415,6 @@ class EventBus(QObject):
                 try:
                     # 应用过滤器
                     if subscription.filter_func and not subscription.filter_func(event):
-                        continue:
                         continue
                     
                     # 异步处理
@@ -429,14 +426,14 @@ class EventBus(QObject):
                 except Exception as e:
                     self.logger.error(f"处理事件订阅失败: {subscription.id} - {e}")
                     self._handle_error(e, event)
-                    self.stats['events_failed'] = stats.get('events_failed', 0) + 1
+                    self.stats['events_failed'] = self.stats.get('events_failed', 0) + 1
             
             # 记录处理时间
             processing_time = (datetime.now() - start_time).total_seconds()
             self.processing_times.append(processing_time)
             
             # 更新统计
-            self.stats['events_processed'] = stats.get('events_processed', 0) + 1
+            self.stats['events_processed'] = self.stats.get('events_processed', 0) + 1
             
             # 发出处理完成信号
             self.event_processed.emit(event.id, True)
@@ -538,7 +535,7 @@ def get_event_bus() -> EventBus:
     return _global_event_bus
 
 
-def publish_event(event_type: str, data: Any = None, **kwargs) -> str
+def publish_event(event_type: str, data: Any = None, **kwargs) -> str:
     """发布事件到全局事件总线"""
     return _global_event_bus.publish(event_type, data, **kwargs)
 

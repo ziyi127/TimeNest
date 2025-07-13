@@ -39,7 +39,6 @@ class ClockComponent(BaseComponent):
         """初始化时钟组件"""
         try:
             if not self.widget or not self.layout:
-                return:
                 return
             
             # 获取设置

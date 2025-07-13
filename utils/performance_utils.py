@@ -35,7 +35,7 @@ class LRUCache:
         self._timestamps: Dict[Any, float] = {}
         self._lock = threading.RLock()
     
-    def get(self, key: Any, default: Any = None) -> Any
+    def get(self, key: Any, default: Any = None) -> Any:
         """获取缓存值"""
         with self._lock:
             if key not in self._cache:
@@ -56,7 +56,6 @@ class LRUCache:
         """设置缓存值"""
         with self._lock:
             if key in self._cache:
-                # 更新现有值:
                 # 更新现有值
                 self._cache.pop(key)
             elif len(self._cache) >= self.max_size:
@@ -144,7 +143,6 @@ def timing_decorator(threshold_ms: float = 100.0):
 
                 # 只在超过阈值时记录
                 if execution_time > threshold_ms:
-                    import logging:
                     import logging
                     logger = logging.getLogger(__name__)
                     func_name = f"{func.__module__}.{func.__qualname__}"
@@ -180,9 +178,7 @@ def debounce(wait: float):
                 func(*args, **kwargs)
             
             
-            if timer and hasattr(timer, "timer.cancel"):
-    timer.cancel()
-            
+            if timer and hasattr(timer, "cancel"):
                 timer.cancel()
             
             timer = threading.Timer(wait, call_func)
@@ -208,7 +204,6 @@ def throttle(interval: float):
         def wrapper(*args, **kwargs):
             now = time.time()
             if now - last_called[0] >= interval:
-                last_called[0] = now:
                 last_called[0] = now
                 return func(*args, **kwargs)
         
@@ -247,7 +242,6 @@ class ObjectPool:
         """释放对象回池中"""
         with self._lock:
             if len(self._pool) < self.max_size:
-                # 重置对象状态（如果需要）:
                 # 重置对象状态（如果需要）
                 if hasattr(obj, 'reset'):
                     obj.reset()
@@ -305,7 +299,6 @@ def batch_processor(batch_size: int = 100, flush_interval: float = 1.0):
         def flush_batch():
             nonlocal batch, last_flush
             if batch:
-                # 批量处理:
                 # 批量处理
                 try:
                     func(batch.copy())
@@ -362,12 +355,8 @@ def memory_efficient_generator(iterable, chunk_size: int = 1000):
     for item in iterable:
         chunk.append(item)
         if len(chunk) >= chunk_size:
-            yield chunk:
             yield chunk
             chunk = []
     
-    
     if chunk:
-        yield chunk:
-    
         yield chunk

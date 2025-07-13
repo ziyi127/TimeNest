@@ -55,7 +55,6 @@ class ContainerComponent(BaseComponent):
         """初始化容器组件"""
         try:
             if not self.widget or not self.layout:
-                return:
                 return
             
             # 创建标题
@@ -288,7 +287,6 @@ class ContainerComponent(BaseComponent):
         """更新基本布局内容"""
         try:
             if not self.container_layout:
-                return:
                 return
             
             # 清除现有内容
@@ -309,7 +307,6 @@ class ContainerComponent(BaseComponent):
         """更新网格布局内容"""
         try:
             if not self.container_layout:
-                return:
                 return
             
             # 清除现有内容
@@ -332,7 +329,6 @@ class ContainerComponent(BaseComponent):
         """更新标签页内容"""
         try:
             if not self.tab_widget:
-                return:
                 return
             
             # 清除现有标签页
@@ -351,7 +347,6 @@ class ContainerComponent(BaseComponent):
         """更新堆叠内容"""
         try:
             if not self.stacked_widget:
-                return:
                 return
             
             # 清除现有页面
@@ -375,7 +370,6 @@ class ContainerComponent(BaseComponent):
         """更新分割器内容"""
         try:
             if not self.splitter:
-                return:
                 return
             
             # 清除现有组件

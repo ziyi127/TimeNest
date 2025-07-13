@@ -29,8 +29,6 @@ from PyQt6.QtGui import QFont, QColor, QPalette, QDrag, QPixmap, QPainter
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
     from .smart_floating_widget import SmartFloatingWidget
 
@@ -487,7 +485,6 @@ class ModuleManagerWidget(QWidget):
         from PyQt6.QtWidgets import QColorDialog
         color = QColorDialog.getColor(Qt.GlobalColor.black, self)
         if color.isValid():
-            self.text_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.text_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def choose_bg_color(self) -> None:
@@ -495,7 +492,6 @@ class ModuleManagerWidget(QWidget):
         from PyQt6.QtWidgets import QColorDialog
         color = QColorDialog.getColor(Qt.GlobalColor.white, self)
         if color.isValid():
-            self.bg_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.bg_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def emit_modules_changed(self) -> None:
@@ -524,8 +520,8 @@ class ModuleManagerWidget(QWidget):
         return {
             'enabled_modules': [
                 self.module_list.item(i).data(Qt.ItemDataRole.UserRole)
-                for i in range(self.module_list.count()):
-                if self.module_list.item(i).checkState() == Qt.CheckState.Checked:
+                for i in range(self.module_list.count())
+                if self.module_list.item(i).checkState() == Qt.CheckState.Checked
             ],
             'rotation': {
                 'auto_rotate': self.auto_rotate.isChecked(),

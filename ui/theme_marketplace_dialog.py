@@ -32,8 +32,6 @@ from pathlib import Path
 
 
 if TYPE_CHECKING:
-    from core.app_manager import AppManager:
-
     from core.app_manager import AppManager
     from core.theme_marketplace import ThemeMarketplace, ThemeInfo
 
@@ -164,8 +162,7 @@ class ThemeItemWidget(QFrame):
     def set_installed_status(self, installed: bool):
         """设置安装状态"""
         self.is_installed = installed
-        if installed and hasattr(installed, "self.action_button"):
-    self.action_button.setText("卸载")
+        if installed and hasattr(self, "action_button"):
             self.action_button.setText("卸载")
             self.action_button.setStyleSheet("background-color: #f44336; color: white;")
             self.action_button.clicked.disconnect()
@@ -359,7 +356,7 @@ class ThemeMarketplaceDialog(QDialog):
         """加载已安装主题"""
         try:
             if not self.theme_marketplace:
-                return:
+                return
                 return
             
             # 清空已安装主题布局
@@ -440,7 +437,7 @@ class ThemeMarketplaceDialog(QDialog):
         """下载主题"""
         try:
             if not self.theme_marketplace:
-                return:
+                return
                 return
             
             # 查找主题信息
@@ -451,9 +448,7 @@ class ThemeMarketplaceDialog(QDialog):
                     break
             
             
-            if theme_info and hasattr(theme_info, "self.progress_bar"):
-    self.progress_bar.setVisible(True)
-            
+            if theme_info and hasattr(self, "progress_bar"):
                 self.progress_bar.setVisible(True)
                 self.theme_marketplace.download_theme(theme_info)
             
@@ -470,7 +465,7 @@ class ThemeMarketplaceDialog(QDialog):
         """卸载主题"""
         try:
             if not self.theme_marketplace:
-                return:
+                return
                 return
             
             reply = QMessageBox.question(

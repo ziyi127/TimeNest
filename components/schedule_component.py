@@ -54,7 +54,6 @@ class ScheduleComponent(BaseComponent):
         """初始化课程表组件"""
         try:
             if not self.widget or not self.layout:
-                return:
                 return
             
             # 创建标题
@@ -85,7 +84,6 @@ class ScheduleComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_current_class', True):
-                return:
                 return
             
             self.current_class_frame = QFrame()
@@ -119,7 +117,6 @@ class ScheduleComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_next_class', True):
-                return:
                 return
             
             self.next_class_frame = QFrame()
@@ -261,12 +258,11 @@ class ScheduleComponent(BaseComponent):
         """更新当前课程显示"""
         try:
             if not self.current_class_frame:
-                return:
                 return
             
             layout = self.current_class_frame.layout()
             if not layout:
-                return:
+                return
                 return
             
             # 清除现有内容（保留标题）
@@ -326,12 +322,12 @@ class ScheduleComponent(BaseComponent):
         """更新下节课显示"""
         try:
             if not self.next_class_frame:
-                return:
+                return
                 return
             
             layout = self.next_class_frame.layout()
             if not layout:
-                return:
+                return
                 return
             
             # 清除现有内容（保留标题）
@@ -399,7 +395,7 @@ class ScheduleComponent(BaseComponent):
         """更新课程表显示"""
         try:
             if not self.schedule_container:
-                return:
+                return
                 return
             
             # 清除现有内容
@@ -449,7 +445,7 @@ class ScheduleComponent(BaseComponent):
             
             
             if not day_classes:
-                return:
+                return
             
                 return
             
@@ -463,7 +459,7 @@ class ScheduleComponent(BaseComponent):
             
             
             if not day_classes:
-                return:
+                return
             
                 return
             
