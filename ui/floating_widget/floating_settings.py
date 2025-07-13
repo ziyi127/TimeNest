@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 浮窗设置界面
 提供浮窗外观、模块管理等设置功能
@@ -15,6 +26,7 @@ from PyQt6.QtWidgets import (
     QFontDialog, QMessageBox, QFormLayout, QDialogButtonBox, QLineEdit
 )
 from PyQt6.QtGui import QFont, QColor
+
 
 if TYPE_CHECKING:
     from core.app_manager import AppManager
@@ -88,19 +100,19 @@ class FloatingSettingsDialog(QDialog):
                     background-color: #f5f5f5;
                     border-radius: 10px;
                 }
-                QTabWidget::pane {
+                QTabWidget:pane {
                     border: 1px solid #ddd;
                     border-radius: 8px;
                     background-color: white;
                 }
-                QTabBar::tab {
+                QTabBar:tab {
                     background-color: #e9e9e9;
                     padding: 8px 16px;
                     margin-right: 2px;
                     border-top-left-radius: 6px;
                     border-top-right-radius: 6px;
                 }
-                QTabBar::tab:selected {
+                QTabBar:tab:selected {
                     background-color: white;
                     border-bottom: 2px solid #007acc;
                 }
@@ -111,7 +123,7 @@ class FloatingSettingsDialog(QDialog):
                     margin-top: 10px;
                     padding-top: 10px;
                 }
-                QGroupBox::title {
+                QGroupBox:title {
                     subcontrol-origin: margin;
                     left: 10px;
                     padding: 0 8px 0 8px;
@@ -323,14 +335,14 @@ class FloatingSettingsDialog(QDialog):
         self.opacity_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.opacity_slider.setTickInterval(10)
         self.opacity_slider.setStyleSheet("""
-            QSlider::groove:horizontal {
+            QSlider:groove:horizontal {
                 border: 1px solid #bbb;
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #ff6b6b, stop:1 #4ecdc4);
                 height: 8px;
                 border-radius: 4px;
             }
-            QSlider::handle:horizontal {
+            QSlider:handle:horizontal {
                 background: white;
                 border: 2px solid #007acc;
                 width: 18px;
@@ -707,7 +719,10 @@ class FloatingSettingsDialog(QDialog):
                 module_id = item.data(Qt.ItemDataRole.UserRole)
                 module_config = modules_config.get(module_id, {})
 
+
                 if module_config.get('enabled', True):
+                    item.setCheckState(Qt.CheckState.Checked)
+
                     item.setCheckState(Qt.CheckState.Checked)
                 else:
                     item.setCheckState(Qt.CheckState.Unchecked)
@@ -759,7 +774,7 @@ class FloatingSettingsDialog(QDialog):
                 # 保存颜色到临时设置
                 if 'appearance' not in self.settings:
                     self.settings['appearance'] = {}
-                self.settings['appearance']['background_color'] = color.name()
+                self.settings.get('appearance')['background_color'] = color.name()
 
         except Exception as e:
             self.logger.error(f"选择背景颜色失败: {e}")
@@ -775,7 +790,7 @@ class FloatingSettingsDialog(QDialog):
                 # 保存颜色到临时设置
                 if 'appearance' not in self.settings:
                     self.settings['appearance'] = {}
-                self.settings['appearance']['text_color'] = color.name()
+                self.settings.get('appearance')['text_color'] = color.name()
 
         except Exception as e:
             self.logger.error(f"选择文字颜色失败: {e}")
@@ -785,6 +800,7 @@ class FloatingSettingsDialog(QDialog):
         try:
             current_font = QFont("Arial", 12)
             font, ok = QFontDialog.getFont(current_font, self, "选择字体")
+
 
             if ok:
                 font_text = f"{font.family()}, {font.pointSize()}pt"
@@ -798,7 +814,7 @@ class FloatingSettingsDialog(QDialog):
                 # 保存字体到临时设置
                 if 'appearance' not in self.settings:
                     self.settings['appearance'] = {}
-                self.settings['appearance']['font'] = {
+                self.settings.get('appearance')['font'] = {
                     'family': font.family(),
                     'size': font.pointSize(),
                     'bold': font.bold(),
@@ -945,14 +961,14 @@ class FloatingSettingsDialog(QDialog):
 
             # 时间模块特殊设置
             if 'time' in modules_config:
-                modules_config['time'].update({
+                modules_config.get('time').update({
                     'format_24h': self.time_24h_check.isChecked(),
                     'show_seconds': self.time_seconds_check.isChecked()
                 })
 
             # 天气模块特殊设置
             if 'weather' in modules_config:
-                modules_config['weather'].update({
+                modules_config.get('weather').update({
                     'api_key': self.weather_api_key_edit.text().strip(),
                     'city': self.weather_city_edit.text().strip()
                 })
@@ -961,7 +977,7 @@ class FloatingSettingsDialog(QDialog):
 
             # 合并外观设置
             if 'appearance' in self.settings:
-                settings['appearance'] = self.settings['appearance']
+                settings['appearance'] = self.settings.get('appearance')
 
             return settings
 
@@ -1129,21 +1145,24 @@ class FloatingSettingsDialog(QDialog):
                 }
             }
 
+
             if preset_id in presets:
                 preset = presets[preset_id]
 
+                preset = presets[preset_id]
+
                 # 应用预设设置
-                self.width_spin.setValue(preset['width'])
-                self.height_spin.setValue(preset['height'])
-                self.opacity_slider.setValue(preset['opacity'])
-                self.radius_spin.setValue(preset['border_radius'])
+                self.width_spin.setValue(preset.get('width'))
+                self.height_spin.setValue(preset.get('height'))
+                self.opacity_slider.setValue(preset.get('opacity'))
+                self.radius_spin.setValue(preset.get('border_radius'))
 
                 # 更新模块选择（如果模块列表存在）
                 if hasattr(self, 'modules_list'):
                     for i in range(self.modules_list.count()):
                         item = self.modules_list.item(i)
                         module_id = item.data(Qt.ItemDataRole.UserRole)
-                        if module_id in preset['modules']:
+                        if module_id in preset.get('modules'):
                             item.setCheckState(Qt.CheckState.Checked)
                         else:
                             item.setCheckState(Qt.CheckState.Unchecked)
@@ -1183,7 +1202,10 @@ class FloatingSettingsDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
+
             if reply == QMessageBox.StandardButton.Yes:
+                # 恢复默认值:
+
                 # 恢复默认值
                 self.width_spin.setValue(400)
                 self.height_spin.setValue(60)
@@ -1308,6 +1330,7 @@ class FloatingSettingsDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
+
             if reply == QMessageBox.StandardButton.Yes:
                 # 重置外观设置
                 self.opacity_slider.setValue(90)
@@ -1388,6 +1411,7 @@ class FloatingSettingsDialog(QDialog):
                 "JSON文件 (*.json);;所有文件 (*)"
             )
 
+
             if file_path:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(settings, f, indent=2, ensure_ascii=False)
@@ -1408,6 +1432,7 @@ class FloatingSettingsDialog(QDialog):
                 self, "导入浮窗设置", "",
                 "JSON文件 (*.json);;所有文件 (*)"
             )
+
 
             if file_path:
                 with open(file_path, 'r', encoding='utf-8') as f:

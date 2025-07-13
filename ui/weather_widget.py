@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 天气组件UI
 显示天气信息的用户界面组件
@@ -230,6 +241,7 @@ class WeatherWidget(QWidget):
         """
         try:
             if self.weather_service:
+                # 获取当前天气数据:
                 # 获取当前天气数据
                 self.current_weather = self.weather_service.get_current_weather()
                 self.update_display()
@@ -245,7 +257,10 @@ class WeatherWidget(QWidget):
             self.refresh_button.setEnabled(False)
             self.refresh_button.setText("刷新中...")
             
+            
             if self.weather_service:
+                self.weather_service.update_weather()
+            
                 self.weather_service.update_weather()
             
             self.refresh_requested.emit()
@@ -301,6 +316,7 @@ class WeatherWidget(QWidget):
         """
         try:
             if not self.current_weather:
+                return:
                 return
             
             # 更新温度
@@ -344,13 +360,17 @@ class WeatherWidget(QWidget):
         """
         try:
             if not self.current_weather or not self.current_weather.condition:
+                return:
                 return
             
             # 根据天气状况设置图标
             condition = self.current_weather.condition
             icon_text = "☀️"  # 默认晴天图标
             
+            
             if condition.name in ['CLOUDY', 'OVERCAST']:
+                icon_text = "☁️"
+            
                 icon_text = "☁️"
             elif condition.name in ['RAINY', 'DRIZZLE']:
                 icon_text = "🌧️"

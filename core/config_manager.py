@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 配置管理器
 负责应用配置的加载、保存和管理
@@ -420,6 +431,7 @@ class ConfigManager(QObject):
                     return False
                 current_dict = current_dict[k]
             
+            
             if keys[-1] in current_dict:
                 del current_dict[keys[-1]]
                 
@@ -467,6 +479,7 @@ class ConfigManager(QObject):
             
             file_path = Path(file_path)
             
+            
             if format.lower() == 'yaml':
                 with open(file_path, 'w', encoding='utf-8') as f:
                     yaml.dump(export_data, f, default_flow_style=False, allow_unicode=True)
@@ -496,6 +509,7 @@ class ConfigManager(QObject):
             else:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     import_data = json.load(f)
+            
             
             if config_type == 'all':
                 if merge:

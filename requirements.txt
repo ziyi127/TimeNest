@@ -1,5 +1,5 @@
 # TimeNest 项目依赖
-# Python 课程表管理工具
+# Python 智能时间管理助手
 
 # ===== 核心运行时依赖 =====
 
@@ -47,12 +47,26 @@ psutil>=5.9.0
 # 错误监控和日志（可选）
 sentry-sdk>=1.32.0
 
+# ===== 构建和发布依赖 =====
+
+# 可执行文件打包
+pyinstaller>=5.13.0
+
+# 版本管理
+setuptools>=68.0.0
+wheel>=0.41.0
+
 # ===== 注意事项 =====
 #
-# 1. 这是核心运行时依赖文件，只包含应用运行必需的包
+# 1. 这是核心运行时依赖文件，包含应用运行和构建必需的包
 # 2. 开发工具请安装 requirements-dev.txt: pip install -r requirements-dev.txt
 # 3. 完整安装请使用: pip install -r requirements.txt -r requirements-dev.txt
-# 4. 生产环境建议只安装此文件中的依赖
+# 4. 生产环境建议只安装运行时依赖，构建环境需要完整依赖
+# 5. 自动化构建已集成在 GitHub Actions 和本地脚本中
 #
 # 安装命令:
 # pip install -r requirements.txt
+#
+# 构建命令:
+# python release.py "1.0.0 Preview"
+# build_release.bat

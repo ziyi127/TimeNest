@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 浮窗模块实现
 定义浮窗模块的基类和具体实现
@@ -14,6 +25,7 @@ from typing import Dict, Any, Optional, TYPE_CHECKING
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout
 from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor
+
 
 if TYPE_CHECKING:
     from core.app_manager import AppManager
@@ -176,6 +188,7 @@ class TimeModule(FloatingModule):
             if self.timezone_offset != 0:
                 now += timedelta(hours=self.timezone_offset)
             
+            
             if self.format_24h:
                 if self.show_seconds:
                     return now.strftime("%H:%M:%S")
@@ -218,11 +231,14 @@ class ScheduleModule(FloatingModule):
             # 获取当前课程信息
             current_info = self.get_current_class_info()
             
-            if current_info and current_info.get('status') == 'in_class':
+            
+            if current_info and current_info['status'] == 'in_class':
+                name = current_info.get('name', '未知课程')
+            
                 name = current_info.get('name', '未知课程')
                 room = current_info.get('room', '未知教室')
                 return f"📚 {name} | {room}"
-            elif current_info and current_info.get('status') == 'break':
+            elif current_info and current_info['status'] == 'break':
                 next_name = current_info.get('next_name', '未知课程')
                 return f"⏰ 课间 | 下节: {next_name}"
             else:
@@ -273,6 +289,7 @@ class ScheduleModule(FloatingModule):
             now = datetime.now()
             hour = now.hour
             
+            
             if 8 <= hour < 12:
                 return {
                     'status': 'in_class',
@@ -314,8 +331,8 @@ class CountdownModule(FloatingModule):
             if not nearest_event:
                 return "📅 暂无倒计时事件"
             
-            remaining = self.calculate_remaining_time(nearest_event['target_time'])
-            return f"⏳ {nearest_event['name']}: {remaining}"
+            remaining = self.calculate_remaining_time(nearest_event.get('target_time'))
+            return f"⏳ {nearest_event.get('name')}: {remaining}"
             
         except Exception as e:
             self.logger.error(f"获取倒计时失败: {e}")
@@ -328,7 +345,7 @@ class CountdownModule(FloatingModule):
             if not nearest_event:
                 return "暂无倒计时事件"
             
-            return f"事件: {nearest_event['name']}\n目标时间: {nearest_event['target_time']}\n描述: {nearest_event.get('description', '无')}"
+            return f"事件: {nearest_event.get('name')}\n目标时间: {nearest_event.get('target_time')}\n描述: {nearest_event.get('description', '无')}"
         except Exception as e:
             return "倒计时信息不可用"
     
@@ -357,11 +374,11 @@ class CountdownModule(FloatingModule):
         """获取最近的倒计时事件"""
         try:
             now = datetime.now()
-            future_events = [e for e in self.events if e['target_time'] > now]
+            future_events = [e for e in self.events if e.get('target_time') > now]
             if not future_events:
                 return None
             
-            return min(future_events, key=lambda x: x['target_time'])
+            return min(future_events, key=lambda x: x.get('target_time'))
         except Exception as e:
             self.logger.error(f"获取最近事件失败: {e}")
             return None
@@ -371,6 +388,7 @@ class CountdownModule(FloatingModule):
         try:
             now = datetime.now()
             remaining = target_time - now
+            
             
             if remaining.days > 0:
                 return f"{remaining.days}天"
@@ -468,11 +486,11 @@ class WeatherModule(FloatingModule):
 
             data = response.json()
             self.weather_data = {
-                'temperature': round(data['main']['temp']),
-                'feels_like': round(data['main']['feels_like']),
-                'humidity': data['main']['humidity'],
-                'description': data['weather'][0]['description'],
-                'condition': data['weather'][0]['main']
+                'temperature': round(data.get('main')['temp']),
+                'feels_like': round(data.get('main')['feels_like']),
+                'humidity': data.get('main')['humidity'],
+                'description': data.get('weather')[0]['description'],
+                'condition': data.get('weather')[0]['main']
             }
 
             self.last_update = datetime.now().strftime('%H:%M')
@@ -513,6 +531,7 @@ class SystemStatusModule(FloatingModule):
         """获取系统状态显示文本"""
         try:
             status_parts = []
+
 
             if self.show_cpu:
                 cpu_percent = psutil.cpu_percent(interval=0.1)
@@ -625,7 +644,7 @@ class StudyProgressModule(FloatingModule):
                 text-align: center;
                 height: 16px;
             }
-            QProgressBar::chunk {
+            QProgressBar:chunk {
                 background-color: #4CAF50;
                 border-radius: 2px;
             }
@@ -740,7 +759,7 @@ class EnvironmentModule(FloatingModule):
 
             # 获取环境总结
             summary = self.environment_optimizer.get_environment_summary()
-            if summary.get('status') == 'success':
+            if summary['status'] == 'success':
                 score = summary.get('overall_score', 0.0)
                 grade = summary.get('grade', '未知')
                 color = summary.get('color', 'gray')
@@ -834,6 +853,7 @@ class ResourceQuickAccessModule(FloatingModule):
                 reverse=True
             )[:3]
 
+
             if recent_resources:
                 recent_text = "\n".join([f"• {r.title[:20]}..." if len(r.title) > 20 else f"• {r.title}"
                                        for r in recent_resources])
@@ -847,6 +867,7 @@ class ResourceQuickAccessModule(FloatingModule):
                 key=lambda r: r.rating,
                 reverse=True
             )[:3]
+
 
             if favorite_resources:
                 favorite_text = "\n".join([f"⭐ {r.title[:20]}..." if len(r.title) > 20 else f"⭐ {r.title}"
@@ -938,6 +959,7 @@ class FocusModeModule(FloatingModule):
             # 获取专注模式状态
             status = self.notification_enhancement.get_focus_mode_status()
 
+
             if status.get('active'):
                 self.is_focus_active = True
                 remaining = status.get('remaining_minutes', 0)
@@ -985,6 +1007,7 @@ class FocusModeModule(FloatingModule):
         try:
             if not self.notification_enhancement:
                 return
+
 
             if self.is_focus_active:
                 # 结束专注模式

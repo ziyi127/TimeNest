@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 组件管理器
 负责UI组件的加载、管理和布局
@@ -101,8 +112,8 @@ class ComponentManager(QObject):
             
         self.component_configs = {
             comp_id: config 
-            for comp_id, config in instances_config.items()
-            if self._validate_component_config(config)
+            for comp_id, config in instances_config.items():
+            if self._validate_component_config(config):
         }
         
     def _load_layout_config(self, layout_config: dict):
@@ -113,7 +124,10 @@ class ComponentManager(QObject):
             'margins': {'top': 10, 'bottom': 10, 'left': 10, 'right': 10}
         }
         
+        
         if not layout_config or not isinstance(layout_config, dict):
+            self.logger.warning("布局配置无效，将使用默认布局")
+        
             self.logger.warning("布局配置无效，将使用默认布局")
             self.layout_config = default_layout
             return
@@ -135,8 +149,11 @@ class ComponentManager(QObject):
         if not required_fields.issubset(config.keys()):
             return False
             
-        if config['type'] not in self.component_types:
-            self.logger.warning(f"组件类型 {config['type']} 未注册")
+            
+        if config.get('type') not in self.component_types:
+            self.logger.warning(f"组件类型 {config.get('type')} 未注册"):
+            
+            self.logger.warning(f"组件类型 {config.get('type')} 未注册")
             return False
             
         return True
@@ -183,7 +200,7 @@ class ComponentManager(QObject):
             self.component_configs[clock_id] = clock_config
             
             # 更新布局配置
-            self.layout_config['rows'][0]['components'] = [schedule_id, clock_id]
+            self.layout_config.get('rows')[0]['components'] = [schedule_id, clock_id]
             
             # 保存到配置文件
             self._save_component_configs()
@@ -208,7 +225,10 @@ class ComponentManager(QObject):
             if not issubclass(component_class, BaseComponent):
                 raise ValueError(f"组件类 {component_class} 必须继承自 BaseComponent")
             
+            
             if type_name in self.component_types:
+                self.logger.warning(f"组件类型 {type_name} 已存在，将被覆盖")
+            
                 self.logger.warning(f"组件类型 {type_name} 已存在，将被覆盖")
                 
             self.component_types[type_name] = component_class
@@ -302,6 +322,7 @@ class ComponentManager(QObject):
             
             # 从配置中移除
             if component_id in self.component_configs:
+                del self.component_configs[component_id]:
                 del self.component_configs[component_id]
             
             # 从布局中移除
@@ -366,7 +387,7 @@ class ComponentManager(QObject):
         
         return component_list
     
-    def enable_component(self, component_id: str, enabled: bool = True) -> bool:
+    def enable_component(self, component_id: str, enabled: bool = True) -> bool
         """启用/禁用组件"""
         try:
             if component_id not in self.component_configs:
@@ -374,7 +395,10 @@ class ComponentManager(QObject):
             
             self.component_configs[component_id]['enabled'] = enabled
             
+            
             if enabled and component_id not in self.active_components:
+                # 创建组件实例:
+            
                 # 创建组件实例
                 config = self.component_configs[component_id]
                 component_type = config.get('type')
@@ -417,7 +441,7 @@ class ComponentManager(QObject):
         try:
             for row in self.layout_config.get('rows', []):
                 if component_id in row.get('components', []):
-                    row['components'].remove(component_id)
+                    row.get('components').remove(component_id)
             
         except Exception as e:
             self.logger.error(f"从布局中移除组件失败: {e}")
@@ -432,7 +456,7 @@ class ComponentManager(QObject):
             
             # 添加到布局（添加到第一行）
             if self.layout_config.get('rows'):
-                first_row = self.layout_config['rows'][0]
+                first_row = self.layout_config.get('rows')[0]
                 if component_id not in first_row.get('components', []):
                     first_row.setdefault('components', []).append(component_id)
             
@@ -453,10 +477,10 @@ class ComponentManager(QObject):
             
             # 复制配置
             original_config = self.component_configs[component_id].copy()
-            original_config['name'] += ' (副本)'
+            original_config['name'] = original_config.get('name', 0) + ' (副本)'
             
             # 创建新组件
-            return self.create_component(original_config['type'], original_config)
+            return self.create_component(original_config.get('type'), original_config)
             
         except Exception as e:
             self.logger.error(f"复制组件失败: {e}")

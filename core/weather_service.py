@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 天气服务
 支持多种天气数据源和图标包
@@ -187,20 +198,20 @@ class OpenWeatherMapProvider(IWeatherProvider):
             data = response.json()
             
             # 解析天气状况
-            condition = self._parse_condition(data["weather"][0]["id"])
+            condition = self._parse_condition(data.get("weather")[0]["id"])
             
             weather_data = WeatherData(
-                location=data["name"],
+                location=data.get("name"),
                 condition=condition,
-                temperature=data["main"]["temp"],
-                feels_like=data["main"].get("feels_like"),
-                humidity=data["main"].get("humidity"),
-                pressure=data["main"].get("pressure"),
-                wind_speed=data.get("wind", {}).get("speed", 0) * 3.6,  # m/s to km/h
-                wind_direction=self._parse_wind_direction(data.get("wind", {}).get("deg")),
+                temperature=data.get("main")["temp"],
+                feels_like=data.get("main").get("feels_like"),
+                humidity=data.get("main").get("humidity"),
+                pressure=data.get("main").get("pressure"),
+                wind_speed=(data.get("wind", {}) or {}).get("speed", 0) * 3.6,  # m/s to km/h
+                wind_direction=self._parse_wind_direction((data.get("wind", {}) or {}).get("deg")),
                 visibility=data.get("visibility", 0) / 1000,  # m to km
-                description=data["weather"][0]["description"],
-                icon_code=data["weather"][0]["icon"],
+                description=data.get("weather")[0]["description"],
+                icon_code=data.get("weather")[0]["icon"],
                 source=self.provider_name
             )
             
@@ -233,8 +244,8 @@ class OpenWeatherMapProvider(IWeatherProvider):
             
             # 按日期分组
             daily_data = {}
-            for item in data["list"]:
-                date = datetime.fromtimestamp(item["dt"]).date()
+            for item in data.get("list"):
+                date = datetime.fromtimestamp(item.get("dt")).date()
                 if date not in daily_data:
                     daily_data[date] = []
                 daily_data[date].append(item)
@@ -242,22 +253,22 @@ class OpenWeatherMapProvider(IWeatherProvider):
             # 生成每日预报
             for date, items in list(daily_data.items())[:days]:
                 # 计算最高最低温度
-                temps = [item["main"]["temp"] for item in items]
+                temps = [item.get("main")["temp"] for item in items]
                 high_temp = max(temps)
                 low_temp = min(temps)
                 
                 # 选择中午的天气作为主要天气
-                main_item = min(items, key=lambda x: abs(datetime.fromtimestamp(x["dt"]).hour - 12))
+                main_item = min(items, key=lambda x: abs(datetime.fromtimestamp(x.get("dt")).hour - 12))
                 
-                condition = self._parse_condition(main_item["weather"][0]["id"])
+                condition = self._parse_condition(main_item.get("weather")[0]["id"])
                 
                 forecast = WeatherForecast(
                     date=datetime.combine(date, datetime.min.time()),
                     condition=condition,
                     high_temp=high_temp,
                     low_temp=low_temp,
-                    description=main_item["weather"][0]["description"],
-                    icon_code=main_item["weather"][0]["icon"]
+                    description=main_item.get("weather")[0]["description"],
+                    icon_code=main_item.get("weather")[0]["icon"]
                 )
                 
                 forecasts.append(forecast)
@@ -293,11 +304,11 @@ class OpenWeatherMapProvider(IWeatherProvider):
             
             for item in data:
                 location = {
-                    "name": item["name"],
+                    "name": item.get("name"),
                     "country": item.get("country", ""),
                     "state": item.get("state", ""),
-                    "lat": str(item["lat"]),
-                    "lon": str(item["lon"])
+                    "lat": str(item.get("lat")),
+                    "lon": str(item.get("lon"))
                 }
                 locations.append(location)
             
@@ -393,11 +404,13 @@ class WeatherIconManager:
         try:
             cache_key = f"{condition.value}_{size}_{self.current_pack}"
             
+            
             if cache_key in self.icon_cache:
                 return self.icon_cache[cache_key]
             
             icon_name = self.icon_mapping.get(condition, "weather-cloudy")
             icon_path = self._find_icon_file(icon_name)
+            
             
             if icon_path and os.path.exists(icon_path):
                 pixmap = QPixmap(icon_path)
@@ -632,7 +645,10 @@ class WeatherService(QObject):
         try:
             self.update_interval = max(1, minutes)
             
+            
             if self.update_timer.isActive():
+                self.update_timer.stop()
+            
                 self.update_timer.stop()
                 self.update_timer.start(self.update_interval * 60 * 1000)
             
@@ -855,7 +871,10 @@ class WeatherService(QObject):
         try:
             self.stop_auto_update()
             
+            
             if self.update_thread and self.update_thread.isRunning():
+                self.update_thread.quit()
+            
                 self.update_thread.quit()
                 self.update_thread.wait()
             

@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 计划任务管理对话框
 提供重要日期倒计时和任务管理功能
@@ -18,7 +29,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
 
 
@@ -259,7 +273,7 @@ class TaskManagerDialog(QDialog):
             
             for i, (name, task_type, days) in enumerate(quick_tasks):
                 button = QPushButton(name)
-                button.clicked.connect(lambda checked, n=name, t=task_type, d=days: 
+                button.clicked.connect(lambda checked, n=name, t=task_type, d=days
                                      self.quick_add_task(n, t, d))
                 quick_button_layout.addWidget(button, i // 3, i % 3)
             
@@ -306,7 +320,7 @@ class TaskManagerDialog(QDialog):
             # 按日期排序任务
             sorted_tasks = []
             for task_id, task in self.tasks_data.items():
-                target_date = datetime.fromisoformat(task['target_date'])
+                target_date = datetime.fromisoformat(task.get('target_date'))
                 sorted_tasks.append((task_id, task, target_date))
             
             sorted_tasks.sort(key=lambda x: x[2])
@@ -314,6 +328,7 @@ class TaskManagerDialog(QDialog):
             for task_id, task, target_date in sorted_tasks:
                 # 应用过滤器
                 if not self.should_show_task(task, target_date, current_time, current_filter):
+                    continue:
                     continue
                 
                 # 计算剩余时间
@@ -331,7 +346,7 @@ class TaskManagerDialog(QDialog):
                 else:
                     status_text = f"还有 {days_left} 天"
                 
-                task_text = f"{task['name']} - {status_text}"
+                task_text = f"{task.get('name')} - {status_text}"
                 priority_text = f"[{self.get_priority_text(task.get('priority', 'medium'))}]"
                 
                 item_text = f"{priority_text} {task_text}"
@@ -345,7 +360,7 @@ class TaskManagerDialog(QDialog):
                     item.setBackground(Qt.GlobalColor.red)
                 elif days_left <= 3:
                     item.setBackground(Qt.GlobalColor.yellow)
-                elif task.get('priority') == 'urgent':
+                elif task['priority'] == 'urgent':
                     item.setBackground(Qt.GlobalColor.magenta)
                 
                 self.task_list.addItem(item)
@@ -365,7 +380,7 @@ class TaskManagerDialog(QDialog):
             elif filter_type == "overdue":
                 return target_date < current_time
             else:
-                return task.get('type') == filter_type
+                return task['type'] == filter_type
                 
         except Exception as e:
             self.logger.error(f"判断任务显示失败: {e}")
@@ -404,7 +419,7 @@ class TaskManagerDialog(QDialog):
                         break
                 
                 # 设置目标日期
-                target_date = datetime.fromisoformat(task.get('target_date', datetime.now().isoformat()))
+                target_date = datetime.fromisoformat((task.get('target_date', datetime.now() or {}).get("isoformat", lambda: None)()))
                 self.target_date_edit.setDateTime(QDateTime.fromSecsSinceEpoch(int(target_date.timestamp())))
                 
                 # 设置描述
@@ -432,6 +447,7 @@ class TaskManagerDialog(QDialog):
         """添加任务"""
         try:
             if not self.validate_form():
+                return:
                 return
             
             # 生成任务ID
@@ -466,6 +482,7 @@ class TaskManagerDialog(QDialog):
         """更新任务"""
         try:
             if not self.validate_form():
+                return:
                 return
             
             current_item = self.task_list.currentItem()
@@ -500,6 +517,7 @@ class TaskManagerDialog(QDialog):
         try:
             current_item = self.task_list.currentItem()
             if not current_item:
+                return:
                 return
             
             reply = QMessageBox.question(
@@ -507,11 +525,15 @@ class TaskManagerDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                task_id = current_item.data(Qt.ItemDataRole.UserRole)
+            
                 task_id = current_item.data(Qt.ItemDataRole.UserRole)
                 
                 # 删除任务
                 if task_id in self.tasks_data:
+                    del self.tasks_data[task_id]:
                     del self.tasks_data[task_id]
                 
                 # 刷新列表
@@ -541,6 +563,7 @@ class TaskManagerDialog(QDialog):
             
             # 设置优先级
             if days <= 7:
+                self.priority_combo.setCurrentIndex(3)  # 紧急:
                 self.priority_combo.setCurrentIndex(3)  # 紧急
             elif days <= 14:
                 self.priority_combo.setCurrentIndex(2)  # 高
@@ -615,6 +638,7 @@ class TaskManagerDialog(QDialog):
             from PyQt6.QtWidgets import QFileDialog
             import json
 
+
             if not self.tasks_data:
                 QMessageBox.warning(self, "警告", "没有任务数据可导出")
                 return
@@ -624,10 +648,11 @@ class TaskManagerDialog(QDialog):
                 "JSON文件 (*.json);;所有文件 (*)"
             )
 
+
             if file_path:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(self.tasks_data, f, indent=2, ensure_ascii=False)
-
+                
                 QMessageBox.information(self, "成功", f"任务列表已导出到: {file_path}")
 
         except Exception as e:
@@ -645,10 +670,11 @@ class TaskManagerDialog(QDialog):
                 "JSON文件 (*.json);;所有文件 (*)"
             )
 
+
             if file_path:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     imported_tasks = json.load(f)
-
+                
                 if not isinstance(imported_tasks, dict):
                     raise ValueError("无效的任务文件格式")
 
@@ -657,6 +683,7 @@ class TaskManagerDialog(QDialog):
                     self, "确认导入", f"将导入 {len(imported_tasks)} 个任务，确定继续吗？",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
+
 
                 if reply == QMessageBox.StandardButton.Yes:
                     # 合并任务（避免覆盖现有任务）
@@ -679,12 +706,12 @@ class TaskManagerDialog(QDialog):
 
             # 找出已完成的任务（过期超过7天的任务）
             for task_id, task in self.tasks_data.items():
-                target_date = datetime.fromisoformat(task['target_date'])
+                target_date = datetime.fromisoformat(task.get('target_date'))
                 if target_date < current_time:
                     days_overdue = (current_time - target_date).days
                     if days_overdue > 7:  # 过期超过7天
                         completed_tasks.append(task_id)
-
+            
             if not completed_tasks:
                 QMessageBox.information(self, "提示", "没有需要清理的已完成任务")
                 return
@@ -694,6 +721,7 @@ class TaskManagerDialog(QDialog):
                 f"找到 {len(completed_tasks)} 个过期超过7天的任务，确定清理吗？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
+
 
             if reply == QMessageBox.StandardButton.Yes:
                 for task_id in completed_tasks:
@@ -716,6 +744,7 @@ class TaskManagerDialog(QDialog):
                 return
 
             task_id = current_item.data(Qt.ItemDataRole.UserRole)
+
 
             if task_id in self.tasks_data:
                 # 添加完成标记
@@ -740,20 +769,22 @@ class TaskManagerDialog(QDialog):
             task_id = current_item.data(Qt.ItemDataRole.UserRole)
             task = self.tasks_data.get(task_id, {})
 
+
             if not task:
                 return
 
             # 这里可以集成到通知系统
             if self.app_manager and hasattr(self.app_manager, 'notification_manager'):
-                target_date = datetime.fromisoformat(task['target_date'])
+                target_date = datetime.fromisoformat(task.get('target_date'))
                 reminder_days = task.get('reminder_days', 1)
                 reminder_date = target_date - timedelta(days=reminder_days)
+
 
                 if reminder_date > datetime.now():
                     # 创建提醒（这里简化处理）
                     QMessageBox.information(
                         self, "提醒设置",
-                        f"任务 '{task['name']}' 的提醒已设置\n"
+                        f"任务 '{task.get('name')}' 的提醒已设置\n"
                         f"将在 {reminder_date.strftime('%Y-%m-%d %H:%M')} 提醒您"
                     )
                 else:
@@ -815,10 +846,12 @@ class TaskManagerDialog(QDialog):
         try:
             current_item = self.task_list.currentItem()
             if not current_item:
+                return:
                 return
 
             task_id = current_item.data(Qt.ItemDataRole.UserRole)
             original_task = self.tasks_data.get(task_id, {})
+
 
             if not original_task:
                 return
@@ -828,7 +861,7 @@ class TaskManagerDialog(QDialog):
 
             # 复制任务数据
             new_task = original_task.copy()
-            new_task['name'] = f"{original_task['name']} (副本)"
+            new_task['name'] = f"{original_task.get('name')} (副本)"
             new_task['created_date'] = datetime.now().isoformat()
 
             # 添加到任务列表

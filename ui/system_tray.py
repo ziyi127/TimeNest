@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 系统托盘管理
 """
@@ -54,6 +65,7 @@ class SystemTray(QObject):
         # 支持浮窗管理器参数（向后兼容）
         self.floating_manager = floating_manager
 
+
         if QSystemTrayIcon.isSystemTrayAvailable():
             self._init_tray()
         else:
@@ -61,73 +73,90 @@ class SystemTray(QObject):
 
     def _init_tray(self):
         """初始化托盘图标和菜单"""
-        self.tray_icon = QSystemTrayIcon(self)
-        icon_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png')
-        if os.path.exists(icon_path):
-            self.tray_icon.setIcon(QIcon(icon_path))
-        else:
-            self.tray_icon.setIcon(QApplication.style().standardIcon(QApplication.style().StandardPixmap.SP_ComputerIcon))
+        try:
+            self.tray_icon = QSystemTrayIcon(self)
+            
+            # 设置托盘图标
+            icon_path = os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png')
+            if os.path.exists(icon_path):
+                self.tray_icon.setIcon(QIcon(icon_path))
+                self.logger.debug(f"使用自定义托盘图标: {icon_path}")
+            else:
+                self.tray_icon.setIcon(QApplication.style().standardIcon(QApplication.style().StandardPixmap.SP_ComputerIcon))
+                self.logger.debug("使用默认托盘图标")
 
-        self.tray_icon.setToolTip("TimeNest")
+            self.tray_icon.setToolTip("TimeNest")
+            
+            # 创建菜单
+            try:
+                menu = QMenu()
 
-        # 创建菜单
-        menu = QMenu()
+                # 浮窗控制区域
+                self.toggle_floater_action = QAction("隐藏浮窗", self)
+                self.toggle_floater_action.setCheckable(True)
+                self.toggle_floater_action.setChecked(True)  # 默认显示
+                self.toggle_floater_action.triggered.connect(self.toggle_floating_widget_requested)
+                menu.addAction(self.toggle_floater_action)
 
-        # 浮窗控制区域
-        self.toggle_floater_action = QAction("隐藏浮窗", self)
-        self.toggle_floater_action.setCheckable(True)
-        self.toggle_floater_action.setChecked(True)  # 默认显示
-        self.toggle_floater_action.triggered.connect(self.toggle_floating_widget_requested)
-        menu.addAction(self.toggle_floater_action)
+                menu.addSeparator()
 
-        menu.addSeparator()
+                # 核心功能模块区域
+                module_label = QAction("📋 核心功能", self)
+                module_label.setEnabled(False)  # 作为标题，不可点击
+                menu.addAction(module_label)
 
-        # 核心功能模块区域
-        module_label = QAction("📋 核心功能", self)
-        module_label.setEnabled(False)  # 作为标题，不可点击
-        menu.addAction(module_label)
+                schedule_action = QAction("📅 课程表管理", self)
+                schedule_action.triggered.connect(self.schedule_module_requested)
+                menu.addAction(schedule_action)
 
-        schedule_action = QAction("📅 课程表管理", self)
-        schedule_action.triggered.connect(self.schedule_module_requested)
-        menu.addAction(schedule_action)
+                settings_action = QAction("🔧 应用设置", self)
+                settings_action.triggered.connect(self.settings_module_requested)
+                menu.addAction(settings_action)
 
-        settings_action = QAction("🔧 应用设置", self)
-        settings_action.triggered.connect(self.settings_module_requested)
-        menu.addAction(settings_action)
+                plugins_action = QAction("🔌 插件市场", self)
+                plugins_action.triggered.connect(self.plugins_module_requested)
+                menu.addAction(plugins_action)
 
-        plugins_action = QAction("🔌 插件市场", self)
-        plugins_action.triggered.connect(self.plugins_module_requested)
-        menu.addAction(plugins_action)
+                menu.addSeparator()
 
-        menu.addSeparator()
+                # 快捷工具区域
+                tools_label = QAction("🛠️ 快捷工具", self)
+                tools_label.setEnabled(False)  # 作为标题，不可点击
+                menu.addAction(tools_label)
 
-        # 快捷工具区域
-        tools_label = QAction("🛠️ 快捷工具", self)
-        tools_label.setEnabled(False)  # 作为标题，不可点击
-        menu.addAction(tools_label)
+                floating_settings_action = QAction("⚙️ 浮窗设置", self)
+                floating_settings_action.triggered.connect(self.floating_settings_requested)
+                menu.addAction(floating_settings_action)
 
-        floating_settings_action = QAction("⚙️ 浮窗设置", self)
-        floating_settings_action.triggered.connect(self.floating_settings_requested)
-        menu.addAction(floating_settings_action)
+                calibration_action = QAction("⏰ 时间校准", self)
+                calibration_action.triggered.connect(self.time_calibration_requested)
+                menu.addAction(calibration_action)
 
-        calibration_action = QAction("⏰ 时间校准", self)
-        calibration_action.triggered.connect(self.time_calibration_requested)
-        menu.addAction(calibration_action)
+                menu.addSeparator()
 
-        menu.addSeparator()
+                # 应用控制区域
+                quit_action = QAction("❌ 退出 TimeNest", self)
+                quit_action.triggered.connect(self.quit_requested)
+                menu.addAction(quit_action)
 
-        # 应用控制区域
-        quit_action = QAction("❌ 退出 TimeNest", self)
-        quit_action.triggered.connect(self.quit_requested)
-        menu.addAction(quit_action)
+                # 确保菜单可以正常工作
+                menu.setEnabled(True)
 
-        # 确保菜单可以正常工作
-        menu.setEnabled(True)
-
-        self.tray_icon.setContextMenu(menu)
-        self.tray_icon.activated.connect(self.on_activated)
-        self.tray_icon.show()
-        self.logger.info("系统托盘初始化完成。")
+                self.tray_icon.setContextMenu(menu)
+                self.tray_icon.activated.connect(self.on_activated)
+                self.tray_icon.show()
+                self.logger.info("系统托盘初始化完成。")
+                
+            except Exception as e:
+                self.logger.error(f"创建托盘菜单失败: {e}")
+                # 即使菜单创建失败，也要显示基本的托盘图标
+                if self.tray_icon:
+                    self.tray_icon.show()
+                raise
+                
+        except Exception as e:
+            self.logger.error(f"初始化托盘失败: {e}")
+            raise
 
     def on_activated(self, reason: QSystemTrayIcon.ActivationReason):
         """托盘图标激活事件（优化版本）"""
@@ -426,6 +455,7 @@ class SystemTrayManagerLegacy(QObject):
         if not self.context_menu:
             return None
 
+
         if separator_before:
             self.context_menu.addSeparator()
 
@@ -456,7 +486,10 @@ class SystemTrayManagerLegacy(QObject):
                 self.tray_icon.deleteLater()
                 self.tray_icon = None
 
+
             if self.context_menu:
+                self.context_menu.deleteLater()
+
                 self.context_menu.deleteLater()
                 self.context_menu = None
 

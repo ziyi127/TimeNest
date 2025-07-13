@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 时间管理器
 负责时间获取、时间偏移、时间校准等功能
@@ -57,6 +68,7 @@ class TimeManager(QObject):
         """获取当前时间（考虑偏移）"""
         current_time = datetime.now()
 
+
         if self._offset_enabled and self._time_offset != timedelta():
             current_time += self._time_offset
 
@@ -72,7 +84,8 @@ class TimeManager(QObject):
             old_offset = self._time_offset
             self._time_offset = offset
             
-            if save_to_config:
+            
+            if save_to_config and self.config_manager:
                 self.config_manager.set('time.offset_seconds', int(offset.total_seconds()))
             
             self.time_offset_changed.emit(offset)
@@ -94,7 +107,8 @@ class TimeManager(QObject):
             old_speed = self._time_speed
             self._time_speed = speed
             
-            if save_to_config:
+            
+            if save_to_config and self.config_manager:
                 self.config_manager.set('time.speed', speed)
             
             self.logger.info(f"时间流速已更改: {old_speed} -> {speed}")
@@ -112,7 +126,8 @@ class TimeManager(QObject):
             old_enabled = self._offset_enabled
             self._offset_enabled = enabled
             
-            if save_to_config:
+            
+            if save_to_config and self.config_manager:
                 self.config_manager.set('time.offset_enabled', enabled)
             
             self.logger.info(f"时间偏移状态已更改: {old_enabled} -> {enabled}")
@@ -178,6 +193,7 @@ class TimeManager(QObject):
     def get_next_occurrence(self, target_time: datetime) -> datetime:
         """获取下一次出现的时间（如果已过今天，则返回明天的时间）"""
         current_time = self.get_current_time()
+        
         
         if target_time <= current_time:
             # 如果目标时间已过，返回明天的同一时间

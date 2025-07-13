@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 浮窗设置标签页扩展
 提供更多高级设置功能
@@ -16,7 +27,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QColor, QPalette
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
     from .smart_floating_widget import SmartFloatingWidget
 
@@ -256,6 +270,7 @@ class FloatingSettingsTabWidget(QWidget):
         """选择边框颜色"""
         color = QColorDialog.getColor(Qt.GlobalColor.black, self)
         if color.isValid():
+            self.border_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.border_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def get_settings(self) -> Dict[str, Any]:
@@ -298,25 +313,25 @@ class FloatingSettingsTabWidget(QWidget):
         try:
             # 加载动画设置
             if 'animation' in settings:
-                anim = settings['animation']
+                anim = settings.get('animation')
                 self.animation_enabled.setChecked(anim.get('enabled', True))
                 self.animation_speed.setValue(anim.get('speed', 5))
                 
             # 加载交互设置
             if 'interaction' in settings:
-                inter = settings['interaction']
+                inter = settings.get('interaction')
                 self.hover_effects.setChecked(inter.get('hover_effects', True))
                 self.context_menu_enabled.setChecked(inter.get('context_menu', True))
                 
             # 加载显示效果设置
             if 'display_effects' in settings:
-                display = settings['display_effects']
+                display = settings.get('display_effects')
                 self.shadow_enabled.setChecked(display.get('shadow_enabled', True))
                 self.shadow_intensity.setValue(display.get('shadow_intensity', 50))
                 
             # 加载性能设置
             if 'performance' in settings:
-                perf = settings['performance']
+                perf = settings.get('performance')
                 self.low_power_mode.setChecked(perf.get('low_power_mode', False))
                 self.update_frequency.setValue(perf.get('update_frequency', 1000))
                 

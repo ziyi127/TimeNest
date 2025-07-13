@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 通知窗口
 弹窗通知的UI实现
@@ -134,7 +145,7 @@ class NotificationWindow(QWidget):
         try:
             # 应用背景色
             if 'background' in theme_colors:
-                bg_color = theme_colors['background']
+                bg_color = theme_colors.get('background')
                 self.setStyleSheet(f"""
                     QWidget {{
                         background-color: {bg_color};
@@ -144,7 +155,7 @@ class NotificationWindow(QWidget):
 
             # 应用文本颜色
             if 'text' in theme_colors:
-                text_color = theme_colors['text']
+                text_color = theme_colors.get('text')
                 if hasattr(self, 'title_label'):
                     self.title_label.setStyleSheet(f"color: {text_color}; font-weight: bold;")
                 if hasattr(self, 'message_label'):
@@ -152,7 +163,7 @@ class NotificationWindow(QWidget):
 
             # 应用按钮样式
             if 'accent' in theme_colors:
-                accent_color = theme_colors['accent']
+                accent_color = theme_colors.get('accent')
                 if hasattr(self, 'close_button'):
                     self.close_button.setStyleSheet(f"""
                         QPushButton {{
@@ -219,7 +230,7 @@ class NotificationWindow(QWidget):
                 "bottom-left": (margin, screen_rect.height() - self.height() - margin)
             }
 
-            x, y = positions.get(corner, positions["top-right"])
+            x, y = positions.get(corner, positions.get("top-right"))
             
             self.show_at_position(x, y)
         else:
@@ -247,5 +258,10 @@ def test_notification_window():
     sys.exit(app.exec())
 
 
+
+
 if __name__ == "__main__":
+    test_notification_window()
+
+
     test_notification_window()

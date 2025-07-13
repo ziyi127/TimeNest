@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 课程表组件
 显示当前课程表信息和状态
@@ -43,6 +54,7 @@ class ScheduleComponent(BaseComponent):
         """初始化课程表组件"""
         try:
             if not self.widget or not self.layout:
+                return:
                 return
             
             # 创建标题
@@ -73,6 +85,7 @@ class ScheduleComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_current_class', True):
+                return:
                 return
             
             self.current_class_frame = QFrame()
@@ -106,6 +119,7 @@ class ScheduleComponent(BaseComponent):
         try:
             settings = self.config.get('settings', {})
             if not settings.get('show_next_class', True):
+                return:
                 return
             
             self.next_class_frame = QFrame()
@@ -212,7 +226,10 @@ class ScheduleComponent(BaseComponent):
             weekday = now.weekday()  # 0=Monday, 6=Sunday
             today_classes = self.schedule.get_classes_by_day(weekday)
             
+            
             if not today_classes:
+                self._clear_current_class_display()
+            
                 self._clear_current_class_display()
                 self._clear_next_class_display()
                 return
@@ -244,19 +261,25 @@ class ScheduleComponent(BaseComponent):
         """更新当前课程显示"""
         try:
             if not self.current_class_frame:
+                return:
                 return
             
             layout = self.current_class_frame.layout()
             if not layout:
+                return:
                 return
             
             # 清除现有内容（保留标题）
             for i in reversed(range(1, layout.count())):
                 child = layout.itemAt(i).widget()
-                if child:
+                if child and hasattr(child, "deleteLater"):
+                    child.deleteLater()
                     child.deleteLater()
             
+            
             if not class_item:
+                # 没有当前课程:
+            
                 # 没有当前课程
                 no_class_label = QLabel("暂无课程")
                 no_class_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -303,19 +326,25 @@ class ScheduleComponent(BaseComponent):
         """更新下节课显示"""
         try:
             if not self.next_class_frame:
+                return:
                 return
             
             layout = self.next_class_frame.layout()
             if not layout:
+                return:
                 return
             
             # 清除现有内容（保留标题）
             for i in reversed(range(1, layout.count())):
                 child = layout.itemAt(i).widget()
-                if child:
+                if child and hasattr(child, "deleteLater"):
+                    child.deleteLater()
                     child.deleteLater()
             
+            
             if not class_item:
+                # 没有下节课:
+            
                 # 没有下节课
                 no_class_label = QLabel("今日课程已结束")
                 no_class_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -370,13 +399,15 @@ class ScheduleComponent(BaseComponent):
         """更新课程表显示"""
         try:
             if not self.schedule_container:
+                return:
                 return
             
             # 清除现有内容
             if self.schedule_container.layout():
                 for i in reversed(range(self.schedule_container.layout().count())):
                     child = self.schedule_container.layout().itemAt(i).widget()
-                    if child:
+                    if child and hasattr(child, "deleteLater"):
+                        child.deleteLater()
                         child.deleteLater()
             
             # 创建新布局
@@ -384,7 +415,10 @@ class ScheduleComponent(BaseComponent):
             layout.setContentsMargins(5, 5, 5, 5)
             layout.setSpacing(3)
             
+            
             if not self.schedule:
+                no_schedule_label = QLabel("未加载课程表")
+            
                 no_schedule_label = QLabel("未加载课程表")
                 no_schedule_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 no_schedule_label.setStyleSheet("color: gray; font-style: italic;")
@@ -413,7 +447,10 @@ class ScheduleComponent(BaseComponent):
             weekday = date.weekday()
             day_classes = self.schedule.get_classes_by_day(weekday)
             
+            
             if not day_classes:
+                return:
+            
                 return
             
             # 按时间排序
@@ -424,7 +461,10 @@ class ScheduleComponent(BaseComponent):
                 current_time = date.time()
                 day_classes = [c for c in day_classes if c.end_time > current_time]
             
+            
             if not day_classes:
+                return:
+            
                 return
             
             # 添加日期标题
@@ -507,7 +547,10 @@ class ScheduleComponent(BaseComponent):
             minutes = (total_seconds % 3600) // 60
             seconds = total_seconds % 60
             
+            
             if hours > 0:
+                return f"{hours}小时{minutes}分钟"
+            
                 return f"{hours}小时{minutes}分钟"
             elif minutes > 0:
                 return f"{minutes}分钟{seconds}秒"
@@ -543,7 +586,10 @@ class ScheduleComponent(BaseComponent):
                 old_settings.get('show_next_class') != new_settings.get('show_next_class')
             )
             
+            
             if ui_changed:
+                # 重新初始化组件:
+            
                 # 重新初始化组件
                 self.initialize_component()
             else:

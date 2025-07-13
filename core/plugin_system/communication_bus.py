@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Communication Bus
 Event-driven communication system for loose coupling between plugins
@@ -66,6 +77,7 @@ class EventSubscription:
         """Check if this subscription should handle the event"""
         if event.event_type != self.event_type and self.event_type != EventType.CUSTOM:
             return False
+        
         
         if self.filter_func:
             try:
@@ -177,7 +189,7 @@ class PluginCommunicationBus(BaseManager):
                 self._plugin_subscriptions[plugin_id].add(subscription.subscription_id)
                 
                 # Update statistics
-                self._stats['subscriptions_active'] += 1
+                self._stats['subscriptions_active'] = self._stats.get('subscriptions_active', 0) + 1
                 
                 # Emit signal
                 self.subscription_added.emit(plugin_id, event_type.value)
@@ -218,7 +230,7 @@ class PluginCommunicationBus(BaseManager):
                                     del self._plugin_subscriptions[plugin_id]
                             
                             # Update statistics
-                            self._stats['subscriptions_active'] -= 1
+                            self._stats['subscriptions_active'] = self._stats.get('subscriptions_active', 0) - 1
                             
                             # Emit signal
                             self.subscription_removed.emit(plugin_id, event_type.value)
@@ -281,7 +293,7 @@ class PluginCommunicationBus(BaseManager):
                 matching_subscriptions = self._find_matching_subscriptions(event)
                 
                 # Update statistics
-                self._stats['events_published'] += 1
+                self._stats['events_published'] = self._stats.get('events_published', 0) + 1
                 
                 # Emit signal
                 self.event_published.emit(event.event_type.value, event.source_plugin)
@@ -294,7 +306,7 @@ class PluginCommunicationBus(BaseManager):
                 try:
                     subscription.handle_event(event)
                     delivered_count += 1
-                    self._stats['events_delivered'] += 1
+                    self._stats['events_delivered'] = self._stats.get('events_delivered', 0) + 1
                 except Exception as e:
                     self.logger.error(f"Error delivering event to {subscription.plugin_id}: {e}")
             
@@ -360,15 +372,14 @@ class PluginCommunicationBus(BaseManager):
             for subscription in self._subscriptions[event.event_type]:
                 if subscription.should_handle(event):
                     # Check target filtering
-                    if (event.target_plugins is None or 
-                        subscription.plugin_id in event.target_plugins):
+                    if event.target_plugins is None or subscription.plugin_id in event.target_plugins:
                         matching_subscriptions.append(subscription)
         
         # Check custom event subscriptions
         if event.event_type == EventType.CUSTOM and EventType.CUSTOM in self._subscriptions:
             for subscription in self._subscriptions[EventType.CUSTOM]:
                 if subscription.should_handle(event):
-                    if (event.target_plugins is None or 
+                    if event.target_plugins is None or
                         subscription.plugin_id in event.target_plugins):
                         matching_subscriptions.append(subscription)
         

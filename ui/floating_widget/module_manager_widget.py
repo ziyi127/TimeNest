@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 浮窗模块管理器
 提供可视化的模块管理界面
@@ -16,7 +27,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QColor, QPalette, QDrag, QPixmap, QPainter
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
     from .smart_floating_widget import SmartFloatingWidget
 
@@ -127,15 +141,15 @@ class ModuleManagerWidget(QWidget):
                 background-color: white;
                 alternate-background-color: #f9f9f9;
             }
-            QListWidget::item {
+            QListWidget:item {
                 padding: 8px;
                 border-bottom: 1px solid #eee;
             }
-            QListWidget::item:selected {
+            QListWidget:item:selected {
                 background-color: #007acc;
                 color: white;
             }
-            QListWidget::item:hover {
+            QListWidget:item:hover {
                 background-color: #e6f3ff;
             }
         """)
@@ -144,8 +158,8 @@ class ModuleManagerWidget(QWidget):
         for module_id, module_info in self.available_modules.items():
             item = ModuleItem(
                 module_id,
-                module_info['name'],
-                module_info['description'],
+                module_info.get('name'),
+                module_info.get('description'),
                 module_info.get('icon', '🧩')
             )
             self.module_list.addItem(item)
@@ -473,6 +487,7 @@ class ModuleManagerWidget(QWidget):
         from PyQt6.QtWidgets import QColorDialog
         color = QColorDialog.getColor(Qt.GlobalColor.black, self)
         if color.isValid():
+            self.text_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.text_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def choose_bg_color(self) -> None:
@@ -480,6 +495,7 @@ class ModuleManagerWidget(QWidget):
         from PyQt6.QtWidgets import QColorDialog
         color = QColorDialog.getColor(Qt.GlobalColor.white, self)
         if color.isValid():
+            self.bg_color_btn.setStyleSheet(f"background-color: {color.name()}"):
             self.bg_color_btn.setStyleSheet(f"background-color: {color.name()}")
             
     def emit_modules_changed(self) -> None:
@@ -508,8 +524,8 @@ class ModuleManagerWidget(QWidget):
         return {
             'enabled_modules': [
                 self.module_list.item(i).data(Qt.ItemDataRole.UserRole)
-                for i in range(self.module_list.count())
-                if self.module_list.item(i).checkState() == Qt.CheckState.Checked
+                for i in range(self.module_list.count()):
+                if self.module_list.item(i).checkState() == Qt.CheckState.Checked:
             ],
             'rotation': {
                 'auto_rotate': self.auto_rotate.isChecked(),

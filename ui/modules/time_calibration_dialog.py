@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 时间校准对话框
 提供时间校准功能的用户界面
@@ -301,6 +312,7 @@ class TimeCalibrationDialog(QDialog):
         self.progress_bar.setVisible(False)
         self.calibrate_button.setEnabled(True)
         self.stop_button.setEnabled(False)
+        
         
         if success:
             self.status_label.setText("校准完成")

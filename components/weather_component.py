@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 天气组件 - 增强版
 显示详细天气信息，支持动画效果和多种数据源
@@ -36,11 +47,15 @@ class WeatherWorker(QThread):
         """获取天气数据"""
         try:
             if not self.api_key:
+                # 使用模拟数据:
                 # 使用模拟数据
                 self._emit_mock_data()
                 return
 
+
             if self.provider == "openweather":
+                self._fetch_openweather_data()
+
                 self._fetch_openweather_data()
             elif self.provider == "qweather":
                 self._fetch_qweather_data()
@@ -130,9 +145,9 @@ class WeatherWorker(QThread):
             items = data.get('list', [])
 
             # 取未来5天的数据（每天取中午12点的数据）
-            for item in items[:40]:  # 5天 * 8次/天
+            for item in items[:40]:  # 5天 * 8次/天:
                 dt = datetime.fromtimestamp(item.get('dt', 0))
-                if dt.hour == 12:  # 只取中午的数据
+                if dt.hour == 12:  # 只取中午的数据:
                     main = item.get('main', {})
                     weather = item.get('weather', [{}])[0]
 
@@ -146,7 +161,10 @@ class WeatherWorker(QThread):
                         'pop': item.get('pop', 0) * 100  # 降水概率转换为百分比
                     })
 
+
                     if len(forecast_list) >= 5:
+                        break:
+
                         break
 
             return forecast_list

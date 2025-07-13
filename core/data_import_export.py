@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 数据导入导出管理器
 支持多种格式的课程表数据导入导出
@@ -64,7 +75,10 @@ class DataImportExportManager(QObject):
             # 根据文件扩展名选择导入方法
             extension = file_path.suffix.lower()
             
+            
             if extension == '.json':
+                schedule = self._import_from_json(file_path)
+            
                 schedule = self._import_from_json(file_path)
             elif extension in ['.yaml', '.yml']:
                 schedule = self._import_from_yaml(file_path)
@@ -83,7 +97,7 @@ class DataImportExportManager(QObject):
             self.import_completed.emit(False, error_msg)
             return None
     
-    def export_schedule(self, schedule: Schedule, file_path: str, format_type: str = None) -> bool:
+    def export_schedule(self, schedule: Schedule, file_path: str, format_type: str = None) -> bool
         """
         导出课程表数据
         
@@ -120,7 +134,10 @@ class DataImportExportManager(QObject):
             else:
                 raise ValueError(f"不支持的导出格式: {extension}")
             
-            if success:
+            
+            if success and hasattr(success, "self.export_completed"):
+    self.export_completed.emit(True, f"成功导出课程表到: {file_path}")
+            
                 self.export_completed.emit(True, f"成功导出课程表到: {file_path}")
                 self.logger.info(f"课程表导出完成: {file_path}")
             else:
@@ -212,6 +229,7 @@ class DataImportExportManager(QObject):
             time_slots = []
             for i, row_name in enumerate(df.index):
                 if pd.notna(row_name) and str(row_name).strip():
+                    # 尝试解析时间格式:
                     # 尝试解析时间格式
                     time_slot = TimeSlot(
                         id=f"slot_{i}",
@@ -230,6 +248,7 @@ class DataImportExportManager(QObject):
             
             for col_idx, col_name in enumerate(df.columns):
                 if col_idx >= len(weekdays):
+                    break:
                     break
                 
                 weekday = weekdays[col_idx]
@@ -422,7 +441,10 @@ class DataImportExportManager(QObject):
                 time_slot_index = class_data.get('TimeLayoutItem', 0)
                 time_slot_id = f"slot_{time_slot_index}" if time_slot_index < len(schedule.time_slots) else None
 
+
                 if time_slot_id:
+                    class_item = ClassItem(
+
                     class_item = ClassItem(
                         id=f"class_{weekday}_{time_slot_index}",
                         subject_id=class_data.get('Subject', ''),
@@ -460,7 +482,10 @@ class DataImportExportManager(QObject):
             # 导出为JSON格式
             success = self._export_to_json(schedule, backup_file)
 
-            if success:
+
+            if success and hasattr(success, "self.logger"):
+    self.logger.info(f"课程表备份完成: {backup_file}")
+
                 self.logger.info(f"课程表备份完成: {backup_file}")
 
             return success

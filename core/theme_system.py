@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 主题系统
 支持动态主题切换、主题市场、自定义主题等功能
@@ -273,7 +284,10 @@ class ThemeManager(QObject):
             else:
                 default_theme_id = 'builtin_light'
             
+            
             if default_theme_id in self.themes:
+                self.apply_theme(default_theme_id)
+            
                 self.apply_theme(default_theme_id)
             else:
                 self.apply_theme('builtin_light')
@@ -414,25 +428,25 @@ class ThemeManager(QObject):
                 padding-top: 8px;
             }}
             
-            QGroupBox::title {{
+            QGroupBox:title {{
                 subcontrol-origin: margin;
                 left: 8px;
                 padding: 0 4px 0 4px;
             }}
             
-            QTabWidget::pane {{
+            QTabWidget:pane {{
                 border: 1px solid {colors.border};
                 background-color: {colors.surface};
             }}
             
-            QTabBar::tab {{
+            QTabBar:tab {{
                 background-color: {colors.card};
                 color: {colors.text_secondary};
                 padding: 8px 16px;
                 margin-right: 2px;
             }}
             
-            QTabBar::tab:selected {{
+            QTabBar:tab:selected {{
                 background-color: {colors.primary};
                 color: {colors.background};
             }}
@@ -442,7 +456,7 @@ class ThemeManager(QObject):
                 color: {colors.text_primary};
             }}
             
-            QMenuBar::item:selected {{
+            QMenuBar:item:selected {{
                 background-color: {colors.primary};
                 color: {colors.background};
             }}
@@ -453,7 +467,7 @@ class ThemeManager(QObject):
                 border: 1px solid {colors.border};
             }}
             
-            QMenu::item:selected {{
+            QMenu:item:selected {{
                 background-color: {colors.primary};
                 color: {colors.background};
             }}
@@ -469,13 +483,13 @@ class ThemeManager(QObject):
                 border-radius: 6px;
             }}
             
-            QScrollBar::handle:vertical {{
+            QScrollBar:handle:vertical {{
                 background-color: {colors.border};
                 border-radius: 6px;
                 min-height: 20px;
             }}
             
-            QScrollBar::handle:vertical:hover {{
+            QScrollBar:handle:vertical:hover {{
                 background-color: {colors.primary};
             }}
             """
@@ -530,7 +544,10 @@ class ThemeManager(QObject):
                 self.logger.error("不能卸载内置主题")
                 return False
 
+
             if theme_id not in self.themes:
+                self.logger.error(f"主题不存在: {theme_id}")
+
                 self.logger.error(f"主题不存在: {theme_id}")
                 return False
 
@@ -589,6 +606,7 @@ class ThemeManager(QObject):
         """检查系统主题变化（用于自动主题）"""
         try:
             if self.current_theme and self.current_theme.metadata.theme_type == ThemeType.AUTO:
+                # 这里可以添加系统主题检测逻辑:
                 # 这里可以添加系统主题检测逻辑
                 # 例如检查系统是否为深色模式
                 pass
@@ -693,6 +711,7 @@ class ThemeMarketManager(QObject):
                     theme_info = theme
                     break
 
+
             if not theme_info:
                 self.logger.error(f"市场中未找到主题: {theme_id}")
                 return False
@@ -705,15 +724,15 @@ class ThemeMarketManager(QObject):
             mock_theme_data = {
                 "metadata": {
                     "id": theme_id,
-                    "name": theme_info['name'],
-                    "description": theme_info['description'],
-                    "author": theme_info['author'],
-                    "version": theme_info['version'],
-                    "theme_type": theme_info['theme_type'],
-                    "preview_image": theme_info['preview_image'],
-                    "tags": theme_info['tags'],
-                    "created_date": theme_info['created_date'],
-                    "updated_date": theme_info['updated_date']
+                    "name": theme_info.get('name'),
+                    "description": theme_info.get('description'),
+                    "author": theme_info.get('author'),
+                    "version": theme_info.get('version'),
+                    "theme_type": theme_info.get('theme_type'),
+                    "preview_image": theme_info.get('preview_image'),
+                    "tags": theme_info.get('tags'),
+                    "created_date": theme_info.get('created_date'),
+                    "updated_date": theme_info.get('updated_date')
                 },
                 "colors": {
                     "primary": "#1976D2" if theme_id == "material_blue" else "#7B1FA2",
@@ -745,7 +764,7 @@ class ThemeMarketManager(QObject):
             if success:
                 self.download_progress.emit(theme_id, 100)
                 self.theme_downloaded.emit(theme_id)
-                self.logger.info(f"主题下载安装成功: {theme_info['name']}")
+                self.logger.info(f"主题下载安装成功: {theme_info.get('name')}")
             else:
                 self.download_error.emit(theme_id, "安装失败")
 
@@ -769,9 +788,9 @@ class ThemeMarketManager(QObject):
 
             for theme in self.market_themes:
                 # 搜索名称和描述
-                if (query_lower in theme['name'].lower() or
-                    query_lower in theme['description'].lower() or
-                    query_lower in theme['author'].lower()):
+                if (query_lower in theme.get('name').lower() or
+                    query_lower in theme.get('description').lower() or
+                    query_lower in theme.get('author').lower()):
 
                     # 如果指定了标签，检查标签匹配
                     if tags:

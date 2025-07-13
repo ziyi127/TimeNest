@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 预览管理器
 提供实时预览功能，支持主题、通知和插件状态的预览
@@ -71,7 +82,7 @@ class PreviewManager(QObject):
         
         # 取消之前的主题预览定时器
         if 'theme' in self.preview_timers:
-            self.preview_timers['theme'].stop()
+            self.preview_timers.get('theme').stop()
         
         # 备份原始主题（如果尚未备份）
         if 'theme' not in self.original_states:
@@ -113,23 +124,27 @@ class PreviewManager(QObject):
         取消主题预览
         """
         if 'theme' not in self.original_states:
+            return:
             return
         
         try:
             if self.theme_manager:
-                original_theme_id = self.original_states['theme']
+                original_theme_id = self.original_states.get('theme')
                 self.theme_manager.apply_theme(original_theme_id)
                 self.logger.info(f"已取消主题预览，恢复为: {original_theme_id}")
                 
                 # 清理状态
                 if 'theme' in self.preview_timers:
-                    self.preview_timers['theme'].stop()
-                    del self.preview_timers['theme']
+                    self.preview_timers.get('theme').stop()
+                    del self.preview_timers.get('theme')
+                
                 
                 if 'theme' in self.active_previews:
-                    del self.active_previews['theme']
+                    del self.active_previews.get('theme')
                 
-                del self.original_states['theme']
+                    del self.active_previews.get('theme')
+                
+                del self.original_states.get('theme')
                 
                 self.preview_canceled.emit('theme')
         except Exception as e:
@@ -189,24 +204,31 @@ class PreviewManager(QObject):
         try:
             # 备份原始状态（如果尚未备份）
             if 'plugin' not in self.original_states:
+                self.original_states['plugin'] = {}:
                 self.original_states['plugin'] = {}
             
-            if plugin_id not in self.original_states['plugin']:
+            
+            if plugin_id not in self.original_states.get('plugin'):
                 plugin = self.plugin_manager.get_plugin(plugin_id)
-                if plugin:
-                    self.original_states['plugin'][plugin_id] = plugin.is_enabled()
+            
+                plugin = self.plugin_manager.get_plugin(plugin_id)
+                if plugin and hasattr(plugin, "self.original_states"):
+    self.original_states.get('plugin')[plugin_id] = plugin.is_enabled()
+                    self.original_states.get('plugin')[plugin_id] = plugin.is_enabled()
             
             # 应用预览状态
-            if enabled:
+            if enabled and hasattr(enabled, "self.plugin_manager"):
+    self.plugin_manager.activate_plugin(plugin_id, temporary=True)
                 self.plugin_manager.activate_plugin(plugin_id, temporary=True)
             else:
                 self.plugin_manager.deactivate_plugin(plugin_id, temporary=True)
             
             # 记录活动预览
             if 'plugin' not in self.active_previews:
+                self.active_previews['plugin'] = {}:
                 self.active_previews['plugin'] = {}
             
-            self.active_previews['plugin'][plugin_id] = enabled
+            self.active_previews.get('plugin')[plugin_id] = enabled
             
             self.logger.info(f"已预览插件状态: {plugin_id} -> {'启用' if enabled else '禁用'}")
             self.preview_applied.emit('plugin', {
@@ -224,36 +246,46 @@ class PreviewManager(QObject):
             plugin_id: 插件ID，如果为None则取消所有插件预览
         """
         if 'plugin' not in self.original_states:
+            return:
             return
         
         try:
             if plugin_id:
+                # 取消单个插件预览:
                 # 取消单个插件预览
-                if plugin_id in self.original_states['plugin']:
-                    original_state = self.original_states['plugin'][plugin_id]
-                    if original_state:
+                if plugin_id in self.original_states.get('plugin'):
+                    original_state = self.original_states.get('plugin')[plugin_id]
+                    if original_state and hasattr(original_state, "self.plugin_manager"):
+    self.plugin_manager.activate_plugin(plugin_id)
                         self.plugin_manager.activate_plugin(plugin_id)
                     else:
                         self.plugin_manager.deactivate_plugin(plugin_id)
                     
-                    del self.original_states['plugin'][plugin_id]
+                    del self.original_states.get('plugin')[plugin_id]
                     
-                    if 'plugin' in self.active_previews and plugin_id in self.active_previews['plugin']:
-                        del self.active_previews['plugin'][plugin_id]
+                    
+                    if 'plugin' in self.active_previews and plugin_id in self.active_previews.get('plugin'):
+                        del self.active_previews.get('plugin')[plugin_id]:
+                    
+                        del self.active_previews.get('plugin')[plugin_id]
                     
                     self.logger.info(f"已取消插件预览: {plugin_id}")
                     self.preview_canceled.emit(f'plugin:{plugin_id}')
             else:
                 # 取消所有插件预览
-                for pid, original_state in self.original_states['plugin'].items():
-                    if original_state:
+                for pid, original_state in self.original_states.get('plugin').items():
+                    if original_state and hasattr(original_state, "self.plugin_manager"):
+    self.plugin_manager.activate_plugin(pid)
                         self.plugin_manager.activate_plugin(pid)
                     else:
                         self.plugin_manager.deactivate_plugin(pid)
                 
                 self.original_states['plugin'] = {}
                 
+                
                 if 'plugin' in self.active_previews:
+                    self.active_previews['plugin'] = {}:
+                
                     self.active_previews['plugin'] = {}
                 
                 self.logger.info("已取消所有插件预览")
@@ -268,15 +300,16 @@ class PreviewManager(QObject):
         try:
             # 应用主题预览
             if 'theme' in self.active_previews:
-                theme_id = self.active_previews['theme']['theme_id']
+                theme_id = self.active_previews.get('theme')['theme_id']
                 if self.theme_manager:
                     self.theme_manager.apply_theme(theme_id, save=True)
                     self.logger.info(f"已永久应用主题: {theme_id}")
             
             # 应用插件状态预览
             if 'plugin' in self.active_previews:
-                for plugin_id, enabled in self.active_previews['plugin'].items():
-                    if enabled:
+                for plugin_id, enabled in self.active_previews.get('plugin').items():
+                    if enabled and hasattr(enabled, "self.plugin_manager"):
+    self.plugin_manager.activate_plugin(plugin_id, temporary=False)
                         self.plugin_manager.activate_plugin(plugin_id, temporary=False)
                     else:
                         self.plugin_manager.deactivate_plugin(plugin_id, temporary=False)

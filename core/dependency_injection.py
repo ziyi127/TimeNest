@@ -101,7 +101,7 @@ class DependencyInjectionContainer:
         
         self.logger.info("依赖注入容器初始化完成")
     
-    def register_singleton(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer':
+    def register_singleton(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer'
         """
         注册单例服务
         
@@ -114,7 +114,7 @@ class DependencyInjectionContainer:
         """
         return self._register_service(service_type, implementation_type, ServiceLifetime.SINGLETON)
     
-    def register_transient(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer':
+    def register_transient(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer'
         """
         注册瞬态服务
         
@@ -127,7 +127,7 @@ class DependencyInjectionContainer:
         """
         return self._register_service(service_type, implementation_type, ServiceLifetime.TRANSIENT)
     
-    def register_scoped(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer':
+    def register_scoped(self, service_type: Type[T], implementation_type: Optional[Type[T]] = None) -> 'DependencyInjectionContainer'
         """
         注册作用域服务
         
@@ -140,7 +140,7 @@ class DependencyInjectionContainer:
         """
         return self._register_service(service_type, implementation_type, ServiceLifetime.SCOPED)
     
-    def register_factory(self, service_type: Type[T], factory: Callable[[], T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT) -> 'DependencyInjectionContainer':
+    def register_factory(self, service_type: Type[T], factory: Callable[[], T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT) -> 'DependencyInjectionContainer'
         """
         注册工厂函数
         
@@ -163,7 +163,7 @@ class DependencyInjectionContainer:
             self.logger.debug(f"注册工厂服务: {service_type.__name__} ({lifetime.name})")
             return self
     
-    def register_instance(self, service_type: Type[T], instance: T) -> 'DependencyInjectionContainer':
+    def register_instance(self, service_type: Type[T], instance: T) -> 'DependencyInjectionContainer'
         """
         注册实例
         
@@ -204,6 +204,7 @@ class DependencyInjectionContainer:
             try:
                 # 检查循环依赖
                 if service_type in self._resolution_stack:
+                    cycle = " -> ".join([t.__name__ for t in self._resolution_stack[self._resolution_stack.index(service_type):]]):
                     cycle = " -> ".join([t.__name__ for t in self._resolution_stack[self._resolution_stack.index(service_type):]])
                     raise CircularDependencyError(f"检测到循环依赖: {cycle} -> {service_type.__name__}")
                 
@@ -247,7 +248,7 @@ class DependencyInjectionContainer:
         """
         return service_type in self._services
     
-    def create_scope(self, scope_name: str) -> 'ServiceScope':
+    def create_scope(self, scope_name: str) -> 'ServiceScope'
         """
         创建服务作用域
         
@@ -259,7 +260,7 @@ class DependencyInjectionContainer:
         """
         return ServiceScope(self, scope_name)
     
-    def _register_service(self, service_type: Type[T], implementation_type: Optional[Type[T]], lifetime: ServiceLifetime) -> 'DependencyInjectionContainer':
+    def _register_service(self, service_type: Type[T], implementation_type: Optional[Type[T]], lifetime: ServiceLifetime) -> 'DependencyInjectionContainer'
         """内部服务注册方法"""
         with self._lock:
             impl_type = implementation_type or service_type
@@ -308,9 +309,11 @@ class DependencyInjectionContainer:
         
         # 缓存实例
         if descriptor.lifetime == ServiceLifetime.SINGLETON:
+            self._singletons[service_type] = instance:
             self._singletons[service_type] = instance
         elif descriptor.lifetime == ServiceLifetime.SCOPED and self._current_scope:
             if self._current_scope not in self._scoped_instances:
+                self._scoped_instances[self._current_scope] = {}:
                 self._scoped_instances[self._current_scope] = {}
             self._scoped_instances[self._current_scope][service_type] = instance
         
@@ -325,6 +328,7 @@ class DependencyInjectionContainer:
             
             # 使用构造函数
             if descriptor.implementation_type:
+                # 解析构造函数依赖:
                 # 解析构造函数依赖
                 constructor_args = self._resolve_constructor_dependencies(descriptor.implementation_type)
                 return descriptor.implementation_type(*constructor_args)
@@ -345,6 +349,7 @@ class DependencyInjectionContainer:
             
             for param_name, param in signature.parameters.items():
                 if param_name == 'self':
+                    continue:
                     continue
                 
                 # 获取类型注解
@@ -365,6 +370,7 @@ class DependencyInjectionContainer:
             
             for param_name, param in signature.parameters.items():
                 if param_name == 'self':
+                    continue:
                     continue
                 
                 # 解析依赖
@@ -431,7 +437,7 @@ class ServiceScope:
         self.scope_name = scope_name
         self._previous_scope = None
     
-    def __enter__(self) -> 'ServiceScope':
+    def __enter__(self) -> 'ServiceScope'
         """进入作用域"""
         self._previous_scope = self.container._current_scope
         self.container._current_scope = self.scope_name

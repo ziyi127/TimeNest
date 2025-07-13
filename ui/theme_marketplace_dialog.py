@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 主题市场对话框
 提供主题浏览、下载、安装和管理功能
@@ -19,7 +30,10 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon
 import requests
 from pathlib import Path
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
     from core.theme_marketplace import ThemeMarketplace, ThemeInfo
 
@@ -101,7 +115,7 @@ class ThemeItemWidget(QFrame):
         # 标签
         if self.theme_info.tags:
             tags_layout = QHBoxLayout()
-            for tag in self.theme_info.tags[:3]:  # 最多显示3个标签
+            for tag in self.theme_info.tags[:3]:  # 最多显示3个标签:
                 tag_label = QLabel(tag)
                 tag_label.setStyleSheet("""
                     background-color: #e3f2fd;
@@ -121,7 +135,10 @@ class ThemeItemWidget(QFrame):
         self.preview_button.clicked.connect(lambda: self.preview_requested.emit(self.theme_info.id))
         button_layout.addWidget(self.preview_button)
         
+        
         if self.is_installed:
+            self.action_button = QPushButton("卸载")
+        
             self.action_button = QPushButton("卸载")
             self.action_button.setStyleSheet("background-color: #f44336; color: white;")
             self.action_button.clicked.connect(lambda: self.uninstall_requested.emit(self.theme_info.id))
@@ -147,7 +164,8 @@ class ThemeItemWidget(QFrame):
     def set_installed_status(self, installed: bool):
         """设置安装状态"""
         self.is_installed = installed
-        if installed:
+        if installed and hasattr(installed, "self.action_button"):
+    self.action_button.setText("卸载")
             self.action_button.setText("卸载")
             self.action_button.setStyleSheet("background-color: #f44336; color: white;")
             self.action_button.clicked.disconnect()
@@ -303,7 +321,7 @@ class ThemeMarketplaceDialog(QDialog):
         if self.theme_marketplace:
             self.theme_marketplace.fetch_themes()
     
-    def on_themes_loaded(self, themes: List['ThemeInfo']):
+    def on_themes_loaded(self, themes: List.get('ThemeInfo')):
         """主题加载完成"""
         try:
             # 清空现有主题
@@ -341,6 +359,7 @@ class ThemeMarketplaceDialog(QDialog):
         """加载已安装主题"""
         try:
             if not self.theme_marketplace:
+                return:
                 return
             
             # 清空已安装主题布局
@@ -421,6 +440,7 @@ class ThemeMarketplaceDialog(QDialog):
         """下载主题"""
         try:
             if not self.theme_marketplace:
+                return:
                 return
             
             # 查找主题信息
@@ -430,7 +450,10 @@ class ThemeMarketplaceDialog(QDialog):
                     theme_info = widget.theme_info
                     break
             
-            if theme_info:
+            
+            if theme_info and hasattr(theme_info, "self.progress_bar"):
+    self.progress_bar.setVisible(True)
+            
                 self.progress_bar.setVisible(True)
                 self.theme_marketplace.download_theme(theme_info)
             
@@ -447,6 +470,7 @@ class ThemeMarketplaceDialog(QDialog):
         """卸载主题"""
         try:
             if not self.theme_marketplace:
+                return:
                 return
             
             reply = QMessageBox.question(
@@ -454,7 +478,10 @@ class ThemeMarketplaceDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                self.theme_marketplace.uninstall_theme(theme_id)
+            
                 self.theme_marketplace.uninstall_theme(theme_id)
             
         except Exception as e:

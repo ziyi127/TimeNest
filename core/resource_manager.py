@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 学习资源管理器
 管理学习资料、笔记、文档和在线资源
@@ -173,7 +184,8 @@ class ResourceManager(BaseManager):
                 
                 # 检查重复文件
                 existing_resource = self._find_resource_by_hash(file_hash)
-                if existing_resource:
+                if existing_resource and hasattr(existing_resource, "self.logger"):
+    self.logger.warning(f"文件已存在: {existing_resource.title}")
                     self.logger.warning(f"文件已存在: {existing_resource.title}")
                     return existing_resource.id
             else:
@@ -321,18 +333,21 @@ class ResourceManager(BaseManager):
             for resource in self.resources.values():
                 # 检查类型过滤
                 if resource_type and resource.resource_type != resource_type:
+                    continue:
                     continue
                 
                 # 检查科目过滤
                 if subject and resource.subject != subject:
+                    continue:
                     continue
                 
                 # 检查标签过滤
                 if tags and not tags.intersection(resource.tags):
+                    continue:
                     continue
                 
                 # 检查关键词匹配
-                if (query_lower in resource.title.lower() or
+                if (query_lower in resource.title.lower() or:
                     query_lower in resource.description.lower() or
                     any(query_lower in tag.lower() for tag in resource.tags)):
                     results.append(resource)
@@ -351,7 +366,7 @@ class ResourceManager(BaseManager):
             return []
     
     def get_resource_recommendations(self, subject: str = None,
-                                   current_resource_id: str = None) -> List[StudyResource]:
+                                   current_resource_id: str = None) -> List[StudyResource]
         """获取资源推荐"""
         try:
             recommendations = []
@@ -359,7 +374,7 @@ class ResourceManager(BaseManager):
             # 基于科目推荐
             if subject:
                 subject_resources = [r for r in self.resources.values() 
-                                   if r.subject == subject and r.rating >= 3]
+                                   if r.subject == subject and r.rating >= 3]:
                 recommendations.extend(subject_resources[:5])
             
             # 基于当前资源推荐相关资源
@@ -373,7 +388,7 @@ class ResourceManager(BaseManager):
                 
                 # 基于标签推荐
                 for resource in self.resources.values():
-                    if (resource.id != current_resource_id and
+                    if (resource.id != current_resource_id and:
                         resource.tags.intersection(current_resource.tags)):
                         recommendations.append(resource)
             
@@ -462,9 +477,10 @@ class ResourceManager(BaseManager):
                 
                 # 更新状态
                 if resource.status == ResourceStatus.IN_USE:
+                    # 如果长时间未访问，改为可用状态:
                     # 如果长时间未访问，改为可用状态
-                    if (resource.last_accessed and 
-                        datetime.now() - resource.last_accessed > timedelta(hours=1)):
+                    if (resource.last_accessed and:
+                        datetime.now() - resource.last_accessed > timedelta(hours=1))
                         resource.status = ResourceStatus.AVAILABLE
                         organized += 1
             
@@ -478,7 +494,7 @@ class ResourceManager(BaseManager):
             self.logger.error(f"整理资源失败: {e}")
             return {'error': str(e)}
     
-    def export_resource_list(self, format_type: str = "json") -> str:
+    def export_resource_list(self, format_type: str = "json") -> str
         """导出资源列表"""
         try:
             import json
@@ -492,7 +508,7 @@ class ResourceManager(BaseManager):
             
             # 导出资源
             for resource in self.resources.values():
-                export_data['resources'].append({
+                export_data.get('resources').append({
                     'id': resource.id,
                     'title': resource.title,
                     'type': resource.resource_type.value,
@@ -506,7 +522,7 @@ class ResourceManager(BaseManager):
             
             # 导出集合
             for collection in self.collections.values():
-                export_data['collections'].append({
+                export_data.get('collections').append({
                     'id': collection.id,
                     'name': collection.name,
                     'description': collection.description,
@@ -517,7 +533,7 @@ class ResourceManager(BaseManager):
             
             # 导出笔记
             for note in self.notes.values():
-                export_data['notes'].append({
+                export_data.get('notes').append({
                     'id': note.id,
                     'title': note.title,
                     'subject': note.subject,

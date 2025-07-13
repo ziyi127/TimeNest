@@ -256,8 +256,8 @@ class Schedule:
         schedule = cls(
             name=data.get('name', ''),
             description=data.get('description', ''),
-            created_date=date.fromisoformat(data['created_date']) if data.get('created_date') else None,
-            modified_date=date.fromisoformat(data['modified_date']) if data.get('modified_date') else None
+            created_date=date.fromisoformat(data.get('created_date')) if data.get('created_date') else None,
+            modified_date=date.fromisoformat(data.get('modified_date')) if data.get('modified_date') else None
         )
         
         # 加载时间段
@@ -293,6 +293,7 @@ class Schedule:
         for class_item in self.classes:
             if class_item.time_slot_id not in time_slot_ids:
                 errors.append(f"课程 {class_item.id} 引用了不存在的时间段 {class_item.time_slot_id}")
+
 
             if class_item.subject_id not in subject_ids:
                 errors.append(f"课程 {class_item.id} 引用了不存在的科目 {class_item.subject_id}")
@@ -464,12 +465,12 @@ class ClassPlan:
             time_layout_id=data.get('time_layout_id', ''),
             description=data.get('description', ''),
             is_enabled=data.get('is_enabled', True),
-            start_date=date.fromisoformat(data['start_date']) if data.get('start_date') else None,
-            end_date=date.fromisoformat(data['end_date']) if data.get('end_date') else None
+            start_date=date.fromisoformat(data.get('start_date')) if data.get('start_date') else None,
+            end_date=date.fromisoformat(data.get('end_date')) if data.get('end_date') else None
         )
 
         # 加载时间布局
         if data.get('time_layout'):
-            plan.time_layout = TimeLayout.from_dict(data['time_layout'])
+            plan.time_layout = TimeLayout.from_dict(data.get('time_layout'))
 
         return plan

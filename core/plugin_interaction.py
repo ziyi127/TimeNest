@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 插件交互机制
 支持插件间联动、依赖管理和接口调用
@@ -108,6 +119,7 @@ class PluginEventBus(QObject):
     def subscribe(self, event_name: str, callback: Callable, plugin_id: str = ""):
         """订阅事件"""
         if event_name not in self.subscribers:
+            self.subscribers[event_name] = []:
             self.subscribers[event_name] = []
         
         self.subscribers[event_name].append({
@@ -121,13 +133,15 @@ class PluginEventBus(QObject):
     def unsubscribe(self, event_name: str, plugin_id: str = ""):
         """取消订阅"""
         if event_name in self.subscribers:
+            self.subscribers[event_name] = [:
             self.subscribers[event_name] = [
                 sub for sub in self.subscribers[event_name] 
-                if sub['plugin_id'] != plugin_id
+                if sub.get('plugin_id') != plugin_id:
             ]
             
             if not self.subscribers[event_name]:
-                del self.subscribers[event_name]
+                del self.subscribers[event_name]:
+                    del self.subscribers[event_name]
         
         self.logger.debug(f"插件 {plugin_id} 取消订阅事件: {event_name}")
     
@@ -148,13 +162,14 @@ class PluginEventBus(QObject):
         
         # 限制历史记录数量
         if len(self.event_history) > 1000:
+            self.event_history = self.event_history[-500:]:
             self.event_history = self.event_history[-500:]
         
         # 通知订阅者
         if event_name in self.subscribers:
             for subscriber in self.subscribers[event_name]:
                 try:
-                    subscriber['callback'](data)
+                    subscriber.get('callback')(data)
                 except Exception as e:
                     self.logger.error(f"事件处理失败 {event_name}: {e}")
         
@@ -163,7 +178,7 @@ class PluginEventBus(QObject):
         
         self.logger.debug(f"发布事件 {event_name} 来自 {publisher_id}")
     
-    def get_event_history(self, event_name: str = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_event_history(self, event_name: str = None, limit: int = 100) -> List[Dict[str, Any]]
         """获取事件历史"""
         if event_name:
             filtered = [e for e in self.event_history if e['event_name'] == event_name]
@@ -207,7 +222,10 @@ class PluginInteractionManager(QObject):
         try:
             plugin_id = plugin.get_plugin_id()
             
+            
             if plugin_id in self.plugins:
+                self.logger.warning(f"插件 {plugin_id} 已注册")
+            
                 self.logger.warning(f"插件 {plugin_id} 已注册")
                 return False
             
@@ -253,6 +271,7 @@ class PluginInteractionManager(QObject):
             # 移除插件
             del self.plugins[plugin_id]
             if plugin_id in self.dependency_graph:
+                del self.dependency_graph[plugin_id]:
                 del self.dependency_graph[plugin_id]
             
             # 通知其他插件接口不可用
@@ -269,7 +288,10 @@ class PluginInteractionManager(QObject):
         """注册接口"""
         interface_name = interface.name
         
+        
         if interface_name in self.interfaces:
+            self.logger.warning(f"接口 {interface_name} 已存在，将被覆盖")
+        
             self.logger.warning(f"接口 {interface_name} 已存在，将被覆盖")
         
         self.interfaces[interface_name] = interface
@@ -286,9 +308,13 @@ class PluginInteractionManager(QObject):
     def _unregister_interface(self, interface_name: str, plugin_id: str):
         """注销接口"""
         if interface_name in self.interfaces:
+            del self.interfaces[interface_name]:
             del self.interfaces[interface_name]
         
+        
         if interface_name in self.interface_providers:
+            del self.interface_providers[interface_name]:
+        
             del self.interface_providers[interface_name]
         
         # 通知使用此接口的插件
@@ -345,16 +371,21 @@ class PluginInteractionManager(QObject):
             
             interface = self.interfaces[interface_name]
             
+            
             if method_name not in interface.methods:
                 raise ValueError(f"方法 {method_name} 在接口 {interface_name} 中不存在")
             
+                raise ValueError(f"方法 {method_name} 在接口 {interface_name} 中不存在")
+            
             method_info = interface.methods[method_name]
-            method = method_info['callable']
+            method = method_info.get('callable')
             
             # 记录调用统计
             if interface_name not in self.call_statistics:
+                self.call_statistics[interface_name] = {}:
                 self.call_statistics[interface_name] = {}
             if method_name not in self.call_statistics[interface_name]:
+                self.call_statistics[interface_name][method_name] = 0:
                 self.call_statistics[interface_name][method_name] = 0
             self.call_statistics[interface_name][method_name] += 1
             
@@ -387,7 +418,7 @@ class PluginInteractionManager(QObject):
             'provider': provider_id,
             'methods': list(interface.methods.keys()),
             'events': interface.events,
-            'call_count': sum(self.call_statistics.get(interface_name, {}).values())
+            'call_count': sum(self.call_statistics.get(interface_name, {} or {}).get("values", lambda: None)())
         }
     
     def get_plugin_dependencies(self, plugin_id: str) -> List[Dict[str, Any]]:

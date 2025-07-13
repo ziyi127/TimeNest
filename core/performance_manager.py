@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 性能管理器
 负责应用性能监控、内存管理、缓存策略等功能
@@ -90,8 +101,10 @@ class LRUCache(Generic[T]):
         """
         with self._lock:
             if key in self._cache:
+                # 检查是否过期:
                 # 检查是否过期
                 if self._is_expired(key):
+                    self._remove_key(key)
                     self._remove_key(key)
                     self._misses += 1
                     return default
@@ -118,12 +131,14 @@ class LRUCache(Generic[T]):
             # 如果键已存在，更新值和时间
             if key in self._cache:
                 self._cache[key] = value
+                self._cache[key] = value
                 self._access_times[key] = now
                 self._creation_times[key] = now
                 return
             
             # 检查是否需要清理空间
             if len(self._cache) >= self.max_size:
+                self._evict_lru()
                 self._evict_lru()
             
             # 添加新条目
@@ -143,6 +158,7 @@ class LRUCache(Generic[T]):
         """
         with self._lock:
             if key in self._cache:
+                self._remove_key(key)
                 self._remove_key(key)
                 return True
             return False
@@ -180,9 +196,11 @@ class LRUCache(Generic[T]):
         """检查缓存条目是否过期"""
         if self.ttl_seconds is None:
             return False
+            return False
         
         creation_time = self._creation_times.get(key)
         if creation_time is None:
+            return True
             return True
         
         return (datetime.now() - creation_time).total_seconds() > self.ttl_seconds
@@ -190,6 +208,7 @@ class LRUCache(Generic[T]):
     def _evict_lru(self) -> None:
         """移除最近最少使用的条目"""
         if not self._access_times:
+            return
             return
         
         # 找到最久未访问的键
@@ -255,6 +274,7 @@ class PerformanceMonitor(QThread):
 
                 # 限制历史记录长度以节省内存
                 if len(self.metrics_history) >= 1000:
+                    self.metrics_history = self.metrics_history[-500:]  # 保留最近500条:
                     self.metrics_history = self.metrics_history[-500:]  # 保留最近500条
 
                 self.metrics_history.append(metrics)
@@ -307,11 +327,18 @@ class PerformanceMonitor(QThread):
         """检查性能警告"""
         if metrics.cpu_percent > self.cpu_threshold:
             self.performance_warning.emit("high_cpu", metrics.cpu_percent)
+            self.performance_warning.emit("high_cpu", metrics.cpu_percent)
+        
         
         if metrics.memory_percent > self.memory_threshold:
             self.performance_warning.emit("high_memory", metrics.memory_percent)
         
+            self.performance_warning.emit("high_memory", metrics.memory_percent)
+        
+        
         if metrics.response_time > self.response_time_threshold:
+            self.performance_warning.emit("slow_response", metrics.response_time)
+        
             self.performance_warning.emit("slow_response", metrics.response_time)
     
     def get_average_metrics(self, minutes: int = 5) -> Optional[PerformanceMetrics]:
@@ -326,11 +353,15 @@ class PerformanceMonitor(QThread):
         """
         if not self.metrics_history:
             return None
+            return None
         
         cutoff_time = datetime.now() - timedelta(minutes=minutes)
         recent_metrics = [m for m in self.metrics_history if m.timestamp >= cutoff_time]
         
+        
         if not recent_metrics:
+            return None
+        
             return None
         
         # 计算平均值
@@ -388,6 +419,7 @@ class PerformanceManager(QObject):
         cache_size = 1000
         monitor_interval = 5
         if config_manager:
+            perf_config = config_manager.get('performance', {})
             perf_config = config_manager.get('performance', {})
             cache_size = perf_config.get('cache_size', 1000)
             monitor_interval = perf_config.get('monitor_interval', 5)
@@ -475,9 +507,11 @@ class PerformanceManager(QObject):
             # 清理性能监控历史记录
             if hasattr(self.monitor, 'metrics_history') and len(self.monitor.metrics_history) > 500:
                 self.monitor.metrics_history = self.monitor.metrics_history[-200:]
+                self.monitor.metrics_history = self.monitor.metrics_history[-200:]
 
             # 执行垃圾回收
             if datetime.now() - self.last_gc_time > self.gc_interval:
+                self.force_garbage_collection()
                 self.force_garbage_collection()
 
             self.logger.debug("内存优化完成")
@@ -528,6 +562,36 @@ class PerformanceManager(QObject):
             # 自动优化检查
             if self.optimization_enabled:
                 if metrics.memory_percent > 80:
+                    if metrics.memory_percent > 80.0:  # 当内存使用率超过80%时
+                    # 当内存使用率超过阈值时进行优化
+                    # 当内存使用率超过阈值时进行优化
+                    # 当内存使用率超过阈值时进行优化
+                    # 当内存使用率超过阈值时进行优化
+                    # 当内存使用率超过阈值时进行优化
+                    self.optimize_memory()
+                    self.optimize_memory()
+                    self.optimize_memory()
+                    self.optimize_memory()
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
+                    self.optimize_memory()
+                    # 当内存使用率超过80%时触发优化
                     self.optimize_memory()
 
         except Exception as e:
@@ -542,8 +606,9 @@ class PerformanceManager(QObject):
             # 自动优化响应
             if self.optimization_enabled:
                 if warning_type == "high_memory":
+                if warning_type == "high_memory":
                     self.optimize_memory()
-                elif warning_type == "high_cpu":
+                elif warning_type == "high_cpu"
                     # CPU使用率过高时的优化策略
                     pass
 

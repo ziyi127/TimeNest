@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 智能浮窗主组件
 仿苹果灵动岛的动态信息显示功能
@@ -25,6 +36,7 @@ from .floating_modules import (
     CountdownModule, WeatherModule, SystemStatusModule
 )
 from .animations import FloatingAnimations
+
 
 if TYPE_CHECKING:
     from core.app_manager import AppManager
@@ -129,6 +141,7 @@ class SmartFloatingWidget(QWidget):
             self.enabled_modules = ['time', 'schedule']
             self.module_order = ['time', 'schedule']
 
+
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
                 self.config = self.app_manager.config_manager.get_config('floating_widget', {}, 'component')
                 self.logger.debug(f"从配置管理器加载的配置: {self.config}")
@@ -149,6 +162,7 @@ class SmartFloatingWidget(QWidget):
                 modules_config = self.config.get('modules', {})
                 self.logger.debug(f"从配置加载的模块配置: {modules_config}")
 
+
                 if modules_config:
                     enabled_modules = [
                         module_id for module_id, config in modules_config.items()
@@ -160,7 +174,7 @@ class SmartFloatingWidget(QWidget):
                         # 按顺序排序
                         self.module_order = sorted(
                             self.enabled_modules,
-                            key=lambda x: modules_config.get(x, {}).get('order', 0)
+                            key=lambda x: (modules_config.get(x, {}) or {}).get('order', 0)
                         )
                         self.logger.debug(f"从配置解析出的启用模块: {self.enabled_modules}")
 
@@ -391,7 +405,7 @@ class SmartFloatingWidget(QWidget):
             # 按顺序排序
             self.module_order = sorted(
                 self.enabled_modules,
-                key=lambda x: modules_config.get(x, {}).get('order', 0)
+                key=lambda x: (modules_config.get(x, {}) or {}).get('order', 0)
             )
 
             # 重新初始化模块
@@ -570,6 +584,7 @@ class SmartFloatingWidget(QWidget):
                     else:
                         theme_type_value = getattr(theme, 'name', 'light')
 
+
                     if theme_type_value == 'dark':
                         self.content_label.setStyleSheet("""
                             QLabel {
@@ -622,6 +637,7 @@ class SmartFloatingWidget(QWidget):
                 self.logger.error("内容标签不存在")
                 return
 
+
             if not self.modules:
                 self.logger.warning(f"没有可用的模块，尝试重新初始化。启用模块列表: {self.enabled_modules}")
 
@@ -633,6 +649,7 @@ class SmartFloatingWidget(QWidget):
                 if not self.modules:
                     self.content_label.setText("TimeNest - 模块加载失败")
                     return
+
 
             if self.auto_rotate_content and len(self.enabled_modules) > 1:
                 # 轮播模式：只显示当前轮播的模块
@@ -657,6 +674,7 @@ class SmartFloatingWidget(QWidget):
                 if module_id in self.modules:
                     module = self.modules[module_id]
                     self.logger.debug(f"模块 {module_id}: enabled={module.enabled}, visible={module.visible}")
+
 
                     if module.enabled and module.visible:
                         text = module.get_display_text()
@@ -692,6 +710,7 @@ class SmartFloatingWidget(QWidget):
                 self.current_rotation_index = 0
 
             current_module_id = self.enabled_modules[self.current_rotation_index]
+
 
             if current_module_id in self.modules:
                 module = self.modules[current_module_id]
@@ -734,6 +753,7 @@ class SmartFloatingWidget(QWidget):
             self.auto_rotate_content = enabled
             self.rotation_interval = interval_ms
 
+
             if enabled and len(self.enabled_modules) > 1:
                 self.rotation_timer.start(self.rotation_interval)
             else:
@@ -765,6 +785,7 @@ class SmartFloatingWidget(QWidget):
     def on_animation_finished(self, animation_type: str) -> None:
         """动画完成处理"""
         self.logger.debug(f"动画完成: {animation_type}")
+
 
         if animation_type in ['slide_out', 'fade_out']:
             self.visibility_changed.emit(False)
@@ -804,6 +825,7 @@ class SmartFloatingWidget(QWidget):
                     else:
                         theme_type_value = getattr(theme, 'name', 'light')
 
+
                     if theme_type_value == 'dark':
                         return QColor(30, 30, 30, int(255 * self.opacity_value))
                     else:
@@ -827,6 +849,7 @@ class SmartFloatingWidget(QWidget):
                         theme_type_value = theme_type.value
                     else:
                         theme_type_value = getattr(theme, 'name', 'light')
+
 
                     if theme_type_value == 'dark':
                         return QColor(80, 80, 80, 150)
@@ -1005,6 +1028,7 @@ class SmartFloatingWidget(QWidget):
                 Qt.WindowType.Popup |
                 Qt.WindowType.NoDropShadowWindowHint
             )
+
 
             if self.mouse_transparent:
                 window_flags |= Qt.WindowType.WindowTransparentForInput

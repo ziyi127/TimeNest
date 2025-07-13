@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest Excel导出工具 v2
 支持多种格式和样式的课程表导出
@@ -96,6 +107,7 @@ class ExcelExportThread(QThread):
                 options=self.options
             )
             
+            
             if success:
                 self.export_finished.emit(True, f"导出成功: {self.file_path}")
             else:
@@ -157,6 +169,7 @@ class ExcelExporterV2(QObject):
                 self.logger.error("openpyxl库未安装，无法导出Excel文件")
                 return False
             
+            
             if options is None:
                 options = ExportOptions()
             
@@ -173,6 +186,7 @@ class ExcelExporterV2(QObject):
                 success = self._export_simple_format(schedule, file_path, options)
             
             self.progress_updated.emit(100)
+            
             
             if success:
                 self.logger.info(f"课程表导出成功: {file_path}")
@@ -231,10 +245,12 @@ class ExcelExporterV2(QObject):
                         if subject:
                             cell_content.append(subject.name)
                             
+                            
                         if options.include_teacher and class_item.teacher:
                             cell_content.append(f"教师: {class_item.teacher}")
                         elif options.include_teacher and subject and subject.teacher:
                             cell_content.append(f"教师: {subject.teacher}")
+                            
                             
                         if options.include_classroom and class_item.classroom:
                             cell_content.append(f"教室: {class_item.classroom}")
@@ -306,13 +322,16 @@ class ExcelExporterV2(QObject):
                         class_item = class_items[0]
                         subject = schedule.get_subject(class_item.subject_id)
                         
+                        
                         if subject:
                             content_parts = [subject.name]
+                            
                             
                             if options.include_teacher:
                                 teacher = class_item.teacher or subject.teacher
                                 if teacher:
                                     content_parts.append(teacher)
+                            
                             
                             if options.include_classroom and class_item.classroom:
                                 content_parts.append(class_item.classroom)
@@ -334,7 +353,7 @@ class ExcelExporterV2(QObject):
             for row in worksheet.iter_rows(min_row=4, max_row=3+len(time_slots)):
                 worksheet.row_dimensions[row[0].row].height = 60
             
-            worksheet.column_dimensions['A'].width = 15
+            worksheet.column_dimensions.get('A').width = 15
             for col in range(2, 7):
                 worksheet.column_dimensions[worksheet.cell(row=1, column=col).column_letter].width = 20
             
@@ -451,7 +470,7 @@ class ExcelExporterV2(QObject):
 
             # 背景色
             scheme = self.color_schemes.get('colorful' if options.style == ExportStyle.COLORFUL else 'professional')
-            header_color = scheme['header']
+            header_color = scheme.get('header')
             cell.fill = PatternFill(start_color=header_color, end_color=header_color, fill_type='solid')
 
             # 对齐
@@ -468,7 +487,7 @@ class ExcelExporterV2(QObject):
 
             # 获取颜色方案
             scheme = self.color_schemes.get('colorful' if options.style == ExportStyle.COLORFUL else 'professional')
-            colors = scheme['subject_colors']
+            colors = scheme.get('subject_colors')
 
             # 根据科目名称选择颜色
             color_index = hash(subject.name) % len(colors)

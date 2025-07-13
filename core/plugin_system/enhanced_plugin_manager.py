@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Enhanced Plugin Manager
 Integrates all plugin system components for comprehensive plugin management
@@ -24,7 +35,7 @@ class EnhancedPluginManager(BaseManager):
     Enhanced Plugin Manager
     
     Integrates interface registry, dependency validation, message bus, and communication bus
-    for comprehensive plugin management with inter-plugin communication capabilities.
+    for comprehensive plugin management with inter-plugin communication capabilities.:
     """
     
     # Signals
@@ -71,13 +82,16 @@ class EnhancedPluginManager(BaseManager):
                 self.logger.error("Failed to initialize interface registry")
                 return False
             
+            
             if not self.dependency_validator.initialize():
                 self.logger.error("Failed to initialize dependency validator")
                 return False
             
+            
             if not self.message_bus.initialize():
                 self.logger.error("Failed to initialize message bus")
                 return False
+            
             
             if not self.communication_bus.initialize():
                 self.logger.error("Failed to initialize communication bus")
@@ -133,6 +147,7 @@ class EnhancedPluginManager(BaseManager):
                         self.plugin_dependencies[metadata.id] = dependencies
                         self.validation_results[metadata.id] = validation_result
                         
+                        
                         if validation_result.is_valid:
                             plugin_load_plan.append((metadata.id, plugin_dir))
                         else:
@@ -168,6 +183,7 @@ class EnhancedPluginManager(BaseManager):
             validation_result = self.dependency_validator.validate_dependencies(
                 metadata.id, dependencies
             )
+            
             
             if not validation_result.is_valid:
                 self.logger.error(f"Plugin {metadata.id} failed validation: {validation_result.errors}")
@@ -239,6 +255,7 @@ class EnhancedPluginManager(BaseManager):
             
             plugin = self.plugins[plugin_id]
             
+            
             if plugin.get_status() == PluginStatus.ENABLED:
                 self.logger.warning(f"Plugin already active: {plugin_id}")
                 return True
@@ -272,6 +289,7 @@ class EnhancedPluginManager(BaseManager):
                 return False
             
             plugin = self.plugins[plugin_id]
+            
             
             if plugin.get_status() != PluginStatus.ENABLED:
                 self.logger.warning(f"Plugin not active: {plugin_id}")
@@ -314,7 +332,7 @@ class EnhancedPluginManager(BaseManager):
         """Get list of active plugin IDs"""
         return [
             plugin_id for plugin_id, plugin in self.plugins.items()
-            if plugin.get_status() == PluginStatus.ENABLED
+            if plugin.get_status() == PluginStatus.ENABLED:
         ]
     
     def get_plugin_status(self, plugin_id: str) -> Optional[PluginStatus]:
@@ -410,7 +428,7 @@ class EnhancedPluginManager(BaseManager):
                 return None
 
             # 检查文件大小
-            if manifest_file.stat().st_size > 1024 * 100:  # 100KB限制
+            if manifest_file.stat().st_size > 1024 * 100:  # 100KB限制:
                 self.logger.warning(f"Plugin manifest too large: {manifest_file}")
                 return None
 
@@ -503,11 +521,12 @@ class EnhancedPluginManager(BaseManager):
             plugin_class = None
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (isinstance(attr, type) and
+                if (isinstance(attr, type) and:
                     issubclass(attr, IPlugin) and
                     attr != IPlugin):
                     plugin_class = attr
                     break
+
 
             if not plugin_class:
                 self.logger.error(f"No plugin class found in {plugin_id}")

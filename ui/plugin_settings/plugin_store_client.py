@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Store Client
 Fetches plugin metadata from the TimeNest plugin store
@@ -40,7 +51,7 @@ class PluginStoreMetadata:
     download_url: str = ""
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PluginStoreMetadata':
+    def from_dict(cls, data: Dict[str, Any]) -> 'PluginStoreMetadata'
         """Create instance from dictionary"""
         return cls(
             id=data.get('id', ''),
@@ -136,7 +147,7 @@ class PluginStoreClient(BaseManager):
         except Exception as e:
             self.logger.error(f"Error during store client cleanup: {e}")
     
-    def fetch_plugin_metadata(self, plugin_id: str, force_refresh: bool = False) -> None:
+    def fetch_plugin_metadata(self, plugin_id: str, force_refresh: bool = False) -> None
         """
         Fetch plugin metadata from store
         
@@ -148,7 +159,8 @@ class PluginStoreClient(BaseManager):
             # Check cache first
             if not force_refresh and self._is_cache_valid(plugin_id):
                 cached_metadata = self._metadata_cache.get(plugin_id)
-                if cached_metadata:
+                if cached_metadata and hasattr(cached_metadata, "self.metadata_fetched"):
+    self.metadata_fetched.emit(plugin_id, cached_metadata)
                     self.metadata_fetched.emit(plugin_id, cached_metadata)
                     return
             
@@ -159,7 +171,7 @@ class PluginStoreClient(BaseManager):
             self.logger.error(f"Error fetching metadata for {plugin_id}: {e}")
             self.fetch_error.emit(plugin_id, str(e))
     
-    def fetch_plugin_reviews(self, plugin_id: str, force_refresh: bool = False) -> None:
+    def fetch_plugin_reviews(self, plugin_id: str, force_refresh: bool = False) -> None
         """
         Fetch plugin reviews from store
         
@@ -171,7 +183,8 @@ class PluginStoreClient(BaseManager):
             # Check cache first
             if not force_refresh and self._is_cache_valid(plugin_id, "reviews"):
                 cached_reviews = self._reviews_cache.get(plugin_id)
-                if cached_reviews:
+                if cached_reviews and hasattr(cached_reviews, "self.reviews_fetched"):
+    self.reviews_fetched.emit(plugin_id, cached_reviews)
                     self.reviews_fetched.emit(plugin_id, cached_reviews)
                     return
             
@@ -288,12 +301,15 @@ class PluginStoreClient(BaseManager):
             self.logger.error(f"Error processing reviews response: {e}")
             self.fetch_error.emit(plugin_id, str(e))
     
-    def _is_cache_valid(self, plugin_id: str, data_type: str = "metadata") -> bool:
+    def _is_cache_valid(self, plugin_id: str, data_type: str = "metadata") -> bool
         """Check if cached data is still valid"""
         import time
         cache_key = f"{plugin_id}_{data_type}"
         
+        
         if cache_key not in self._last_fetch_time:
+            return False
+        
             return False
         
         elapsed = time.time() - self._last_fetch_time[cache_key]

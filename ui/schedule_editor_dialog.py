@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 课程表编辑对话框
 提供快速的课程表编辑功能
@@ -16,7 +27,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
 
 
@@ -287,6 +301,7 @@ class ScheduleEditorDialog(QDialog):
         """添加课程"""
         try:
             if not self.validate_form():
+                return:
                 return
             
             current_item = self.schedule_table.currentItem()
@@ -308,10 +323,12 @@ class ScheduleEditorDialog(QDialog):
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
                 if reply != QMessageBox.StandardButton.Yes:
+                    return:
                     return
             
             # 添加课程
             if day not in self.schedule_data:
+                self.schedule_data[day] = {}:
                 self.schedule_data[day] = {}
             
             self.schedule_data[day][time_key] = {
@@ -336,10 +353,12 @@ class ScheduleEditorDialog(QDialog):
         """更新课程"""
         try:
             if not self.validate_form():
+                return:
                 return
             
             current_item = self.schedule_table.currentItem()
             if not current_item:
+                return:
                 return
             
             row = self.schedule_table.currentRow()
@@ -351,6 +370,7 @@ class ScheduleEditorDialog(QDialog):
             
             # 更新课程
             if day in self.schedule_data and time_key in self.schedule_data[day]:
+                self.schedule_data[day][time_key].update({:
                 self.schedule_data[day][time_key].update({
                     'name': self.course_name_edit.text().strip(),
                     'classroom': self.classroom_edit.text().strip(),
@@ -373,6 +393,7 @@ class ScheduleEditorDialog(QDialog):
         try:
             current_item = self.schedule_table.currentItem()
             if not current_item:
+                return:
                 return
             
             reply = QMessageBox.question(
@@ -380,7 +401,10 @@ class ScheduleEditorDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                row = self.schedule_table.currentRow()
+            
                 row = self.schedule_table.currentRow()
                 col = self.schedule_table.currentColumn()
                 
@@ -390,10 +414,12 @@ class ScheduleEditorDialog(QDialog):
                 
                 # 删除课程
                 if day in self.schedule_data and time_key in self.schedule_data[day]:
+                    del self.schedule_data[day][time_key]:
                     del self.schedule_data[day][time_key]
                     
                     # 如果该天没有课程了，删除整天
                     if not self.schedule_data[day]:
+                        del self.schedule_data[day]:
                         del self.schedule_data[day]
                 
                 # 更新显示
@@ -428,7 +454,10 @@ class ScheduleEditorDialog(QDialog):
                 QMessageBox.warning(self, "警告", "请输入课程名称")
                 return False
             
+            
             if self.start_week_spin.value() > self.end_week_spin.value():
+                QMessageBox.warning(self, "警告", "开始周次不能大于结束周次")
+            
                 QMessageBox.warning(self, "警告", "开始周次不能大于结束周次")
                 return False
             
@@ -479,7 +508,10 @@ class ScheduleEditorDialog(QDialog):
                 "JSON文件 (*.json);;CSV文件 (*.csv);;所有文件 (*)"
             )
 
+
             if file_path:
+                if file_path.endswith('.json'):
+
                 if file_path.endswith('.json'):
                     self.import_from_json(file_path)
                 elif file_path.endswith('.csv'):
@@ -499,7 +531,10 @@ class ScheduleEditorDialog(QDialog):
             with open(file_path, 'r', encoding='utf-8') as f:
                 imported_data = json.load(f)
 
+
             if not isinstance(imported_data, dict):
+                raise ValueError("无效的JSON格式")
+
                 raise ValueError("无效的JSON格式")
 
             # 确认导入
@@ -508,7 +543,10 @@ class ScheduleEditorDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
+
             if reply == QMessageBox.StandardButton.Yes:
+                self.schedule_data = imported_data
+
                 self.schedule_data = imported_data
                 self.update_table_display()
                 QMessageBox.information(self, "成功", "课程表导入成功")
@@ -526,15 +564,18 @@ class ScheduleEditorDialog(QDialog):
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    day = row.get('星期', '').strip()
-                    time_slot = row.get('时间', '').strip()
-                    course_name = row.get('课程名称', '').strip()
-                    classroom = row.get('教室', '').strip()
-                    teacher = row.get('教师', '').strip()
+                    day = (row.get('星期', '') or {}).get("strip", lambda: None)()
+                    time_slot = (row.get('时间', '') or {}).get("strip", lambda: None)()
+                    course_name = (row.get('课程名称', '') or {}).get("strip", lambda: None)()
+                    classroom = (row.get('教室', '') or {}).get("strip", lambda: None)()
+                    teacher = (row.get('教师', '') or {}).get("strip", lambda: None)()
                     start_week = int(row.get('开始周', 1))
                     end_week = int(row.get('结束周', 16))
 
+
                     if day and time_slot and course_name:
+                        if day not in new_schedule:
+
                         if day not in new_schedule:
                             new_schedule[day] = {}
 
@@ -546,14 +587,20 @@ class ScheduleEditorDialog(QDialog):
                             'end_week': end_week
                         }
 
+
             if new_schedule:
+                # 确认导入:
+
                 # 确认导入
                 reply = QMessageBox.question(
                     self, "确认导入", f"将导入 {len(new_schedule)} 天的课程，确定继续吗？",
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
 
+
                 if reply == QMessageBox.StandardButton.Yes:
+                    self.schedule_data = new_schedule
+
                     self.schedule_data = new_schedule
                     self.update_table_display()
                     QMessageBox.information(self, "成功", "课程表导入成功")
@@ -569,7 +616,10 @@ class ScheduleEditorDialog(QDialog):
             from PyQt6.QtWidgets import QFileDialog
             import json
 
+
             if not self.schedule_data:
+                QMessageBox.warning(self, "警告", "没有课程数据可导出")
+
                 QMessageBox.warning(self, "警告", "没有课程数据可导出")
                 return
 
@@ -578,7 +628,10 @@ class ScheduleEditorDialog(QDialog):
                 "JSON文件 (*.json);;CSV文件 (*.csv);;所有文件 (*)"
             )
 
+
             if file_path:
+                if "JSON" in file_filter or file_path.endswith('.json'):
+
                 if "JSON" in file_filter or file_path.endswith('.json'):
                     self.export_to_json(file_path)
                 elif "CSV" in file_filter or file_path.endswith('.csv'):
@@ -647,7 +700,10 @@ class ScheduleEditorDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
+
             if reply == QMessageBox.StandardButton.Yes:
+                self.schedule_data.clear()
+
                 self.schedule_data.clear()
                 self.update_table_display()
                 self.clear_form()

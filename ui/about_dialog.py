@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 关于对话框
 显示应用程序信息、版本、作者等
@@ -384,25 +395,31 @@ class AboutDialog(QDialog):
         layout = QVBoxLayout(widget)
         
         # 姓名和角色
-        name_label = QLabel(author_info['name'])
+        name_label = QLabel(author_info.get('name'))
         name_font = QFont()
         name_font.setBold(True)
         name_label.setFont(name_font)
         layout.addWidget(name_label)
         
-        role_label = QLabel(author_info['role'])
+        role_label = QLabel(author_info.get('role'))
         layout.addWidget(role_label)
         
         # 联系方式
         contact_layout = QHBoxLayout()
         
+        
         if 'email' in author_info:
-            email_label = QLabel(f'<a href="mailto:{author_info["email"]}">📧 邮箱</a>')
+            email_label = QLabel(f'<a href="mailto:{author_info.get("email")}">📧 邮箱</a>'):
+        
+            email_label = QLabel(f'<a href="mailto:{author_info.get("email")}">📧 邮箱</a>')
             email_label.setOpenExternalLinks(True)
             contact_layout.addWidget(email_label)
         
+        
         if 'github' in author_info:
-            github_label = QLabel(f'<a href="{author_info["github"]}">🐙 GitHub</a>')
+            github_label = QLabel(f'<a href="{author_info.get("github")}">🐙 GitHub</a>')
+        
+            github_label = QLabel(f'<a href="{author_info.get("github")}">🐙 GitHub</a>')
             github_label.setOpenExternalLinks(True)
             contact_layout.addWidget(github_label)
         

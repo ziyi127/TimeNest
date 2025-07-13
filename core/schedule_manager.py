@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 课程表管理器
 负责课程表数据的加载、保存、状态管理等功能
@@ -109,7 +120,7 @@ class ScheduleManager(QObject):
             
             for day_idx, weekday in enumerate(weekdays):
                 for slot_idx, time_slot in enumerate(time_slots):
-                    if slot_idx < 4:  # 上午课程
+                    if slot_idx < 4:  # 上午课程:
                         subject_id = subject_rotation[(day_idx * 4 + slot_idx) % len(subject_rotation)]
                         class_item = ClassItem(
                             id=f"{weekday}_{time_slot.id}",
@@ -120,7 +131,7 @@ class ScheduleManager(QObject):
                             teacher="老师"
                         )
                         schedule.add_class(class_item)
-                    elif slot_idx >= 4:  # 下午课程
+                    elif slot_idx >= 4:  # 下午课程:
                         subject_id = subject_rotation[(day_idx * 4 + slot_idx - 4) % len(subject_rotation)]
                         class_item = ClassItem(
                             id=f"{weekday}_{time_slot.id}",
@@ -155,6 +166,7 @@ class ScheduleManager(QObject):
             else:
                 self.logger.error(f"不支持的文件格式: {file_path.suffix}")
                 return False
+            
             
             if schedule:
                 self.current_schedule = schedule
@@ -265,7 +277,7 @@ class ScheduleManager(QObject):
                 # 更新课程状态
                 self._update_class_statuses(current_time)
                 self.logger.debug(f"当前课程变化: {old_class} -> {new_current_class}")
-                # ===== doc/AttachedSettings.md: 按优先级获取附加设置并自动提醒 =====
+                # ==  == = doc/AttachedSettings.md: 按优先级获取附加设置并自动提醒 ==  == =
                 if new_current_class:
                     subject = self.current_schedule.get_subject(new_current_class.subject_id)
                     time_layout_item = new_current_class

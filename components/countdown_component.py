@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 倒计时组件
 显示重要事件的倒计时
@@ -33,6 +44,7 @@ class CountdownComponent(BaseComponent):
         """初始化倒计时组件"""
         try:
             if not self.widget or not self.layout:
+                return:
                 return
             
             # 创建标题
@@ -68,7 +80,7 @@ class CountdownComponent(BaseComponent):
                 self._create_default_events()
             
             # 按时间排序
-            self.countdown_events.sort(key=lambda x: datetime.fromisoformat(x['target_time']))
+            self.countdown_events.sort(key=lambda x: datetime.fromisoformat(x.get('target_time')))
             
         except Exception as e:
             self.logger.error(f"加载倒计时事件失败: {e}")
@@ -117,7 +129,7 @@ class CountdownComponent(BaseComponent):
         """获取下个周末的时间"""
         now = datetime.now()
         days_until_saturday = (5 - now.weekday()) % 7  # 5 = Saturday
-        if days_until_saturday == 0 and now.hour >= 18:  # 如果是周六且已过18点
+        if days_until_saturday == 0 and now.hour >= 18:  # 如果是周六且已过18点:
             days_until_saturday = 7
         
         next_weekend = now + timedelta(days=days_until_saturday)
@@ -138,6 +150,7 @@ class CountdownComponent(BaseComponent):
         """更新倒计时内容"""
         try:
             if not self.events_container:
+                return:
                 return
             
             # 清除现有内容
@@ -145,7 +158,8 @@ class CountdownComponent(BaseComponent):
             if layout:
                 for i in reversed(range(layout.count())):
                     child = layout.itemAt(i).widget()
-                    if child:
+                    if child and hasattr(child, "deleteLater"):
+                        child.deleteLater()
                         child.deleteLater()
             
             # 获取当前时间
@@ -155,17 +169,22 @@ class CountdownComponent(BaseComponent):
             active_events = []
             for event in self.countdown_events:
                 if not event.get('enabled', True):
+                    continue:
                     continue
                 
                 try:
-                    target_time = datetime.fromisoformat(event['target_time'])
+                    target_time = datetime.fromisoformat(event.get('target_time'))
                     if target_time > now:
+                        active_events.append((event, target_time)):
                         active_events.append((event, target_time))
                 except ValueError:
                     self.logger.warning(f"无效的时间格式: {event.get('target_time')}")
                     continue
             
+            
             if not active_events:
+                # 没有活动的倒计时事件:
+            
                 # 没有活动的倒计时事件
                 no_events_label = QLabel("暂无倒计时事件")
                 no_events_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -242,7 +261,10 @@ class CountdownComponent(BaseComponent):
         try:
             delta = target_time - now
             
+            
             if delta.total_seconds() <= 0:
+                return "已到期"
+            
                 return "已到期"
             
             days = delta.days
@@ -294,7 +316,7 @@ class CountdownComponent(BaseComponent):
             self.logger.error(f"计算倒计时失败: {e}")
             return "计算错误"
     
-    def add_countdown_event(self, name: str, target_time: datetime, color: str = '#4caf50') -> str:
+    def add_countdown_event(self, name: str, target_time: datetime, color: str = '#4caf50') -> str
         """添加倒计时事件"""
         try:
             import uuid
@@ -309,7 +331,7 @@ class CountdownComponent(BaseComponent):
             }
             
             self.countdown_events.append(event)
-            self.countdown_events.sort(key=lambda x: datetime.fromisoformat(x['target_time']))
+            self.countdown_events.sort(key=lambda x: datetime.fromisoformat(x.get('target_time')))
             
             # 保存到配置
             settings = self.config.setdefault('settings', {})
@@ -331,7 +353,10 @@ class CountdownComponent(BaseComponent):
             original_count = len(self.countdown_events)
             self.countdown_events = [e for e in self.countdown_events if e.get('id') != event_id]
             
+            
             if len(self.countdown_events) < original_count:
+                # 保存到配置:
+            
                 # 保存到配置
                 settings = self.config.setdefault('settings', {})
                 settings['events'] = self.countdown_events

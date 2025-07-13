@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 核心模块管理器
 管理三大核心功能模块：课程表管理、应用设置、插件市场
@@ -10,7 +21,10 @@ from typing import Dict, Optional, Any, TYPE_CHECKING
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QDialog, QMessageBox
 
+
 if TYPE_CHECKING:
+    from core.app_manager import AppManager:
+
     from core.app_manager import AppManager
 
 
@@ -157,7 +171,10 @@ class ModuleManager(QObject):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
             
+            
             if reply == QMessageBox.StandardButton.Yes:
+                # 显示进度对话框:
+            
                 # 显示进度对话框
                 from PyQt6.QtWidgets import QProgressDialog
                 from PyQt6.QtCore import Qt
@@ -175,7 +192,8 @@ class ModuleManager(QObject):
                 
                 def on_completed(success, offset, message):
                     progress.close()
-                    if success:
+                    if success and hasattr(success, "QMessageBox.information"):
+    QMessageBox.information(None, "校准完成", message)
                         QMessageBox.information(None, "校准完成", message)
                     else:
                         QMessageBox.warning(None, "校准失败", message)
@@ -198,6 +216,7 @@ class ModuleManager(QObject):
         """模块关闭处理"""
         try:
             if module_id in self.active_dialogs:
+                del self.active_dialogs[module_id]:
                 del self.active_dialogs[module_id]
             
             self.module_closed.emit(module_id)

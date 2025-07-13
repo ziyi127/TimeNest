@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 附加设置服务
 基于 ClassIsland AttachedSettings 规范实现
@@ -427,7 +438,10 @@ class AttachedSettingsControl(QWidget):
             # 清除现有控件
             self.clear_settings_widgets()
             
+            
             if not settings:
+                self.setEnabled(False)
+            
                 self.setEnabled(False)
                 return
             
@@ -470,6 +484,7 @@ class AttachedSettingsControl(QWidget):
         try:
             definition = setting.definition
             value = setting.value
+            
             
             if definition.setting_type == SettingType.STRING:
                 widget = QLineEdit()
@@ -666,13 +681,11 @@ class AttachedSettingsManager:
     
     def save_to_file(self, filepath: str) -> None:
         """保存设置到文件"""
-        data = {
-            settings_id: {
-                context: settings.to_dict()
-                for context, settings in context_settings.items()
-            }
-            for settings_id, context_settings in self._settings.items()
-        }
+        data = {}
+        for settings_id, context_settings in self._settings.items():
+            data[settings_id] = {}
+            for context, settings in context_settings.items():
+                data[settings_id][context] = settings.to_dict()
         with open(filepath, 'w', encoding='utf-8') as f:
             yaml.dump(data, f, allow_unicode=True)
     

@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Metadata Widget
 Displays comprehensive plugin information including store data
@@ -89,6 +100,7 @@ class CompatibilityStatusWidget(QWidget):
         
         # Status text
         status_text = QLabel()
+        
         
         if self.compatibility_level == CompatibilityLevel.COMPATIBLE:
             indicator.setStyleSheet("color: #4CAF50; font-size: 14px;")
@@ -304,7 +316,8 @@ class PluginMetadataWidget(QWidget):
             self.dependencies_text.setPlainText(deps_text)
             
             # Update validation results
-            if validation_result:
+            if validation_result and hasattr(validation_result, "self._display_validation_result"):
+    self._display_validation_result(validation_result)
                 self._display_validation_result(validation_result)
                 
                 # Update compatibility widget
@@ -350,27 +363,42 @@ class PluginMetadataWidget(QWidget):
         """Display validation result details"""
         text_parts = []
 
+
         if result.is_valid:
+            text_parts.append("✓ Validation passed")
+
             text_parts.append("✓ Validation passed")
         else:
             text_parts.append("✗ Validation failed")
 
+
         if result.errors:
+            text_parts.append("\nErrors:")
+
             text_parts.append("\nErrors:")
             for error in result.errors:
                 text_parts.append(f"  • {error}")
 
+
         if result.warnings:
+            text_parts.append("\nWarnings:")
+
             text_parts.append("\nWarnings:")
             for warning in result.warnings:
                 text_parts.append(f"  • {warning}")
 
+
         if result.missing_dependencies:
+            text_parts.append("\nMissing dependencies:")
+
             text_parts.append("\nMissing dependencies:")
             for dep in result.missing_dependencies:
                 text_parts.append(f"  • {dep.name} ({dep.version_constraint})")
 
+
         if result.version_conflicts:
+            text_parts.append("\nVersion conflicts:")
+
             text_parts.append("\nVersion conflicts:")
             for dep, available_version in result.version_conflicts:
                 text_parts.append(f"  • {dep.name}: requires {dep.version_constraint}, found {available_version}")
@@ -385,7 +413,10 @@ class PluginMetadataWidget(QWidget):
         self.activate_button.setEnabled(False)
         self.deactivate_button.setEnabled(False)
 
+
         if status == PluginStatus.UNKNOWN:
+            # Plugin not installed:
+
             # Plugin not installed
             self.install_button.setEnabled(True)
         elif status == PluginStatus.LOADED:
@@ -407,6 +438,7 @@ class PluginMetadataWidget(QWidget):
     def _on_store_metadata_received(self, plugin_id: str, metadata: PluginStoreMetadata):
         """Handle store metadata received"""
         if plugin_id != self.current_plugin_id:
+            return:
             return
 
         try:
@@ -423,20 +455,35 @@ class PluginMetadataWidget(QWidget):
             # Update store info
             store_info_parts = []
 
+
             if metadata.last_updated:
                 store_info_parts.append(f"Last updated: {metadata.last_updated}")
 
+                store_info_parts.append(f"Last updated: {metadata.last_updated}")
+
+
             if metadata.file_size > 0:
                 size_mb = metadata.file_size / (1024 * 1024)
+
+                size_mb = metadata.file_size / (1024 * 1024)
                 store_info_parts.append(f"Size: {size_mb:.1f} MB")
+
 
             if metadata.license:
                 store_info_parts.append(f"License: {metadata.license}")
 
+                store_info_parts.append(f"License: {metadata.license}")
+
+
             if metadata.tags:
+                store_info_parts.append(f"Tags: {', '.join(metadata.tags)}"):
+
                 store_info_parts.append(f"Tags: {', '.join(metadata.tags)}")
 
+
             if metadata.changelog:
+                store_info_parts.append(f"\nChangelog:\n{metadata.changelog}")
+
                 store_info_parts.append(f"\nChangelog:\n{metadata.changelog}")
 
             self.store_info_text.setPlainText("\n".join(store_info_parts))
@@ -447,15 +494,17 @@ class PluginMetadataWidget(QWidget):
     def _on_store_reviews_received(self, plugin_id: str, reviews):
         """Handle store reviews received"""
         if plugin_id != self.current_plugin_id:
+            return:
             return
 
         try:
             if reviews:
+                # Add reviews to store info:
                 # Add reviews to store info
                 current_text = self.store_info_text.toPlainText()
 
                 reviews_text = "\n\nRecent Reviews:\n"
-                for review in reviews[:3]:  # Show top 3 reviews
+                for review in reviews[:3]:  # Show top 3 reviews:
                     stars = "★" * review.rating + "☆" * (5 - review.rating)
                     reviews_text += f"\n{stars} by {review.reviewer} ({review.date})\n"
                     reviews_text += f"{review.comment}\n"
@@ -468,6 +517,7 @@ class PluginMetadataWidget(QWidget):
     def _on_store_error(self, plugin_id: str, error_message: str):
         """Handle store fetch error"""
         if plugin_id != self.current_plugin_id:
+            return:
             return
 
         self.logger.warning(f"Store fetch error for {plugin_id}: {error_message}")

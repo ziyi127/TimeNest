@@ -15,7 +15,7 @@ from core.safe_logger import get_cached_safe_logger
 class ErrorHandler:
     """统一错误处理器"""
     
-    def __init__(self, logger_name: str = "ErrorHandler"):
+    def __init__(self, logger_name="error_handler"):
         self.logger = get_cached_safe_logger(logger_name)
         self.error_counts = {}
         self.max_errors_per_function = 10

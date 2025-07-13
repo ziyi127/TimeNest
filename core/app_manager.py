@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 应用管理器
 负责协调和管理应用的各个核心组件
@@ -185,6 +196,7 @@ class AppManager(QObject):
             return True
         except Exception as e:
             if fallback_module:
+                # 删除多余的try语句，因为外层已经有try-except结构
                 try:
                     if not fallback_module:
                         raise ValueError("备选模块路径为空")

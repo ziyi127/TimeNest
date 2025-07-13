@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 数据管理器
 负责应用程序的数据存储、备份和管理功能
@@ -51,6 +62,7 @@ class DataBackupWorker(QThread):
                     try:
                         file_path = Path(file_path)
                         if file_path.exists():
+                            # 计算相对路径:
                             # 计算相对路径
                             rel_path = file_path.relative_to(self.data_manager.data_dir)
                             zipf.write(file_path, rel_path)
@@ -99,7 +111,10 @@ class DataRestoreWorker(QThread):
             backup_path = Path(self.backup_path)
             restore_dir = Path(self.restore_dir)
             
+            
             if not backup_path.exists():
+                raise FileNotFoundError(f"备份文件不存在: {backup_path}")
+            
                 raise FileNotFoundError(f"备份文件不存在: {backup_path}")
             
             restore_dir.mkdir(parents=True, exist_ok=True)
@@ -242,7 +257,10 @@ class DataManager(QObject):
             self.db_connection = QSqlDatabase.addDatabase("QSQLITE", "timenest_main")
             self.db_connection.setDatabaseName(str(self.db_file))
             
+            
             if not self.db_connection.open():
+                error = self.db_connection.lastError()
+            
                 error = self.db_connection.lastError()
                 raise Exception(f"无法打开数据库: {error.text()}")
             
@@ -346,6 +364,7 @@ class DataManager(QObject):
             if self.config_manager:
                 auto_cleanup = self.config_manager.get('data.auto_cleanup', True)
                 if auto_cleanup:
+                    # 每天执行一次清理:
                     # 每天执行一次清理
                     self.cleanup_timer.start(24 * 60 * 60 * 1000)
                     self.logger.info("自动清理已启动")
@@ -354,7 +373,7 @@ class DataManager(QObject):
             self.logger.error(f"启动自动清理失败: {e}")
     
     def save_data(self, data_type: str, data: Any, file_name: str = None, 
-                  format: str = 'json', subdir: str = None) -> Optional[str]:
+                  format: str = 'json', subdir: str = None) -> Optional[str]
         """
         保存数据到文件
         
@@ -396,7 +415,10 @@ class DataManager(QObject):
             else:
                 file_ext = '.json'
             
+            
             if not file_name.endswith(file_ext):
+                file_name += file_ext:
+            
                 file_name += file_ext
             
             file_path = save_dir / file_name
@@ -426,7 +448,7 @@ class DataManager(QObject):
             self.logger.error(f"保存数据失败: {e}")
             return None
     
-    def load_data(self, file_path: str, format: str = None) -> Optional[Any]:
+    def load_data(self, file_path: str, format: str = None) -> Optional[Any]
         """
         从文件加载数据
         
@@ -440,7 +462,10 @@ class DataManager(QObject):
         try:
             file_path = Path(file_path)
             
+            
             if not file_path.exists():
+                self.logger.warning(f"文件不存在: {file_path}")
+            
                 self.logger.warning(f"文件不存在: {file_path}")
                 return None
             
@@ -489,7 +514,10 @@ class DataManager(QObject):
         try:
             file_path = Path(file_path)
             
+            
             if not file_path.exists():
+                self.logger.warning(f"文件不存在: {file_path}")
+            
                 self.logger.warning(f"文件不存在: {file_path}")
                 return False
             
@@ -510,7 +538,7 @@ class DataManager(QObject):
             self.logger.error(f"删除数据失败: {e}")
             return False
     
-    def list_data_files(self, data_type: str = None, subdir: str = None) -> List[Dict[str, Any]]:
+    def list_data_files(self, data_type: str = None, subdir: str = None) -> List[Dict[str, Any]]
         """
         列出数据文件
         
@@ -534,7 +562,10 @@ class DataManager(QObject):
             else:
                 search_dir = self.data_dir
             
+            
             if not search_dir.exists():
+                return []
+            
                 return []
             
             files = []
@@ -559,7 +590,7 @@ class DataManager(QObject):
                         continue
             
             # 按修改时间排序
-            files.sort(key=lambda x: x['modified'], reverse=True)
+            files.sort(key=lambda x: x.get('modified'), reverse=True)
             
             return files
             
@@ -607,6 +638,7 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             stat = file_path.stat()
@@ -629,7 +661,10 @@ class DataManager(QObject):
             query.addBindValue(stat.st_size)
             query.addBindValue(checksum)
             
+            
             if not query.exec():
+                error = query.lastError()
+            
                 error = query.lastError()
                 self.logger.warning(f"更新文件元数据失败: {error.text()}")
             
@@ -645,6 +680,7 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             query = QSqlQuery(self.db_connection)
@@ -656,7 +692,10 @@ class DataManager(QObject):
             
             query.addBindValue(str(file_path))
             
+            
             if not query.exec():
+                error = query.lastError()
+            
                 error = query.lastError()
                 self.logger.warning(f"更新文件访问时间失败: {error.text()}")
             
@@ -672,13 +711,17 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             query = QSqlQuery(self.db_connection)
             query.prepare("DELETE FROM file_metadata WHERE file_path = ?")
             query.addBindValue(str(file_path))
             
+            
             if not query.exec():
+                error = query.lastError()
+            
                 error = query.lastError()
                 self.logger.warning(f"删除文件元数据失败: {error.text()}")
             
@@ -748,15 +791,18 @@ class DataManager(QObject):
         
         try:
             if backup_type == 'full':
+                # 完整备份：包含所有数据文件:
                 # 完整备份：包含所有数据文件
                 for directory in [self.schedules_dir, self.user_data_dir, self.exports_dir]:
                     if directory.exists():
                         for file_path in directory.rglob('*'):
                             if file_path.is_file():
+                                files.append(str(file_path)):
                                 files.append(str(file_path))
                 
                 # 包含数据库文件
                 if self.db_file.exists():
+                    files.append(str(self.db_file)):
                     files.append(str(self.db_file))
                 
             elif backup_type == 'incremental':
@@ -769,6 +815,7 @@ class DataManager(QObject):
                             if file_path.is_file():
                                 stat = file_path.stat()
                                 if datetime.fromtimestamp(stat.st_mtime) > cutoff_time:
+                                    files.append(str(file_path)):
                                     files.append(str(file_path))
             
             self.logger.debug(f"备份文件列表生成完成，共 {len(files)} 个文件")
@@ -791,6 +838,7 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             query = QSqlQuery(self.db_connection)
@@ -805,7 +853,10 @@ class DataManager(QObject):
             query.addBindValue(backup_type)
             query.addBindValue(description or '')
             
+            
             if not query.exec():
+                error = query.lastError()
+            
                 error = query.lastError()
                 self.logger.warning(f"记录备份信息失败: {error.text()}")
             
@@ -823,6 +874,7 @@ class DataManager(QObject):
         """
         try:
             if success and self.backup_worker:
+                # 更新备份大小:
                 # 更新备份大小
                 backup_path = Path(self.backup_worker.backup_path)
                 if backup_path.exists():
@@ -849,6 +901,7 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             query = QSqlQuery(self.db_connection)
@@ -861,14 +914,17 @@ class DataManager(QObject):
             query.addBindValue(backup_size)
             query.addBindValue(backup_path)
             
+            
             if not query.exec():
+                error = query.lastError()
+            
                 error = query.lastError()
                 self.logger.warning(f"更新备份大小失败: {error.text()}")
             
         except Exception as e:
             self.logger.warning(f"更新备份大小失败: {e}")
     
-    def restore_backup(self, backup_path: str, restore_dir: str = None) -> bool:
+    def restore_backup(self, backup_path: str, restore_dir: str = None) -> bool
         """
         恢复数据备份
         
@@ -884,7 +940,10 @@ class DataManager(QObject):
                 self.logger.warning("恢复任务正在进行中")
                 return False
             
+            
             if restore_dir is None:
+                restore_dir = str(self.data_dir)
+            
                 restore_dir = str(self.data_dir)
             
             # 启动恢复工作线程
@@ -933,7 +992,10 @@ class DataManager(QObject):
         try:
             backups = []
             
+            
             if not self.db_connection or not self.db_connection.isOpen():
+                return backups
+            
                 return backups
             
             query = QSqlQuery(self.db_connection)
@@ -955,13 +1017,16 @@ class DataManager(QObject):
                 }
                 
                 # 检查文件是否存在
-                backup_path = Path(backup_info['path'])
+                backup_path = Path(backup_info.get('path'))
                 backup_info['exists'] = backup_path.exists()
                 
-                if backup_info['exists'] and backup_info['size'] == 0:
+                
+                if backup_info.get('exists') and backup_info['size'] == 0:
+                    # 更新文件大小:
+                
                     # 更新文件大小
                     backup_info['size'] = backup_path.stat().st_size
-                    self._update_backup_size(backup_info['path'], backup_info['size'])
+                    self._update_backup_size(backup_info.get('path'), backup_info.get('size'))
                 
                 backups.append(backup_info)
             
@@ -994,7 +1059,10 @@ class DataManager(QObject):
                 query.prepare("DELETE FROM backup_records WHERE backup_path = ?")
                 query.addBindValue(str(backup_path))
                 
+                
                 if not query.exec():
+                    error = query.lastError()
+                
                     error = query.lastError()
                     self.logger.warning(f"删除备份记录失败: {error.text()}")
             
@@ -1016,7 +1084,10 @@ class DataManager(QObject):
             deleted_files = 0
             freed_space = 0
             
+            
             if self.config_manager:
+                cleanup_days = self.config_manager.get('data.cleanup_days', 30)
+            
                 cleanup_days = self.config_manager.get('data.cleanup_days', 30)
             else:
                 cleanup_days = 30
@@ -1030,6 +1101,7 @@ class DataManager(QObject):
                         try:
                             stat = file_path.stat()
                             if datetime.fromtimestamp(stat.st_mtime) < cutoff_time:
+                                freed_space += stat.st_size:
                                 freed_space += stat.st_size
                                 file_path.unlink()
                                 deleted_files += 1
@@ -1043,6 +1115,7 @@ class DataManager(QObject):
                         try:
                             stat = file_path.stat()
                             if datetime.fromtimestamp(stat.st_atime) < cutoff_time:
+                                freed_space += stat.st_size:
                                 freed_space += stat.st_size
                                 file_path.unlink()
                                 deleted_files += 1
@@ -1072,13 +1145,17 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
+                return:
                 return
             
             query = QSqlQuery(self.db_connection)
             query.prepare("DELETE FROM app_logs WHERE timestamp < ?")
             query.addBindValue(cutoff_time.isoformat())
             
+            
             if query.exec():
+                deleted_count = query.numRowsAffected()
+            
                 deleted_count = query.numRowsAffected()
                 if deleted_count > 0:
                     self.logger.debug(f"清理旧日志记录: {deleted_count} 条")
@@ -1101,11 +1178,14 @@ class DataManager(QObject):
             
             backups = self.list_backups()
             
+            
             if len(backups) > max_backups:
+                # 删除最旧的备份:
+            
                 # 删除最旧的备份
                 old_backups = backups[max_backups:]
                 for backup in old_backups:
-                    self.delete_backup(backup['path'])
+                    self.delete_backup(backup.get('path'))
                 
                 self.logger.debug(f"清理旧备份: {len(old_backups)} 个")
             
@@ -1152,22 +1232,22 @@ class DataManager(QObject):
                             except Exception:
                                 continue
                     
-                    info['directories'][dir_name] = {
+                    info.get('directories')[dir_name] = {
                         'size': dir_size,
                         'size_mb': dir_size // (1024 * 1024),
                         'file_count': dir_files
                     }
                     
-                    info['total_size'] += dir_size
-                    info['file_count'] += dir_files
+                    info['total_size'] = info.get('total_size', 0) + dir_size
+                    info['file_count'] = info.get('file_count', 0) + dir_files
                 else:
-                    info['directories'][dir_name] = {
+                    info.get('directories')[dir_name] = {
                         'size': 0,
                         'size_mb': 0,
                         'file_count': 0
                     }
             
-            info['total_size_mb'] = info['total_size'] // (1024 * 1024)
+            info['total_size_mb'] = info.get('total_size') // (1024 * 1024)
             
             return info
             
@@ -1189,7 +1269,10 @@ class DataManager(QObject):
                 self.backup_worker.terminate()
                 self.backup_worker.wait()
             
+            
             if self.restore_worker and self.restore_worker.isRunning():
+                self.restore_worker.terminate()
+            
                 self.restore_worker.terminate()
                 self.restore_worker.wait()
             

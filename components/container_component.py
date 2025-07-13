@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 TimeNest 容器组件
 用于管理和布局其他组件
@@ -44,6 +55,7 @@ class ContainerComponent(BaseComponent):
         """初始化容器组件"""
         try:
             if not self.widget or not self.layout:
+                return:
                 return
             
             # 创建标题
@@ -88,7 +100,10 @@ class ContainerComponent(BaseComponent):
         try:
             self.container_widget = QWidget()
             
+            
             if layout_type == 'horizontal':
+                self.container_layout = QHBoxLayout(self.container_widget)
+            
                 self.container_layout = QHBoxLayout(self.container_widget)
             elif layout_type == 'grid':
                 self.container_layout = QGridLayout(self.container_widget)
@@ -139,12 +154,12 @@ class ContainerComponent(BaseComponent):
                     width: 12px;
                     border-radius: 6px;
                 }
-                QScrollBar::handle:vertical {
+                QScrollBar:handle:vertical {
                     background-color: #6c757d;
                     border-radius: 6px;
                     min-height: 20px;
                 }
-                QScrollBar::handle:vertical:hover {
+                QScrollBar:handle:vertical:hover {
                     background-color: #5a6268;
                 }
             """)
@@ -163,12 +178,12 @@ class ContainerComponent(BaseComponent):
             
             # 设置样式
             self.tab_widget.setStyleSheet("""
-                QTabWidget::pane {
+                QTabWidget:pane {
                     border: 1px solid #dee2e6;
                     border-radius: 6px;
                     background-color: #ffffff;
                 }
-                QTabBar::tab {
+                QTabBar:tab {
                     background-color: #f8f9fa;
                     border: 1px solid #dee2e6;
                     border-bottom: none;
@@ -176,11 +191,11 @@ class ContainerComponent(BaseComponent):
                     padding: 8px 16px;
                     margin-right: 2px;
                 }
-                QTabBar::tab:selected {
+                QTabBar:tab:selected {
                     background-color: #ffffff;
                     border-bottom: 1px solid #ffffff;
                 }
-                QTabBar::tab:hover {
+                QTabBar:tab:hover {
                     background-color: #e9ecef;
                 }
             """)
@@ -222,16 +237,16 @@ class ContainerComponent(BaseComponent):
                     border-radius: 6px;
                     background-color: #ffffff;
                 }
-                QSplitter::handle {
+                QSplitter:handle {
                     background-color: #dee2e6;
                 }
-                QSplitter::handle:horizontal {
+                QSplitter:handle:horizontal {
                     width: 3px;
                 }
-                QSplitter::handle:vertical {
+                QSplitter:handle:vertical {
                     height: 3px;
                 }
-                QSplitter::handle:hover {
+                QSplitter:handle:hover {
                     background-color: #6c757d;
                 }
             """)
@@ -252,7 +267,10 @@ class ContainerComponent(BaseComponent):
             settings = self.config.get('settings', {})
             layout_type = settings.get('layout_type', 'vertical')
             
+            
             if layout_type == 'tabs' and self.tab_widget:
+                self._update_tab_content()
+            
                 self._update_tab_content()
             elif layout_type == 'stack' and self.stacked_widget:
                 self._update_stack_content()
@@ -270,6 +288,7 @@ class ContainerComponent(BaseComponent):
         """更新基本布局内容"""
         try:
             if not self.container_layout:
+                return:
                 return
             
             # 清除现有内容
@@ -290,6 +309,7 @@ class ContainerComponent(BaseComponent):
         """更新网格布局内容"""
         try:
             if not self.container_layout:
+                return:
                 return
             
             # 清除现有内容
@@ -312,6 +332,7 @@ class ContainerComponent(BaseComponent):
         """更新标签页内容"""
         try:
             if not self.tab_widget:
+                return:
                 return
             
             # 清除现有标签页
@@ -330,6 +351,7 @@ class ContainerComponent(BaseComponent):
         """更新堆叠内容"""
         try:
             if not self.stacked_widget:
+                return:
                 return
             
             # 清除现有页面
@@ -353,6 +375,7 @@ class ContainerComponent(BaseComponent):
         """更新分割器内容"""
         try:
             if not self.splitter:
+                return:
                 return
             
             # 清除现有组件
@@ -441,6 +464,7 @@ class ContainerComponent(BaseComponent):
         try:
             for i, component in enumerate(self.child_components):
                 if component.component_id == component_id:
+                    # 从列表中移除:
                     # 从列表中移除
                     removed_component = self.child_components.pop(i)
                     
@@ -505,10 +529,13 @@ class ContainerComponent(BaseComponent):
         """配置更新回调"""
         try:
             # 检查布局类型是否改变
-            old_layout = old_config.get('settings', {}).get('layout_type', 'vertical')
-            new_layout = new_config.get('settings', {}).get('layout_type', 'vertical')
+            old_layout = (old_config.get('settings', {}) or {}).get('layout_type', 'vertical')
+            new_layout = (new_config.get('settings', {}) or {}).get('layout_type', 'vertical')
+            
             
             if old_layout != new_layout:
+                # 布局类型改变，需要重新初始化:
+            
                 # 布局类型改变，需要重新初始化
                 self.initialize_component()
                 self.layout_changed.emit(new_layout)

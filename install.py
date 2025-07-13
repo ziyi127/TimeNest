@@ -1,267 +1,417 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TimeNest 自动安装脚本
-简化安装过程，自动检测环境并安装依赖
+TimeNest 自动安装程序
+自动创建虚拟环境并安装依赖
 """
 
-import os
 import sys
+import os
 import subprocess
-import platform
+import threading
+import time
 from pathlib import Path
 
-
-def print_banner():
-    """打印欢迎横幅"""
-    banner = """
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║  ████████╗██╗███╗   ███╗███████╗███╗   ██╗███████╗███████╗████████╗  ║
-║  ╚══██╔══╝██║████╗ ████║██╔════╝████╗  ██║██╔════╝██╔════╝╚══██╔══╝  ║
-║     ██║   ██║██╔████╔██║█████╗  ██╔██╗ ██║█████╗  ███████╗   ██║     ║
-║     ██║   ██║██║╚██╔╝██║██╔══╝  ██║╚██╗██║██╔══╝  ╚════██║   ██║     ║
-║     ██║   ██║██║ ╚═╝ ██║███████╗██║ ╚████║███████╗███████║   ██║     ║
-║     ╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝╚══════╝   ╚═╝     ║
-║                                                              ║
-║                    TimeNest 自动安装程序                      ║
-║                  让时间管理更简单，让学习更高效                  ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-    """
-    print(banner)
-
-
-def check_python_version():
-    """检查 Python 版本"""
-    print("🔍 检查 Python 版本...")
-    
-    version = sys.version_info
-    if version.major < 3 or (version.major == 3 and version.minor < 8):
-        print(f"❌ Python 版本过低: {version.major}.{version.minor}.{version.micro}")
-        print("   TimeNest 需要 Python 3.8 或更高版本")
-        print("   请访问 https://www.python.org/downloads/ 下载最新版本")
-        return False
-    
-    print(f"✅ Python 版本: {version.major}.{version.minor}.{version.micro}")
-    return True
-
-
-def check_system_info():
-    """检查系统信息"""
-    print("\n📋 系统信息:")
-    print(f"   操作系统: {platform.system()} {platform.release()}")
-    print(f"   架构: {platform.machine()}")
-    print(f"   Python 路径: {sys.executable}")
-
-
-def run_command(cmd, description=""):
-    """运行命令并显示结果"""
-    if description:
-        print(f"🔧 {description}...")
-    
-    try:
-        result = subprocess.run(
-            cmd, 
-            shell=True, 
-            check=True, 
-            capture_output=True, 
-            text=True
-        )
-        return True, result.stdout
-    except subprocess.CalledProcessError as e:
-        return False, e.stderr
-
-
-def check_venv():
-    """检查是否在虚拟环境中"""
-    in_venv = (
-        hasattr(sys, 'real_prefix') or 
-        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
+        QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
+        QMessageBox, QFrame, QCheckBox, QComboBox
     )
-    
-    if in_venv:
-        print("✅ 检测到虚拟环境")
-        return True
-    else:
-        print("⚠️  未检测到虚拟环境")
-        return False
-
-
-def create_venv():
-    """创建虚拟环境"""
-    print("\n🔧 创建虚拟环境...")
-    
-    venv_path = Path("venv")
-    if venv_path.exists():
-        print("   虚拟环境已存在，跳过创建")
-        return True
-    
-    success, output = run_command(f"{sys.executable} -m venv venv")
-    if success:
-        print("✅ 虚拟环境创建成功")
-        return True
-    else:
-        print(f"❌ 虚拟环境创建失败: {output}")
-        return False
-
-
-def get_activation_command():
-    """获取虚拟环境激活命令"""
-    if platform.system() == "Windows":
-        return "venv\\Scripts\\activate"
-    else:
-        return "source venv/bin/activate"
-
-
-def install_dependencies(install_type="standard"):
-    """安装依赖"""
-    requirements_files = {
-        "minimal": "requirements-minimal.txt",
-        "standard": "requirements.txt", 
-        "dev": "requirements-dev.txt",
-        "prod": "requirements-prod.txt"
-    }
-    
-    req_file = requirements_files.get(install_type, "requirements.txt")
-    
-    if not Path(req_file).exists():
-        print(f"❌ 依赖文件不存在: {req_file}")
-        return False
-    
-    print(f"\n📦 安装依赖 ({install_type})...")
-    
-    # 升级 pip
-    success, _ = run_command(f"{sys.executable} -m pip install --upgrade pip")
-    if not success:
-        print("⚠️  pip 升级失败，继续安装...")
-    
-    # 安装依赖
-    success, output = run_command(
-        f"{sys.executable} -m pip install -r {req_file}",
-        f"安装 {req_file} 中的依赖"
+    from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
+    from PyQt6.QtGui import QFont, QPixmap, QIcon
+except ImportError:
+    print("正在安装PyQt6...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "PyQt6"])
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
+        QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
+        QMessageBox, QFrame, QCheckBox, QComboBox
     )
-    
-    if success:
-        print("✅ 依赖安装成功")
-        return True
-    else:
-        print(f"❌ 依赖安装失败: {output}")
-        return False
+    from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
+    from PyQt6.QtGui import QFont, QPixmap, QIcon
 
 
-def verify_installation():
-    """验证安装"""
-    print("\n🔍 验证安装...")
+class InstallWorker(QThread):
+    """安装工作线程"""
+    progress_updated = pyqtSignal(int)
+    status_updated = pyqtSignal(str)
+    log_updated = pyqtSignal(str)
+    finished = pyqtSignal(bool, str)
     
-    # 检查核心依赖
-    core_modules = ["PyQt6", "yaml", "requests"]
-    
-    for module in core_modules:
+    def __init__(self, install_options):
+        super().__init__()
+        self.install_options = install_options
+        self.project_dir = Path.cwd()
+        self.venv_dir = self.project_dir / "venv"
+        
+    def run(self):
+        """执行安装过程"""
         try:
-            __import__(module)
-            print(f"   ✅ {module}")
-        except ImportError:
-            print(f"   ❌ {module}")
-            return False
+            self.progress_updated.emit(0)
+            
+            # 步骤1: 检查Python环境
+            self.status_updated.emit("检查Python环境...")
+            self.log_updated.emit(f"Python版本: {sys.version}")
+            self.log_updated.emit(f"Python路径: {sys.executable}")
+            time.sleep(1)
+            self.progress_updated.emit(10)
+            
+            # 步骤2: 创建虚拟环境
+            if self.install_options['create_venv']:
+                self.status_updated.emit("创建虚拟环境...")
+                if self.venv_dir.exists():
+                    self.log_updated.emit("虚拟环境已存在，跳过创建")
+                else:
+                    self._run_command([sys.executable, "-m", "venv", str(self.venv_dir)])
+                    self.log_updated.emit(f"虚拟环境创建完成: {self.venv_dir}")
+            self.progress_updated.emit(30)
+            
+            # 步骤3: 激活虚拟环境并获取pip路径
+            if self.install_options['create_venv']:
+                if sys.platform == "win32":
+                    pip_path = self.venv_dir / "Scripts" / "pip.exe"
+                    python_path = self.venv_dir / "Scripts" / "python.exe"
+                else:
+                    pip_path = self.venv_dir / "bin" / "pip"
+                    python_path = self.venv_dir / "bin" / "python"
+            else:
+                pip_path = "pip"
+                python_path = sys.executable
+                
+            # 步骤4: 升级pip
+            if self.install_options['upgrade_pip']:
+                self.status_updated.emit("升级pip...")
+                self._run_command([str(python_path), "-m", "pip", "install", "--upgrade", "pip"])
+                self.log_updated.emit("pip升级完成")
+            self.progress_updated.emit(50)
+            
+            # 步骤5: 安装依赖
+            if self.install_options['install_deps']:
+                self.status_updated.emit("安装项目依赖...")
+                
+                # 检查requirements文件
+                req_files = [
+                    "requirements.txt",
+                    "requirements-prod.txt", 
+                    "requirements-dev.txt"
+                ]
+                
+                for req_file in req_files:
+                    req_path = self.project_dir / req_file
+                    if req_path.exists() and self.install_options.get(f'install_{req_file.replace("-", "_").replace(".txt", "")}', True):
+                        self.log_updated.emit(f"安装 {req_file}...")
+                        self._run_command([str(pip_path), "install", "-r", str(req_path)])
+                        self.log_updated.emit(f"{req_file} 安装完成")
+                        
+            self.progress_updated.emit(80)
+            
+            # 步骤6: 验证安装
+            self.status_updated.emit("验证安装...")
+            self._verify_installation(python_path)
+            self.progress_updated.emit(100)
+            
+            self.status_updated.emit("安装完成！")
+            self.finished.emit(True, "安装成功完成！")
+            
+        except Exception as e:
+            self.log_updated.emit(f"安装失败: {str(e)}")
+            self.finished.emit(False, f"安装失败: {str(e)}")
     
-    # 运行依赖检查脚本
-    if Path("check_dependencies.py").exists():
-        success, _ = run_command(f"{sys.executable} check_dependencies.py")
+    def _run_command(self, cmd):
+        """运行命令"""
+        self.log_updated.emit(f"执行命令: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.project_dir)
+        
+        if result.stdout:
+            self.log_updated.emit(result.stdout)
+        if result.stderr:
+            self.log_updated.emit(f"警告: {result.stderr}")
+            
+        if result.returncode != 0:
+            raise Exception(f"命令执行失败: {' '.join(cmd)}")
+    
+    def _verify_installation(self, python_path):
+        """验证安装"""
+        try:
+            # 检查主要依赖
+            test_imports = [
+                "PyQt6",
+                "requests", 
+                "psutil",
+                "schedule"
+            ]
+            
+            for module in test_imports:
+                try:
+                    result = subprocess.run(
+                        [str(python_path), "-c", f"import {module}; print(f'{module} 导入成功')"],
+                        capture_output=True, text=True, timeout=10
+                    )
+                    if result.returncode == 0:
+                        self.log_updated.emit(f"✓ {module} 验证通过")
+                    else:
+                        self.log_updated.emit(f"⚠ {module} 验证失败")
+                except subprocess.TimeoutExpired:
+                    self.log_updated.emit(f"⚠ {module} 验证超时")
+                    
+        except Exception as e:
+            self.log_updated.emit(f"验证过程出错: {e}")
+
+
+class InstallWindow(QMainWindow):
+    """安装程序主窗口"""
+    
+    def __init__(self):
+        super().__init__()
+        self.worker = None
+        self.init_ui()
+        
+    def init_ui(self):
+        """初始化UI"""
+        self.setWindowTitle("TimeNest 安装程序")
+        self.setFixedSize(600, 500)
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f0f0f0;
+            }
+            QLabel {
+                color: #333;
+                font-size: 12px;
+            }
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:disabled {
+                background-color: #cccccc;
+                color: #666666;
+            }
+            QProgressBar {
+                border: 2px solid #ddd;
+                border-radius: 5px;
+                text-align: center;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background-color: #4CAF50;
+                border-radius: 3px;
+            }
+            QTextEdit {
+                background-color: #2b2b2b;
+                color: #ffffff;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 10px;
+                border: 1px solid #555;
+            }
+            QCheckBox {
+                font-size: 11px;
+                color: #333;
+            }
+        """)
+        
+        # 中央widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # 标题
+        title_label = QLabel("TimeNest 自动安装程序")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px;")
+        layout.addWidget(title_label)
+        
+        # 分隔线
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Sunken)
+        layout.addWidget(line)
+        
+        # 安装选项
+        options_frame = QFrame()
+        options_layout = QVBoxLayout(options_frame)
+        
+        options_label = QLabel("安装选项:")
+        options_label.setStyleSheet("font-weight: bold; font-size: 13px;")
+        options_layout.addWidget(options_label)
+        
+        self.create_venv_cb = QCheckBox("创建虚拟环境 (推荐)")
+        self.create_venv_cb.setChecked(True)
+        options_layout.addWidget(self.create_venv_cb)
+        
+        self.upgrade_pip_cb = QCheckBox("升级pip到最新版本")
+        self.upgrade_pip_cb.setChecked(True)
+        options_layout.addWidget(self.upgrade_pip_cb)
+        
+        self.install_deps_cb = QCheckBox("安装项目依赖")
+        self.install_deps_cb.setChecked(True)
+        options_layout.addWidget(self.install_deps_cb)
+        
+        # 依赖文件选择
+        deps_frame = QFrame()
+        deps_layout = QVBoxLayout(deps_frame)
+        deps_layout.setContentsMargins(20, 0, 0, 0)
+        
+        self.req_main_cb = QCheckBox("requirements.txt (主要依赖)")
+        self.req_main_cb.setChecked(True)
+        deps_layout.addWidget(self.req_main_cb)
+        
+        self.req_prod_cb = QCheckBox("requirements-prod.txt (生产环境)")
+        self.req_prod_cb.setChecked(False)
+        deps_layout.addWidget(self.req_prod_cb)
+        
+        self.req_dev_cb = QCheckBox("requirements-dev.txt (开发环境)")
+        self.req_dev_cb.setChecked(False)
+        deps_layout.addWidget(self.req_dev_cb)
+        
+        options_layout.addWidget(deps_frame)
+        layout.addWidget(options_frame)
+        
+        # 进度显示
+        progress_frame = QFrame()
+        progress_layout = QVBoxLayout(progress_frame)
+        
+        self.status_label = QLabel("准备安装...")
+        self.status_label.setStyleSheet("font-weight: bold;")
+        progress_layout.addWidget(self.status_label)
+        
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        progress_layout.addWidget(self.progress_bar)
+        
+        layout.addWidget(progress_frame)
+        
+        # 日志显示
+        log_label = QLabel("安装日志:")
+        log_label.setStyleSheet("font-weight: bold;")
+        layout.addWidget(log_label)
+        
+        self.log_text = QTextEdit()
+        self.log_text.setMaximumHeight(150)
+        layout.addWidget(self.log_text)
+        
+        # 按钮
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        self.install_btn = QPushButton("开始安装")
+        self.install_btn.clicked.connect(self.start_install)
+        button_layout.addWidget(self.install_btn)
+        
+        self.close_btn = QPushButton("关闭")
+        self.close_btn.clicked.connect(self.close)
+        self.close_btn.setEnabled(False)
+        button_layout.addWidget(self.close_btn)
+        
+        layout.addLayout(button_layout)
+        
+        # 检查环境
+        self.check_environment()
+    
+    def check_environment(self):
+        """检查环境"""
+        self.log_text.append("=== 环境检查 ===")
+        self.log_text.append(f"Python版本: {sys.version}")
+        self.log_text.append(f"工作目录: {Path.cwd()}")
+        
+        # 检查requirements文件
+        req_files = {
+            "requirements.txt": self.req_main_cb,
+            "requirements-prod.txt": self.req_prod_cb,
+            "requirements-dev.txt": self.req_dev_cb
+        }
+        
+        for req_file, checkbox in req_files.items():
+            if Path(req_file).exists():
+                self.log_text.append(f"✓ 找到 {req_file}")
+                checkbox.setEnabled(True)
+            else:
+                self.log_text.append(f"✗ 未找到 {req_file}")
+                checkbox.setEnabled(False)
+                checkbox.setChecked(False)
+        
+        self.log_text.append("环境检查完成\n")
+    
+    def start_install(self):
+        """开始安装"""
+        # 获取安装选项
+        install_options = {
+            'create_venv': self.create_venv_cb.isChecked(),
+            'upgrade_pip': self.upgrade_pip_cb.isChecked(),
+            'install_deps': self.install_deps_cb.isChecked(),
+            'install_requirements': self.req_main_cb.isChecked(),
+            'install_requirements_prod': self.req_prod_cb.isChecked(),
+            'install_requirements_dev': self.req_dev_cb.isChecked()
+        }
+        
+        # 禁用按钮
+        self.install_btn.setEnabled(False)
+        
+        # 清空日志
+        self.log_text.clear()
+        self.log_text.append("=== 开始安装 ===")
+        
+        # 创建并启动工作线程
+        self.worker = InstallWorker(install_options)
+        self.worker.progress_updated.connect(self.progress_bar.setValue)
+        self.worker.status_updated.connect(self.status_label.setText)
+        self.worker.log_updated.connect(self.log_text.append)
+        self.worker.finished.connect(self.on_install_finished)
+        self.worker.start()
+    
+    def on_install_finished(self, success, message):
+        """安装完成"""
         if success:
-            print("✅ 依赖检查通过")
+            self.status_label.setText("安装成功！")
+            self.log_text.append("\n=== 安装成功 ===")
+            self.log_text.append("\n使用说明:")
+            if self.create_venv_cb.isChecked():
+                if sys.platform == "win32":
+                    self.log_text.append("激活虚拟环境: venv\\Scripts\\activate")
+                    self.log_text.append("运行程序: venv\\Scripts\\python main.py")
+                else:
+                    self.log_text.append("激活虚拟环境: source venv/bin/activate")
+                    self.log_text.append("运行程序: venv/bin/python main.py")
+            else:
+                self.log_text.append("运行程序: python main.py")
+            
+            QMessageBox.information(self, "安装完成", "TimeNest安装成功！\n\n请查看日志了解如何运行程序。")
         else:
-            print("⚠️  依赖检查发现问题，但核心功能应该可用")
-    
-    return True
-
-
-def show_next_steps():
-    """显示后续步骤"""
-    activation_cmd = get_activation_command()
-    
-    print("\n🎉 安装完成！")
-    print("\n📝 后续步骤:")
-    print("   1. 激活虚拟环境:")
-    print(f"      {activation_cmd}")
-    print("   2. 运行 TimeNest:")
-    print("      python main.py")
-    print("   3. 查看帮助文档:")
-    print("      https://ziyi127.github.io/TimeNest-Website")
-    print("\n💡 提示:")
-    print("   - 首次运行会创建配置文件")
-    print("   - 可以通过系统托盘访问应用")
-    print("   - 遇到问题请查看 INSTALL.md")
+            self.status_label.setText("安装失败")
+            self.log_text.append(f"\n=== 安装失败 ===")
+            self.log_text.append(f"错误信息: {message}")
+            QMessageBox.critical(self, "安装失败", f"安装过程中出现错误:\n{message}")
+        
+        self.install_btn.setEnabled(True)
+        self.close_btn.setEnabled(True)
 
 
 def main():
-    """主安装流程"""
-    print_banner()
+    """主函数"""
+    app = QApplication(sys.argv)
+    app.setApplicationName("TimeNest Installer")
     
-    # 检查 Python 版本
-    if not check_python_version():
-        sys.exit(1)
+    # 设置应用图标（如果存在）
+    icon_path = Path("resources/icons/tray_icon.png")
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
     
-    # 显示系统信息
-    check_system_info()
+    window = InstallWindow()
+    window.show()
     
-    # 选择安装类型
-    print("\n📦 选择安装类型:")
-    print("   1. 标准安装 (推荐)")
-    print("   2. 最小安装 (仅核心功能)")
-    print("   3. 开发环境安装")
-    print("   4. 生产环境安装")
-    
-    while True:
-        choice = input("\n请选择 (1-4): ").strip()
-        if choice in ["1", "2", "3", "4"]:
-            break
-        print("❌ 无效选择，请输入 1-4")
-    
-    install_types = {
-        "1": "standard",
-        "2": "minimal", 
-        "3": "dev",
-        "4": "prod"
-    }
-    install_type = install_types[choice]
-    
-    # 检查虚拟环境
-    if not check_venv():
-        create_venv_choice = input("\n是否创建虚拟环境? (推荐) [Y/n]: ").strip().lower()
-        if create_venv_choice in ["", "y", "yes"]:
-            if not create_venv():
-                print("❌ 虚拟环境创建失败，继续在全局环境安装...")
-            else:
-                print(f"\n⚠️  请手动激活虚拟环境后重新运行安装脚本:")
-                print(f"   {get_activation_command()}")
-                print(f"   python install.py")
-                sys.exit(0)
-    
-    # 安装依赖
-    if not install_dependencies(install_type):
-        print("\n❌ 安装失败！")
-        print("💡 可能的解决方案:")
-        print("   1. 检查网络连接")
-        print("   2. 升级 pip: python -m pip install --upgrade pip")
-        print("   3. 使用国内镜像: pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt")
-        sys.exit(1)
-    
-    # 验证安装
-    if not verify_installation():
-        print("\n⚠️  安装验证失败，但可能仍然可用")
-    
-    # 显示后续步骤
-    show_next_steps()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ 安装被用户中断")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ 安装过程中发生错误: {e}")
-        print("请查看 INSTALL.md 获取详细安装说明")
-        sys.exit(1)
+    main()

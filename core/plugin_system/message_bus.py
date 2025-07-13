@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+try:
+    from PyQt6.QtCore import QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # 提供备用实现
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
 """
 Plugin Message Bus with Type Safety
 Provides type-safe message passing between plugins with delivery guarantees
@@ -109,6 +120,7 @@ class MessageHandler:
         if self.topic == "*":
             return True
         
+        
         if self.topic.endswith("*"):
             prefix = self.topic[:-1]
             return message_topic.startswith(prefix)
@@ -148,15 +160,15 @@ class MessageDeliveryTracker:
         with self._lock:
             if message_id in self._delivery_status:
                 status = self._delivery_status[message_id]
-                status['delivered'].add(recipient_id)
-                status['failed'].discard(recipient_id)
+                status.get('delivered').add(recipient_id)
+                status.get('failed').discard(recipient_id)
     
     def mark_failed(self, message_id: str, recipient_id: str) -> None:
         """Mark message delivery as failed"""
         with self._lock:
             if message_id in self._delivery_status:
                 status = self._delivery_status[message_id]
-                status['failed'].add(recipient_id)
+                status.get('failed').add(recipient_id)
     
     def is_fully_delivered(self, message_id: str) -> bool:
         """Check if message is fully delivered"""
@@ -165,7 +177,7 @@ class MessageDeliveryTracker:
                 return False
             
             status = self._delivery_status[message_id]
-            return status['delivered'] == status['recipients']
+            return status['delivered'] == status.get('recipients')
     
     def get_delivery_status(self, message_id: str) -> Optional[Dict[str, Any]]:
         """Get delivery status for a message"""
@@ -178,7 +190,7 @@ class MessageDeliveryTracker:
             current_time = time.time()
             expired_ids = [
                 msg_id for msg_id, status in self._delivery_status.items()
-                if current_time - status['timestamp'] > max_age_seconds
+                if current_time - status.get('timestamp') > max_age_seconds:
             ]
             
             for msg_id in expired_ids:
@@ -294,7 +306,7 @@ class PluginMessageBus(BaseManager):
                 self._topic_handlers[topic].append(handler_id)
                 
                 # Update statistics
-                self._stats['handlers_registered'] += 1
+                self._stats['handlers_registered'] = self._stats.get('handlers_registered', 0) + 1
                 
                 # Emit signal
                 self.handler_registered.emit(handler_id, topic)
@@ -377,7 +389,7 @@ class PluginMessageBus(BaseManager):
                 self._message_queue.append(message)
 
                 # Update statistics
-                self._stats['messages_sent'] += 1
+                self._stats['messages_sent'] = _stats.get('messages_sent', 0) + 1
 
                 # Emit signal
                 self.message_sent.emit(message.id, message.topic)
@@ -424,7 +436,7 @@ class PluginMessageBus(BaseManager):
 
             def response_handler(msg: Message):
                 nonlocal response_message
-                if (msg.message_type == MessageType.RESPONSE and
+                if (msg.message_type == MessageType.RESPONSE and:
                     msg.correlation_id == request.correlation_id):
                     response_message = msg
                     response_received.set()
@@ -530,6 +542,7 @@ class PluginMessageBus(BaseManager):
             # Find matching handlers
             matching_handlers = self._find_matching_handlers(message)
 
+
             if not matching_handlers:
                 self.logger.debug(f"No handlers found for message: {message.id} topic: {message.topic}")
                 return
@@ -584,7 +597,7 @@ class PluginMessageBus(BaseManager):
                 self._delivery_tracker.mark_delivered(message.id, handler.plugin_id)
 
             # Update statistics
-            self._stats['messages_delivered'] += 1
+            self._stats['messages_delivered'] = _stats.get('messages_delivered', 0) + 1
 
             # Emit signal
             self.message_delivered.emit(message.id, handler.plugin_id)
@@ -597,7 +610,7 @@ class PluginMessageBus(BaseManager):
                 self._delivery_tracker.mark_failed(message.id, handler.plugin_id)
 
             # Update statistics
-            self._stats['messages_failed'] += 1
+            self._stats['messages_failed'] = _stats.get('messages_failed', 0) + 1
 
             # Emit signal
             self.message_failed.emit(message.id, handler.plugin_id, str(e))
