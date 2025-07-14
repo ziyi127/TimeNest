@@ -33,6 +33,7 @@ try:
     from ui.system_tray import SystemTray
     from ui.tray_features import TrayFeatureManager
     from ui.tray_status_monitor import TrayStatusManager
+    from utils.version_manager import version_manager
 except ImportError as e:
     print(f"Import error: {e}")
     print("Please ensure all dependencies are properly installed")
@@ -71,9 +72,11 @@ def setup_application():
     """
     设置 QApplication
     """
-    # 设置应用属性
-    QApplication.setApplicationName('TimeNest')
-    QApplication.setApplicationVersion('1.1.2 Preview')
+    # 设置应用属性（从版本管理器获取）
+    app_name = version_manager.get_app_name() or "null"
+    app_version = version_manager.get_full_version() or "null"
+    QApplication.setApplicationName(app_name)
+    QApplication.setApplicationVersion(app_version)
     QApplication.setOrganizationName('TimeNest Team')
     QApplication.setOrganizationDomain('timenest.org')
     

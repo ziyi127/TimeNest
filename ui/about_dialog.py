@@ -29,6 +29,28 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QUrl
 from PyQt6.QtGui import QPixmap, QFont, QPalette, QDesktopServices, QIcon
 
+# 导入版本管理器
+try:
+    from utils.version_manager import version_manager
+except ImportError:
+    # 如果导入失败，创建一个简单的备用版本（返回None）
+    class SimpleVersionManager:
+        def get_app_name(self): return None
+        def get_full_version(self): return None
+        def get_app_description(self): return None
+        def get_author_display_name(self): return None
+        def get_author_email(self): return None
+        def get_website_url(self): return None
+        def get_repository_url(self): return None
+        def get_issues_url(self): return None
+        def get_license(self): return None
+        def get_copyright(self): return None
+        def get_contributors(self): return None
+        def get_main_features(self): return None
+        def get_thanks_list(self): return None
+
+    version_manager = SimpleVersionManager()
+
 
 class AboutDialog(QDialog):
     """
@@ -43,15 +65,38 @@ class AboutDialog(QDialog):
     - 致谢信息
     """
     
-    # 应用程序信息
-    APP_NAME = "TimeNest"
-    APP_VERSION = "1.1.2 Preview"
-    APP_DESCRIPTION = "智能课程表管理和时间提醒工具"
-    APP_AUTHOR = "ziyi127"
-    APP_EMAIL = "ziyihed@outlook.com"
-    APP_WEBSITE = "https://ziyi127.github.io/TimeNest-Website"
-    APP_REPOSITORY = "https://github.com/ziyi127/TimeNest"
-    APP_LICENSE = "MIT License"
+    # 应用程序信息从版本管理器获取
+    @property
+    def APP_NAME(self):
+        return version_manager.get_app_name()
+
+    @property
+    def APP_VERSION(self):
+        return version_manager.get_full_version()
+
+    @property
+    def APP_DESCRIPTION(self):
+        return version_manager.get_app_description()
+
+    @property
+    def APP_AUTHOR(self):
+        return version_manager.get_author_display_name()
+
+    @property
+    def APP_EMAIL(self):
+        return version_manager.get_author_email()
+
+    @property
+    def APP_WEBSITE(self):
+        return version_manager.get_website_url()
+
+    @property
+    def APP_REPOSITORY(self):
+        return version_manager.get_repository_url()
+
+    @property
+    def APP_LICENSE(self):
+        return version_manager.get_license()
     
     def __init__(self, parent=None):
         """
@@ -77,7 +122,8 @@ class AboutDialog(QDialog):
         """
         初始化用户界面
         """
-        self.setWindowTitle(f"关于 {self.APP_NAME}")
+        app_name = self.APP_NAME or "null"
+        self.setWindowTitle(f"关于 {app_name}")
         self.setFixedSize(600, 500)
         self.setModal(True)
         
@@ -177,22 +223,25 @@ class AboutDialog(QDialog):
         info_layout = QVBoxLayout()
         
         # 应用程序名称
-        name_label = QLabel(self.APP_NAME)
+        app_name = self.APP_NAME or "null"
+        name_label = QLabel(app_name)
         name_font = QFont()
         name_font.setPointSize(18)
         name_font.setBold(True)
         name_label.setFont(name_font)
         info_layout.addWidget(name_label)
-        
+
         # 版本
-        version_label = QLabel(f"版本 {self.APP_VERSION}")
+        app_version = self.APP_VERSION or "null"
+        version_label = QLabel(f"版本 {app_version}")
         version_font = QFont()
         version_font.setPointSize(12)
         version_label.setFont(version_font)
         info_layout.addWidget(version_label)
         
         # 描述
-        desc_label = QLabel(self.APP_DESCRIPTION)
+        app_description = self.APP_DESCRIPTION or "null"
+        desc_label = QLabel(app_description)
         desc_label.setWordWrap(True)
         info_layout.addWidget(desc_label)
         
@@ -274,13 +323,16 @@ class AboutDialog(QDialog):
         version_layout = QGridLayout(version_group)
         
         version_layout.addWidget(QLabel("应用程序版本:"), 0, 0)
-        version_layout.addWidget(QLabel(self.APP_VERSION), 0, 1)
+        app_version = self.APP_VERSION or "null"
+        version_layout.addWidget(QLabel(app_version), 0, 1)
         
         version_layout.addWidget(QLabel("构建日期:"), 1, 0)
-        version_layout.addWidget(QLabel("2025-01-01"), 1, 1)  # 这里可以从构建信息获取
-        
-        version_layout.addWidget(QLabel("Git 提交:"), 2, 0)
-        version_layout.addWidget(QLabel("abc123def"), 2, 1)  # 这里可以从Git信息获取
+        build_date = version_manager.get_release_date() or "null"
+        version_layout.addWidget(QLabel(build_date), 1, 1)
+
+        version_layout.addWidget(QLabel("构建号:"), 2, 0)
+        build_number = version_manager.get_build_number() or "null"
+        version_layout.addWidget(QLabel(build_number), 2, 1)
         
         layout.addWidget(version_group)
         
@@ -335,14 +387,26 @@ class AboutDialog(QDialog):
         main_authors_group = QGroupBox("主要作者")
         main_authors_layout = QVBoxLayout(main_authors_group)
         
-        main_authors = [
-            {
-                "name": "ziyi127",
+        main_authors = []
+
+        # 从版本管理器获取作者信息
+        author_name = version_manager.get_author_display_name()
+        author_email = version_manager.get_author_email()
+        if author_name:
+            main_authors.append({
+                "name": author_name,
                 "role": "项目负责人 & 核心开发者",
-                "email": "ziyihed@outlook.com",
-                "github": "https://github.com/ziyi127"
-            }
-        ]
+                "email": author_email or "null",
+                "github": version_manager.get_repository_url() or "null"
+            })
+        else:
+            # 如果没有作者信息，显示null
+            main_authors.append({
+                "name": "null",
+                "role": "null",
+                "email": "null",
+                "github": "null"
+            })
         
         for author in main_authors:
             author_widget = self.create_author_widget(author)
@@ -381,7 +445,8 @@ class AboutDialog(QDialog):
         contact_layout.addWidget(github_link, 1, 1)
 
         contact_layout.addWidget(QLabel("问题反馈:"), 2, 0)
-        issues_link = QLabel('<a href="https://github.com/ziyi127/TimeNest/issues">GitHub Issues</a>')
+        issues_url = version_manager.get_issues_url()
+        issues_link = QLabel(f'<a href="{issues_url}">GitHub Issues</a>')
         issues_link.setOpenExternalLinks(True)
         contact_layout.addWidget(issues_link, 2, 1)
         
@@ -657,39 +722,21 @@ class AboutDialog(QDialog):
         Returns:
             更新历史文本
         """
-        return """版本 1.1.2 Preview (2025-01-14)
-• 预览版本发布
-• 优化关于页面显示
-• 更新应用图标和界面
-• 完善插件市场功能
-• 改进课程表编辑体验
-• 修复多周循环显示问题
-• 优化托盘菜单功能
+        # 从版本管理器获取版本信息
+        current_version = version_manager.get_full_version() or "null"
+        release_date = version_manager.get_release_date() or "null"
 
-版本 1.0.0 (2025-01-01)
-• 初始版本发布
-• 实现基本的课程表管理功能
-• 添加课程提醒和通知
-• 支持多种组件显示
-• 实现系统托盘集成
-• 添加数据导入导出功能
-• 支持自定义主题
-• 添加多周循环功能（单双周）
-• 添加插件市场功能
-• 修复课程表编辑bug
+        return f"""版本 {current_version} ({release_date})
+• 当前版本信息从配置文件读取
+• 移除硬编码版本信息
+• 支持动态版本管理
+• 版本信息统一管理
 
-版本 0.9.0 (2024-12-15)
-• Beta版本发布
-• 核心功能基本完成
-• 进行大量测试和优化
-• 修复已知问题
-• 完善用户界面
-
-版本 0.8.0 (2024-12-01)
-• Alpha版本发布
-• 实现主要功能模块
-• 建立项目架构
-• 开始内部测试"""
+历史版本:
+• 版本信息现在统一从 app_info.json 配置文件管理
+• 不再使用硬编码的版本号
+• 支持灵活的版本信息配置
+• 便于版本发布和维护"""
     
     def get_license_text(self) -> str:
         """

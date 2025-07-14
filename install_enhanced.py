@@ -18,6 +18,16 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
+
+# 尝试导入版本管理器
+try:
+    from utils.version_manager import version_manager
+except ImportError:
+    # 如果导入失败，创建简单的备用版本
+    class SimpleVersionManager:
+        def get_app_name(self): return "null"
+        def get_full_version(self): return "null"
+    version_manager = SimpleVersionManager()
 from dataclasses import dataclass
 
 # 设置日志
@@ -853,7 +863,9 @@ class EnhancedInstallWindow(QMainWindow):
 
     def init_ui(self):
         """初始化UI"""
-        self.setWindowTitle("TimeNest 增强版安装程序")
+        app_name = version_manager.get_app_name()
+        title = f"{app_name} 增强版安装程序" if app_name else "null 增强版安装程序"
+        self.setWindowTitle(title)
         self.setFixedSize(800, 700)
         self.setStyleSheet(self._get_stylesheet())
 
@@ -958,7 +970,9 @@ class EnhancedInstallWindow(QMainWindow):
         header_layout = QVBoxLayout(header_frame)
 
         # 标题
-        title_label = QLabel("TimeNest 增强版安装程序")
+        app_name = version_manager.get_app_name()
+        title_text = f"{app_name} 增强版安装程序" if app_name else "null 增强版安装程序"
+        title_label = QLabel(title_text)
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50; margin: 10px;")
         header_layout.addWidget(title_label)
@@ -1380,7 +1394,9 @@ def main():
 
     # GUI模式
     app = QApplication(sys.argv)
-    app.setApplicationName("TimeNest Enhanced Installer")
+    app_name = version_manager.get_app_name()
+    installer_name = f"{app_name} Enhanced Installer" if app_name else "null Enhanced Installer"
+    app.setApplicationName(installer_name)
 
     # 设置应用图标（如果存在）
     icon_path = Path("resources/icons/app_icon.png")

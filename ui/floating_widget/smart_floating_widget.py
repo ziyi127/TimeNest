@@ -31,6 +31,15 @@ from PyQt6.QtGui import (
 from core.safe_logger import get_cached_safe_logger
 from core.error_handler import error_handler, safe_getattr, safe_call_method
 
+# 尝试导入版本管理器
+try:
+    from utils.version_manager import version_manager
+except ImportError:
+    # 如果导入失败，创建简单的备用版本
+    class SimpleVersionManager:
+        def get_app_name(self): return "null"
+    version_manager = SimpleVersionManager()
+
 from .floating_modules import (
     FloatingModule, TimeModule, ScheduleModule, 
     CountdownModule, WeatherModule, SystemStatusModule
@@ -300,7 +309,9 @@ class SmartFloatingWidget(QWidget):
             self.layout.setSpacing(10)
             
             # 创建内容标签
-            self.content_label = QLabel("TimeNest 智能浮窗")
+            app_name = version_manager.get_app_name()
+            label_text = f"{app_name} 智能浮窗" if app_name else "null 智能浮窗"
+            self.content_label = QLabel(label_text)
             self.content_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.content_label.setStyleSheet("""
                 QLabel {
@@ -564,7 +575,9 @@ class SmartFloatingWidget(QWidget):
             self.enhanced_modules = EnhancedFloatingModules()
 
             # 创建增强组件
-            self.scrolling_text = self.enhanced_modules.create_scrolling_text("欢迎使用 TimeNest 智能浮窗")
+            app_name = version_manager.get_app_name()
+            welcome_text = f"欢迎使用 {app_name} 智能浮窗" if app_name else "欢迎使用 null 智能浮窗"
+            self.scrolling_text = self.enhanced_modules.create_scrolling_text(welcome_text)
             self.weather_widget = self.enhanced_modules.create_weather_widget()
             self.notification_banner = self.enhanced_modules.create_notification_banner()
 

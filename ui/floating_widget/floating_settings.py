@@ -28,6 +28,15 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QColor
 
+# 尝试导入版本管理器
+try:
+    from utils.version_manager import version_manager
+except ImportError:
+    # 如果导入失败，创建简单的备用版本
+    class SimpleVersionManager:
+        def get_app_name(self): return "null"
+    version_manager = SimpleVersionManager()
+
 
 if TYPE_CHECKING:
     from core.app_manager import AppManager
@@ -91,7 +100,9 @@ class FloatingSettingsDialog(QDialog):
     def init_ui(self) -> None:
         """初始化UI"""
         try:
-            self.setWindowTitle("🎨 TimeNest 浮窗设置")
+            app_name = version_manager.get_app_name()
+            title = f"🎨 {app_name} 浮窗设置" if app_name else "🎨 null 浮窗设置"
+            self.setWindowTitle(title)
             self.setFixedSize(900, 650)  # 更大的窗口尺寸，确保内容不重叠
             self.setModal(True)
 

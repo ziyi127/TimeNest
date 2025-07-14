@@ -1,0 +1,68 @@
+{
+  "version": {
+    "number": "1.1.3",
+    "name": "Preview",
+    "build": "20250714",
+    "release_date": "2025-07-14",
+    "full_version": "1.1.3 Preview"
+  },
+  "app": {
+    "name": "TimeNest",
+    "display_name": "TimeNest - 智能时间管理助手",
+    "description": "一款功能强大的智能时间管理助手，帮助您更好地管理时间和提高效率",
+    "slogan": "让时间更有价值"
+  },
+  "author": {
+    "name": "ziyi127",
+    "display_name": "ziyi127",
+    "email": "ziyihed@outlook.com",
+    "github": "https://github.com/ziyi127"
+  },
+  "links": {
+    "website": "https://ziyi127.github.io/TimeNest-Website",
+    "repository": "https://github.com/ziyi127/TimeNest",
+    "issues": "https://github.com/ziyi127/TimeNest/issues",
+    "releases": "https://github.com/ziyi127/TimeNest/releases",
+    "documentation": "https://ziyi127.github.io/TimeNest-Website/docs"
+  },
+  "legal": {
+    "license": "MIT License",
+    "license_url": "https://github.com/ziyi127/TimeNest/blob/main/LICENSE",
+    "copyright": "© 2024-2025 ziyi127. All rights reserved."
+  },
+  "technical": {
+    "python_version_min": "3.8.0",
+    "python_version_max": "3.12.0",
+    "supported_platforms": ["Windows 10+", "Linux", "macOS 10.14+"],
+    "dependencies": {
+      "PyQt6": ">=6.0.0",
+      "requests": ">=2.25.0",
+      "psutil": ">=5.8.0"
+    }
+  },
+  "features": {
+    "main_features": [
+      "智能时间管理",
+      "课程表管理",
+      "任务提醒",
+      "悬浮窗显示",
+      "主题定制",
+      "插件系统"
+    ],
+    "highlights": [
+      "实时时间校准",
+      "多平台支持",
+      "插件扩展",
+      "主题商店"
+    ]
+  },
+  "about": {
+    "thanks": [
+      "感谢所有为 TimeNest 项目做出贡献的开发者",
+      "感谢开源社区提供的优秀库和工具",
+      "感谢用户的反馈和建议"
+    ],
+    "contributors": "暂无",
+    "special_thanks": "感谢 PyQt6 团队提供的优秀 GUI 框架"
+  }
+}
