@@ -470,8 +470,6 @@ class SystemTrayManagerLegacy(QObject):
         self._update_floating_menu_text()
         self.logger.debug(f"浮窗状态更新: {is_visible}")
 
-
-
     def set_tooltip(self, tooltip: str):
         """设置托盘提示文本"""
         if self.tray_icon:

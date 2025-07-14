@@ -141,7 +141,6 @@ class SmartFloatingWidget(QWidget):
             self.enabled_modules = ['time', 'schedule']
             self.module_order = ['time', 'schedule']
 
-
             if self.app_manager and hasattr(self.app_manager, 'config_manager'):
                 # 使用增强的配置合并方法，确保正确的优先级
                 self.config = self.app_manager.config_manager.get_merged_config('floating_widget', {})

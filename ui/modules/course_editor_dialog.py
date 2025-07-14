@@ -170,7 +170,6 @@ class CourseEditorDialog(QDialog):
         """加载课程数据"""
         if not self.course_data:
             return
-            return
         
         try:
             self.course_name_edit.setText(self.course_data.get('name', ''))
@@ -209,7 +208,6 @@ class CourseEditorDialog(QDialog):
         """周次类型变化处理"""
         sender = self.sender()
         if sender.isChecked():
-            # 取消其他选项:
             # 取消其他选项
             if sender == self.all_weeks_radio:
                 self.odd_weeks_radio.setChecked(False)
@@ -230,22 +228,16 @@ class CourseEditorDialog(QDialog):
         
         start_time = self.start_time_edit.time()
         end_time = self.end_time_edit.time()
-        
-        
+
         if start_time >= end_time:
-            QMessageBox.warning(self, "时间错误", "结束时间必须晚于开始时间")
-        
             QMessageBox.warning(self, "时间错误", "结束时间必须晚于开始时间")
             self.end_time_edit.setFocus()
             return False
         
         start_week = self.start_week_spin.value()
         end_week = self.end_week_spin.value()
-        
-        
+
         if start_week > end_week:
-            QMessageBox.warning(self, "周次错误", "结束周次必须大于等于开始周次")
-        
             QMessageBox.warning(self, "周次错误", "结束周次必须大于等于开始周次")
             self.end_week_spin.setFocus()
             return False
@@ -256,7 +248,6 @@ class CourseEditorDialog(QDialog):
         """保存课程"""
         try:
             if not self.validate_input():
-                return
                 return
             
             # 确定周次类型

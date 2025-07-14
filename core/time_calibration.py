@@ -287,8 +287,7 @@ class TimeCalibrationWorker(QThread):
                 self.logger.error(f"Web 时间同步失败: {e}")
             
             self.progress_updated.emit(90, "计算最佳时间偏移...")
-            
-            
+
             if successful_syncs:
                 # 计算加权平均偏移量（延迟越小权重越大）
                 total_weight = 0

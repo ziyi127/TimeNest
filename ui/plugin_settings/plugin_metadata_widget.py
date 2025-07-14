@@ -438,7 +438,6 @@ class PluginMetadataWidget(QWidget):
         """Handle store metadata received"""
         if plugin_id != self.current_plugin_id:
             return
-            return
 
         try:
             # Update downloads
@@ -492,7 +491,6 @@ class PluginMetadataWidget(QWidget):
         """Handle store reviews received"""
         if plugin_id != self.current_plugin_id:
             return
-            return
 
         try:
             if reviews:
@@ -514,7 +512,6 @@ class PluginMetadataWidget(QWidget):
     def _on_store_error(self, plugin_id: str, error_message: str):
         """Handle store fetch error"""
         if plugin_id != self.current_plugin_id:
-            return
             return
 
         self.logger.warning(f"Store fetch error for {plugin_id}: {error_message}")

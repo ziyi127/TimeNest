@@ -357,7 +357,6 @@ class ThemeMarketplaceDialog(QDialog):
         try:
             if not self.theme_marketplace:
                 return
-                return
             
             # 清空已安装主题布局
             self.clear_installed_theme_widgets()
@@ -438,7 +437,6 @@ class ThemeMarketplaceDialog(QDialog):
         try:
             if not self.theme_marketplace:
                 return
-                return
             
             # 查找主题信息
             theme_info = None
@@ -465,7 +463,6 @@ class ThemeMarketplaceDialog(QDialog):
         """卸载主题"""
         try:
             if not self.theme_marketplace:
-                return
                 return
             
             reply = QMessageBox.question(

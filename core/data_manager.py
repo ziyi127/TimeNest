@@ -678,7 +678,6 @@ class DataManager(QObject):
         try:
             if not self.db_connection or not self.db_connection.isOpen():
                 return
-                return
             
             query = QSqlQuery(self.db_connection)
             query.prepare("""
@@ -708,7 +707,6 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
-                return
                 return
             
             query = QSqlQuery(self.db_connection)
@@ -833,7 +831,6 @@ class DataManager(QObject):
         try:
             if not self.db_connection or not self.db_connection.isOpen():
                 return
-                return
             
             query = QSqlQuery(self.db_connection)
             query.prepare("""
@@ -895,7 +892,6 @@ class DataManager(QObject):
         """
         try:
             if not self.db_connection or not self.db_connection.isOpen():
-                return
                 return
             
             query = QSqlQuery(self.db_connection)

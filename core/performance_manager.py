@@ -196,11 +196,9 @@ class LRUCache(Generic[T]):
         """检查缓存条目是否过期"""
         if self.ttl_seconds is None:
             return False
-            return False
         
         creation_time = self._creation_times.get(key)
         if creation_time is None:
-            return True
             return True
         
         return (datetime.now() - creation_time).total_seconds() > self.ttl_seconds
@@ -208,7 +206,6 @@ class LRUCache(Generic[T]):
     def _evict_lru(self) -> None:
         """移除最近最少使用的条目"""
         if not self._access_times:
-            return
             return
         
         # 找到最久未访问的键
@@ -352,7 +349,6 @@ class PerformanceMonitor(QThread):
             平均性能指标
         """
         if not self.metrics_history:
-            return None
             return None
         
         cutoff_time = datetime.now() - timedelta(minutes=minutes)

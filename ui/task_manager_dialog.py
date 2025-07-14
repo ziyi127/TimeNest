@@ -446,7 +446,6 @@ class TaskManagerDialog(QDialog):
         try:
             if not self.validate_form():
                 return
-                return
             
             # 生成任务ID
             task_id = f"task_{int(datetime.now().timestamp())}"
@@ -481,7 +480,6 @@ class TaskManagerDialog(QDialog):
         try:
             if not self.validate_form():
                 return
-                return
             
             current_item = self.task_list.currentItem()
             if not current_item:
@@ -515,7 +513,6 @@ class TaskManagerDialog(QDialog):
         try:
             current_item = self.task_list.currentItem()
             if not current_item:
-                return
                 return
             
             reply = QMessageBox.question(

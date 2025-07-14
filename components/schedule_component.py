@@ -263,7 +263,6 @@ class ScheduleComponent(BaseComponent):
             layout = self.current_class_frame.layout()
             if not layout:
                 return
-                return
             
             # 清除现有内容（保留标题）
             for i in reversed(range(1, layout.count())):
@@ -323,11 +322,9 @@ class ScheduleComponent(BaseComponent):
         try:
             if not self.next_class_frame:
                 return
-                return
-            
+
             layout = self.next_class_frame.layout()
             if not layout:
-                return
                 return
             
             # 清除现有内容（保留标题）
@@ -395,7 +392,6 @@ class ScheduleComponent(BaseComponent):
         """更新课程表显示"""
         try:
             if not self.schedule_container:
-                return
                 return
             
             # 清除现有内容

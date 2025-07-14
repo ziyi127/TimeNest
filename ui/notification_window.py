@@ -258,8 +258,6 @@ def test_notification_window():
     sys.exit(app.exec())
 
 
-
-
 if __name__ == "__main__":
     test_notification_window()
 

@@ -249,8 +249,6 @@ class TimeCalibrationDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "错误", f"启动校准失败: {e}")
 
-
-    
     def stop_calibration(self):
         """停止校准"""
         try:
@@ -367,8 +365,7 @@ class TimeCalibrationDialog(QDialog):
         self.progress_bar.setVisible(False)
         self.calibrate_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-        
-        
+
         if success:
             self.status_label.setText("校准完成")
             self.add_log(f"校准成功: {message}")

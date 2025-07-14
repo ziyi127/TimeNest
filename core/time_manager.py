@@ -68,7 +68,6 @@ class TimeManager(QObject):
         """获取当前时间（考虑偏移）"""
         current_time = datetime.now()
 
-
         if self._offset_enabled and self._time_offset != timedelta():
             current_time += self._time_offset
 
@@ -83,8 +82,7 @@ class TimeManager(QObject):
         try:
             old_offset = self._time_offset
             self._time_offset = offset
-            
-            
+
             if save_to_config and self.config_manager:
                 self.config_manager.set('time.offset_seconds', int(offset.total_seconds()))
             
@@ -193,8 +191,7 @@ class TimeManager(QObject):
     def get_next_occurrence(self, target_time: datetime) -> datetime:
         """获取下一次出现的时间（如果已过今天，则返回明天的时间）"""
         current_time = self.get_current_time()
-        
-        
+
         if target_time <= current_time:
             # 如果目标时间已过，返回明天的同一时间
             next_day = current_time.date() + timedelta(days=1)

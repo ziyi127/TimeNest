@@ -57,7 +57,6 @@ class ScrollingTextWidget(QWidget):
         """更新滚动位置"""
         if not self.text:
             return
-            return
         
         text_width = self.fontMetrics().horizontalAdvance(self.text)
         widget_width = self.width()
@@ -184,7 +183,6 @@ class WeatherWidget(QWidget):
         """更新显示"""
         if not self.weather_data:
             return
-            return
         
         temp = self.weather_data.get('temperature', 0)
         desc = self.weather_data.get('description', '未知')
@@ -286,7 +284,6 @@ class CarouselWidget(QWidget):
         """下一个项目"""
         if len(self.items) <= 1:
             return
-            return
         
         # 隐藏当前项目
         self.items[self.current_index].hide()
@@ -300,7 +297,6 @@ class CarouselWidget(QWidget):
     def previous_item(self):
         """上一个项目"""
         if len(self.items) <= 1:
-            return
             return
         
         # 隐藏当前项目

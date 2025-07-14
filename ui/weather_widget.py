@@ -317,7 +317,6 @@ class WeatherWidget(QWidget):
         try:
             if not self.current_weather:
                 return
-                return
             
             # 更新温度
             if self.current_weather.temperature is not None:
@@ -360,7 +359,6 @@ class WeatherWidget(QWidget):
         """
         try:
             if not self.current_weather or not self.current_weather.condition:
-                return
                 return
             
             # 根据天气状况设置图标

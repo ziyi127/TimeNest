@@ -125,7 +125,6 @@ class PreviewManager(QObject):
         """
         if 'theme' not in self.original_states:
             return
-            return
         
         try:
             if self.theme_manager:
@@ -239,7 +238,6 @@ class PreviewManager(QObject):
             plugin_id: 插件ID，如果为None则取消所有插件预览
         """
         if 'plugin' not in self.original_states:
-            return
             return
         
         try:
