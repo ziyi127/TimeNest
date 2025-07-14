@@ -93,6 +93,8 @@ class FloatingSettingsTab(QWidget):
         """创建外观设置分组"""
         group = QGroupBox("外观设置")
         layout = QGridLayout(group)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 20, 15, 15)
 
         # 尺寸设置
         layout.addWidget(QLabel("宽度:"), 0, 0)
@@ -100,6 +102,7 @@ class FloatingSettingsTab(QWidget):
         self.width_spin.setRange(200, 800)
         self.width_spin.setValue(400)
         self.width_spin.setSuffix(" px")
+        self.width_spin.setMinimumWidth(80)
         layout.addWidget(self.width_spin, 0, 1)
 
         layout.addWidget(QLabel("高度:"), 0, 2)
@@ -107,6 +110,7 @@ class FloatingSettingsTab(QWidget):
         self.height_spin.setRange(40, 120)
         self.height_spin.setValue(60)
         self.height_spin.setSuffix(" px")
+        self.height_spin.setMinimumWidth(80)
         layout.addWidget(self.height_spin, 0, 3)
 
         # 透明度设置
@@ -114,9 +118,12 @@ class FloatingSettingsTab(QWidget):
         self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
         self.opacity_slider.setRange(30, 100)
         self.opacity_slider.setValue(85)
+        self.opacity_slider.setMinimumWidth(150)
         layout.addWidget(self.opacity_slider, 1, 1, 1, 2)
 
         self.opacity_label = QLabel("85%")
+        self.opacity_label.setMinimumWidth(40)
+        self.opacity_label.setStyleSheet("font-weight: bold; color: #007acc;")
         layout.addWidget(self.opacity_label, 1, 3)
 
         # 圆角设置
@@ -124,9 +131,12 @@ class FloatingSettingsTab(QWidget):
         self.radius_slider = QSlider(Qt.Orientation.Horizontal)
         self.radius_slider.setRange(10, 50)
         self.radius_slider.setValue(30)
+        self.radius_slider.setMinimumWidth(150)
         layout.addWidget(self.radius_slider, 2, 1, 1, 2)
 
         self.radius_label = QLabel("30px")
+        self.radius_label.setMinimumWidth(40)
+        self.radius_label.setStyleSheet("font-weight: bold; color: #007acc;")
         layout.addWidget(self.radius_label, 2, 3)
 
         # 字体大小
@@ -135,19 +145,28 @@ class FloatingSettingsTab(QWidget):
         self.font_size_spin.setRange(8, 18)
         self.font_size_spin.setValue(12)
         self.font_size_spin.setSuffix(" px")
+        self.font_size_spin.setMinimumWidth(80)
         layout.addWidget(self.font_size_spin, 3, 1)
 
         # 颜色设置
         layout.addWidget(QLabel("背景色:"), 3, 2)
         self.bg_color_btn = QPushButton()
-        self.bg_color_btn.setFixedSize(50, 25)
-        self.bg_color_btn.setStyleSheet("background-color: #323232; border: 1px solid #666;")
+        self.bg_color_btn.setFixedSize(60, 30)
+        self.bg_color_btn.setStyleSheet("background-color: #323232; border: 1px solid #666; border-radius: 4px;")
         self.bg_color_btn.clicked.connect(self._choose_bg_color)
         layout.addWidget(self.bg_color_btn, 3, 3)
 
-        # 位置设置
-        layout.addWidget(QLabel("位置:"), 4, 0)
+        # 位置设置 - 使用单独的分组框
+        position_widget = QWidget()
+        position_main_layout = QVBoxLayout(position_widget)
+        position_main_layout.setContentsMargins(0, 10, 0, 0)
+
+        position_label = QLabel("位置:")
+        position_label.setStyleSheet("font-weight: bold; margin-bottom: 5px;")
+        position_main_layout.addWidget(position_label)
+
         position_layout = QHBoxLayout()
+        position_layout.setSpacing(8)
 
         self.position_group = QButtonGroup()
         self.pos_top_center = QRadioButton("顶部居中")
@@ -156,6 +175,22 @@ class FloatingSettingsTab(QWidget):
         self.pos_custom = QRadioButton("自定义")
 
         self.pos_top_center.setChecked(True)
+
+        # 设置单选按钮样式
+        radio_style = """
+            QRadioButton {
+                padding: 5px;
+                margin: 2px;
+                font-size: 12px;
+            }
+            QRadioButton::indicator {
+                width: 16px;
+                height: 16px;
+            }
+        """
+
+        for radio in [self.pos_top_center, self.pos_top_left, self.pos_top_right, self.pos_custom]:
+            radio.setStyleSheet(radio_style)
 
         self.position_group.addButton(self.pos_top_center, 0)
         self.position_group.addButton(self.pos_top_left, 1)
@@ -168,11 +203,28 @@ class FloatingSettingsTab(QWidget):
         position_layout.addWidget(self.pos_custom)
         position_layout.addStretch()
 
-        layout.addLayout(position_layout, 4, 1, 1, 3)
+        position_main_layout.addLayout(position_layout)
+        layout.addWidget(position_widget, 4, 0, 1, 4)
 
         # 预览按钮
         self.preview_btn = QPushButton("实时预览")
         self.preview_btn.setCheckable(True)
+        self.preview_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #007acc;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005a9e;
+            }
+            QPushButton:checked {
+                background-color: #28a745;
+            }
+        """)
         layout.addWidget(self.preview_btn, 5, 0, 1, 4)
 
         return group
@@ -181,14 +233,41 @@ class FloatingSettingsTab(QWidget):
         """创建显示内容分组"""
         group = QGroupBox("显示内容")
         layout = QVBoxLayout(group)
+        layout.setSpacing(15)
+        layout.setContentsMargins(15, 20, 15, 15)
 
         # 模块管理
         module_layout = QHBoxLayout()
+        module_layout.setSpacing(10)
 
         # 可用模块列表
         available_layout = QVBoxLayout()
-        available_layout.addWidget(QLabel("可用模块:"))
+        available_label = QLabel("可用模块:")
+        available_label.setStyleSheet("font-weight: bold; margin-bottom: 5px;")
+        available_layout.addWidget(available_label)
+
         self.available_modules_list = QListWidget()
+        self.available_modules_list.setMinimumHeight(150)
+        self.available_modules_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                margin: 2px;
+                border-radius: 4px;
+            }
+            QListWidget::item:hover {
+                background-color: #f0f8ff;
+            }
+            QListWidget::item:selected {
+                background-color: #007acc;
+                color: white;
+            }
+        """)
         self._populate_available_modules()
         available_layout.addWidget(self.available_modules_list)
 
@@ -196,10 +275,32 @@ class FloatingSettingsTab(QWidget):
         buttons_layout = QVBoxLayout()
         buttons_layout.addStretch()
 
+        button_style = """
+            QPushButton {
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: #f8f9fa;
+                font-weight: bold;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: #e9ecef;
+                border-color: #007acc;
+            }
+            QPushButton:pressed {
+                background-color: #dee2e6;
+            }
+        """
+
         self.add_module_btn = QPushButton("添加 →")
+        self.add_module_btn.setStyleSheet(button_style)
         self.remove_module_btn = QPushButton("← 移除")
+        self.remove_module_btn.setStyleSheet(button_style)
         self.move_up_btn = QPushButton("↑ 上移")
+        self.move_up_btn.setStyleSheet(button_style)
         self.move_down_btn = QPushButton("↓ 下移")
+        self.move_down_btn.setStyleSheet(button_style)
 
         buttons_layout.addWidget(self.add_module_btn)
         buttons_layout.addWidget(self.remove_module_btn)
@@ -209,8 +310,32 @@ class FloatingSettingsTab(QWidget):
 
         # 已启用模块列表
         enabled_layout = QVBoxLayout()
-        enabled_layout.addWidget(QLabel("已启用模块:"))
+        enabled_label = QLabel("已启用模块:")
+        enabled_label.setStyleSheet("font-weight: bold; margin-bottom: 5px;")
+        enabled_layout.addWidget(enabled_label)
+
         self.enabled_modules_list = QListWidget()
+        self.enabled_modules_list.setMinimumHeight(150)
+        self.enabled_modules_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                margin: 2px;
+                border-radius: 4px;
+            }
+            QListWidget::item:hover {
+                background-color: #f0f8ff;
+            }
+            QListWidget::item:selected {
+                background-color: #28a745;
+                color: white;
+            }
+        """)
         enabled_layout.addWidget(self.enabled_modules_list)
 
         module_layout.addLayout(available_layout)
@@ -242,49 +367,121 @@ class FloatingSettingsTab(QWidget):
         """创建行为设置分组"""
         group = QGroupBox("行为设置")
         layout = QGridLayout(group)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 20, 15, 15)
 
         # 快捷键设置
-        layout.addWidget(QLabel("显示/隐藏快捷键:"), 0, 0)
+        shortcut_label_style = "font-weight: bold; margin-bottom: 5px;"
+        shortcut_display_style = """
+            QLabel {
+                border: 2px solid #ddd;
+                padding: 8px 12px;
+                border-radius: 6px;
+                background-color: #f8f9fa;
+                font-family: 'Courier New', monospace;
+                font-weight: bold;
+                color: #495057;
+                min-width: 120px;
+            }
+        """
+
+        toggle_label = QLabel("显示/隐藏快捷键:")
+        toggle_label.setStyleSheet(shortcut_label_style)
+        layout.addWidget(toggle_label, 0, 0)
+
         self.toggle_shortcut_edit = QLabel("Ctrl+Shift+F")
-        self.toggle_shortcut_edit.setStyleSheet("border: 1px solid #ccc; padding: 5px;")
+        self.toggle_shortcut_edit.setStyleSheet(shortcut_display_style)
         layout.addWidget(self.toggle_shortcut_edit, 0, 1)
 
-        layout.addWidget(QLabel("鼠标穿透快捷键:"), 0, 2)
+        transparent_label = QLabel("鼠标穿透快捷键:")
+        transparent_label.setStyleSheet(shortcut_label_style)
+        layout.addWidget(transparent_label, 0, 2)
+
         self.transparent_shortcut_edit = QLabel("Ctrl+Shift+T")
-        self.transparent_shortcut_edit.setStyleSheet("border: 1px solid #ccc; padding: 5px;")
+        self.transparent_shortcut_edit.setStyleSheet(shortcut_display_style)
         layout.addWidget(self.transparent_shortcut_edit, 0, 3)
 
         # 行为选项
+        checkbox_style = """
+            QCheckBox {
+                padding: 5px;
+                font-weight: bold;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+            }
+        """
+
         self.always_on_top_check = QCheckBox("总是置顶")
         self.always_on_top_check.setChecked(True)
+        self.always_on_top_check.setStyleSheet(checkbox_style)
         layout.addWidget(self.always_on_top_check, 1, 0, 1, 2)
 
         self.auto_hide_check = QCheckBox("无活动时自动隐藏")
+        self.auto_hide_check.setStyleSheet(checkbox_style)
         layout.addWidget(self.auto_hide_check, 1, 2, 1, 2)
 
         # 专注模式
-        layout.addWidget(QLabel("专注模式:"), 2, 0)
+        focus_label = QLabel("专注模式:")
+        focus_label.setStyleSheet(shortcut_label_style)
+        layout.addWidget(focus_label, 2, 0)
+
         self.focus_mode_combo = QComboBox()
         self.focus_mode_combo.addItems(["禁用", "手动", "定时"])
+        self.focus_mode_combo.setStyleSheet("""
+            QComboBox {
+                padding: 6px 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+                min-width: 80px;
+            }
+        """)
         layout.addWidget(self.focus_mode_combo, 2, 1)
 
-        layout.addWidget(QLabel("专注时长:"), 2, 2)
+        duration_label = QLabel("专注时长:")
+        duration_label.setStyleSheet(shortcut_label_style)
+        layout.addWidget(duration_label, 2, 2)
+
         self.focus_duration_spin = QSpinBox()
         self.focus_duration_spin.setRange(5, 180)
         self.focus_duration_spin.setValue(25)
         self.focus_duration_spin.setSuffix(" 分钟")
+        self.focus_duration_spin.setStyleSheet("""
+            QSpinBox {
+                padding: 6px 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+                min-width: 80px;
+            }
+        """)
         layout.addWidget(self.focus_duration_spin, 2, 3)
 
         # 动画设置
         self.enable_animations_check = QCheckBox("启用动画效果")
         self.enable_animations_check.setChecked(True)
+        self.enable_animations_check.setStyleSheet(checkbox_style)
         layout.addWidget(self.enable_animations_check, 3, 0, 1, 2)
 
-        layout.addWidget(QLabel("动画时长:"), 3, 2)
+        animation_label = QLabel("动画时长:")
+        animation_label.setStyleSheet(shortcut_label_style)
+        layout.addWidget(animation_label, 3, 2)
+
         self.animation_duration_spin = QSpinBox()
         self.animation_duration_spin.setRange(100, 1000)
         self.animation_duration_spin.setValue(300)
         self.animation_duration_spin.setSuffix(" ms")
+        self.animation_duration_spin.setStyleSheet("""
+            QSpinBox {
+                padding: 6px 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+                min-width: 80px;
+            }
+        """)
         layout.addWidget(self.animation_duration_spin, 3, 3)
 
         return group

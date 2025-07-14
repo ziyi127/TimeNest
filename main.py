@@ -73,7 +73,7 @@ def setup_application():
     """
     # 设置应用属性
     QApplication.setApplicationName('TimeNest')
-    QApplication.setApplicationVersion('2.0')
+    QApplication.setApplicationVersion('1.1.2 Preview')
     QApplication.setOrganizationName('TimeNest Team')
     QApplication.setOrganizationDomain('timenest.org')
     
@@ -323,6 +323,8 @@ def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_ma
                                    feature_manager.show_plugin_marketplace, logger)
                 _safe_connect_signal(tray_manager, 'time_calibration_requested',
                                    feature_manager.show_time_calibration, logger)
+                _safe_connect_signal(tray_manager, 'about_requested',
+                                   feature_manager.show_about_dialog, logger)
             else:
                 # 如果功能管理器不可用，连接到默认处理函数
                 _safe_connect_signal(tray_manager, 'floating_settings_requested',
@@ -335,6 +337,8 @@ def setup_tray_connections(tray_manager, feature_manager, status_monitor, app_ma
                                    lambda: logger.warning("插件市场功能不可用"), logger)
                 _safe_connect_signal(tray_manager, 'time_calibration_requested',
                                    lambda: logger.warning("时间校准功能不可用"), logger)
+                _safe_connect_signal(tray_manager, 'about_requested',
+                                   lambda: logger.warning("关于对话框功能不可用"), logger)
 
         # 状态监控器信号连接
         if status_monitor:

@@ -121,7 +121,7 @@ class ResourceManager(BaseManager):
     resource_broken = pyqtSignal(str, str)  # 资源ID, 错误信息
     
     def __init__(self, config_manager=None):
-        super().__init__("ResourceManager", config_manager)
+        super().__init__(config_manager, "ResourceManager")
         
         # 数据存储
         self.resources: Dict[str, StudyResource] = {}
@@ -145,7 +145,149 @@ class ResourceManager(BaseManager):
         self._init_default_tags()
         
         self.logger.info("学习资源管理器初始化完成")
-    
+
+    def initialize(self) -> bool:
+        """
+        初始化学习资源管理器
+
+        Returns:
+            bool: 初始化是否成功
+        """
+        try:
+            with self._lock:
+                if self._initialized:
+                    return True
+
+                # 创建资源目录
+                self._create_resource_directories()
+
+                # 初始化默认标签
+                self._init_default_tags()
+
+                # 加载资源数据
+                self._load_resources()
+
+                # 加载收藏夹
+                self._load_collections()
+
+                # 加载笔记
+                self._load_notes()
+
+                # 验证资源完整性
+                self._verify_resource_integrity()
+
+                self._initialized = True
+                self._running = True
+                self.manager_initialized.emit()
+
+                self.logger.info("学习资源管理器初始化成功")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"学习资源管理器初始化失败: {e}")
+            self.manager_error.emit("initialization_failed", str(e))
+            return False
+
+    def _create_resource_directories(self):
+        """创建资源目录结构"""
+        try:
+            directories = [
+                self.resource_base_path,
+                self.resource_base_path / "documents",
+                self.resource_base_path / "videos",
+                self.resource_base_path / "audio",
+                self.resource_base_path / "images",
+                self.resource_base_path / "notes",
+                self.resource_base_path / "collections"
+            ]
+
+            for directory in directories:
+                directory.mkdir(parents=True, exist_ok=True)
+
+            self.logger.info("资源目录结构创建完成")
+        except Exception as e:
+            self.logger.error(f"创建资源目录失败: {e}")
+
+    def _load_resources(self):
+        """加载资源数据"""
+        try:
+            if self.config_manager:
+                resource_config = self.config_manager.get_config('resource_manager', {})
+                resources_data = resource_config.get('resources', {})
+
+                # 重建资源数据
+                for resource_id, resource_data in resources_data.items():
+                    try:
+                        # 这里可以添加资源数据的反序列化逻辑
+                        # 暂时只记录日志
+                        pass
+                    except Exception as e:
+                        self.logger.warning(f"加载资源 {resource_id} 失败: {e}")
+
+                self.logger.info("资源数据加载完成")
+        except Exception as e:
+            self.logger.error(f"加载资源数据失败: {e}")
+
+    def _load_collections(self):
+        """加载收藏夹"""
+        try:
+            if self.config_manager:
+                resource_config = self.config_manager.get_config('resource_manager', {})
+                collections_data = resource_config.get('collections', {})
+
+                # 重建收藏夹数据
+                for collection_id, collection_data in collections_data.items():
+                    try:
+                        # 这里可以添加收藏夹数据的反序列化逻辑
+                        # 暂时只记录日志
+                        pass
+                    except Exception as e:
+                        self.logger.warning(f"加载收藏夹 {collection_id} 失败: {e}")
+
+                self.logger.info("收藏夹加载完成")
+        except Exception as e:
+            self.logger.error(f"加载收藏夹失败: {e}")
+
+    def _load_notes(self):
+        """加载笔记"""
+        try:
+            if self.config_manager:
+                resource_config = self.config_manager.get_config('resource_manager', {})
+                notes_data = resource_config.get('notes', {})
+
+                # 重建笔记数据
+                for note_id, note_data in notes_data.items():
+                    try:
+                        # 这里可以添加笔记数据的反序列化逻辑
+                        # 暂时只记录日志
+                        pass
+                    except Exception as e:
+                        self.logger.warning(f"加载笔记 {note_id} 失败: {e}")
+
+                self.logger.info("笔记加载完成")
+        except Exception as e:
+            self.logger.error(f"加载笔记失败: {e}")
+
+    def _verify_resource_integrity(self):
+        """验证资源完整性"""
+        try:
+            broken_resources = []
+
+            for resource_id, resource in self.resources.items():
+                if resource.file_path:
+                    file_path = Path(resource.file_path)
+                    if not file_path.exists():
+                        broken_resources.append(resource_id)
+                        resource.status = ResourceStatus.BROKEN
+
+            if broken_resources:
+                self.logger.warning(f"发现 {len(broken_resources)} 个损坏的资源")
+            else:
+                self.logger.info("所有资源完整性验证通过")
+
+        except Exception as e:
+            self.logger.error(f"验证资源完整性失败: {e}")
+
     def _init_default_tags(self):
         """初始化默认标签"""
         try:

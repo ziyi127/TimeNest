@@ -509,6 +509,10 @@ class SmartFloatingWidget(QWidget):
         # 应用位置配置
         self._apply_position_config()
 
+        # 强制应用固定位置设置
+        if getattr(self, 'fixed_position', True):
+            QTimer.singleShot(100, lambda: self.center_on_screen(save_config=False))
+
         # 应用主题
         safe_call_method(self, 'apply_theme')
 
@@ -651,8 +655,21 @@ class SmartFloatingWidget(QWidget):
                 # 设置到屏幕顶部，留出一些边距
                 y = screen_geometry.y() + 10  # 距离顶部10px
 
-                self.move(x, y)
-                self.logger.info(f"浮窗位置设置为: ({x}, {y})")
+                # 强制设置位置
+                self.setGeometry(x, y, self.width(), self.height())
+
+                # 确保窗口显示并强制刷新
+                self.show()
+                self.raise_()
+                self.activateWindow()
+
+                # 验证位置是否正确设置
+                actual_pos = self.pos()
+                self.logger.info(f"浮窗位置设置为: ({x}, {y}), 实际位置: ({actual_pos.x()}, {actual_pos.y()})")
+
+                # 如果位置不正确，尝试再次设置
+                if abs(actual_pos.x() - x) > 5 or abs(actual_pos.y() - y) > 5:
+                    QTimer.singleShot(100, lambda: self._force_position(x, y))
 
                 # 可选择性保存位置到配置
                 if save_config:
@@ -661,6 +678,16 @@ class SmartFloatingWidget(QWidget):
 
         except Exception as e:
             self.logger.warning(f"设置浮窗位置失败: {e}")
+
+    def _force_position(self, x: int, y: int) -> None:
+        """强制设置位置"""
+        try:
+            self.move(x, y)
+            self.setGeometry(x, y, self.width(), self.height())
+            actual_pos = self.pos()
+            self.logger.info(f"强制位置设置: 目标({x}, {y}), 实际({actual_pos.x()}, {actual_pos.y()})")
+        except Exception as e:
+            self.logger.error(f"强制设置位置失败: {e}")
 
     def _apply_position_config(self):
         """应用位置配置"""
@@ -728,12 +755,18 @@ class SmartFloatingWidget(QWidget):
                 y = screen_geometry.y() + 10
                 self.logger.warning(f"未知位置设置: {position_str}，使用默认位置")
 
-            self.move(x, y)
-            self.logger.info(f"应用字符串位置 '{position_str}': ({x}, {y})")
+            # 强制设置位置
+            self.setGeometry(x, y, self.width(), self.height())
+            self.show()
+            self.raise_()
 
             # 验证最终位置
-            final_pos = self.pos()
-            self.logger.info(f"浮窗最终位置: ({final_pos.x()}, {final_pos.y()})")
+            actual_pos = self.pos()
+            self.logger.info(f"应用字符串位置 '{position_str}': 目标({x}, {y}), 实际({actual_pos.x()}, {actual_pos.y()})")
+
+            # 如果位置不正确，尝试再次设置
+            if abs(actual_pos.x() - x) > 5 or abs(actual_pos.y() - y) > 5:
+                QTimer.singleShot(100, lambda: self._force_position(x, y))
 
             # 更新配置为具体坐标，以便后续使用
             self.config['position'] = {'x': x, 'y': y}
@@ -1133,6 +1166,7 @@ class SmartFloatingWidget(QWidget):
             transparent: 是否启用鼠标穿透
         """
         try:
+            old_transparent = self.mouse_transparent
             self.mouse_transparent = transparent
 
             # 重新设置窗口标志
@@ -1143,15 +1177,23 @@ class SmartFloatingWidget(QWidget):
                 Qt.WindowType.NoDropShadowWindowHint
             )
 
-
             if self.mouse_transparent:
                 window_flags |= Qt.WindowType.WindowTransparentForInput
 
-            self.setWindowFlags(window_flags)
-            self.show()  # 重新显示以应用新标志
+            # 保存当前位置
+            current_pos = self.pos()
 
+            self.setWindowFlags(window_flags)
+
+            # 恢复位置并重新显示
+            self.move(current_pos)
+            self.show()
+
+            # 保存配置
+            self.config['mouse_transparent'] = transparent
             self.save_config()
-            self.logger.debug(f"鼠标穿透设置为: {transparent}")
+
+            self.logger.info(f"鼠标穿透设置从 {old_transparent} 更改为: {transparent}")
 
         except Exception as e:
             self.logger.error(f"设置鼠标穿透失败: {e}")
@@ -1164,12 +1206,21 @@ class SmartFloatingWidget(QWidget):
             fixed: 是否固定位置
         """
         try:
+            old_fixed = self.fixed_position
             self.fixed_position = fixed
+
             if fixed:
                 # 固定到屏幕顶部中央
                 self.center_on_screen(save_config=True)
+                self.logger.info("浮窗已固定到屏幕顶部中央")
             else:
-                self.save_config()
+                self.logger.info("浮窗固定位置已取消，可自由拖拽")
+
+            # 保存配置
+            self.config['fixed_position'] = fixed
+            self.save_config()
+
+            self.logger.info(f"固定位置设置从 {old_fixed} 更改为: {fixed}")
 
         except Exception as e:
             self.logger.error(f"设置固定位置失败: {e}")

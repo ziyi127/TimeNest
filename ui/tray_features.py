@@ -130,7 +130,24 @@ class TrayFeatureManager(QObject):
         except Exception as e:
             self.logger.error(f"显示插件市场失败: {e}")
             self._show_error("插件市场", str(e))
-    
+
+    def show_about_dialog(self):
+        """显示关于对话框"""
+        try:
+            self.logger.info("显示关于对话框被调用")
+
+            from ui.about_dialog import AboutDialog
+
+            dialog = AboutDialog()
+            dialog.exec()
+
+            self.feature_activated.emit("about_dialog")
+            self.logger.info("关于对话框已显示")
+
+        except Exception as e:
+            self.logger.error(f"显示关于对话框失败: {e}")
+            self._show_error("关于对话框", str(e))
+
     def show_time_calibration(self):
         """显示时间校准"""
         try:

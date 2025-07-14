@@ -1022,6 +1022,11 @@ class ConfigManager(QObject):
                 'class': '',
                 'student_id': ''
             },
+            'schedule': {
+                'start_date': '',  # 开学日期，格式：YYYY-MM-DD
+                'semester_weeks': 20,  # 学期总周数
+                'current_week': 1  # 当前周次
+            },
             'preferences': {
                 'startup_component': 'schedule',
                 'show_tips': True,

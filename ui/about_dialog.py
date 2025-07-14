@@ -17,6 +17,7 @@ TimeNest 关于对话框
 """
 
 import logging
+import os
 import sys
 import platform
 from typing import Optional
@@ -44,11 +45,12 @@ class AboutDialog(QDialog):
     
     # 应用程序信息
     APP_NAME = "TimeNest"
-    APP_VERSION = "1.0.0"
+    APP_VERSION = "1.1.2 Preview"
     APP_DESCRIPTION = "智能课程表管理和时间提醒工具"
-    APP_AUTHOR = "TimeNest Team"
-    APP_EMAIL = "contact@timenest.app"
-    APP_WEBSITE = "https://github.com/timenest/timenest"
+    APP_AUTHOR = "ziyi127"
+    APP_EMAIL = "ziyihed@outlook.com"
+    APP_WEBSITE = "https://ziyi127.github.io/TimeNest-Website"
+    APP_REPOSITORY = "https://github.com/ziyi127/TimeNest"
     APP_LICENSE = "MIT License"
     
     def __init__(self, parent=None):
@@ -143,12 +145,32 @@ class AboutDialog(QDialog):
         
         # 图标
         icon_label = QLabel()
-        # 这里可以设置应用程序图标
-        # icon_label.setPixmap(QPixmap(":/icons/app_icon.png").scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio))
         icon_label.setFixedSize(64, 64)
-        icon_label.setStyleSheet("QLabel { border: 1px solid gray; background-color: #f0f0f0; }")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setText("ICON")
+
+        # 优先使用app_icon.png作为关于页面的logo
+        icon_loaded = False
+        icon_paths = [
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'app_icon.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_32x32.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_24x24.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon_16x16.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'resources', 'icons', 'tray_icon.png')
+        ]
+
+        for icon_path in icon_paths:
+            if os.path.exists(icon_path):
+                pixmap = QPixmap(icon_path)
+                if not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                    icon_label.setPixmap(scaled_pixmap)
+                    icon_loaded = True
+                    break
+
+        if not icon_loaded:
+            # 如果没有找到图标文件，显示默认样式
+            icon_label.setStyleSheet("QLabel { border: 1px solid gray; background-color: #f0f0f0; }")
+            icon_label.setText("ICON")
         header_layout.addWidget(icon_label)
         
         # 应用程序信息
@@ -201,9 +223,14 @@ class AboutDialog(QDialog):
         website_label = QLabel(f'<a href="{self.APP_WEBSITE}">{self.APP_WEBSITE}</a>')
         website_label.setOpenExternalLinks(True)
         details_layout.addWidget(website_label, 2, 1)
-        
-        details_layout.addWidget(QLabel("许可证:"), 3, 0)
-        details_layout.addWidget(QLabel(self.APP_LICENSE), 3, 1)
+
+        details_layout.addWidget(QLabel("项目地址:"), 3, 0)
+        repository_label = QLabel(f'<a href="{self.APP_REPOSITORY}">{self.APP_REPOSITORY}</a>')
+        repository_label.setOpenExternalLinks(True)
+        details_layout.addWidget(repository_label, 3, 1)
+
+        details_layout.addWidget(QLabel("许可证:"), 4, 0)
+        details_layout.addWidget(QLabel(self.APP_LICENSE), 4, 1)
         
         layout.addLayout(details_layout)
         
@@ -250,7 +277,7 @@ class AboutDialog(QDialog):
         version_layout.addWidget(QLabel(self.APP_VERSION), 0, 1)
         
         version_layout.addWidget(QLabel("构建日期:"), 1, 0)
-        version_layout.addWidget(QLabel("2024-01-01"), 1, 1)  # 这里可以从构建信息获取
+        version_layout.addWidget(QLabel("2025-01-01"), 1, 1)  # 这里可以从构建信息获取
         
         version_layout.addWidget(QLabel("Git 提交:"), 2, 0)
         version_layout.addWidget(QLabel("abc123def"), 2, 1)  # 这里可以从Git信息获取
@@ -310,22 +337,10 @@ class AboutDialog(QDialog):
         
         main_authors = [
             {
-                "name": "张三",
+                "name": "ziyi127",
                 "role": "项目负责人 & 核心开发者",
-                "email": "zhangsan@example.com",
-                "github": "https://github.com/zhangsan"
-            },
-            {
-                "name": "李四",
-                "role": "UI/UX 设计师 & 前端开发",
-                "email": "lisi@example.com",
-                "github": "https://github.com/lisi"
-            },
-            {
-                "name": "王五",
-                "role": "后端开发 & 数据库设计",
-                "email": "wangwu@example.com",
-                "github": "https://github.com/wangwu"
+                "email": "ziyihed@outlook.com",
+                "github": "https://github.com/ziyi127"
             }
         ]
         
@@ -343,13 +358,9 @@ class AboutDialog(QDialog):
         contributors_text.setReadOnly(True)
         contributors_text.setMaximumHeight(150)
         contributors_text.setPlainText(
-            "感谢以下贡献者对项目的支持：\n\n"
-            "• 赵六 - 文档编写\n"
-            "• 孙七 - 测试和反馈\n"
-            "• 周八 - 翻译工作\n"
-            "• 吴九 - 图标设计\n"
-            "• 郑十 - 功能建议\n\n"
-            "以及所有提交问题报告和功能请求的用户们！"
+            "暂无其他贡献者\n\n"
+            "欢迎更多开发者加入 TimeNest 项目！\n"
+            "如果您想为项目做出贡献，请访问我们的 GitHub 仓库。"
         )
         contributors_layout.addWidget(contributors_text)
         
@@ -365,12 +376,12 @@ class AboutDialog(QDialog):
         contact_layout.addWidget(contact_email, 0, 1)
         
         contact_layout.addWidget(QLabel("GitHub:"), 1, 0)
-        github_link = QLabel(f'<a href="{self.APP_WEBSITE}">{self.APP_WEBSITE}</a>')
+        github_link = QLabel(f'<a href="{self.APP_REPOSITORY}">{self.APP_REPOSITORY}</a>')
         github_link.setOpenExternalLinks(True)
         contact_layout.addWidget(github_link, 1, 1)
-        
+
         contact_layout.addWidget(QLabel("问题反馈:"), 2, 0)
-        issues_link = QLabel('<a href="https://github.com/timenest/timenest/issues">GitHub Issues</a>')
+        issues_link = QLabel('<a href="https://github.com/ziyi127/TimeNest/issues">GitHub Issues</a>')
         issues_link.setOpenExternalLinks(True)
         contact_layout.addWidget(issues_link, 2, 1)
         
@@ -646,7 +657,16 @@ class AboutDialog(QDialog):
         Returns:
             更新历史文本
         """
-        return """版本 1.0.0 (2024-01-01)
+        return """版本 1.1.2 Preview (2025-01-14)
+• 预览版本发布
+• 优化关于页面显示
+• 更新应用图标和界面
+• 完善插件市场功能
+• 改进课程表编辑体验
+• 修复多周循环显示问题
+• 优化托盘菜单功能
+
+版本 1.0.0 (2025-01-01)
 • 初始版本发布
 • 实现基本的课程表管理功能
 • 添加课程提醒和通知
@@ -654,16 +674,18 @@ class AboutDialog(QDialog):
 • 实现系统托盘集成
 • 添加数据导入导出功能
 • 支持自定义主题
-• 实现多语言支持
+• 添加多周循环功能（单双周）
+• 添加插件市场功能
+• 修复课程表编辑bug
 
-版本 0.9.0 (2023-12-15)
+版本 0.9.0 (2024-12-15)
 • Beta版本发布
 • 核心功能基本完成
 • 进行大量测试和优化
 • 修复已知问题
 • 完善用户界面
 
-版本 0.8.0 (2023-12-01)
+版本 0.8.0 (2024-12-01)
 • Alpha版本发布
 • 实现主要功能模块
 • 建立项目架构

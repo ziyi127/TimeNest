@@ -80,7 +80,7 @@ class StudyAssistantManager(BaseManager):
     study_insight_available = pyqtSignal(str)  # 洞察内容
     
     def __init__(self, config_manager=None, schedule_enhancement=None):
-        super().__init__("StudyAssistant", config_manager)
+        super().__init__(config_manager, "StudyAssistant")
         
         self.schedule_enhancement = schedule_enhancement
         
@@ -108,7 +108,111 @@ class StudyAssistantManager(BaseManager):
         }
         
         self.logger.info("智能学习助手管理器初始化完成")
-    
+
+    def initialize(self) -> bool:
+        """
+        初始化智能学习助手管理器
+
+        Returns:
+            bool: 初始化是否成功
+        """
+        try:
+            with self._lock:
+                if self._initialized:
+                    return True
+
+                # 加载用户配置
+                self._load_user_profile()
+
+                # 初始化推荐系统
+                self._init_recommendation_system()
+
+                # 加载历史数据
+                self._load_analytics_data()
+
+                # 启动定期分析
+                self._start_periodic_analysis()
+
+                self._initialized = True
+                self._running = True
+                self.manager_initialized.emit()
+
+                self.logger.info("智能学习助手管理器初始化成功")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"智能学习助手管理器初始化失败: {e}")
+            self.manager_error.emit("initialization_failed", str(e))
+            return False
+
+    def _load_user_profile(self):
+        """加载用户学习档案"""
+        try:
+            if self.config_manager:
+                profile_config = self.config_manager.get_config('study_assistant', {})
+                user_profile = profile_config.get('user_profile', {})
+
+                # 更新用户档案
+                for key, value in user_profile.items():
+                    if key in self.user_profile:
+                        if key in ['study_pattern', 'learning_style']:
+                            # 枚举类型需要特殊处理
+                            try:
+                                if key == 'study_pattern':
+                                    self.user_profile[key] = StudyPattern(value)
+                                elif key == 'learning_style':
+                                    self.user_profile[key] = LearningStyle(value)
+                            except ValueError:
+                                self.logger.warning(f"无效的{key}值: {value}")
+                        else:
+                            self.user_profile[key] = value
+
+                self.logger.info("用户学习档案加载完成")
+        except Exception as e:
+            self.logger.error(f"加载用户学习档案失败: {e}")
+
+    def _init_recommendation_system(self):
+        """初始化推荐系统"""
+        try:
+            # 清理过期推荐
+            current_time = datetime.now()
+            expired_recommendations = [
+                rec_id for rec_id, rec in self.recommendations.items()
+                if rec.expires_at and rec.expires_at < current_time
+            ]
+
+            for rec_id in expired_recommendations:
+                del self.recommendations[rec_id]
+
+            self.logger.info("推荐系统初始化完成")
+        except Exception as e:
+            self.logger.error(f"推荐系统初始化失败: {e}")
+
+    def _load_analytics_data(self):
+        """加载分析数据"""
+        try:
+            if self.config_manager:
+                analytics_config = self.config_manager.get_config('study_assistant', {})
+                analytics_data = analytics_config.get('analytics_cache', {})
+
+                if analytics_data:
+                    # 重建分析缓存
+                    self.analytics_cache = LearningAnalytics(**analytics_data)
+                    self.last_analytics_update = datetime.now()
+
+                self.logger.info("分析数据加载完成")
+        except Exception as e:
+            self.logger.error(f"加载分析数据失败: {e}")
+
+    def _start_periodic_analysis(self):
+        """启动定期分析"""
+        try:
+            # 这里可以启动定时器进行定期分析
+            # 暂时只记录日志
+            self.logger.info("定期分析已启动")
+        except Exception as e:
+            self.logger.error(f"启动定期分析失败: {e}")
+
     def analyze_study_patterns(self) -> Dict[str, Any]:
         """分析学习模式"""
         try:

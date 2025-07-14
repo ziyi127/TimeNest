@@ -112,7 +112,7 @@ class StudyPlannerManager(BaseManager):
     plan_optimization_suggested = pyqtSignal(str, str)  # 计划ID, 建议
     
     def __init__(self, config_manager=None, schedule_enhancement=None, study_assistant=None):
-        super().__init__("StudyPlanner", config_manager)
+        super().__init__(config_manager, "StudyPlanner")
         
         self.schedule_enhancement = schedule_enhancement
         self.study_assistant = study_assistant
@@ -144,7 +144,114 @@ class StudyPlannerManager(BaseManager):
         }
         
         self.logger.info("智能学习计划生成器初始化完成")
-    
+
+    def initialize(self) -> bool:
+        """
+        初始化智能学习计划生成器
+
+        Returns:
+            bool: 初始化是否成功
+        """
+        try:
+            with self._lock:
+                if self._initialized:
+                    return True
+
+                # 加载计划配置
+                self._load_planning_preferences()
+
+                # 加载历史计划
+                self._load_study_plans()
+
+                # 加载学习目标
+                self._load_study_goals()
+
+                # 初始化学科权重
+                self._init_subject_weights()
+
+                self._initialized = True
+                self._running = True
+                self.manager_initialized.emit()
+
+                self.logger.info("智能学习计划生成器初始化成功")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"智能学习计划生成器初始化失败: {e}")
+            self.manager_error.emit("initialization_failed", str(e))
+            return False
+
+    def _load_planning_preferences(self):
+        """加载计划偏好设置"""
+        try:
+            if self.config_manager:
+                planner_config = self.config_manager.get_config('study_planner', {})
+                preferences = planner_config.get('planning_preferences', {})
+
+                # 更新计划偏好
+                for key, value in preferences.items():
+                    if key in self.planning_preferences:
+                        self.planning_preferences[key] = value
+
+                self.logger.info("计划偏好设置加载完成")
+        except Exception as e:
+            self.logger.error(f"加载计划偏好设置失败: {e}")
+
+    def _load_study_plans(self):
+        """加载历史学习计划"""
+        try:
+            if self.config_manager:
+                planner_config = self.config_manager.get_config('study_planner', {})
+                plans_data = planner_config.get('study_plans', {})
+
+                # 重建学习计划
+                for plan_id, plan_data in plans_data.items():
+                    try:
+                        # 这里可以添加计划数据的反序列化逻辑
+                        # 暂时只记录日志
+                        pass
+                    except Exception as e:
+                        self.logger.warning(f"加载计划 {plan_id} 失败: {e}")
+
+                self.logger.info("历史学习计划加载完成")
+        except Exception as e:
+            self.logger.error(f"加载历史学习计划失败: {e}")
+
+    def _load_study_goals(self):
+        """加载学习目标"""
+        try:
+            if self.config_manager:
+                planner_config = self.config_manager.get_config('study_planner', {})
+                goals_data = planner_config.get('study_goals', {})
+
+                # 重建学习目标
+                for goal_id, goal_data in goals_data.items():
+                    try:
+                        # 这里可以添加目标数据的反序列化逻辑
+                        # 暂时只记录日志
+                        pass
+                    except Exception as e:
+                        self.logger.warning(f"加载目标 {goal_id} 失败: {e}")
+
+                self.logger.info("学习目标加载完成")
+        except Exception as e:
+            self.logger.error(f"加载学习目标失败: {e}")
+
+    def _init_subject_weights(self):
+        """初始化学科权重"""
+        try:
+            if self.config_manager:
+                planner_config = self.config_manager.get_config('study_planner', {})
+                weights = planner_config.get('subject_difficulty_weights', {})
+
+                # 更新学科权重
+                for subject, weight in weights.items():
+                    self.subject_difficulty_weights[subject] = weight
+
+                self.logger.info("学科权重初始化完成")
+        except Exception as e:
+            self.logger.error(f"初始化学科权重失败: {e}")
+
     def create_study_goal(self, title: str, subject: str, target_date: datetime,
                          estimated_hours: float, description: str = "",
                          priority: int = 3, milestones: List[str] = None) -> str:

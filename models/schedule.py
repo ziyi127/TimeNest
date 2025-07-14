@@ -91,11 +91,14 @@ class ClassItem:
     teacher: str = ""
     notes: str = ""
     is_active: bool = True
-    
+    start_week: int = 1  # 开始周次
+    end_week: int = 16   # 结束周次
+    week_type: str = "all"  # 周次类型: "all"(全部), "odd"(单周), "even"(双周)
+
     def __post_init__(self):
         if not self.id:
             self.id = str(uuid.uuid4())
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             'id': self.id,
@@ -105,9 +108,12 @@ class ClassItem:
             'classroom': self.classroom,
             'teacher': self.teacher,
             'notes': self.notes,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'start_week': self.start_week,
+            'end_week': self.end_week,
+            'week_type': self.week_type
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ClassItem':
         return cls(
@@ -118,8 +124,41 @@ class ClassItem:
             classroom=data.get('classroom', ''),
             teacher=data.get('teacher', ''),
             notes=data.get('notes', ''),
-            is_active=data.get('is_active', True)
+            is_active=data.get('is_active', True),
+            start_week=data.get('start_week', 1),
+            end_week=data.get('end_week', 16),
+            week_type=data.get('week_type', 'all')
         )
+
+    def is_active_in_week(self, week_number: int, start_date: date = None) -> bool:
+        """判断在指定周次是否有课"""
+        # 检查周次范围
+        if not (self.start_week <= week_number <= self.end_week):
+            return False
+
+        # 检查周次类型
+        if self.week_type == "all":
+            return True
+        elif self.week_type == "odd":
+            return week_number % 2 == 1
+        elif self.week_type == "even":
+            return week_number % 2 == 0
+
+        return False
+
+    def get_display_weeks(self) -> str:
+        """获取周次显示文本"""
+        if self.start_week == self.end_week:
+            week_text = f"第{self.start_week}周"
+        else:
+            week_text = f"第{self.start_week}-{self.end_week}周"
+
+        if self.week_type == "odd":
+            week_text += "(单周)"
+        elif self.week_type == "even":
+            week_text += "(双周)"
+
+        return week_text
 
 @dataclass
 class Schedule:

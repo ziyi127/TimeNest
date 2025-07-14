@@ -55,6 +55,7 @@ class SystemTray(QObject):
     time_calibration_requested = pyqtSignal()
 
     # 应用控制信号
+    about_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, parent: Optional[QObject] = None, floating_manager=None):
@@ -144,6 +145,13 @@ class SystemTray(QObject):
                 calibration_action = QAction("⏰ 时间校准", self)
                 calibration_action.triggered.connect(self.time_calibration_requested)
                 menu.addAction(calibration_action)
+
+                menu.addSeparator()
+
+                # 帮助和信息
+                about_action = QAction("ℹ️ 关于 TimeNest", self)
+                about_action.triggered.connect(self.about_requested)
+                menu.addAction(about_action)
 
                 menu.addSeparator()
 
@@ -258,6 +266,7 @@ class SystemTrayManagerLegacy(QObject):
     time_calibration_requested = pyqtSignal()
 
     # 应用控制信号
+    about_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, floating_manager=None, parent=None):
@@ -378,6 +387,13 @@ class SystemTrayManagerLegacy(QObject):
         calibration_action = QAction("⏰ 时间校准", self)
         calibration_action.triggered.connect(self.time_calibration_requested)
         self.context_menu.addAction(calibration_action)
+
+        self.context_menu.addSeparator()
+
+        # 帮助和信息
+        about_action = QAction("ℹ️ 关于 TimeNest", self)
+        about_action.triggered.connect(self.about_requested)
+        self.context_menu.addAction(about_action)
 
         self.context_menu.addSeparator()
 

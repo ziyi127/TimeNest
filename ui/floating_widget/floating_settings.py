@@ -20,10 +20,11 @@ import logging
 from typing import Dict, Any, Optional, TYPE_CHECKING
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
+    QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QWidget,
     QLabel, QSlider, QCheckBox, QSpinBox, QComboBox, QPushButton,
     QListWidget, QListWidgetItem, QGroupBox, QColorDialog,
-    QFontDialog, QMessageBox, QFormLayout, QDialogButtonBox, QLineEdit
+    QFontDialog, QMessageBox, QFormLayout, QDialogButtonBox, QLineEdit,
+    QScrollArea
 )
 from PyQt6.QtGui import QFont, QColor
 
@@ -91,26 +92,22 @@ class FloatingSettingsDialog(QDialog):
         """初始化UI"""
         try:
             self.setWindowTitle("🎨 TimeNest 浮窗设置")
-            self.setFixedSize(650, 700)  # 增大窗口以容纳更多内容
+            self.setFixedSize(900, 650)  # 更大的窗口尺寸，确保内容不重叠
             self.setModal(True)
 
-            # 设置现代化样式
+            # 设置简洁的样式
             self.setStyleSheet("""
                 QDialog {
                     background-color: #f5f5f5;
-                    border-radius: 10px;
                 }
                 QTabWidget:pane {
                     border: 1px solid #ddd;
-                    border-radius: 8px;
                     background-color: white;
                 }
                 QTabBar:tab {
                     background-color: #e9e9e9;
                     padding: 8px 16px;
                     margin-right: 2px;
-                    border-top-left-radius: 6px;
-                    border-top-right-radius: 6px;
                 }
                 QTabBar:tab:selected {
                     background-color: white;
@@ -118,33 +115,26 @@ class FloatingSettingsDialog(QDialog):
                 }
                 QGroupBox {
                     font-weight: bold;
-                    border: 2px solid #ddd;
-                    border-radius: 8px;
+                    border: 1px solid #ddd;
                     margin-top: 10px;
                     padding-top: 10px;
                 }
                 QGroupBox:title {
                     subcontrol-origin: margin;
                     left: 10px;
-                    padding: 0 8px 0 8px;
+                    padding: 0 5px 0 5px;
                 }
             """)
 
             # 主布局
             layout = QVBoxLayout(self)
-            layout.setSpacing(10)
-            layout.setContentsMargins(15, 15, 15, 15)
+            layout.setSpacing(8)
+            layout.setContentsMargins(10, 10, 10, 10)
 
-            # 添加标题和描述
+            # 添加标题
             title_label = QLabel("🎨 浮窗个性化设置")
-            title_label.setStyleSheet("""
-                QLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #333;
-                    padding: 10px;
-                }
-            """)
+            title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #333; padding: 5px;")
+            title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(title_label)
 
             # 创建选项卡
@@ -259,61 +249,91 @@ class FloatingSettingsDialog(QDialog):
         """创建预设方案选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(20)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # 设置简单的样式，确保文字为黑色
+        tab.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                color: black;
+            }
+            QLabel {
+                color: black;
+                font-weight: bold;
+            }
+            QGroupBox {
+                color: black;
+                font-weight: bold;
+                border: 1px solid gray;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: black;
+            }
+        """)
 
         # 预设方案说明
         info_label = QLabel("选择预设方案快速配置浮窗样式")
-        info_label.setStyleSheet("color: #666; font-style: italic; margin-bottom: 10px;")
+        info_label.setStyleSheet("color: #666; font-style: italic; font-size: 14px;")
         layout.addWidget(info_label)
 
-        # 预设方案列表
-        presets_group = QGroupBox("📋 预设方案")
-        presets_layout = QVBoxLayout(presets_group)
+        # 预设方案网格布局
+        presets_group = QGroupBox("预设方案")
+        presets_layout = QGridLayout(presets_group)
+        presets_layout.setSpacing(10)
 
-        # 预设方案按钮
+        # 预设方案数据
         presets = [
-            ("minimal", "🎯 极简模式", "简洁的时间显示，适合专注工作"),
-            ("productivity", "💼 效率模式", "显示时间、课程和系统状态"),
-            ("comprehensive", "📊 全功能模式", "显示所有可用信息模块"),
-            ("gaming", "🎮 游戏模式", "低干扰，仅显示必要信息"),
-            ("presentation", "🎤 演示模式", "大字体，高对比度显示")
+            ("minimal", "🎯 极简模式", "简洁时间显示"),
+            ("productivity", "💼 效率模式", "时间+课程+状态"),
+            ("comprehensive", "📊 全功能模式", "显示所有模块"),
+            ("gaming", "🎮 游戏模式", "低干扰显示"),
+            ("presentation", "🎤 演示模式", "大字体高对比")
         ]
 
-        for preset_id, name, description in presets:
+        # 使用网格布局排列预设按钮
+        for i, (preset_id, name, description) in enumerate(presets):
+            row = i // 2
+            col = i % 2
+
             preset_btn = QPushButton(f"{name}\n{description}")
             preset_btn.setStyleSheet("""
                 QPushButton {
-                    text-align: left;
-                    padding: 12px;
-                    border: 2px solid #ddd;
-                    border-radius: 8px;
+                    text-align: center;
+                    padding: 10px;
+                    border: 1px solid gray;
                     background-color: white;
-                    margin: 2px;
+                    color: black;
+                    font-size: 11px;
+                    min-height: 50px;
+                    max-height: 50px;
                 }
                 QPushButton:hover {
-                    border-color: #007acc;
-                    background-color: #f0f8ff;
-                }
-                QPushButton:pressed {
-                    background-color: #e6f3ff;
+                    background-color: lightgray;
                 }
             """)
             preset_btn.clicked.connect(lambda checked, pid=preset_id: self.apply_preset(pid))
-            presets_layout.addWidget(preset_btn)
+            presets_layout.addWidget(preset_btn, row, col)
 
         layout.addWidget(presets_group)
 
         # 自定义方案管理
-        custom_group = QGroupBox("💾 自定义方案")
-        custom_layout = QFormLayout(custom_group)
+        custom_group = QGroupBox("自定义方案")
+        custom_layout = QHBoxLayout(custom_group)
 
         self.preset_name_edit = QLineEdit()
         self.preset_name_edit.setPlaceholderText("输入方案名称...")
+        custom_layout.addWidget(QLabel("方案名称:"))
+        custom_layout.addWidget(self.preset_name_edit)
 
-        save_preset_btn = QPushButton("💾 保存当前配置")
+        save_preset_btn = QPushButton("保存当前配置")
         save_preset_btn.clicked.connect(self.save_custom_preset)
-
-        custom_layout.addRow("方案名称:", self.preset_name_edit)
-        custom_layout.addRow("", save_preset_btn)
+        custom_layout.addWidget(save_preset_btn)
 
         layout.addWidget(custom_group)
         layout.addStretch()
@@ -324,190 +344,105 @@ class FloatingSettingsDialog(QDialog):
         """创建外观设置选项卡"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # 透明度设置
-        opacity_group = QGroupBox("🌟 透明度设置")
-        opacity_layout = QFormLayout(opacity_group)
+        opacity_group = QGroupBox("透明度设置")
+        opacity_layout = QHBoxLayout(opacity_group)
+
+        opacity_layout.addWidget(QLabel("透明度:"))
 
         self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
-        self.opacity_slider.setRange(30, 100)  # 扩大透明度范围
+        self.opacity_slider.setRange(30, 100)
         self.opacity_slider.setValue(90)
         self.opacity_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.opacity_slider.setTickInterval(10)
-        self.opacity_slider.setStyleSheet("""
-            QSlider:groove:horizontal {
-                border: 1px solid #bbb;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #ff6b6b, stop:1 #4ecdc4);
-                height: 8px;
-                border-radius: 4px;
-            }
-            QSlider:handle:horizontal {
-                background: white;
-                border: 2px solid #007acc;
-                width: 18px;
-                margin: -5px 0;
-                border-radius: 9px;
-            }
-        """)
+        opacity_layout.addWidget(self.opacity_slider)
 
         self.opacity_label = QLabel("90%")
-        self.opacity_label.setStyleSheet("font-weight: bold; color: #007acc;")
+        self.opacity_label.setStyleSheet("font-weight: bold; color: #007acc; min-width: 40px;")
         self.opacity_slider.valueChanged.connect(
             lambda v: [
                 self.opacity_label.setText(f"{v}%"),
-                self.on_setting_changed()  # 实时预览
+                self.on_setting_changed()
             ]
         )
+        opacity_layout.addWidget(self.opacity_label)
 
-        opacity_h_layout = QHBoxLayout()
-        opacity_h_layout.addWidget(self.opacity_slider)
-        opacity_h_layout.addWidget(self.opacity_label)
-
-        # 添加透明度预设按钮
-        opacity_presets = QHBoxLayout()
-        for value, name in [(50, "半透明"), (75, "适中"), (90, "推荐"), (100, "不透明")]:
-            btn = QPushButton(name)
-            btn.setStyleSheet("""
-                QPushButton {
-                    padding: 4px 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    background-color: #f8f9fa;
-                }
-                QPushButton:hover {
-                    background-color: #e9ecef;
-                }
-            """)
-            btn.clicked.connect(lambda checked, v=value: self.opacity_slider.setValue(v))
-            opacity_presets.addWidget(btn)
-
-        opacity_layout.addRow("透明度:", opacity_h_layout)
-        opacity_layout.addRow("快速设置:", opacity_presets)
         layout.addWidget(opacity_group)
 
         # 尺寸设置
-        size_group = QGroupBox("📏 尺寸设置")
+        size_group = QGroupBox("尺寸设置")
         size_layout = QFormLayout(size_group)
 
         # 宽度设置
         width_layout = QHBoxLayout()
         self.width_spin = QSpinBox()
-        self.width_spin.setRange(250, 800)  # 扩大范围
+        self.width_spin.setRange(250, 800)
         self.width_spin.setValue(400)
         self.width_spin.setSuffix(" px")
         self.width_spin.valueChanged.connect(self.on_setting_changed)
-
-        self.width_slider = QSlider(Qt.Orientation.Horizontal)
-        self.width_slider.setRange(250, 800)
-        self.width_slider.setValue(400)
-        self.width_slider.valueChanged.connect(self.width_spin.setValue)
-        self.width_spin.valueChanged.connect(self.width_slider.setValue)
-
         width_layout.addWidget(self.width_spin)
-        width_layout.addWidget(self.width_slider)
+        width_layout.addStretch()
+        size_layout.addRow("宽度:", width_layout)
 
         # 高度设置
         height_layout = QHBoxLayout()
         self.height_spin = QSpinBox()
-        self.height_spin.setRange(40, 120)  # 扩大范围
+        self.height_spin.setRange(40, 120)
         self.height_spin.setValue(60)
         self.height_spin.setSuffix(" px")
         self.height_spin.valueChanged.connect(self.on_setting_changed)
-
-        self.height_slider = QSlider(Qt.Orientation.Horizontal)
-        self.height_slider.setRange(40, 120)
-        self.height_slider.setValue(60)
-        self.height_slider.valueChanged.connect(self.height_spin.setValue)
-        self.height_spin.valueChanged.connect(self.height_slider.setValue)
-
         height_layout.addWidget(self.height_spin)
-        height_layout.addWidget(self.height_slider)
+        height_layout.addStretch()
+        size_layout.addRow("高度:", height_layout)
 
-        # 圆角半径设置
+        # 圆角设置
         radius_layout = QHBoxLayout()
         self.radius_spin = QSpinBox()
-        self.radius_spin.setRange(0, 60)  # 扩大范围
+        self.radius_spin.setRange(0, 60)
         self.radius_spin.setValue(30)
         self.radius_spin.setSuffix(" px")
         self.radius_spin.valueChanged.connect(self.on_setting_changed)
-
-        self.radius_slider = QSlider(Qt.Orientation.Horizontal)
-        self.radius_slider.setRange(0, 60)
-        self.radius_slider.setValue(30)
-        self.radius_slider.valueChanged.connect(self.radius_spin.setValue)
-        self.radius_spin.valueChanged.connect(self.radius_slider.setValue)
-
         radius_layout.addWidget(self.radius_spin)
-        radius_layout.addWidget(self.radius_slider)
+        radius_layout.addStretch()
+        size_layout.addRow("圆角:", radius_layout)
 
-        # 尺寸预设
-        size_presets = QHBoxLayout()
-        presets = [
-            (350, 50, "紧凑"),
-            (400, 60, "标准"),
-            (500, 70, "宽敞"),
-            (600, 80, "大屏")
-        ]
-
-        for width, height, name in presets:
-            btn = QPushButton(name)
-            btn.setStyleSheet("""
-                QPushButton {
-                    padding: 4px 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    background-color: #f8f9fa;
-                }
-                QPushButton:hover {
-                    background-color: #e9ecef;
-                }
-            """)
-            btn.clicked.connect(lambda checked, w=width, h=height: [
-                self.width_spin.setValue(w),
-                self.height_spin.setValue(h)
-            ])
-            size_presets.addWidget(btn)
-
-        size_layout.addRow("宽度:", width_layout)
-        size_layout.addRow("高度:", height_layout)
-        size_layout.addRow("圆角半径:", radius_layout)
-        size_layout.addRow("快速设置:", size_presets)
         layout.addWidget(size_group)
         
-        # 主题设置
-        theme_group = QGroupBox("主题设置")
-        theme_layout = QFormLayout(theme_group)
-        
-        self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["跟随系统", "浅色主题", "深色主题", "自定义"])
-        self.theme_combo.currentTextChanged.connect(self.on_theme_changed)
-        
+        # 颜色和字体设置
+        style_group = QGroupBox("样式设置")
+        style_layout = QFormLayout(style_group)
+
+        # 背景色
+        bg_layout = QHBoxLayout()
         self.background_color_btn = QPushButton("选择背景色")
         self.background_color_btn.clicked.connect(self.choose_background_color)
-        
+        bg_layout.addWidget(self.background_color_btn)
+        bg_layout.addStretch()
+        style_layout.addRow("背景色:", bg_layout)
+
+        # 文字色
+        text_layout = QHBoxLayout()
         self.text_color_btn = QPushButton("选择文字色")
         self.text_color_btn.clicked.connect(self.choose_text_color)
-        
-        theme_layout.addRow("主题模式:", self.theme_combo)
-        theme_layout.addRow("背景颜色:", self.background_color_btn)
-        theme_layout.addRow("文字颜色:", self.text_color_btn)
-        layout.addWidget(theme_group)
-        
-        # 字体设置
-        font_group = QGroupBox("字体设置")
-        font_layout = QFormLayout(font_group)
-        
+        text_layout.addWidget(self.text_color_btn)
+        text_layout.addStretch()
+        style_layout.addRow("文字色:", text_layout)
+
+        # 字体
+        font_layout = QHBoxLayout()
         self.font_btn = QPushButton("选择字体")
         self.font_btn.clicked.connect(self.choose_font)
+        font_layout.addWidget(self.font_btn)
+
         self.font_label = QLabel("Arial, 12pt")
-        
-        font_h_layout = QHBoxLayout()
-        font_h_layout.addWidget(self.font_btn)
-        font_h_layout.addWidget(self.font_label)
-        
-        font_layout.addRow("字体:", font_h_layout)
-        layout.addWidget(font_group)
+        font_layout.addWidget(self.font_label)
+        font_layout.addStretch()
+        style_layout.addRow("字体:", font_layout)
+
+        layout.addWidget(style_group)
         
         layout.addStretch()
         return tab
@@ -572,134 +507,132 @@ class FloatingSettingsDialog(QDialog):
     def create_advanced_tab(self) -> QWidget:
         """创建高级设置选项卡"""
         tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # 位置设置
-        position_group = QGroupBox("位置设置")
-        position_layout = QFormLayout(position_group)
-        
+        main_layout = QVBoxLayout(tab)
+        main_layout.setSpacing(5)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # 设置简单的样式，确保文字为黑色
+        tab.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                color: black;
+            }
+            QLabel {
+                color: black;
+                font-size: 12px;
+            }
+        """)
+
+        # 创建滚动区域
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        # 滚动内容容器
+        scroll_content = QWidget()
+        layout = QVBoxLayout(scroll_content)
+        layout.setSpacing(15)
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        # 位置设置 - 使用简单的垂直布局
+        layout.addWidget(QLabel("=== 位置设置 ==="))
+
+        layout.addWidget(QLabel("预设位置:"))
         self.position_combo = QComboBox()
         self.position_combo.addItems([
             "屏幕顶部居中", "屏幕顶部左侧", "屏幕顶部右侧",
             "屏幕底部居中", "自定义位置"
         ])
         self.position_combo.currentTextChanged.connect(self.on_position_preset_changed)
-        
+        layout.addWidget(self.position_combo)
+
+        layout.addWidget(QLabel("X坐标:"))
         self.x_spin = QSpinBox()
         self.x_spin.setRange(0, 9999)
         self.x_spin.setValue(0)
-        
+        layout.addWidget(self.x_spin)
+
+        layout.addWidget(QLabel("Y坐标:"))
         self.y_spin = QSpinBox()
         self.y_spin.setRange(0, 9999)
         self.y_spin.setValue(10)
-        
-        position_layout.addRow("预设位置:", self.position_combo)
-        position_layout.addRow("X坐标:", self.x_spin)
-        position_layout.addRow("Y坐标:", self.y_spin)
-        layout.addWidget(position_group)
-        
-        # 动画设置
-        animation_group = QGroupBox("动画设置")
-        animation_layout = QFormLayout(animation_group)
-        
+        layout.addWidget(self.y_spin)
+
+        # 行为设置
+        layout.addWidget(QLabel("=== 行为设置 ==="))
+
         self.animation_enabled_check = QCheckBox("启用动画效果")
         self.animation_enabled_check.setChecked(True)
-        
+        layout.addWidget(self.animation_enabled_check)
+
+        layout.addWidget(QLabel("动画时长:"))
         self.animation_duration_spin = QSpinBox()
         self.animation_duration_spin.setRange(100, 1000)
         self.animation_duration_spin.setValue(300)
         self.animation_duration_spin.setSuffix(" ms")
-        
-        animation_layout.addRow("", self.animation_enabled_check)
-        animation_layout.addRow("动画时长:", self.animation_duration_spin)
-        layout.addWidget(animation_group)
-        
-        # 性能设置
-        performance_group = QGroupBox("性能设置")
-        performance_layout = QFormLayout(performance_group)
-        
+        layout.addWidget(self.animation_duration_spin)
+
+        layout.addWidget(QLabel("更新间隔:"))
         self.update_interval_spin = QSpinBox()
         self.update_interval_spin.setRange(500, 5000)
         self.update_interval_spin.setValue(1000)
         self.update_interval_spin.setSuffix(" ms")
-        
+        layout.addWidget(self.update_interval_spin)
+
         self.low_cpu_mode_check = QCheckBox("低CPU使用模式")
-        
-        performance_layout.addRow("更新间隔:", self.update_interval_spin)
-        performance_layout.addRow("", self.low_cpu_mode_check)
-        layout.addWidget(performance_group)
+        layout.addWidget(self.low_cpu_mode_check)
 
         # 交互设置
-        interaction_group = QGroupBox("交互设置")
-        interaction_layout = QFormLayout(interaction_group)
+        layout.addWidget(QLabel("=== 交互设置 ==="))
 
         self.mouse_transparent_check = QCheckBox("启用鼠标穿透")
         self.mouse_transparent_check.setToolTip("启用后，鼠标点击将穿透浮窗到下层窗口")
+        layout.addWidget(self.mouse_transparent_check)
 
         self.fixed_position_check = QCheckBox("固定位置")
         self.fixed_position_check.setToolTip("启用后，浮窗将固定在屏幕顶部中央，不可拖拽")
+        layout.addWidget(self.fixed_position_check)
 
         self.auto_rotate_check = QCheckBox("自动轮播内容")
         self.auto_rotate_check.setToolTip("当有多个模块时，自动轮播显示不同内容")
+        layout.addWidget(self.auto_rotate_check)
 
+        layout.addWidget(QLabel("轮播间隔:"))
         self.rotate_interval_spin = QSpinBox()
         self.rotate_interval_spin.setRange(3, 30)
         self.rotate_interval_spin.setValue(5)
         self.rotate_interval_spin.setSuffix(" 秒")
+        layout.addWidget(self.rotate_interval_spin)
 
-        interaction_layout.addRow("", self.mouse_transparent_check)
-        interaction_layout.addRow("", self.fixed_position_check)
-        interaction_layout.addRow("", self.auto_rotate_check)
-        interaction_layout.addRow("轮播间隔:", self.rotate_interval_spin)
-        layout.addWidget(interaction_group)
+        # 其他设置
+        layout.addWidget(QLabel("=== 其他设置 ==="))
 
-        # 启动设置
-        startup_group = QGroupBox("启动设置")
-        startup_layout = QFormLayout(startup_group)
-        
         self.auto_start_check = QCheckBox("开机自启动")
+        layout.addWidget(self.auto_start_check)
+
         self.start_minimized_check = QCheckBox("启动时最小化")
-        
-        startup_layout.addRow("", self.auto_start_check)
-        startup_layout.addRow("", self.start_minimized_check)
-        layout.addWidget(startup_group)
+        layout.addWidget(self.start_minimized_check)
 
-        # 高级操作
-        advanced_group = QGroupBox("高级操作")
-        advanced_layout = QVBoxLayout(advanced_group)
-
-        # 第一行按钮
-        button_row1 = QHBoxLayout()
+        # 操作按钮
+        layout.addWidget(QLabel("=== 操作 ==="))
 
         self.preview_button = QPushButton("预览设置")
         self.preview_button.setToolTip("预览当前设置效果")
         self.preview_button.clicked.connect(self.preview_settings)
-        button_row1.addWidget(self.preview_button)
+        layout.addWidget(self.preview_button)
 
         self.reset_button = QPushButton("重置默认")
         self.reset_button.setToolTip("重置所有设置为默认值")
         self.reset_button.clicked.connect(self.reset_to_defaults)
-        button_row1.addWidget(self.reset_button)
-
-        advanced_layout.addLayout(button_row1)
-
-        # 第二行按钮
-        button_row2 = QHBoxLayout()
-
-        self.export_button = QPushButton("导出设置")
-        self.export_button.setToolTip("导出当前设置到文件")
-        self.export_button.clicked.connect(self.export_settings)
-        button_row2.addWidget(self.export_button)
-
-        self.import_button = QPushButton("导入设置")
-        self.import_button.setToolTip("从文件导入设置")
-        self.import_button.clicked.connect(self.import_settings)
-        button_row2.addWidget(self.import_button)
-
-        advanced_layout.addLayout(button_row2)
-        layout.addWidget(advanced_group)
+        layout.addWidget(self.reset_button)
 
         layout.addStretch()
+
+        # 设置滚动区域
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area)
+
         return tab
 
     def load_current_settings(self) -> None:
@@ -859,11 +792,18 @@ class FloatingSettingsDialog(QDialog):
             # 获取屏幕尺寸
             screen = QApplication.primaryScreen()
             if not screen:
+                self.logger.warning("无法获取主屏幕信息")
                 return
 
             screen_geometry = screen.availableGeometry()
-            widget_width = self.width_spin.value()
-            widget_height = self.height_spin.value()
+
+            # 安全获取控件值
+            try:
+                widget_width = self.width_spin.value() if hasattr(self, 'width_spin') else 400
+                widget_height = self.height_spin.value() if hasattr(self, 'height_spin') else 60
+            except Exception as e:
+                self.logger.warning(f"获取控件值失败: {e}")
+                widget_width, widget_height = 400, 60
 
             # 计算预设位置
             if preset_name == "屏幕顶部居中":
@@ -881,9 +821,17 @@ class FloatingSettingsDialog(QDialog):
             else:  # 自定义位置
                 return  # 不修改坐标
 
-            # 更新坐标输入框
-            self.x_spin.setValue(x)
-            self.y_spin.setValue(y)
+            # 安全更新坐标输入框
+            try:
+                if hasattr(self, 'x_spin'):
+                    self.x_spin.setValue(x)
+                if hasattr(self, 'y_spin'):
+                    self.y_spin.setValue(y)
+            except Exception as e:
+                self.logger.warning(f"更新坐标输入框失败: {e}")
+
+        except Exception as e:
+            self.logger.error(f"位置预设变化处理失败: {e}")
 
             # 启用/禁用坐标输入框
             is_custom = preset_name == "自定义位置"
@@ -1330,30 +1278,49 @@ class FloatingSettingsDialog(QDialog):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
 
-
             if reply == QMessageBox.StandardButton.Yes:
-                # 重置外观设置
-                self.opacity_slider.setValue(90)
-                self.width_spin.setValue(400)
-                self.height_spin.setValue(60)
-                self.radius_spin.setValue(30)
+                # 安全重置外观设置
+                try:
+                    if hasattr(self, 'opacity_slider'):
+                        self.opacity_slider.setValue(90)
+                    if hasattr(self, 'width_spin'):
+                        self.width_spin.setValue(400)
+                    if hasattr(self, 'height_spin'):
+                        self.height_spin.setValue(60)
+                    if hasattr(self, 'radius_spin'):
+                        self.radius_spin.setValue(30)
+                except Exception as e:
+                    self.logger.warning(f"重置外观设置失败: {e}")
 
-                # 重置模块设置
-                for i in range(self.modules_list.count()):
-                    item = self.modules_list.item(i)
-                    module_id = item.data(Qt.ItemDataRole.UserRole)
-                    # 默认启用时间和课程表模块
-                    if module_id in ['time', 'schedule']:
-                        item.setCheckState(Qt.CheckState.Checked)
-                    else:
-                        item.setCheckState(Qt.CheckState.Unchecked)
+                # 安全重置模块设置
+                try:
+                    if hasattr(self, 'modules_list'):
+                        for i in range(self.modules_list.count()):
+                            item = self.modules_list.item(i)
+                            if item:
+                                module_id = item.data(Qt.ItemDataRole.UserRole)
+                                # 默认启用时间和课程表模块
+                                if module_id in ['time', 'schedule']:
+                                    item.setCheckState(Qt.CheckState.Checked)
+                                else:
+                                    item.setCheckState(Qt.CheckState.Unchecked)
+                except Exception as e:
+                    self.logger.warning(f"重置模块设置失败: {e}")
 
-                # 重置高级设置
-                self.animation_duration_spin.setValue(300)
-                self.mouse_transparent_check.setChecked(True)
-                self.fixed_position_check.setChecked(True)
-                self.auto_rotate_check.setChecked(True)
-                self.rotate_interval_spin.setValue(5)
+                # 安全重置高级设置
+                try:
+                    if hasattr(self, 'animation_duration_spin'):
+                        self.animation_duration_spin.setValue(300)
+                    if hasattr(self, 'mouse_transparent_check'):
+                        self.mouse_transparent_check.setChecked(True)
+                    if hasattr(self, 'fixed_position_check'):
+                        self.fixed_position_check.setChecked(True)
+                    if hasattr(self, 'auto_rotate_check'):
+                        self.auto_rotate_check.setChecked(True)
+                    if hasattr(self, 'rotate_interval_spin'):
+                        self.rotate_interval_spin.setValue(5)
+                except Exception as e:
+                    self.logger.warning(f"重置高级设置失败: {e}")
 
                 QMessageBox.information(self, "重置完成", "设置已重置为默认值")
 
@@ -1368,29 +1335,72 @@ class FloatingSettingsDialog(QDialog):
                 QMessageBox.warning(self, "警告", "浮窗不可用，无法预览")
                 return
 
-            # 临时应用设置进行预览
-            temp_settings = self.collect_settings()
+            # 安全收集设置
+            try:
+                temp_settings = self.collect_settings()
+            except Exception as e:
+                self.logger.error(f"收集设置失败: {e}")
+                QMessageBox.critical(self, "错误", f"收集设置失败: {e}")
+                return
 
-            # 应用透明度
-            opacity = temp_settings.get('opacity', 0.9)
-            self.floating_widget.set_opacity(opacity)
+            # 安全应用透明度
+            try:
+                opacity = temp_settings.get('opacity', 0.9)
+                if hasattr(self.floating_widget, 'set_opacity'):
+                    self.floating_widget.set_opacity(opacity)
+            except Exception as e:
+                self.logger.warning(f"应用透明度失败: {e}")
 
-            # 应用大小
-            width = temp_settings.get('width', 400)
-            height = temp_settings.get('height', 60)
-            self.floating_widget.setFixedSize(width, height)
+            # 安全应用大小
+            try:
+                width = temp_settings.get('width', 400)
+                height = temp_settings.get('height', 60)
+                self.floating_widget.setFixedSize(width, height)
+            except Exception as e:
+                self.logger.warning(f"应用大小失败: {e}")
 
-            # 应用圆角
-            radius = temp_settings.get('border_radius', 30)
-            self.floating_widget.set_border_radius(radius)
+            # 安全应用圆角
+            try:
+                radius = temp_settings.get('border_radius', 30)
+                if hasattr(self.floating_widget, 'set_border_radius'):
+                    self.floating_widget.set_border_radius(radius)
+            except Exception as e:
+                self.logger.warning(f"应用圆角失败: {e}")
 
-            # 应用交互设置
-            mouse_transparent = temp_settings.get('mouse_transparent', True)
-            self.floating_widget.set_mouse_transparent(mouse_transparent)
+            # 安全应用交互设置
+            try:
+                mouse_transparent = temp_settings.get('mouse_transparent', False)
+                if hasattr(self.floating_widget, 'set_mouse_transparent'):
+                    self.floating_widget.set_mouse_transparent(mouse_transparent)
+                    self.logger.info(f"应用鼠标穿透设置: {mouse_transparent}")
+            except Exception as e:
+                self.logger.warning(f"应用鼠标穿透设置失败: {e}")
 
-            auto_rotate = temp_settings.get('auto_rotate_content', True)
-            rotation_interval = temp_settings.get('rotation_interval', 5000)
-            self.floating_widget.set_auto_rotate(auto_rotate, rotation_interval)
+            # 安全应用固定位置设置
+            try:
+                fixed_position = temp_settings.get('fixed_position', True)
+                if hasattr(self.floating_widget, 'set_fixed_position'):
+                    self.floating_widget.set_fixed_position(fixed_position)
+                    self.logger.info(f"应用固定位置设置: {fixed_position}")
+            except Exception as e:
+                self.logger.warning(f"应用固定位置设置失败: {e}")
+
+            # 安全应用自动轮播设置
+            try:
+                auto_rotate = temp_settings.get('auto_rotate_content', True)
+                if hasattr(self.floating_widget, 'auto_rotate_content'):
+                    self.floating_widget.auto_rotate_content = auto_rotate
+                    self.logger.info(f"应用自动轮播设置: {auto_rotate}")
+            except Exception as e:
+                self.logger.warning(f"应用自动轮播设置失败: {e}")
+
+            try:
+                auto_rotate = temp_settings.get('auto_rotate_content', True)
+                rotation_interval = temp_settings.get('rotation_interval', 5000)
+                if hasattr(self.floating_widget, 'set_auto_rotate'):
+                    self.floating_widget.set_auto_rotate(auto_rotate, rotation_interval)
+            except Exception as e:
+                self.logger.warning(f"应用自动轮播设置失败: {e}")
 
             QMessageBox.information(self, "预览", "设置预览已应用到浮窗")
 

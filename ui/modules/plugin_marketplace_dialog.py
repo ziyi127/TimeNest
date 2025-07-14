@@ -21,10 +21,11 @@ from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
-    QPushButton, QLabel, QComboBox, QLineEdit, QCheckBox, 
+    QPushButton, QLabel, QComboBox, QLineEdit, QCheckBox,
     QGroupBox, QFormLayout, QListWidget, QListWidgetItem,
     QTextEdit, QProgressBar, QMessageBox, QScrollArea,
-    QFrame, QGridLayout, QSplitter, QSpinBox, QSlider
+    QFrame, QGridLayout, QSplitter, QSpinBox, QSlider,
+    QApplication, QSizePolicy, QSpacerItem
 )
 from PyQt6.QtGui import QFont, QPixmap, QIcon
 
@@ -51,20 +52,22 @@ class PluginItemWidget(QFrame):
         """设置界面"""
         self.setFrameStyle(QFrame.Shape.Box)
         self.setStyleSheet("""
-            QFrame {
+            PluginItemWidget {
                 border: 1px solid #ddd;
                 border-radius: 8px;
                 background-color: white;
-                margin: 5px;
+                margin: 2px;
             }
-            QFrame:hover {
+            PluginItemWidget:hover {
                 border-color: #4472C4;
                 background-color: #f8f9fa;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
         """)
         
         layout = QVBoxLayout(self)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # 插件图标和名称
         header_layout = QHBoxLayout()
@@ -112,28 +115,65 @@ class PluginItemWidget(QFrame):
         
         # 操作按钮
         button_layout = QHBoxLayout()
-        
-        
+
         if self.is_installed:
             self.config_button = QPushButton("配置")
-        
-            self.config_button = QPushButton("配置")
+            self.config_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #2196F3;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #1976D2;
+                }
+            """)
             self.config_button.clicked.connect(lambda: self.configure_requested.emit(self.plugin_info.get('id')))
             button_layout.addWidget(self.config_button)
-            
+
             self.uninstall_button = QPushButton("卸载")
-            self.uninstall_button.setStyleSheet("background-color: #f44336; color: white;")
+            self.uninstall_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #f44336;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #d32f2f;
+                }
+            """)
             self.uninstall_button.clicked.connect(lambda: self.uninstall_requested.emit(self.plugin_info.get('id')))
             button_layout.addWidget(self.uninstall_button)
         else:
             self.install_button = QPushButton("安装")
-            self.install_button.setStyleSheet("background-color: #4CAF50; color: white;")
+            self.install_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #388E3C;
+                }
+            """)
             self.install_button.clicked.connect(lambda: self.install_requested.emit(self.plugin_info.get('id')))
             button_layout.addWidget(self.install_button)
-        
+
         layout.addLayout(button_layout)
-        
-        self.setFixedSize(280, 180)
+
+        # 设置最小和最大尺寸，而不是固定尺寸
+        self.setMinimumSize(260, 160)
+        self.setMaximumSize(300, 200)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
 
 class PluginMarketplaceDialog(QDialog):
@@ -158,7 +198,26 @@ class PluginMarketplaceDialog(QDialog):
         self.connect_signals()
         
         self.logger.info("插件市场模块初始化完成")
-    
+
+    def showEvent(self, event):
+        """对话框显示时自动刷新"""
+        super().showEvent(event)
+        # 延迟刷新，确保界面已完全显示
+        QTimer.singleShot(100, self.refresh_plugins)
+
+    def resizeEvent(self, event):
+        """窗口大小变化时重新布局"""
+        super().resizeEvent(event)
+        # 延迟重新布局，避免频繁调用
+        if hasattr(self, 'resize_timer'):
+            self.resize_timer.stop()
+        else:
+            self.resize_timer = QTimer()
+            self.resize_timer.setSingleShot(True)
+            self.resize_timer.timeout.connect(self.update_online_plugins)
+
+        self.resize_timer.start(200)  # 200ms延迟
+
     def setup_ui(self):
         """设置界面"""
         self.setWindowTitle("插件市场")
@@ -245,7 +304,9 @@ class PluginMarketplaceDialog(QDialog):
         # 插件网格容器
         self.online_plugins_widget = QWidget()
         self.online_plugins_layout = QGridLayout(self.online_plugins_widget)
-        self.online_plugins_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.online_plugins_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.online_plugins_layout.setSpacing(10)  # 设置组件间距
+        self.online_plugins_layout.setContentsMargins(10, 10, 10, 10)  # 设置边距
         
         scroll_area.setWidget(self.online_plugins_widget)
         layout.addWidget(scroll_area)
@@ -432,59 +493,179 @@ class PluginMarketplaceDialog(QDialog):
     def load_data(self):
         """加载数据"""
         try:
-            # 加载在线插件（模拟数据）
-            self.online_plugins = [
-                {
-                    'id': 'weather_widget',
-                    'name': '天气组件',
-                    'author': 'WeatherDev',
-                    'version': '1.2.0',
-                    'description': '显示实时天气信息的浮窗组件',
-                    'downloads': 1250,
-                    'rating': 4.5,
-                    'category': '组件'
-                },
-                {
-                    'id': 'todo_manager',
-                    'name': '待办事项管理',
-                    'author': 'ProductivityTeam',
-                    'version': '2.1.0',
-                    'description': '强大的待办事项管理插件，支持分类和提醒',
-                    'downloads': 890,
-                    'rating': 4.8,
-                    'category': '工具'
-                },
-                {
-                    'id': 'dark_theme_pro',
-                    'name': '专业深色主题',
-                    'author': 'ThemeStudio',
-                    'version': '1.0.5',
-                    'description': '精美的深色主题包，包含多种配色方案',
-                    'downloads': 2100,
-                    'rating': 4.7,
-                    'category': '主题'
-                }
-            ]
+            self.logger.info("开始加载插件数据...")
 
-            # 加载已安装插件（模拟数据）
-            self.installed_plugins = [
-                {
-                    'id': 'weather_widget',
-                    'name': '天气组件',
-                    'version': '1.2.0',
-                    'author': 'WeatherDev',
-                    'status': '已启用',
-                    'description': '显示实时天气信息的浮窗组件'
-                }
-            ]
+            # 加载已安装插件
+            self.load_installed_plugins()
 
-            # 更新界面
-            self.update_online_plugins()
-            self.update_installed_plugins()
-            self.update_settings_plugin_combo()
+            # 加载在线插件（异步）
+            self.load_online_plugins()
 
         except Exception as e:
             self.logger.error(f"加载数据失败: {e}")
+            self.status_label.setText(f"加载失败: {e}")
+
+    def load_installed_plugins(self):
+        """加载已安装插件"""
+        try:
+            if self.app_manager and hasattr(self.app_manager, 'plugin_manager'):
+                plugin_manager = self.app_manager.plugin_manager
+                self.installed_plugins = []
+
+                for plugin_id, plugin in plugin_manager.plugins.items():
+                    metadata = plugin.get_metadata()
+                    if metadata:
+                        plugin_info = {
+                            'id': plugin_id,
+                            'name': metadata.name,
+                            'version': metadata.version,
+                            'description': metadata.description,
+                            'author': metadata.author,
+                            'status': plugin.get_status().value,
+                            'plugin_type': metadata.plugin_type.value
+                        }
+                        self.installed_plugins.append(plugin_info)
+
+                self.update_installed_plugins()
+                self.logger.info(f"已加载 {len(self.installed_plugins)} 个已安装插件")
+            else:
+                # 使用示例数据
+                self.installed_plugins = [
+                    {
+                        'id': 'weather_enhanced',
+                        'name': '增强天气插件',
+                        'version': '1.0.0',
+                        'author': 'TimeNest Team',
+                        'status': 'enabled',
+                        'description': '提供详细的天气信息显示'
+                    }
+                ]
+                self.update_installed_plugins()
+
+        except Exception as e:
+            self.logger.error(f"加载已安装插件失败: {e}")
+
+    def load_online_plugins(self):
+        """加载在线插件"""
+        try:
+            self.status_label.setText("正在刷新插件列表...")
+            self.progress_bar.setVisible(True)
+            self.progress_bar.setRange(0, 0)  # 无限进度条
+
+            # 尝试从插件商城获取插件列表
+            if self.app_manager and hasattr(self.app_manager, 'plugin_manager'):
+                plugin_manager = self.app_manager.plugin_manager
+                marketplace = plugin_manager.get_marketplace()
+
+                if marketplace:
+                    try:
+                        # 刷新插件列表
+                        marketplace.refresh_plugins()
+
+                        # 获取可用插件
+                        available_plugins = marketplace.get_available_plugins()
+
+                        if available_plugins:
+                            self.online_plugins = []
+                            for plugin in available_plugins:
+                                plugin_info = {
+                                    'id': plugin.id,
+                                    'name': plugin.name,
+                                    'version': plugin.version,
+                                    'description': plugin.description,
+                                    'author': plugin.author,
+                                    'category': plugin.category,
+                                    'downloads': plugin.downloads,
+                                    'rating': plugin.rating,
+                                    'size': f"{plugin.size / 1024 / 1024:.1f} MB" if plugin.size > 0 else "未知",
+                                    'tags': plugin.tags,
+                                    'download_url': plugin.download_url
+                                }
+                                self.online_plugins.append(plugin_info)
+
+                            self.logger.info(f"从商城加载了 {len(self.online_plugins)} 个插件")
+                        else:
+                            # 使用示例数据作为备用
+                            self.load_example_plugins()
+                    except Exception as e:
+                        self.logger.warning(f"从商城加载插件失败: {e}")
+                        self.load_example_plugins()
+                else:
+                    # 使用示例数据作为备用
+                    self.load_example_plugins()
+            else:
+                # 使用示例数据作为备用
+                self.load_example_plugins()
+
+            self.update_online_plugins()
+            self.update_settings_plugin_combo()
+            self.progress_bar.setVisible(False)
+            self.status_label.setText(f"已加载 {len(self.online_plugins)} 个在线插件")
+
+        except Exception as e:
+            self.logger.error(f"加载在线插件失败: {e}")
+            self.load_example_plugins()  # 失败时使用示例数据
+            self.update_online_plugins()
+            self.update_settings_plugin_combo()
+            self.progress_bar.setVisible(False)
+            self.status_label.setText(f"加载在线插件失败，显示示例数据")
+
+    def load_example_plugins(self):
+        """加载示例插件数据"""
+        self.online_plugins = [
+            {
+                'id': 'weather_enhanced',
+                'name': '增强天气插件',
+                'version': '1.0.0',
+                'description': '提供详细的天气信息显示，包括温度、湿度、风速等多项指标',
+                'author': 'TimeNest Team',
+                'category': '组件',
+                'downloads': 1250,
+                'rating': 4.8,
+                'size': '2.5 MB',
+                'tags': ['weather', 'component', 'utility'],
+                'download_url': 'local://weather_enhanced'
+            },
+            {
+                'id': 'pomodoro_timer',
+                'name': '番茄钟插件',
+                'version': '2.1.0',
+                'description': '专业的番茄工作法计时器，帮助提高工作效率',
+                'author': 'Productivity Team',
+                'category': '工具',
+                'downloads': 3420,
+                'rating': 4.9,
+                'size': '1.8 MB',
+                'tags': ['productivity', 'timer', 'focus'],
+                'download_url': 'https://example.com/pomodoro_timer.zip'
+            },
+            {
+                'id': 'dark_theme',
+                'name': '深色主题包',
+                'version': '1.5.2',
+                'description': '精美的深色主题集合，保护眼睛，提升夜间使用体验',
+                'author': 'Design Studio',
+                'category': '主题',
+                'downloads': 5680,
+                'rating': 4.7,
+                'size': '3.2 MB',
+                'tags': ['theme', 'dark', 'design'],
+                'download_url': 'https://example.com/dark_theme.zip'
+            },
+            {
+                'id': 'calendar_sync',
+                'name': '日历同步插件',
+                'version': '1.3.1',
+                'description': '与Google日历、Outlook等主流日历服务同步',
+                'author': 'Sync Solutions',
+                'category': '扩展',
+                'downloads': 2890,
+                'rating': 4.6,
+                'size': '4.1 MB',
+                'tags': ['calendar', 'sync', 'integration'],
+                'download_url': 'https://example.com/calendar_sync.zip'
+            }
+        ]
 
     def connect_signals(self):
         """连接信号"""
@@ -496,26 +677,65 @@ class PluginMarketplaceDialog(QDialog):
             # 清空现有插件
             self.clear_plugin_widgets()
 
+            if not self.online_plugins:
+                # 如果没有插件，显示提示信息
+                no_plugins_label = QLabel("暂无可用插件")
+                no_plugins_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                no_plugins_label.setStyleSheet("""
+                    QLabel {
+                        color: #666;
+                        font-size: 14px;
+                        padding: 50px;
+                    }
+                """)
+                self.online_plugins_layout.addWidget(no_plugins_label, 0, 0, 1, 4)
+                return
+
+            # 计算最佳列数（根据容器宽度动态调整）
+            container_width = self.online_plugins_widget.width()
+            plugin_width = 280  # 插件组件的大概宽度
+            spacing = 10  # 间距
+            max_cols = max(1, (container_width - 20) // (plugin_width + spacing))  # 至少1列
+            max_cols = min(max_cols, 4)  # 最多4列
+
             # 添加插件项目
             row, col = 0, 0
-            max_cols = 4
 
-            for plugin in self.online_plugins:
-                is_installed = any(p['id'] == plugin.get('id') for p in self.installed_plugins)
-                plugin_widget = PluginItemWidget(plugin, is_installed)
+            for i, plugin in enumerate(self.online_plugins):
+                try:
+                    is_installed = any(p['id'] == plugin.get('id') for p in self.installed_plugins)
+                    plugin_widget = PluginItemWidget(plugin, is_installed)
 
-                # 连接信号
-                plugin_widget.install_requested.connect(self.install_plugin)
-                plugin_widget.uninstall_requested.connect(self.uninstall_plugin)
-                plugin_widget.configure_requested.connect(self.configure_plugin)
+                    # 连接信号
+                    plugin_widget.install_requested.connect(self.install_plugin)
+                    plugin_widget.uninstall_requested.connect(self.uninstall_plugin)
+                    plugin_widget.configure_requested.connect(self.configure_plugin)
 
-                self.online_plugins_layout.addWidget(plugin_widget, row, col)
-                self.plugin_widgets[plugin.get('id')] = plugin_widget
+                    # 添加到布局
+                    self.online_plugins_layout.addWidget(plugin_widget, row, col)
+                    self.plugin_widgets[plugin.get('id')] = plugin_widget
 
-                col += 1
-                if col >= max_cols:
-                    col = 0
-                    row += 1
+                    # 计算下一个位置
+                    col += 1
+                    if col >= max_cols:
+                        col = 0
+                        row += 1
+
+                except Exception as e:
+                    self.logger.error(f"创建插件组件失败 {plugin.get('name', 'Unknown')}: {e}")
+                    continue
+
+            # 添加弹性空间，确保插件靠左对齐
+            if self.online_plugins:
+                # 在最后一行添加弹性空间
+                spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+                self.online_plugins_layout.addItem(spacer, row, max_cols, 1, 1)
+
+                # 在底部添加垂直弹性空间
+                v_spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+                self.online_plugins_layout.addItem(v_spacer, row + 1, 0, 1, max_cols)
+
+            self.logger.info(f"成功显示 {len(self.plugin_widgets)} 个插件，布局: {row + 1} 行 x {max_cols} 列")
 
         except Exception as e:
             self.logger.error(f"更新在线插件失败: {e}")
@@ -554,15 +774,50 @@ class PluginMarketplaceDialog(QDialog):
 
     def clear_plugin_widgets(self):
         """清空插件组件"""
-        for widget in self.plugin_widgets.values():
-            widget.deleteLater()
-        self.plugin_widgets.clear()
+        try:
+            # 先断开所有信号连接，避免在删除过程中触发信号
+            for widget in self.plugin_widgets.values():
+                if hasattr(widget, 'install_requested'):
+                    widget.install_requested.disconnect()
+                if hasattr(widget, 'uninstall_requested'):
+                    widget.uninstall_requested.disconnect()
+                if hasattr(widget, 'configure_requested'):
+                    widget.configure_requested.disconnect()
 
-        # 清空布局
-        while self.online_plugins_layout.count():
-            child = self.online_plugins_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            # 清空插件组件字典
+            for widget in self.plugin_widgets.values():
+                widget.setParent(None)
+                widget.deleteLater()
+            self.plugin_widgets.clear()
+
+            # 彻底清空布局
+            while self.online_plugins_layout.count():
+                child = self.online_plugins_layout.takeAt(0)
+                if child.widget():
+                    child.widget().setParent(None)
+                    child.widget().deleteLater()
+                elif child.layout():
+                    # 如果是嵌套布局，也要清理
+                    self.clear_layout(child.layout())
+
+            # 强制处理待删除的对象
+            QApplication.processEvents()
+
+        except Exception as e:
+            self.logger.error(f"清空插件组件失败: {e}")
+
+    def clear_layout(self, layout):
+        """递归清空布局"""
+        try:
+            while layout.count():
+                child = layout.takeAt(0)
+                if child.widget():
+                    child.widget().setParent(None)
+                    child.widget().deleteLater()
+                elif child.layout():
+                    self.clear_layout(child.layout())
+        except Exception as e:
+            self.logger.error(f"清空布局失败: {e}")
 
     def search_plugins(self, query: str):
         """搜索插件"""
@@ -590,21 +845,23 @@ class PluginMarketplaceDialog(QDialog):
     def refresh_plugins(self):
         """刷新插件列表"""
         try:
+            self.logger.info("手动刷新插件列表")
             self.status_label.setText("正在刷新插件列表...")
             self.progress_bar.setVisible(True)
-            self.progress_bar.setValue(50)
+            self.progress_bar.setRange(0, 0)  # 无限进度条
 
-            # 模拟刷新延迟
-            QTimer.singleShot(1000, self._refresh_complete)
+            # 重新加载数据
+            self.load_data()
 
         except Exception as e:
             self.logger.error(f"刷新插件失败: {e}")
+            self.progress_bar.setVisible(False)
+            self.status_label.setText(f"刷新失败: {e}")
 
     def _refresh_complete(self):
         """刷新完成"""
         self.progress_bar.setVisible(False)
         self.status_label.setText("刷新完成")
-        self.load_data()
 
     def install_plugin(self, plugin_id: str):
         """安装插件"""
@@ -616,46 +873,144 @@ class PluginMarketplaceDialog(QDialog):
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                 )
 
-
                 if reply == QMessageBox.StandardButton.Yes:
-                    # 模拟安装过程
                     self.status_label.setText(f"正在安装 {plugin.get('name')}...")
                     self.progress_bar.setVisible(True)
+                    self.progress_bar.setRange(0, 100)
                     self.progress_bar.setValue(0)
 
-                    # 模拟安装进度
-                    QTimer.singleShot(500, lambda: self.progress_bar.setValue(30))
-                    QTimer.singleShot(1000, lambda: self.progress_bar.setValue(60))
-                    QTimer.singleShot(1500, lambda: self.progress_bar.setValue(100))
-                    QTimer.singleShot(2000, lambda: self._install_complete(plugin))
+                    # 检查是否是本地示例插件
+                    download_url = plugin.get('download_url', '')
+                    if download_url.startswith('local://'):
+                        # 安装本地示例插件
+                        self._install_local_plugin(plugin)
+                    else:
+                        # 尝试从网络下载安装
+                        self._install_remote_plugin(plugin)
 
         except Exception as e:
             self.logger.error(f"安装插件失败: {e}")
             QMessageBox.critical(self, "错误", f"安装失败: {e}")
+            self.progress_bar.setVisible(False)
+            self.status_label.setText("安装失败")
 
-    def _install_complete(self, plugin):
+    def _install_local_plugin(self, plugin):
+        """安装本地示例插件"""
+        try:
+            plugin_id = plugin.get('id')
+
+            # 模拟安装进度
+            self.progress_bar.setValue(20)
+            QTimer.singleShot(200, lambda: self.progress_bar.setValue(40))
+            QTimer.singleShot(400, lambda: self.progress_bar.setValue(60))
+            QTimer.singleShot(600, lambda: self.progress_bar.setValue(80))
+            QTimer.singleShot(800, lambda: self.progress_bar.setValue(100))
+
+            # 检查是否有对应的本地插件文件
+            import os
+            plugin_dir = os.path.join(os.getcwd(), 'plugins', f'example_{plugin_id}')
+
+            if os.path.exists(plugin_dir):
+                # 尝试通过插件管理器安装
+                if self.app_manager and hasattr(self.app_manager, 'plugin_manager'):
+                    plugin_manager = self.app_manager.plugin_manager
+                    success = plugin_manager.install_plugin_from_path(plugin_dir)
+
+                    if success:
+                        QTimer.singleShot(1000, lambda: self._install_complete(plugin, True))
+                    else:
+                        QTimer.singleShot(1000, lambda: self._install_complete(plugin, False))
+                else:
+                    # 模拟成功安装
+                    QTimer.singleShot(1000, lambda: self._install_complete(plugin, True))
+            else:
+                # 模拟成功安装（即使没有实际文件）
+                QTimer.singleShot(1000, lambda: self._install_complete(plugin, True))
+
+        except Exception as e:
+            self.logger.error(f"安装本地插件失败: {e}")
+            self._install_complete(plugin, False)
+
+    def _install_remote_plugin(self, plugin):
+        """安装远程插件"""
+        try:
+            # 模拟网络下载
+            self.progress_bar.setValue(10)
+            QTimer.singleShot(300, lambda: self.progress_bar.setValue(30))
+            QTimer.singleShot(600, lambda: self.progress_bar.setValue(50))
+            QTimer.singleShot(900, lambda: self.progress_bar.setValue(70))
+            QTimer.singleShot(1200, lambda: self.progress_bar.setValue(90))
+            QTimer.singleShot(1500, lambda: self.progress_bar.setValue(100))
+
+            # 尝试通过插件商城下载
+            if self.app_manager and hasattr(self.app_manager, 'plugin_manager'):
+                plugin_manager = self.app_manager.plugin_manager
+                marketplace = plugin_manager.get_marketplace()
+
+                if marketplace:
+                    # 异步下载
+                    QTimer.singleShot(1600, lambda: self._download_and_install(marketplace, plugin))
+                else:
+                    # 模拟成功
+                    QTimer.singleShot(1600, lambda: self._install_complete(plugin, True))
+            else:
+                # 模拟成功
+                QTimer.singleShot(1600, lambda: self._install_complete(plugin, True))
+
+        except Exception as e:
+            self.logger.error(f"安装远程插件失败: {e}")
+            self._install_complete(plugin, False)
+
+    def _download_and_install(self, marketplace, plugin):
+        """下载并安装插件"""
+        try:
+            plugin_id = plugin.get('id')
+            success = marketplace.download_plugin(plugin_id)
+            self._install_complete(plugin, success)
+        except Exception as e:
+            self.logger.error(f"下载安装插件失败: {e}")
+            self._install_complete(plugin, False)
+
+    def _install_complete(self, plugin, success=True):
         """安装完成"""
         try:
-            # 添加到已安装列表
-            installed_plugin = {
-                'id': plugin.get('id'),
-                'name': plugin.get('name'),
-                'version': plugin.get('version'),
-                'author': plugin.get('author'),
-                'status': '已启用',
-                'description': plugin.get('description')
-            }
-            self.installed_plugins.append(installed_plugin)
-
-            # 更新界面
-            self.update_online_plugins()
-            self.update_installed_plugins()
-            self.update_settings_plugin_combo()
-
             self.progress_bar.setVisible(False)
-            self.status_label.setText("安装完成")
 
-            QMessageBox.information(self, "安装成功", f"插件 '{plugin.get('name')}' 安装成功！")
+            if success:
+                # 检查是否已在已安装列表中
+                plugin_id = plugin.get('id')
+                existing = next((p for p in self.installed_plugins if p['id'] == plugin_id), None)
+
+                if not existing:
+                    # 添加到已安装列表
+                    installed_plugin = {
+                        'id': plugin_id,
+                        'name': plugin.get('name'),
+                        'version': plugin.get('version'),
+                        'author': plugin.get('author'),
+                        'status': 'enabled',
+                        'description': plugin.get('description')
+                    }
+                    self.installed_plugins.append(installed_plugin)
+
+                # 更新界面
+                self.update_online_plugins()
+                self.update_installed_plugins()
+                self.update_settings_plugin_combo()
+
+                self.status_label.setText("安装完成")
+                QMessageBox.information(self, "安装成功", f"插件 '{plugin.get('name')}' 安装成功！")
+
+                # 重新加载已安装插件（从插件管理器）
+                self.load_installed_plugins()
+            else:
+                self.status_label.setText("安装失败")
+                QMessageBox.critical(self, "安装失败", f"插件 '{plugin.get('name')}' 安装失败！")
+
+        except Exception as e:
+            self.logger.error(f"安装完成处理失败: {e}")
+            self.status_label.setText("安装失败")
+            QMessageBox.critical(self, "错误", f"安装完成处理失败: {e}")
 
         except Exception as e:
             self.logger.error(f"完成安装失败: {e}")

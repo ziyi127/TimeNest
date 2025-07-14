@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox,
     QDialogButtonBox, QGroupBox, QFormLayout, QSpinBox
 )
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor
 
 
 if TYPE_CHECKING:
@@ -164,20 +164,26 @@ class ScheduleEditorDialog(QDialog):
             # 周次
             week_layout = QHBoxLayout()
             self.start_week_spin = QSpinBox()
-            self.start_week_spin.setRange(1, 20)
+            self.start_week_spin.setRange(1, 30)
             self.start_week_spin.setValue(1)
-            
+
             week_layout.addWidget(QLabel("第"))
             week_layout.addWidget(self.start_week_spin)
             week_layout.addWidget(QLabel("周 至 第"))
-            
+
             self.end_week_spin = QSpinBox()
-            self.end_week_spin.setRange(1, 20)
+            self.end_week_spin.setRange(1, 30)
             self.end_week_spin.setValue(16)
             week_layout.addWidget(self.end_week_spin)
             week_layout.addWidget(QLabel("周"))
-            
+
             layout.addRow("周次:", week_layout)
+
+            # 周次类型（多周循环）
+            self.week_type_combo = QComboBox()
+            self.week_type_combo.addItems(["全部周次", "单周", "双周"])
+            self.week_type_combo.setCurrentText("全部周次")
+            layout.addRow("周次类型:", self.week_type_combo)
             
             # 操作按钮
             button_layout = QHBoxLayout()
@@ -220,6 +226,11 @@ class ScheduleEditorDialog(QDialog):
             self.clear_all_button.setToolTip("清空所有课程")
             batch_layout.addWidget(self.clear_all_button)
 
+            self.settings_button = QPushButton("课程表设置")
+            self.settings_button.clicked.connect(self.open_settings)
+            self.settings_button.setToolTip("配置开学日期和多周循环")
+            batch_layout.addWidget(self.settings_button)
+
             layout.addRow("批量操作:", batch_layout)
             
             return group
@@ -256,9 +267,19 @@ class ScheduleEditorDialog(QDialog):
                     time_key = f"{start_time}-{end_time}"
                     if time_key in day_courses:
                         course = day_courses[time_key]
-                        course_text = f"{course.get('name', '')}\n{course.get('classroom', '')}"
+
+                        # 使用工具函数格式化显示文本
+                        from utils.schedule_utils import format_course_display, get_week_color
+
+                        course_text = format_course_display(course, show_week_info=True)
                         item = QTableWidgetItem(course_text)
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                        # 根据周次类型设置不同的背景色
+                        week_type = course.get('week_type', 'all')
+                        color_rgb = get_week_color(week_type)
+                        item.setBackground(QColor(*color_rgb))
+
                         self.schedule_table.setItem(time_index, day_index, item)
             
         except Exception as e:
@@ -286,6 +307,12 @@ class ScheduleEditorDialog(QDialog):
                 self.teacher_edit.setText(course.get('teacher', ''))
                 self.start_week_spin.setValue(course.get('start_week', 1))
                 self.end_week_spin.setValue(course.get('end_week', 16))
+
+                # 设置周次类型
+                week_type = course.get('week_type', 'all')
+                week_type_map = {"all": "全部周次", "odd": "单周", "even": "双周"}
+                week_type_text = week_type_map.get(week_type, "全部周次")
+                self.week_type_combo.setCurrentText(week_type_text)
                 
                 # 更新按钮状态
                 has_course = bool(course.get('name'))
@@ -299,7 +326,6 @@ class ScheduleEditorDialog(QDialog):
         """添加课程"""
         try:
             if not self.validate_form():
-                return
                 return
             
             current_item = self.schedule_table.currentItem()
@@ -322,18 +348,22 @@ class ScheduleEditorDialog(QDialog):
                 )
                 if reply != QMessageBox.StandardButton.Yes:
                     return
-                    return
             
             # 添加课程
             if day not in self.schedule_data:
                 self.schedule_data[day] = {}
             
+            # 获取周次类型
+            week_type_map = {"全部周次": "all", "单周": "odd", "双周": "even"}
+            week_type = week_type_map.get(self.week_type_combo.currentText(), "all")
+
             self.schedule_data[day][time_key] = {
                 'name': self.course_name_edit.text().strip(),
                 'classroom': self.classroom_edit.text().strip(),
                 'teacher': self.teacher_edit.text().strip(),
                 'start_week': self.start_week_spin.value(),
-                'end_week': self.end_week_spin.value()
+                'end_week': self.end_week_spin.value(),
+                'week_type': week_type
             }
             
             # 更新显示
@@ -351,11 +381,9 @@ class ScheduleEditorDialog(QDialog):
         try:
             if not self.validate_form():
                 return
-                return
-            
+
             current_item = self.schedule_table.currentItem()
             if not current_item:
-                return
                 return
             
             row = self.schedule_table.currentRow()
@@ -367,12 +395,17 @@ class ScheduleEditorDialog(QDialog):
             
             # 更新课程
             if day in self.schedule_data and time_key in self.schedule_data[day]:
+                # 获取周次类型
+                week_type_map = {"全部周次": "all", "单周": "odd", "双周": "even"}
+                week_type = week_type_map.get(self.week_type_combo.currentText(), "all")
+
                 self.schedule_data[day][time_key].update({
                     'name': self.course_name_edit.text().strip(),
                     'classroom': self.classroom_edit.text().strip(),
                     'teacher': self.teacher_edit.text().strip(),
                     'start_week': self.start_week_spin.value(),
-                    'end_week': self.end_week_spin.value()
+                    'end_week': self.end_week_spin.value(),
+                    'week_type': week_type
                 })
                 
                 # 更新显示
@@ -389,39 +422,53 @@ class ScheduleEditorDialog(QDialog):
         try:
             current_item = self.schedule_table.currentItem()
             if not current_item:
+                QMessageBox.warning(self, "警告", "请先选择要删除的课程")
                 return
+
+            # 检查是否有课程内容
+            if not current_item.text().strip():
+                QMessageBox.warning(self, "警告", "该时间段没有课程")
                 return
-            
+
             reply = QMessageBox.question(
                 self, "确认删除", "确定要删除这门课程吗？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
             )
-            
-            
+
             if reply == QMessageBox.StandardButton.Yes:
                 row = self.schedule_table.currentRow()
-            
-                row = self.schedule_table.currentRow()
                 col = self.schedule_table.currentColumn()
-                
+
+                if row < 0 or col < 0:
+                    QMessageBox.warning(self, "警告", "无效的选择位置")
+                    return
+
                 day = self.weekdays[col]
                 start_time, end_time = self.time_slots[row]
                 time_key = f"{start_time}-{end_time}"
-                
+
                 # 删除课程
                 if day in self.schedule_data and time_key in self.schedule_data[day]:
                     del self.schedule_data[day][time_key]
-                    
+
                     # 如果该天没有课程了，删除整天
                     if not self.schedule_data[day]:
                         del self.schedule_data[day]
-                
-                # 更新显示
-                self.update_table_display()
-                self.clear_form()
-                
-                QMessageBox.information(self, "成功", "课程删除成功")
-            
+
+                    # 保存数据
+                    self.save_schedule_data()
+
+                    # 更新显示
+                    self.update_table_display()
+                    self.clear_form()
+
+                    # 禁用删除按钮
+                    self.delete_button.setEnabled(False)
+
+                    QMessageBox.information(self, "成功", "课程删除成功")
+                else:
+                    QMessageBox.warning(self, "警告", "未找到要删除的课程数据")
+
         except Exception as e:
             self.logger.error(f"删除课程失败: {e}")
             QMessageBox.critical(self, "错误", f"删除课程失败: {e}")
@@ -434,29 +481,68 @@ class ScheduleEditorDialog(QDialog):
             self.teacher_edit.clear()
             self.start_week_spin.setValue(1)
             self.end_week_spin.setValue(16)
+            self.week_type_combo.setCurrentText("全部周次")
             
             self.update_button.setEnabled(False)
             self.delete_button.setEnabled(False)
             
         except Exception as e:
             self.logger.error(f"清空表单失败: {e}")
-    
+
+    def open_settings(self) -> None:
+        """打开课程表设置对话框"""
+        try:
+            from ui.schedule_settings_dialog import ScheduleSettingsDialog
+
+            dialog = ScheduleSettingsDialog(self.app_manager, self)
+            dialog.settings_saved.connect(self.on_settings_saved)
+            dialog.exec()
+
+        except Exception as e:
+            self.logger.error(f"打开设置对话框失败: {e}")
+            QMessageBox.critical(self, "错误", f"打开设置失败: {e}")
+
+    def on_settings_saved(self, settings_data: dict) -> None:
+        """处理设置保存事件"""
+        try:
+            self.logger.info(f"课程表设置已更新: {settings_data}")
+
+            # 可以在这里添加设置更新后的处理逻辑
+            # 比如重新计算当前周次的课程显示等
+
+        except Exception as e:
+            self.logger.error(f"处理设置保存事件失败: {e}")
+
     def validate_form(self) -> bool:
         """验证表单"""
         try:
+            # 验证课程名称
             if not self.course_name_edit.text().strip():
                 QMessageBox.warning(self, "警告", "请输入课程名称")
+                self.course_name_edit.setFocus()
                 return False
-            
-            
-            if self.start_week_spin.value() > self.end_week_spin.value():
+
+            # 验证周次范围
+            start_week = self.start_week_spin.value()
+            end_week = self.end_week_spin.value()
+
+            if start_week > end_week:
                 QMessageBox.warning(self, "警告", "开始周次不能大于结束周次")
-            
-                QMessageBox.warning(self, "警告", "开始周次不能大于结束周次")
+                self.start_week_spin.setFocus()
                 return False
-            
+
+            if start_week < 1 or end_week < 1:
+                QMessageBox.warning(self, "警告", "周次必须大于0")
+                return False
+
+            # 验证周次类型
+            week_type = self.week_type_combo.currentText()
+            if week_type not in ["全部周次", "单周", "双周"]:
+                QMessageBox.warning(self, "警告", "请选择有效的周次类型")
+                return False
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"验证表单失败: {e}")
             return False

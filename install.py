@@ -120,16 +120,31 @@ class InstallWorker(QThread):
     
     def _run_command(self, cmd):
         """运行命令"""
-        self.log_updated.emit(f"执行命令: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.project_dir)
-        
-        if result.stdout:
-            self.log_updated.emit(result.stdout)
-        if result.stderr:
-            self.log_updated.emit(f"警告: {result.stderr}")
-            
-        if result.returncode != 0:
-            raise Exception(f"命令执行失败: {' '.join(cmd)}")
+        try:
+            self.log_updated.emit(f"执行命令: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True,
+                                  cwd=self.project_dir, timeout=300)
+
+            if result.stdout:
+                self.log_updated.emit(result.stdout)
+            if result.stderr:
+                self.log_updated.emit(f"警告: {result.stderr}")
+
+            if result.returncode != 0:
+                error_msg = f"命令执行失败: {' '.join(cmd)}"
+                if result.stderr:
+                    error_msg += f"\n错误详情: {result.stderr}"
+                raise Exception(error_msg)
+
+        except subprocess.TimeoutExpired:
+            raise Exception(f"命令执行超时 (300秒): {' '.join(cmd)}")
+        except FileNotFoundError:
+            raise Exception(f"命令不存在: {cmd[0]}")
+        except Exception as e:
+            if "命令执行失败" in str(e) or "命令执行超时" in str(e) or "命令不存在" in str(e):
+                raise e
+            else:
+                raise Exception(f"命令执行错误: {str(e)}")
     
     def _verify_installation(self, python_path):
         """验证安装"""
