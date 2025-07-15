@@ -36,7 +36,13 @@ jobs:
         
     - name: Build executable with spec
       run: |
-        pyinstaller TimeNest.spec --clean --noconfirm
+        if (Test-Path "TimeNest.spec") {
+          echo "使用spec文件构建..."
+          pyinstaller TimeNest.spec --clean --noconfirm
+        } else {
+          echo "spec文件不存在，使用简单构建脚本..."
+          python build_simple.py
+        }
         
     - name: Create portable package
       run: |

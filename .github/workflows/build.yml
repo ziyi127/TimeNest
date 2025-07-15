@@ -33,7 +33,16 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: |
         pip install pyinstaller
-        pyinstaller --onefile --windowed --name TimeNest-dev main.py
+        if (Test-Path "TimeNest.spec") {
+          echo "使用spec文件构建开发版..."
+          pyinstaller TimeNest.spec --clean --noconfirm
+          if (Test-Path "dist\TimeNest.exe") {
+            Rename-Item "dist\TimeNest.exe" "dist\TimeNest-dev.exe"
+          }
+        } else {
+          echo "使用简单命令构建开发版..."
+          pyinstaller --onefile --windowed --name TimeNest-dev main.py
+        }
         
     - name: Upload build artifact
       if: github.ref == 'refs/heads/main'
