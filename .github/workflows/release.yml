@@ -44,9 +44,10 @@ jobs:
         copy dist\TimeNest.exe TimeNest-portable\
         copy README.md TimeNest-portable\
         copy LICENSE TimeNest-portable\
-        xcopy /E /I config TimeNest-portable\config
-        xcopy /E /I resources TimeNest-portable\resources
-        xcopy /E /I plugin_template TimeNest-portable\plugin_template
+        if (Test-Path "config") { xcopy /E /I config TimeNest-portable\config }
+        if (Test-Path "resources") { xcopy /E /I resources TimeNest-portable\resources }
+        if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
+        if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
         
     - name: Create ZIP archive
       run: |
