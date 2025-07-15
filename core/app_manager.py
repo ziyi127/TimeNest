@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -24,8 +24,8 @@ from typing import Any, Dict, Optional
 from functools import lru_cache
 
 # 第三方库
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtWidgets import QApplication
 
 # 本地模块
 from core.component_system import ComponentManager as ComponentSystemManager
@@ -51,9 +51,9 @@ class AppManager(QObject):
     """
     
     # 信号定义
-    app_initialized = pyqtSignal()  # 应用初始化完成
-    app_closing = pyqtSignal()      # 应用即将关闭
-    error_occurred = pyqtSignal(str)  # 发生错误
+    app_initialized = Signal()  # 应用初始化完成
+    app_closing = Signal()      # 应用即将关闭
+    error_occurred = Signal(str)  # 发生错误
 
     def __init__(self):
         """初始化应用管理器"""

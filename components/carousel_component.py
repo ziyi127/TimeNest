@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -17,10 +17,10 @@ TimeNest 轮播组件 - 增强版
 
 import logging
 from typing import List, Any, Optional, Union, Dict
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect, pyqtSignal
-from PyQt6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect, Signal
+from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QHBoxLayout,
                            QStackedWidget, QPushButton, QFrame, QGraphicsOpacityEffect)
-from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient
+from PySide6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient
 
 from .base_component import BaseComponent
 
@@ -28,7 +28,7 @@ class CarouselComponent(BaseComponent):
     """轮播组件"""
     
     # 信号定义
-    item_clicked = pyqtSignal(str)  # 轮播项ID
+    item_clicked = Signal(str)  # 轮播项ID
     
     def __init__(self, component_id: str, config: Dict[str, Any]):
         # 轮播数据

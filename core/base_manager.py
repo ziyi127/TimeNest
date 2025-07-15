@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ import threading
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from functools import lru_cache
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer
 
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class QObjectABCMeta(type(QObject), ABCMeta):
     Custom metaclass that combines QObject's metaclass with ABCMeta
 
     This resolves the metaclass conflict when inheriting from both QObject and ABC.
-    The metaclass properly handles both PyQt's signal/slot mechanism and
+    The metaclass properly handles both PySide6's signal/slot mechanism and
     abstract base class functionality.
     """
     pass
@@ -52,9 +52,9 @@ class BaseManager(QObject, ABC, metaclass=QObjectABCMeta):
     """
     
     # 通用信号
-    manager_initialized = pyqtSignal()
-    manager_error = pyqtSignal(str, str)  # error_type, error_message
-    config_updated = pyqtSignal(str, dict)  # section, config
+    manager_initialized = Signal()
+    manager_error = Signal(str, str)  # error_type, error_message
+    config_updated = Signal(str, dict)  # section, config
     
     def __init__(self, config_manager: 'ConfigManager', manager_name: str = None):
         """

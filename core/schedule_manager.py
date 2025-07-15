@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -22,7 +22,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, date, time, timedelta
 from pathlib import Path
 from functools import lru_cache
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from models.schedule import Schedule, ClassItem, TimeSlot, Subject
 from core.config_manager import ConfigManager
@@ -34,9 +34,9 @@ class ScheduleManager(QObject):
     """课程表管理器"""
     
     # 信号定义
-    current_class_changed = pyqtSignal(object)  # 当前课程变化
-    schedule_updated = pyqtSignal()  # 课程表更新
-    class_status_changed = pyqtSignal(str, str)  # 课程状态变化 (class_id, status)
+    current_class_changed = Signal(object)  # 当前课程变化
+    schedule_updated = Signal()  # 课程表更新
+    class_status_changed = Signal(str, str)  # 课程状态变化 (class_id, status)
     
     def __init__(self, config_manager: ConfigManager,
                  attached_settings_service: Optional[AttachedSettingsHostService] = None,
@@ -63,6 +63,14 @@ class ScheduleManager(QObject):
         self._current_class_cache = None
         self._cache_timestamp = None
         self._cache_ttl = 30  # 缓存30秒
+
+        # 课程数据缓存
+        self._courses_cache = None
+        self._courses_cache_timestamp = None
+
+        # 查找字典缓存
+        self._subjects_dict = {}
+        self._time_slots_dict = {}
         # 加载默认课程表
         self._load_default_schedule()
         self.logger.info("课程表管理器初始化完成")
@@ -448,3 +456,291 @@ class ScheduleManager(QObject):
         except Exception as e:
             self.logger.error(f"更新课程失败: {e}")
             return False
+
+    def clear_all_courses(self) -> bool:
+        """清空所有课程"""
+        try:
+            if not self.current_schedule:
+                self.logger.error("没有加载的课程表")
+                return False
+
+            # 清空课程表中的所有课程
+            self.current_schedule.classes.clear()
+            self.schedule_updated.emit()
+            self.logger.info("已清空所有课程")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"清空课程失败: {e}")
+            return False
+
+    def _invalidate_cache(self):
+        """清除缓存"""
+        if hasattr(self, '_courses_cache'):
+            self._courses_cache = None
+            self._cache_timestamp = None
+        if hasattr(self, '_subjects_dict'):
+            self._subjects_dict.clear()
+        if hasattr(self, '_time_slots_dict'):
+            self._time_slots_dict.clear()
+
+    def _update_lookup_dicts(self):
+        """更新查找字典"""
+        if not self.current_schedule:
+            return
+
+        # 构建subjects查找字典
+        if not hasattr(self, '_subjects_dict'):
+            self._subjects_dict = {}
+        self._subjects_dict = {s.id: s for s in self.current_schedule.subjects}
+
+        # 构建time_slots查找字典
+        if not hasattr(self, '_time_slots_dict'):
+            self._time_slots_dict = {}
+        self._time_slots_dict = {ts.id: ts for ts in self.current_schedule.time_slots}
+
+    def get_all_courses(self) -> List[Dict[str, Any]]:
+        """获取所有课程数据（优化版本，带缓存）"""
+        try:
+            # 检查缓存是否有效
+            current_time = datetime.now()
+            if (hasattr(self, '_courses_cache') and self._courses_cache is not None and
+                hasattr(self, '_cache_timestamp') and self._cache_timestamp is not None and
+                (current_time - self._cache_timestamp).total_seconds() < 300):  # 5分钟缓存
+                return self._courses_cache.copy()
+
+            if not self.current_schedule:
+                self.logger.warning("没有加载的课程表")
+                return []
+
+            # 更新查找字典
+            self._update_lookup_dicts()
+
+            courses = []
+            for class_item in self.current_schedule.classes:
+                # 使用字典查找，O(1)时间复杂度
+                subject = self._subjects_dict.get(class_item.subject_id) if hasattr(self, '_subjects_dict') else None
+                time_slot = self._time_slots_dict.get(class_item.time_slot_id) if hasattr(self, '_time_slots_dict') else None
+
+                # 如果字典查找失败，回退到线性查找
+                if not subject:
+                    for s in self.current_schedule.subjects:
+                        if s.id == class_item.subject_id:
+                            subject = s
+                            break
+
+                if not time_slot:
+                    for ts in self.current_schedule.time_slots:
+                        if ts.id == class_item.time_slot_id:
+                            time_slot = ts
+                            break
+
+                # 构建课程数据
+                course_data = {
+                    'id': class_item.id,
+                    'name': subject.name if subject else f'课程{class_item.subject_id}',
+                    'teacher': class_item.teacher or '未知教师',
+                    'location': class_item.classroom or '未知地点',
+                    'weekday': self._get_weekday_name_from_string(class_item.weekday),
+                    'time': f"{time_slot.start_time}-{time_slot.end_time}" if time_slot else '未知时间',
+                    'start_week': class_item.start_week or 1,
+                    'end_week': class_item.end_week or 16,
+                    'week': class_item.start_week or 1,  # 兼容字段
+                    'day_of_week': self._get_weekday_number(class_item.weekday),
+                    'start_time': time_slot.start_time if time_slot else '08:00',
+                    'end_time': time_slot.end_time if time_slot else '09:40'
+                }
+                courses.append(course_data)
+
+            # 更新缓存
+            self._courses_cache = courses.copy()
+            self._cache_timestamp = current_time
+
+            return courses
+
+        except Exception as e:
+            self.logger.error(f"获取课程数据失败: {e}")
+            return []
+
+    def _get_weekday_number(self, weekday_str: str) -> int:
+        """将星期字符串转换为数字"""
+        weekday_map = {
+            '周一': 1, '星期一': 1, 'Monday': 1,
+            '周二': 2, '星期二': 2, 'Tuesday': 2,
+            '周三': 3, '星期三': 3, 'Wednesday': 3,
+            '周四': 4, '星期四': 4, 'Thursday': 4,
+            '周五': 5, '星期五': 5, 'Friday': 5,
+            '周六': 6, '星期六': 6, 'Saturday': 6,
+            '周日': 7, '星期日': 7, 'Sunday': 7
+        }
+        return weekday_map.get(weekday_str, 1)
+
+    def add_course(self, name: str, teacher: str, location: str, time: str, start_week: int, end_week: int, weekday: str = None) -> bool:
+        """添加课程（简化接口）"""
+        try:
+            # 解析时间信息
+            time_parts = time.split('-')
+            if len(time_parts) != 2:
+                self.logger.error(f"时间格式错误: {time}")
+                return False
+
+            start_time = time_parts[0].strip()
+            end_time = time_parts[1].strip()
+
+            # 转换weekday为英文格式
+            weekday_en = self._convert_weekday_to_english(weekday) if weekday else 'monday'
+
+            # 创建课程对象
+            from models.schedule import Subject, TimeSlot, ClassItem
+            from datetime import time as dt_time
+            import uuid
+
+            # 解析时间字符串为time对象
+            try:
+                start_time_obj = dt_time.fromisoformat(start_time + ':00')
+                end_time_obj = dt_time.fromisoformat(end_time + ':00')
+            except ValueError:
+                # 如果时间格式不正确，尝试其他格式
+                try:
+                    start_hour, start_min = map(int, start_time.split(':'))
+                    end_hour, end_min = map(int, end_time.split(':'))
+                    start_time_obj = dt_time(start_hour, start_min)
+                    end_time_obj = dt_time(end_hour, end_min)
+                except:
+                    self.logger.error(f"无法解析时间格式: {start_time} - {end_time}")
+                    return False
+
+            subject_id = f"SUBJ_{uuid.uuid4().hex[:8]}"
+            time_slot_id = f"TS_{uuid.uuid4().hex[:8]}"
+
+            # 创建Subject对象
+            subject = Subject(
+                id=subject_id,
+                name=name,
+                teacher=teacher
+            )
+
+            # 创建TimeSlot对象
+            time_slot = TimeSlot(
+                id=time_slot_id,
+                name=f"{start_time}-{end_time}",
+                start_time=start_time_obj,
+                end_time=end_time_obj
+            )
+
+            # 创建ClassItem对象
+            class_item = ClassItem(
+                id=f"CLASS_{uuid.uuid4().hex[:8]}",
+                subject_id=subject_id,
+                time_slot_id=time_slot_id,
+                weekday=weekday_en,
+                classroom=location,
+                teacher=teacher,
+                start_week=start_week,
+                end_week=end_week
+            )
+
+            # 添加到当前课程表
+            if not self.current_schedule:
+                from models.schedule import Schedule
+                self.current_schedule = Schedule(name="导入的课程表")
+
+            # 添加Subject和TimeSlot到Schedule
+            self.current_schedule.add_subject(subject)
+            self.current_schedule.add_time_slot(time_slot)
+            self.current_schedule.add_class(class_item)
+
+            self.schedule_updated.emit()
+            self.logger.info(f"成功添加课程: {name}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"添加课程失败: {e}")
+            return False
+
+    def _convert_weekday_to_english(self, weekday: str) -> str:
+        """将星期字符串转换为英文格式"""
+        weekday_map = {
+            '周一': 'monday', '星期一': 'monday', 'monday': 'monday',
+            '周二': 'tuesday', '星期二': 'tuesday', 'tuesday': 'tuesday',
+            '周三': 'wednesday', '星期三': 'wednesday', 'wednesday': 'wednesday',
+            '周四': 'thursday', '星期四': 'thursday', 'thursday': 'thursday',
+            '周五': 'friday', '星期五': 'friday', 'friday': 'friday',
+            '周六': 'saturday', '星期六': 'saturday', 'saturday': 'saturday',
+            '周日': 'sunday', '星期日': 'sunday', 'sunday': 'sunday'
+        }
+        return weekday_map.get(weekday.lower() if weekday else '', 'monday')
+
+    def delete_course(self, course_id: int) -> bool:
+        """删除课程（通过ID）"""
+        try:
+            # 将数字ID转换为字符串ID进行查找
+            course_id_str = str(course_id)
+
+            if not self.current_schedule:
+                return False
+
+            # 查找并删除课程
+            for class_item in self.current_schedule.classes[:]:  # 使用切片复制避免修改时迭代
+                if class_item.id == course_id_str or class_item.id.endswith(course_id_str):
+                    self.current_schedule.classes.remove(class_item)
+                    self.schedule_updated.emit()
+                    self.logger.info(f"删除课程: {course_id}")
+                    return True
+
+            self.logger.warning(f"未找到课程: {course_id}")
+            return False
+
+        except Exception as e:
+            self.logger.error(f"删除课程失败: {e}")
+            return False
+
+    def update_course(self, course_id: int, course_data: Dict[str, Any]) -> bool:
+        """更新课程信息"""
+        try:
+            course_id_str = str(course_id)
+
+            if not self.current_schedule:
+                return False
+
+            # 查找并更新课程
+            for class_item in self.current_schedule.classes:
+                if class_item.id == course_id_str or class_item.id.endswith(course_id_str):
+                    # 更新课程信息
+                    if 'name' in course_data and class_item.subject:
+                        class_item.subject.name = course_data['name']
+                    if 'teacher' in course_data:
+                        class_item.teacher = course_data['teacher']
+                    if 'location' in course_data:
+                        class_item.location = course_data['location']
+                    if 'start_week' in course_data:
+                        class_item.start_week = course_data['start_week']
+                    if 'end_week' in course_data:
+                        class_item.end_week = course_data['end_week']
+
+                    self.schedule_updated.emit()
+                    self.logger.info(f"更新课程: {course_id}")
+                    return True
+
+            self.logger.warning(f"未找到课程: {course_id}")
+            return False
+
+        except Exception as e:
+            self.logger.error(f"更新课程失败: {e}")
+            return False
+
+    def _get_weekday_name(self, weekday: int) -> str:
+        """获取星期名称"""
+        weekday_names = {
+            1: "周一", 2: "周二", 3: "周三", 4: "周四",
+            5: "周五", 6: "周六", 7: "周日"
+        }
+        return weekday_names.get(weekday, "未知")
+
+    def _get_weekday_name_from_string(self, weekday: str) -> str:
+        """从字符串获取星期名称"""
+        weekday_map = {
+            'monday': '周一', 'tuesday': '周二', 'wednesday': '周三',
+            'thursday': '周四', 'friday': '周五', 'saturday': '周六', 'sunday': '周日'
+        }
+        return weekday_map.get(weekday.lower(), weekday)

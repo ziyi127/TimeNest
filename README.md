@@ -1,13 +1,14 @@
-# TimeNest
+# TimeNest 2.0.0 Preview
 
 <div align="center">
 
-<img src="https://github.com/ziyi127/TimeNest/blob/main/resources/icons/tray_icon.svg " style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+<img src="https://github.com/ziyi127/TimeNest/blob/main/resources/icons/app_icon.png" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
 
-**一个功能强大的跨平台课程表管理工具**
+**一个功能强大的跨平台课程表管理工具 - RinUI版本**
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyQt6](https://img.shields.io/badge/PyQt6-6.6+-green.svg)](https://pypi.org/project/PyQt6/)
+[![RinUI](https://img.shields.io/badge/RinUI-0.1.5+-blue.svg)](https://github.com/RinLit-233-shiroko/Rin-UI)
+[![PySide6](https://img.shields.io/badge/PySide6-6.6+-green.svg)](https://pypi.org/project/PySide6/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
@@ -20,7 +21,7 @@
 
 ## 📖 项目简介
 
-TimeNest 是一个基于 Python 和 PyQt6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。它提供了直观的用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
+TimeNest 2.0.0 Preview 是一个基于 Python、RinUI 和 PySide6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。本版本完全采用 RinUI 框架重构，提供了全新的现代化用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
 
 ### 🎯 设计理念
 
@@ -29,6 +30,26 @@ TimeNest 是一个基于 Python 和 PyQt6 开发的现代化课程表管理工�
 - **跨平台**：支持 Windows、macOS、Linux
 - **可扩展**：模块化设计，支持插件扩展
 - **现代化**：采用最新技术栈，持续更新
+
+
+## 🔄 架构升级
+
+TimeNest 2.0.0 Preview 完全基于 RinUI 现代化架构构建：
+
+- **当前架构**: RinUI + QML 声明式UI
+- **旧版架构**: PySide6 Widgets (已完全移除)
+- **性能提升**: 更快的渲染速度和更低的内存占用
+- **界面优化**: 全新的现代化设计语言
+
+### 启动方式
+
+```bash
+# 主要启动方式
+python main.py
+
+# 或使用启动脚本（包含依赖检查）
+python run_rinui.py
+```
 
 ## 🚀 快速开始
 
@@ -60,14 +81,18 @@ venv\Scripts\activate
 source venv/bin/activate
 
 pip install -r requirements.txt
-python main.py
+python main.py  # RinUI版本
+# 或使用启动脚本
+python run_rinui.py
 ```
 
 ### 验证安装
 
 ```bash
 # 运行应用
-python main.py
+python main.py  # RinUI版本
+# 或使用启动脚本
+python run_rinui.py
 ```
 
 ## ✨ 核心功能
@@ -241,7 +266,9 @@ python main.py
 
 1. **启动应用**
    ```bash
-   python main.py
+   python main.py  # RinUI版本
+# 或使用启动脚本
+python run_rinui.py
    ```
 
 2. **创建课程表**
@@ -299,7 +326,9 @@ source dev-env/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 
 # 4. 运行应用
-python main.py
+python main.py  # RinUI版本
+# 或使用启动脚本
+python run_rinui.py
 ```
 
 ### 项目架构
@@ -479,7 +508,8 @@ Closes #123
 ### 特别感谢
 
 - ClassIsland - 提供了灵感和参考
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - 优秀的 GUI 框架
+- [RinUI](https://github.com/RinLit-233-shiroko/Rin-UI) - 现代化的 Qt Quick UI 框架
+- [PySide6](https://www.qt.io/qt-for-python) - 优秀的 GUI 框架
 - 所有提供反馈和建议的用户们
 
 ### 开源项目

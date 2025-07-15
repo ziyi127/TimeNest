@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime, timedelta, time
 from dataclasses import dataclass
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer
 
 from core.base_manager import BaseManager
 
@@ -99,11 +99,11 @@ class NotificationEnhancementManager(BaseManager):
     """通知增强功能管理器"""
     
     # 信号定义
-    notification_scheduled = pyqtSignal(str)  # 通知ID
-    notification_sent = pyqtSignal(str)  # 通知ID
-    notification_failed = pyqtSignal(str, str)  # 通知ID, 错误信息
-    rule_triggered = pyqtSignal(str, str)  # 规则ID, 触发条件
-    batch_completed = pyqtSignal(str, int, int)  # 批次ID, 成功数, 失败数
+    notification_scheduled = Signal(str)  # 通知ID
+    notification_sent = Signal(str)  # 通知ID
+    notification_failed = Signal(str, str)  # 通知ID, 错误信息
+    rule_triggered = Signal(str, str)  # 规则ID, 触发条件
+    batch_completed = Signal(str, int, int)  # 批次ID, 成功数, 失败数
     
     def __init__(self, config_manager=None, notification_manager=None):
         super().__init__(config_manager, "NotificationEnhancement")

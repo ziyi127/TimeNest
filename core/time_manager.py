@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -19,7 +19,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 from functools import lru_cache
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from core.config_manager import ConfigManager
 
@@ -27,7 +27,7 @@ class TimeManager(QObject):
     """时间管理器"""
     
     # 信号定义
-    time_offset_changed = pyqtSignal(timedelta)  # 时间偏移变化
+    time_offset_changed = Signal(timedelta)  # 时间偏移变化
     
     def __init__(self, config_manager: ConfigManager):
         super().__init__()

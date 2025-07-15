@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Type, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal, QThread, QTimer
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
 
 
 class PluginStatus(Enum):
@@ -214,7 +214,7 @@ class PluginEventBus(QObject):
     """插件事件总线"""
     
     # 信号定义
-    event_published = pyqtSignal(str, object)  # 事件类型, 事件对象
+    event_published = Signal(str, object)  # 事件类型, 事件对象
     
     def __init__(self):
         super().__init__()
@@ -268,10 +268,10 @@ class PluginManager(QObject):
     """插件管理器"""
     
     # 信号定义
-    plugin_loaded = pyqtSignal(str)  # 插件ID
-    plugin_activated = pyqtSignal(str)  # 插件ID
-    plugin_deactivated = pyqtSignal(str)  # 插件ID
-    plugin_error = pyqtSignal(str, str)  # 插件ID, 错误信息
+    plugin_loaded = Signal(str)  # 插件ID
+    plugin_activated = Signal(str)  # 插件ID
+    plugin_deactivated = Signal(str)  # 插件ID
+    plugin_error = Signal(str, str)  # 插件ID, 错误信息
     
     def __init__(self, app_version: str = "1.0.0", config_manager=None):
         super().__init__()

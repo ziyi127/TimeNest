@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -17,13 +17,13 @@ TimeNest 容器组件
 
 import logging
 from typing import Dict, Any, Optional, List
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
     QScrollArea, QSplitter, QTabWidget, QStackedWidget,
     QLabel, QPushButton, QFrame
 )
-from PyQt6.QtGui import QFont
+from PySide6.QtGui import QFont
 
 from .base_component import BaseComponent
 
@@ -31,9 +31,9 @@ class ContainerComponent(BaseComponent):
     """容器组件"""
     
     # 信号定义
-    child_component_added = pyqtSignal(str)  # 子组件ID
-    child_component_removed = pyqtSignal(str)  # 子组件ID
-    layout_changed = pyqtSignal(str)  # 布局类型
+    child_component_added = Signal(str)  # 子组件ID
+    child_component_removed = Signal(str)  # 子组件ID
+    layout_changed = Signal(str)  # 布局类型
     
     def __init__(self, component_id: str, config: Dict[str, Any]):
         # 子组件列表

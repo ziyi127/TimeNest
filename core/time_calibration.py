@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -23,7 +23,7 @@ import time
 from typing import Optional, Tuple, List, Dict, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread
+from PySide6.QtCore import QObject, Signal, QTimer, QThread
 import requests
 
 
@@ -194,8 +194,8 @@ class WebTimeClient:
 class TimeCalibrationWorker(QThread):
     """时间校准工作线程"""
     
-    calibration_completed = pyqtSignal(bool, float, str)  # 成功, 偏移量, 消息
-    progress_updated = pyqtSignal(int, str)  # 进度, 状态
+    calibration_completed = Signal(bool, float, str)  # 成功, 偏移量, 消息
+    progress_updated = Signal(int, str)  # 进度, 状态
     
     def __init__(self, servers: List[TimeServer]):
         super().__init__()
@@ -324,8 +324,8 @@ class TimeCalibrationWorker(QThread):
 class TimeCalibrationService(QObject):
     """时间校准服务"""
     
-    calibration_completed = pyqtSignal(bool, float, str)  # 成功, 偏移量, 消息
-    calibration_progress = pyqtSignal(int, str)  # 进度, 状态
+    calibration_completed = Signal(bool, float, str)  # 成功, 偏移量, 消息
+    calibration_progress = Signal(int, str)  # 进度, 状态
     
     def __init__(self, config_manager, time_manager):
         super().__init__()

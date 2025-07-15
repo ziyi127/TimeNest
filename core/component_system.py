@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -29,9 +29,9 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Type
 
 # 第三方库
-from PyQt6.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, pyqtSignal, QTimer
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPen
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Signal, QTimer
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PySide6.QtWidgets import (
     QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, 
     QVBoxLayout, QWidget
 )
@@ -143,9 +143,9 @@ class QObjectABCMeta(type(QObject), ABCMeta):
 class BaseComponent(QObject, IComponent, metaclass=QObjectABCMeta):
     """基础组件类"""
     
-    state_changed = pyqtSignal(ComponentState)
-    update_requested = pyqtSignal()
-    error_occurred = pyqtSignal(str)
+    state_changed = Signal(ComponentState)
+    update_requested = Signal()
+    error_occurred = Signal(str)
     
     def __init__(self):
         super().__init__()
@@ -717,9 +717,9 @@ class ScrollingTextWidget(QWidget):
 class ComponentManager(QObject):
     """组件管理器"""
     
-    component_added = pyqtSignal(str, IComponent)
-    component_removed = pyqtSignal(str)
-    component_state_changed = pyqtSignal(str, ComponentState)
+    component_added = Signal(str, IComponent)
+    component_removed = Signal(str)
+    component_state_changed = Signal(str, ComponentState)
     
     def __init__(self, components_dir: str):
         super().__init__()

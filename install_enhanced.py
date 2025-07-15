@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-TimeNest 增强版安装程序
-包含自动故障处理、多种环境预设和智能错误恢复功能
+TimeNest 2.0.0 Preview 增强版安装程序
+包含自动故障处理、多种环境预设和智能错误恢复功能 - RinUI版本
 """
 
 import sys
@@ -156,7 +156,7 @@ class PresetManager:
                     "python -m pip install --upgrade pip setuptools wheel"
                 ],
                 post_install_commands=[],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule", "plyer"],
                 environment_variables={},
                 troubleshooting_steps=[
@@ -177,7 +177,7 @@ class PresetManager:
                     "conda install pip"
                 ],
                 post_install_commands=[],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule", "plyer"],
                 environment_variables={},
                 troubleshooting_steps=[
@@ -196,7 +196,7 @@ class PresetManager:
                     "python3 -m pip install --upgrade pip setuptools wheel"
                 ],
                 post_install_commands=[],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule", "plyer"],
                 environment_variables={
                     "QT_QPA_PLATFORM": "xcb"
@@ -220,7 +220,7 @@ class PresetManager:
                     "python3 -m pip install --upgrade pip"
                 ],
                 post_install_commands=[],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule", "plyer"],
                 environment_variables={
                     "DISPLAY": ":0",
@@ -243,7 +243,7 @@ class PresetManager:
                     "python3 -m pip install --upgrade pip setuptools wheel"
                 ],
                 post_install_commands=[],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule", "plyer"],
                 environment_variables={},
                 troubleshooting_steps=[
@@ -267,7 +267,7 @@ class PresetManager:
                     "apt-get clean",
                     "rm -rf /var/lib/apt/lists/*"
                 ],
-                required_packages=["PyQt6", "requests", "psutil"],
+                required_packages=["PySide6", "requests", "psutil"],
                 optional_packages=["schedule"],
                 environment_variables={
                     "QT_QPA_PLATFORM": "offscreen"
@@ -778,41 +778,41 @@ class EnhancedInstaller:
         return "\n".join(info)
 
 
-# 尝试导入PyQt6，如果失败则自动安装
+# 尝试导入PySide6，如果失败则自动安装
 try:
-    from PyQt6.QtWidgets import (
+    from PySide6.QtWidgets import (
         QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
         QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
         QMessageBox, QFrame, QCheckBox, QComboBox, QTabWidget,
         QGroupBox, QGridLayout, QSpacerItem, QSizePolicy
     )
-    from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
-    from PyQt6.QtGui import QFont, QPixmap, QIcon
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QThread, Signal, Qt, QTimer
+    from PySide6.QtGui import QFont, QPixmap, QIcon
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    print("PyQt6未安装，正在自动安装...")
+    print("PySide6未安装，正在自动安装...")
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "PyQt6"])
-        from PyQt6.QtWidgets import (
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+        from PySide6.QtWidgets import (
             QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
             QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
             QMessageBox, QFrame, QCheckBox, QComboBox, QTabWidget,
             QGroupBox, QGridLayout, QSpacerItem, QSizePolicy
         )
-        from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
-        from PyQt6.QtGui import QFont, QPixmap, QIcon
-        PYQT6_AVAILABLE = True
+        from PySide6.QtCore import QThread, Signal, Qt, QTimer
+        from PySide6.QtGui import QFont, QPixmap, QIcon
+        PYSIDE6_AVAILABLE = True
     except Exception as e:
-        print(f"PyQt6安装失败: {e}")
-        PYQT6_AVAILABLE = False
+        print(f"PySide6安装失败: {e}")
+        PYSIDE6_AVAILABLE = False
 
 
 class EnhancedInstallWorker(QThread):
     """增强版安装工作线程"""
-    progress_updated = pyqtSignal(int)
-    status_updated = pyqtSignal(str)
-    log_updated = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)
+    progress_updated = Signal(int)
+    status_updated = Signal(str)
+    log_updated = Signal(str)
+    finished = Signal(bool, str)
 
     def __init__(self, install_options):
         super().__init__()
@@ -864,8 +864,7 @@ class EnhancedInstallWindow(QMainWindow):
     def init_ui(self):
         """初始化UI"""
         app_name = version_manager.get_app_name()
-        title = f"{app_name} 增强版安装程序" if app_name else "null 增强版安装程序"
-        self.setWindowTitle(title)
+        self.setWindowTitle(f"{app_name} 增强版安装程序")
         self.setFixedSize(800, 700)
         self.setStyleSheet(self._get_stylesheet())
 
@@ -971,8 +970,7 @@ class EnhancedInstallWindow(QMainWindow):
 
         # 标题
         app_name = version_manager.get_app_name()
-        title_text = f"{app_name} 增强版安装程序" if app_name else "null 增强版安装程序"
-        title_label = QLabel(title_text)
+        title_label = QLabel(f"{app_name} 增强版安装程序")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50; margin: 10px;")
         header_layout.addWidget(title_label)
@@ -1367,9 +1365,9 @@ class EnhancedInstallWindow(QMainWindow):
 
 def main():
     """主函数"""
-    if not PYQT6_AVAILABLE:
-        # 如果PyQt6不可用，使用命令行模式
-        print("PyQt6不可用，使用命令行模式安装...")
+    if not PYSIDE6_AVAILABLE:
+        # 如果PySide6不可用，使用命令行模式
+        print("PySide6不可用，使用命令行模式安装...")
         installer = EnhancedInstaller()
         success, message = installer.install()
 
@@ -1395,8 +1393,7 @@ def main():
     # GUI模式
     app = QApplication(sys.argv)
     app_name = version_manager.get_app_name()
-    installer_name = f"{app_name} Enhanced Installer" if app_name else "null Enhanced Installer"
-    app.setApplicationName(installer_name)
+    app.setApplicationName(f"{app_name} Enhanced Installer")
 
     # 设置应用图标（如果存在）
     icon_path = Path("resources/icons/app_icon.png")

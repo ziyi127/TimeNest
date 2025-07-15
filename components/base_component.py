@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,9 +18,9 @@ TimeNest 组件基类
 import logging
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Dict, Any, Optional
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PySide6.QtCore import QObject, Signal, QTimer, Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame
+from PySide6.QtGui import QFont, QPalette, QColor
 
 
 # 创建兼容的 metaclass
@@ -33,9 +33,9 @@ class BaseComponent(QObject, ABC, metaclass=QObjectABCMeta):
     """组件基类"""
     
     # 信号定义
-    config_changed = pyqtSignal(str, dict)  # 组件ID, 新配置
-    error_occurred = pyqtSignal(str, str)  # 组件ID, 错误信息
-    status_changed = pyqtSignal(str, str)  # 组件ID, 状态信息
+    config_changed = Signal(str, dict)  # 组件ID, 新配置
+    error_occurred = Signal(str, str)  # 组件ID, 错误信息
+    status_changed = Signal(str, str)  # 组件ID, 状态信息
     
     def __init__(self, component_id: str, config: Dict[str, Any]):
         super().__init__()

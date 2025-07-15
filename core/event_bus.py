@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor, Future
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread
+from PySide6.QtCore import QObject, Signal, QTimer, QThread
 
 T = TypeVar('T')
 EventHandler = Callable[[Any], None]
@@ -118,10 +118,10 @@ class EventBus(QObject):
     """
     
     # Qt信号定义
-    event_published = pyqtSignal(object)  # Event
-    event_processed = pyqtSignal(str, bool)  # event_id, success
-    subscription_added = pyqtSignal(str)  # subscription_id
-    subscription_removed = pyqtSignal(str)  # subscription_id
+    event_published = Signal(object)  # Event
+    event_processed = Signal(str, bool)  # event_id, success
+    subscription_added = Signal(str)  # subscription_id
+    subscription_removed = Signal(str)  # subscription_id
     
     def __init__(self, max_history: int = 10000, max_workers: int = 4):
         """

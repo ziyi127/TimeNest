@@ -1,10 +1,10 @@
 {
   "version": {
-    "number": "1.1.3",
+    "number": "2.0.0",
     "name": "Preview",
-    "build": "20250714",
-    "release_date": "2025-07-14",
-    "full_version": "1.1.3 Preview"
+    "build": "20250715",
+    "release_date": "2025-07-15",
+    "full_version": "2.0.0 Preview"
   },
   "app": {
     "name": "TimeNest",
@@ -35,7 +35,8 @@
     "python_version_max": "3.12.0",
     "supported_platforms": ["Windows 10+", "Linux", "macOS 10.14+"],
     "dependencies": {
-      "PyQt6": ">=6.0.0",
+      "RinUI": ">=0.1.5",
+      "PySide6": ">=6.0.0",
       "requests": ">=2.25.0",
       "psutil": ">=5.8.0"
     }
@@ -63,6 +64,6 @@
       "感谢用户的反馈和建议"
     ],
     "contributors": "暂无",
-    "special_thanks": "感谢 PyQt6 团队提供的优秀 GUI 框架"
+    "special_thanks": "感谢 RinUI 和 PySide6 团队提供的优秀 GUI 框架"
   }
 }

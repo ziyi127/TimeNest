@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal, QThread, QTimer
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
 
 
 class PluginMarketplaceStatus(Enum):
@@ -98,9 +98,9 @@ class PluginDownloader(QThread):
     """插件下载器"""
     
     # 信号定义
-    progress_updated = pyqtSignal(int)  # 下载进度
-    download_completed = pyqtSignal(str)  # 下载完成，返回文件路径
-    download_failed = pyqtSignal(str)  # 下载失败，返回错误信息
+    progress_updated = Signal(int)  # 下载进度
+    download_completed = Signal(str)  # 下载完成，返回文件路径
+    download_failed = Signal(str)  # 下载失败，返回错误信息
     
     def __init__(self, plugin: MarketplacePlugin, download_dir: Path):
         super().__init__()
@@ -181,12 +181,12 @@ class PluginMarketplace(QObject):
     """插件商城管理器"""
     
     # 信号定义
-    status_changed = pyqtSignal(str)  # 状态变化
-    plugins_updated = pyqtSignal()  # 插件列表更新
-    plugin_downloaded = pyqtSignal(str)  # 插件下载完成
-    plugin_installed = pyqtSignal(str)  # 插件安装完成
-    plugin_install_failed = pyqtSignal(str, str)  # 插件安装失败
-    download_progress = pyqtSignal(str, int)  # 下载进度
+    status_changed = Signal(str)  # 状态变化
+    plugins_updated = Signal()  # 插件列表更新
+    plugin_downloaded = Signal(str)  # 插件下载完成
+    plugin_installed = Signal(str)  # 插件安装完成
+    plugin_install_failed = Signal(str, str)  # 插件安装失败
+    download_progress = Signal(str, int)  # 下载进度
     
     def __init__(self, plugin_manager, config_manager=None):
         super().__init__()

@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -42,15 +42,15 @@ from functools import lru_cache
 from collections import deque
 
 # 第三方库
-from PyQt6.QtCore import QMutex, QMutexLocker, QObject, Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QGuiApplication, QIcon
-from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer, QSoundEffect
-from PyQt6.QtWidgets import QApplication, QStyle, QSystemTrayIcon
+from PySide6.QtCore import QMutex, QMutexLocker, QObject, Qt, QThread, QTimer, Signal
+from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QSoundEffect
+from PySide6.QtWidgets import QApplication, QStyle, QSystemTrayIcon
 
 # 本地模块
 from core.notification_service import NotificationPriority, NotificationRequest, NotificationType
 from models.schedule import ClassItem, Schedule
-from ui.notification_window import NotificationWindow
+# from ui.notification_window import NotificationWindow  # 已迁移到RinUI
 from utils.text_to_speech import TextToSpeech
 
 
@@ -355,12 +355,12 @@ class NotificationManager(QObject):
     """
 
     # 标准信号定义
-    notification_sent = pyqtSignal(str, dict)  # 通知ID, 通知数据
-    notification_failed = pyqtSignal(str, str)  # 通知ID, 错误信息
-    channel_status_changed = pyqtSignal(str, bool)  # 通道名, 状态
-    config_updated = pyqtSignal(dict)  # 配置变更
-    important_notification_received = pyqtSignal()  # 重要通知接收
-    batch_notification_completed = pyqtSignal(str, int, int)  # 批次ID, 成功数, 失败数
+    notification_sent = Signal(str, dict)  # 通知ID, 通知数据
+    notification_failed = Signal(str, str)  # 通知ID, 错误信息
+    channel_status_changed = Signal(str, bool)  # 通道名, 状态
+    config_updated = Signal(dict)  # 配置变更
+    important_notification_received = Signal()  # 重要通知接收
+    batch_notification_completed = Signal(str, int, int)  # 批次ID, 成功数, 失败数
 
     def __init__(self, config_manager: 'ConfigManager', theme_manager=None, floating_manager=None):
         """
@@ -398,8 +398,8 @@ class NotificationManager(QObject):
         self.tray_icon: Optional[QSystemTrayIcon] = None
         self._init_tray_icon()
 
-        # 通知窗口管理
-        self.notification_windows: List[NotificationWindow] = []
+        # 通知窗口管理 (已迁移到RinUI)
+        # self.notification_windows: List[NotificationWindow] = []
 
         # 定时器管理 - 使用弱引用避免内存泄漏
         import weakref
@@ -1125,7 +1125,7 @@ class NotificationManager(QObject):
     
     def _init_tray_icon(self):
         """初始化系统托盘图标"""
-        from PyQt6.QtCore import Qt  # 确保Qt在本地作用域可用
+        from PySide6.QtCore import Qt  # 确保Qt在本地作用域可用
         try:
             if QSystemTrayIcon.isSystemTrayAvailable():
                 self.tray_icon = QSystemTrayIcon()
@@ -1468,12 +1468,13 @@ class NotificationManager(QObject):
             self.logger.error(f"显示托盘通知失败: {e}")
             return False
     
-    def _close_notification_window(self, window: NotificationWindow):
-        """关闭通知窗口"""
+    def _close_notification_window(self, window):
+        """关闭通知窗口 (已迁移到RinUI)"""
         try:
-            if window in self.notification_windows:
-                self.notification_windows.remove(window)
-                window.close()
+            # if window in self.notification_windows:
+            #     self.notification_windows.remove(window)
+            #     window.close()
+            pass
         except Exception as e:
             self.logger.error(f"关闭通知窗口失败: {e}")
     

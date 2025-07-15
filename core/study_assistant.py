@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta, time
 from dataclasses import dataclass
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from core.base_manager import BaseManager
 
@@ -74,10 +74,10 @@ class StudyAssistantManager(BaseManager):
     """智能学习助手管理器"""
     
     # 信号定义
-    recommendation_generated = pyqtSignal(str)  # 建议ID
-    pattern_detected = pyqtSignal(str, str)  # 模式类型, 描述
-    milestone_reached = pyqtSignal(str, str)  # 里程碑类型, 描述
-    study_insight_available = pyqtSignal(str)  # 洞察内容
+    recommendation_generated = Signal(str)  # 建议ID
+    pattern_detected = Signal(str, str)  # 模式类型, 描述
+    milestone_reached = Signal(str, str)  # 里程碑类型, 描述
+    study_insight_available = Signal(str)  # 洞察内容
     
     def __init__(self, config_manager=None, schedule_enhancement=None):
         super().__init__(config_manager, "StudyAssistant")

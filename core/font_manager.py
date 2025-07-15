@@ -9,16 +9,16 @@
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional
-from PyQt6.QtGui import QFont, QFontDatabase
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtGui import QFont, QFontDatabase
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal
 
 
 class FontManager(QObject):
     """字体管理器"""
     
     # 信号
-    font_changed = pyqtSignal(str, QFont)  # 字体名称, 字体对象
+    font_changed = Signal(str, QFont)  # 字体名称, 字体对象
     
     def __init__(self, config_manager=None):
         super().__init__()

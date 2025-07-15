@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta, time, date
 from dataclasses import dataclass
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from core.base_manager import BaseManager
 
@@ -89,11 +89,11 @@ class ScheduleEnhancementManager(BaseManager):
     """课程表增强功能管理器"""
     
     # 信号定义
-    conflict_detected = pyqtSignal(str)  # 冲突ID
-    schedule_optimized = pyqtSignal(str)  # 优化描述
-    task_created = pyqtSignal(str)  # 任务ID
-    session_started = pyqtSignal(str)  # 会话ID
-    session_completed = pyqtSignal(str, float)  # 会话ID, 生产力分数
+    conflict_detected = Signal(str)  # 冲突ID
+    schedule_optimized = Signal(str)  # 优化描述
+    task_created = Signal(str)  # 任务ID
+    session_started = Signal(str)  # 会话ID
+    session_completed = Signal(str, float)  # 会话ID, 生产力分数
     
     def __init__(self, config_manager=None):
         super().__init__(config_manager, "ScheduleEnhancement")

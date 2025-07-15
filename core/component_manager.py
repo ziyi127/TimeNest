@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -17,8 +17,8 @@ TimeNest 组件管理器
 
 import logging
 from typing import Dict, List, Optional, Any, Type
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QWidget
 import uuid
 
 from core.config_manager import ConfigManager
@@ -34,10 +34,10 @@ class ComponentManager(QObject):
     """组件管理器"""
     
     # 信号定义
-    component_added = pyqtSignal(str, object)  # 组件ID, 组件对象
-    component_removed = pyqtSignal(str)  # 组件ID
-    component_updated = pyqtSignal(str, object)  # 组件ID, 组件对象
-    layout_changed = pyqtSignal()  # 布局变化
+    component_added = Signal(str, object)  # 组件ID, 组件对象
+    component_removed = Signal(str)  # 组件ID
+    component_updated = Signal(str, object)  # 组件ID, 组件对象
+    layout_changed = Signal()  # 布局变化
     
     def __init__(self, config_manager: ConfigManager):
         super().__init__()

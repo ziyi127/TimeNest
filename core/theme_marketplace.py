@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -22,8 +22,8 @@ import requests
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from PyQt6.QtCore import QObject, pyqtSignal, QThread, QTimer
-from PyQt6.QtWidgets import QMessageBox
+from PySide6.QtCore import QObject, Signal, QThread, QTimer
+from PySide6.QtWidgets import QMessageBox
 
 @dataclass
 class ThemeInfo:
@@ -53,9 +53,9 @@ class ThemeInfo:
 class ThemeDownloader(QThread):
     """主题下载器"""
     
-    download_progress = pyqtSignal(int)  # 下载进度
-    download_finished = pyqtSignal(str, bool)  # 主题ID, 是否成功
-    download_error = pyqtSignal(str, str)  # 主题ID, 错误信息
+    download_progress = Signal(int)  # 下载进度
+    download_finished = Signal(str, bool)  # 主题ID, 是否成功
+    download_error = Signal(str, str)  # 主题ID, 错误信息
     
     def __init__(self, theme_info: ThemeInfo, download_path: Path):
         super().__init__()
@@ -101,10 +101,10 @@ class ThemeDownloader(QThread):
 class ThemeMarketplace(QObject):
     """主题市场管理器"""
     
-    themes_loaded = pyqtSignal(list)  # 主题列表加载完成
-    theme_installed = pyqtSignal(str)  # 主题安装完成
-    theme_uninstalled = pyqtSignal(str)  # 主题卸载完成
-    error_occurred = pyqtSignal(str)  # 错误发生
+    themes_loaded = Signal(list)  # 主题列表加载完成
+    theme_installed = Signal(str)  # 主题安装完成
+    theme_uninstalled = Signal(str)  # 主题卸载完成
+    error_occurred = Signal(str)  # 错误发生
     
     def __init__(self, config_manager, theme_manager):
         super().__init__()

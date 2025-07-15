@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from core.base_manager import BaseManager
 
@@ -113,12 +113,12 @@ class ResourceManager(BaseManager):
     """学习资源管理器"""
     
     # 信号定义
-    resource_added = pyqtSignal(str)  # 资源ID
-    resource_updated = pyqtSignal(str)
-    resource_accessed = pyqtSignal(str)
-    collection_created = pyqtSignal(str)  # 集合ID
-    note_created = pyqtSignal(str)  # 笔记ID
-    resource_broken = pyqtSignal(str, str)  # 资源ID, 错误信息
+    resource_added = Signal(str)  # 资源ID
+    resource_updated = Signal(str)
+    resource_accessed = Signal(str)
+    collection_created = Signal(str)  # 集合ID
+    note_created = Signal(str)  # 笔记ID
+    resource_broken = Signal(str, str)  # 资源ID, 错误信息
     
     def __init__(self, config_manager=None):
         super().__init__(config_manager, "ResourceManager")

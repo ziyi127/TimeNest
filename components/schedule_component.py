@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,12 +18,12 @@ TimeNest 课程表组件
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QScrollArea, QFrame, QPushButton
 )
-from PyQt6.QtGui import QFont, QPalette, QColor
+from PySide6.QtGui import QFont, QPalette, QColor
 
 from .base_component import BaseComponent
 from models.schedule import Schedule, ClassItem, Subject
@@ -32,8 +32,8 @@ class ScheduleComponent(BaseComponent):
     """课程表组件"""
     
     # 信号定义
-    class_clicked = pyqtSignal(str)  # 课程ID
-    schedule_edit_requested = pyqtSignal()  # 请求编辑课程表
+    class_clicked = Signal(str)  # 课程ID
+    schedule_edit_requested = Signal()  # 请求编辑课程表
     
     def __init__(self, component_id: str, config: Dict[str, Any]):
         self.schedule: Optional[Schedule] = None

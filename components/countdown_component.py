@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,9 +18,9 @@ TimeNest 倒计时组件
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget
-from PyQt6.QtGui import QFont
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PySide6.QtGui import QFont
 
 from .base_component import BaseComponent
 

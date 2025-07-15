@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer
 
 from core.base_manager import BaseManager
 
@@ -90,12 +90,12 @@ class EnvironmentOptimizer(BaseManager):
     """学习环境优化器"""
     
     # 信号定义
-    environment_status_changed = pyqtSignal(str)  # 状态
-    optimization_suggested = pyqtSignal(str)  # 建议ID
-    focus_session_started = pyqtSignal(str)  # 会话ID
-    focus_session_ended = pyqtSignal(str, float)  # 会话ID, 生产力分数
-    distraction_detected = pyqtSignal(str, str)  # 类型, 描述
-    performance_warning = pyqtSignal(str, float)  # 指标名称, 值
+    environment_status_changed = Signal(str)  # 状态
+    optimization_suggested = Signal(str)  # 建议ID
+    focus_session_started = Signal(str)  # 会话ID
+    focus_session_ended = Signal(str, float)  # 会话ID, 生产力分数
+    distraction_detected = Signal(str, str)  # 类型, 描述
+    performance_warning = Signal(str, float)  # 指标名称, 值
     
     def __init__(self, config_manager=None):
         super().__init__(config_manager, "EnvironmentOptimizer")

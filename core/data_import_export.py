@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -23,7 +23,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, time, date
-from PyQt6.QtCore import QObject, pyqtSignal, QThread
+from PySide6.QtCore import QObject, Signal, QThread
 
 from models.schedule import Schedule, Subject, TimeSlot, ClassItem, TimeLayout, TimeLayoutItem, ClassPlan
 
@@ -32,12 +32,12 @@ class DataImportExportManager(QObject):
     """数据导入导出管理器"""
     
     # 信号定义
-    import_started = pyqtSignal(str)  # 文件路径
-    import_progress = pyqtSignal(int)  # 进度百分比
-    import_completed = pyqtSignal(bool, str)  # 成功状态, 消息
-    export_started = pyqtSignal(str)  # 文件路径
-    export_progress = pyqtSignal(int)  # 进度百分比
-    export_completed = pyqtSignal(bool, str)  # 成功状态, 消息
+    import_started = Signal(str)  # 文件路径
+    import_progress = Signal(int)  # 进度百分比
+    import_completed = Signal(bool, str)  # 成功状态, 消息
+    export_started = Signal(str)  # 文件路径
+    export_progress = Signal(int)  # 进度百分比
+    export_completed = Signal(bool, str)  # 成功状态, 消息
     
     def __init__(self):
         super().__init__()

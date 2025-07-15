@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -26,8 +26,8 @@ import zipfile
 from typing import Any, Dict, List, Optional, Union, Tuple
 from pathlib import Path
 from datetime import datetime, timedelta
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread, pyqtSlot
-from PyQt6.QtSql import QSqlDatabase, QSqlQuery, QSqlError
+from PySide6.QtCore import QObject, Signal, QTimer, QThread, Slot
+from PySide6.QtSql import QSqlDatabase, QSqlQuery, QSqlError
 
 
 class DataBackupWorker(QThread):
@@ -35,8 +35,8 @@ class DataBackupWorker(QThread):
     数据备份工作线程
     """
     
-    backup_progress = pyqtSignal(int)  # 备份进度
-    backup_finished = pyqtSignal(bool, str)  # 备份完成, 成功状态, 消息
+    backup_progress = Signal(int)  # 备份进度
+    backup_finished = Signal(bool, str)  # 备份完成, 成功状态, 消息
     
     def __init__(self, data_manager, backup_path: str, include_files: List[str]):
         super().__init__()
@@ -91,8 +91,8 @@ class DataRestoreWorker(QThread):
     数据恢复工作线程
     """
     
-    restore_progress = pyqtSignal(int)  # 恢复进度
-    restore_finished = pyqtSignal(bool, str)  # 恢复完成, 成功状态, 消息
+    restore_progress = Signal(int)  # 恢复进度
+    restore_finished = Signal(bool, str)  # 恢复完成, 成功状态, 消息
     
     def __init__(self, data_manager, backup_path: str, restore_dir: str):
         super().__init__()
@@ -154,17 +154,17 @@ class DataManager(QObject):
     """
     
     # 信号定义
-    data_saved = pyqtSignal(str, str)  # 数据类型, 文件路径
-    data_loaded = pyqtSignal(str, str)  # 数据类型, 文件路径
-    data_deleted = pyqtSignal(str, str)  # 数据类型, 文件路径
-    backup_started = pyqtSignal(str)  # 备份路径
-    backup_progress = pyqtSignal(int)  # 备份进度
-    backup_finished = pyqtSignal(bool, str)  # 备份完成, 成功状态, 消息
-    restore_started = pyqtSignal(str)  # 恢复路径
-    restore_progress = pyqtSignal(int)  # 恢复进度
-    restore_finished = pyqtSignal(bool, str)  # 恢复完成, 成功状态, 消息
-    cleanup_finished = pyqtSignal(int, int)  # 清理完成, 删除文件数, 释放空间(MB)
-    database_error = pyqtSignal(str)  # 数据库错误
+    data_saved = Signal(str, str)  # 数据类型, 文件路径
+    data_loaded = Signal(str, str)  # 数据类型, 文件路径
+    data_deleted = Signal(str, str)  # 数据类型, 文件路径
+    backup_started = Signal(str)  # 备份路径
+    backup_progress = Signal(int)  # 备份进度
+    backup_finished = Signal(bool, str)  # 备份完成, 成功状态, 消息
+    restore_started = Signal(str)  # 恢复路径
+    restore_progress = Signal(int)  # 恢复进度
+    restore_finished = Signal(bool, str)  # 恢复完成, 成功状态, 消息
+    cleanup_finished = Signal(int, int)  # 清理完成, 删除文件数, 释放空间(MB)
+    database_error = Signal(str)  # 数据库错误
     
     def __init__(self, data_dir: str = None, config_manager=None, parent=None):
         """
@@ -854,7 +854,7 @@ class DataManager(QObject):
         except Exception as e:
             self.logger.warning(f"记录备份信息失败: {e}")
     
-    @pyqtSlot(bool, str)
+    @Slot(bool, str)
     def _on_backup_finished(self, success: bool, message: str):
         """
         备份完成回调
@@ -952,7 +952,7 @@ class DataManager(QObject):
             self.logger.error(f"恢复备份失败: {e}")
             return False
     
-    @pyqtSlot(bool, str)
+    @Slot(bool, str)
     def _on_restore_finished(self, success: bool, message: str):
         """
         恢复完成回调
@@ -1063,7 +1063,7 @@ class DataManager(QObject):
             self.logger.error(f"删除备份失败: {e}")
             return False
     
-    @pyqtSlot()
+    @Slot()
     def _auto_cleanup(self):
         """
         自动清理
@@ -1241,7 +1241,152 @@ class DataManager(QObject):
         except Exception as e:
             self.logger.error(f"获取存储信息失败: {e}")
             return {}
-    
+
+    def save_setting(self, key: str, value: Any) -> bool:
+        """
+        保存设置（优化版本）
+
+        Args:
+            key: 设置键
+            value: 设置值
+
+        Returns:
+            是否保存成功
+        """
+        # 输入验证
+        if not key or not isinstance(key, str) or key.strip() == "":
+            self.logger.error("设置键不能为空")
+            return False
+
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                self.logger.error("数据库连接不可用")
+                return False
+
+            # 开始事务以确保数据一致性
+            if not self.db_connection.transaction():
+                self.logger.error("无法开始事务")
+                return False
+
+            try:
+                # 优化的数据类型检测和序列化
+                if isinstance(value, bool):
+                    data_type = 'bool'
+                    value_str = str(value).lower()
+                elif isinstance(value, int):
+                    data_type = 'int'
+                    value_str = str(value)
+                elif isinstance(value, float):
+                    data_type = 'float'
+                    value_str = str(value)
+                elif isinstance(value, (list, dict, tuple)):
+                    data_type = 'json'
+                    try:
+                        value_str = json.dumps(value, ensure_ascii=False, separators=(',', ':'))
+                    except (TypeError, ValueError) as e:
+                        self.logger.error(f"JSON序列化失败: {e}")
+                        self.db_connection.rollback()
+                        return False
+                elif value is None:
+                    data_type = 'null'
+                    value_str = 'null'
+                else:
+                    data_type = 'string'
+                    value_str = str(value)
+
+                # 使用预编译语句提高性能
+                query = QSqlQuery(self.db_connection)
+                query.prepare("""
+                    INSERT OR REPLACE INTO user_data
+                    (key, value, data_type, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                """)
+
+                query.addBindValue(key.strip())
+                query.addBindValue(value_str)
+                query.addBindValue(data_type)
+
+                if not query.exec():
+                    error = query.lastError()
+                    self.logger.error(f"保存设置失败: {error.text()}")
+                    self.db_connection.rollback()
+                    return False
+
+                # 提交事务
+                if not self.db_connection.commit():
+                    self.logger.error("提交事务失败")
+                    return False
+
+                self.logger.debug(f"设置已保存: {key} = {value} (类型: {data_type})")
+                return True
+
+            except Exception as e:
+                self.db_connection.rollback()
+                raise e
+
+        except Exception as e:
+            self.logger.error(f"保存设置失败: {e}")
+            return False
+
+    def load_setting(self, key: str, default_value: Any = None) -> Any:
+        """
+        加载设置
+
+        Args:
+            key: 设置键
+            default_value: 默认值
+
+        Returns:
+            设置值
+        """
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                return default_value
+
+            query = QSqlQuery(self.db_connection)
+            query.prepare("SELECT value, data_type FROM user_data WHERE key = ?")
+            query.addBindValue(key)
+
+            if not query.exec():
+                error = query.lastError()
+                self.logger.error(f"加载设置失败: {error.text()}")
+                return default_value
+
+            if query.next():
+                value_str = query.value(0)
+                data_type = query.value(1)
+
+                # 根据数据类型转换值
+                if data_type == 'bool':
+                    return value_str.lower() == 'true'
+                elif data_type == 'int':
+                    return int(value_str)
+                elif data_type == 'float':
+                    return float(value_str)
+                elif data_type == 'json':
+                    return json.loads(value_str)
+                else:
+                    return value_str
+
+            return default_value
+
+        except Exception as e:
+            self.logger.error(f"加载设置失败: {e}")
+            return default_value
+
+    def get_setting(self, key: str, default_value: Any = None) -> Any:
+        """
+        获取设置（load_setting的别名）
+
+        Args:
+            key: 设置键
+            default_value: 默认值
+
+        Returns:
+            设置值
+        """
+        return self.load_setting(key, default_value)
+
     def cleanup(self):
         """
         清理资源
@@ -1271,7 +1416,430 @@ class DataManager(QObject):
             
         except Exception as e:
             self.logger.error(f"清理数据管理器失败: {e}")
-    
+
+    def import_data(self, file_path: str) -> bool:
+        """导入数据"""
+        try:
+            file_path = Path(file_path)
+            if not file_path.exists():
+                self.logger.error(f"导入文件不存在: {file_path}")
+                return False
+
+            # 根据文件扩展名选择导入方式
+            if file_path.suffix.lower() == '.json':
+                return self._import_json_data(file_path)
+            elif file_path.suffix.lower() in ['.yaml', '.yml']:
+                return self._import_yaml_data(file_path)
+            elif file_path.suffix.lower() in ['.xlsx', '.xls']:
+                return self._import_excel_data(file_path)
+            else:
+                self.logger.error(f"不支持的文件格式: {file_path.suffix}")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"导入数据失败: {e}")
+            return False
+
+    def export_data(self, file_path: str) -> bool:
+        """导出数据"""
+        try:
+            file_path = Path(file_path)
+
+            # 根据文件扩展名选择导出方式
+            if file_path.suffix.lower() == '.json':
+                return self._export_json_data(file_path)
+            elif file_path.suffix.lower() in ['.yaml', '.yml']:
+                return self._export_yaml_data(file_path)
+            elif file_path.suffix.lower() in ['.xlsx', '.xls']:
+                return self._export_excel_data(file_path)
+            else:
+                self.logger.error(f"不支持的文件格式: {file_path.suffix}")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"导出数据失败: {e}")
+            return False
+
+    def backup_data(self) -> bool:
+        """备份数据"""
+        try:
+            backup_dir = self.data_dir / "backups"
+            backup_dir.mkdir(exist_ok=True)
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_file = backup_dir / f"timenest_backup_{timestamp}.zip"
+
+            with zipfile.ZipFile(backup_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # 备份数据库文件
+                if self.db_path.exists():
+                    zipf.write(self.db_path, "database.db")
+
+                # 备份配置文件
+                config_files = [
+                    self.data_dir / "config.json",
+                    self.data_dir / "settings.json",
+                    self.data_dir / "themes.json"
+                ]
+
+                for config_file in config_files:
+                    if config_file.exists():
+                        zipf.write(config_file, config_file.name)
+
+                # 备份插件数据
+                plugins_dir = self.data_dir / "plugins"
+                if plugins_dir.exists():
+                    for plugin_file in plugins_dir.rglob("*"):
+                        if plugin_file.is_file():
+                            arcname = f"plugins/{plugin_file.relative_to(plugins_dir)}"
+                            zipf.write(plugin_file, arcname)
+
+            self.logger.info(f"数据备份成功: {backup_file}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"数据备份失败: {e}")
+            return False
+
+    def restore_data(self) -> bool:
+        """恢复数据"""
+        try:
+            backup_dir = self.data_dir / "backups"
+            if not backup_dir.exists():
+                self.logger.error("备份目录不存在")
+                return False
+
+            # 找到最新的备份文件
+            backup_files = list(backup_dir.glob("timenest_backup_*.zip"))
+            if not backup_files:
+                self.logger.error("没有找到备份文件")
+                return False
+
+            latest_backup = max(backup_files, key=lambda x: x.stat().st_mtime)
+
+            # 创建临时恢复目录
+            temp_dir = self.data_dir / "temp_restore"
+            temp_dir.mkdir(exist_ok=True)
+
+            try:
+                with zipfile.ZipFile(latest_backup, 'r') as zipf:
+                    zipf.extractall(temp_dir)
+
+                # 恢复数据库
+                temp_db = temp_dir / "database.db"
+                if temp_db.exists():
+                    # 关闭当前数据库连接
+                    if self.db_connection and self.db_connection.isOpen():
+                        self.db_connection.close()
+
+                    # 备份当前数据库
+                    if self.db_path.exists():
+                        backup_current = self.db_path.with_suffix('.db.backup')
+                        shutil.copy2(self.db_path, backup_current)
+
+                    # 恢复数据库
+                    shutil.copy2(temp_db, self.db_path)
+
+                    # 重新初始化数据库连接
+                    self._init_database()
+
+                # 恢复配置文件
+                config_files = ["config.json", "settings.json", "themes.json"]
+                for config_file in config_files:
+                    temp_config = temp_dir / config_file
+                    if temp_config.exists():
+                        target_config = self.data_dir / config_file
+                        shutil.copy2(temp_config, target_config)
+
+                # 恢复插件数据
+                temp_plugins = temp_dir / "plugins"
+                if temp_plugins.exists():
+                    target_plugins = self.data_dir / "plugins"
+                    if target_plugins.exists():
+                        shutil.rmtree(target_plugins)
+                    shutil.copytree(temp_plugins, target_plugins)
+
+                self.logger.info(f"数据恢复成功: {latest_backup}")
+                return True
+
+            finally:
+                # 清理临时目录
+                if temp_dir.exists():
+                    shutil.rmtree(temp_dir)
+
+        except Exception as e:
+            self.logger.error(f"数据恢复失败: {e}")
+            return False
+
+    def _import_json_data(self, file_path: Path) -> bool:
+        """导入JSON数据"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            # 导入课程数据
+            if 'courses' in data:
+                self._import_courses_data(data['courses'])
+
+            # 导入任务数据
+            if 'tasks' in data:
+                self._import_tasks_data(data['tasks'])
+
+            # 导入设置数据
+            if 'settings' in data:
+                self._import_settings_data(data['settings'])
+
+            self.logger.info(f"JSON数据导入成功: {file_path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"导入JSON数据失败: {e}")
+            return False
+
+    def _import_yaml_data(self, file_path: Path) -> bool:
+        """导入YAML数据"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+
+            # 导入课程数据
+            if 'courses' in data:
+                self._import_courses_data(data['courses'])
+
+            # 导入任务数据
+            if 'tasks' in data:
+                self._import_tasks_data(data['tasks'])
+
+            # 导入设置数据
+            if 'settings' in data:
+                self._import_settings_data(data['settings'])
+
+            self.logger.info(f"YAML数据导入成功: {file_path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"导入YAML数据失败: {e}")
+            return False
+
+    def _import_excel_data(self, file_path: Path) -> bool:
+        """导入Excel数据"""
+        try:
+            from core.excel_schedule_manager import ExcelScheduleManager
+            excel_manager = ExcelScheduleManager()
+
+            courses = excel_manager.import_from_excel(str(file_path))
+            if courses:
+                self._import_courses_data(courses)
+                self.logger.info(f"Excel数据导入成功: {file_path}")
+                return True
+            else:
+                self.logger.error("Excel文件中没有有效的课程数据")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"导入Excel数据失败: {e}")
+            return False
+
+    def _export_json_data(self, file_path: Path) -> bool:
+        """导出JSON数据"""
+        try:
+            data = {
+                'courses': self._export_courses_data(),
+                'tasks': self._export_tasks_data(),
+                'settings': self._export_settings_data(),
+                'export_time': datetime.now().isoformat()
+            }
+
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+            self.logger.info(f"JSON数据导出成功: {file_path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"导出JSON数据失败: {e}")
+            return False
+
+    def _export_yaml_data(self, file_path: Path) -> bool:
+        """导出YAML数据"""
+        try:
+            data = {
+                'courses': self._export_courses_data(),
+                'tasks': self._export_tasks_data(),
+                'settings': self._export_settings_data(),
+                'export_time': datetime.now().isoformat()
+            }
+
+            with open(file_path, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+
+            self.logger.info(f"YAML数据导出成功: {file_path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"导出YAML数据失败: {e}")
+            return False
+
+    def _export_excel_data(self, file_path: Path) -> bool:
+        """导出Excel数据"""
+        try:
+            from core.excel_schedule_manager import ExcelScheduleManager
+            excel_manager = ExcelScheduleManager()
+
+            courses = self._export_courses_data()
+            if excel_manager.export_to_excel(courses, str(file_path)):
+                self.logger.info(f"Excel数据导出成功: {file_path}")
+                return True
+            else:
+                self.logger.error("Excel数据导出失败")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"导出Excel数据失败: {e}")
+            return False
+
+    def _import_courses_data(self, courses_data: List[Dict]) -> None:
+        """导入课程数据到数据库"""
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                return
+
+            query = QSqlQuery(self.db_connection)
+            query.prepare("""
+                INSERT OR REPLACE INTO courses
+                (name, teacher, location, time, weekday, start_week, end_week)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """)
+
+            for course in courses_data:
+                query.addBindValue(course.get('name', ''))
+                query.addBindValue(course.get('teacher', ''))
+                query.addBindValue(course.get('location', ''))
+                query.addBindValue(course.get('time', ''))
+                query.addBindValue(course.get('weekday', ''))
+                query.addBindValue(course.get('start_week', 1))
+                query.addBindValue(course.get('end_week', 16))
+
+                if not query.exec():
+                    self.logger.error(f"导入课程失败: {query.lastError().text()}")
+
+        except Exception as e:
+            self.logger.error(f"导入课程数据失败: {e}")
+
+    def _import_tasks_data(self, tasks_data: List[Dict]) -> None:
+        """导入任务数据到数据库"""
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                return
+
+            query = QSqlQuery(self.db_connection)
+            query.prepare("""
+                INSERT OR REPLACE INTO tasks
+                (title, description, priority, due_date, status)
+                VALUES (?, ?, ?, ?, ?)
+            """)
+
+            for task in tasks_data:
+                query.addBindValue(task.get('title', ''))
+                query.addBindValue(task.get('description', ''))
+                query.addBindValue(task.get('priority', 'medium'))
+                query.addBindValue(task.get('due_date', ''))
+                query.addBindValue(task.get('status', 'pending'))
+
+                if not query.exec():
+                    self.logger.error(f"导入任务失败: {query.lastError().text()}")
+
+        except Exception as e:
+            self.logger.error(f"导入任务数据失败: {e}")
+
+    def _import_settings_data(self, settings_data: Dict) -> None:
+        """导入设置数据"""
+        try:
+            settings_file = self.data_dir / "settings.json"
+            with open(settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings_data, f, ensure_ascii=False, indent=2)
+
+        except Exception as e:
+            self.logger.error(f"导入设置数据失败: {e}")
+
+    def _export_courses_data(self) -> List[Dict]:
+        """导出课程数据"""
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                return []
+
+            query = QSqlQuery("SELECT * FROM courses", self.db_connection)
+            courses = []
+
+            while query.next():
+                course = {
+                    'name': query.value('name'),
+                    'teacher': query.value('teacher'),
+                    'location': query.value('location'),
+                    'time': query.value('time'),
+                    'weekday': query.value('weekday'),
+                    'start_week': query.value('start_week'),
+                    'end_week': query.value('end_week')
+                }
+                courses.append(course)
+
+            return courses
+
+        except Exception as e:
+            self.logger.error(f"导出课程数据失败: {e}")
+            return []
+
+    def _export_tasks_data(self) -> List[Dict]:
+        """导出任务数据"""
+        try:
+            if not self.db_connection or not self.db_connection.isOpen():
+                return []
+
+            query = QSqlQuery("SELECT * FROM tasks", self.db_connection)
+            tasks = []
+
+            while query.next():
+                task = {
+                    'title': query.value('title'),
+                    'description': query.value('description'),
+                    'priority': query.value('priority'),
+                    'due_date': query.value('due_date'),
+                    'status': query.value('status')
+                }
+                tasks.append(task)
+
+            return tasks
+
+        except Exception as e:
+            self.logger.error(f"导出任务数据失败: {e}")
+            return []
+
+    def _export_settings_data(self) -> Dict:
+        """导出设置数据"""
+        try:
+            settings_file = self.data_dir / "settings.json"
+            if settings_file.exists():
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            return {}
+
+        except Exception as e:
+            self.logger.error(f"导出设置数据失败: {e}")
+            return {}
+
+    def save_all_data(self) -> bool:
+        """保存所有数据"""
+        try:
+            # 确保数据库事务提交
+            if self.db_connection and self.db_connection.isOpen():
+                self.db_connection.commit()
+
+            self.logger.info("所有数据已保存")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"保存数据失败: {e}")
+            return False
+
     def __del__(self):
         """
         析构函数

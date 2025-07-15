@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,10 +18,10 @@ TimeNest 滚动组件
 
 import logging
 from typing import List, Any, Optional, Union, Dict
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect, pyqtSignal, QParallelAnimationGroup
-from PyQt6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QHBoxLayout,
+from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect, Signal, QParallelAnimationGroup
+from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QHBoxLayout,
                            QScrollArea, QFrame, QGraphicsOpacityEffect, QTextEdit)
-from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient, QTextOption
+from PySide6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient, QTextOption
 
 from .base_component import BaseComponent
 
@@ -93,8 +93,8 @@ class ScrollComponent(BaseComponent):
     """滚动组件"""
     
     # 信号定义
-    item_clicked = pyqtSignal(int)  # 项目索引
-    scroll_finished = pyqtSignal()  # 滚动完成
+    item_clicked = Signal(int)  # 项目索引
+    scroll_finished = Signal()  # 滚动完成
     
     def __init__(self, parent=None):
         super().__init__(parent)

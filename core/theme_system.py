@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -24,9 +24,9 @@ from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QPalette, QColor
+from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QPalette, QColor
 
 
 class ThemeType(Enum):
@@ -172,9 +172,9 @@ class ThemeManager(QObject):
     """主题管理器"""
     
     # 信号定义
-    theme_changed = pyqtSignal(str)  # 主题ID
-    theme_loaded = pyqtSignal(str)   # 主题ID
-    theme_error = pyqtSignal(str, str)  # 主题ID, 错误信息
+    theme_changed = Signal(str)  # 主题ID
+    theme_loaded = Signal(str)   # 主题ID
+    theme_error = Signal(str, str)  # 主题ID, 错误信息
     
     def __init__(self, config_manager=None):
         super().__init__()
@@ -657,10 +657,10 @@ class ThemeMarketManager(QObject):
     """主题市场管理器"""
 
     # 信号定义
-    themes_loaded = pyqtSignal(list)  # 主题列表
-    theme_downloaded = pyqtSignal(str)  # 主题ID
-    download_progress = pyqtSignal(str, int)  # 主题ID, 进度
-    download_error = pyqtSignal(str, str)  # 主题ID, 错误信息
+    themes_loaded = Signal(list)  # 主题列表
+    theme_downloaded = Signal(str)  # 主题ID
+    download_progress = Signal(str, int)  # 主题ID, 进度
+    download_error = Signal(str, str)  # 主题ID, 错误信息
 
     def __init__(self, theme_manager: ThemeManager):
         super().__init__()

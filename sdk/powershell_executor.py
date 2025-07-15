@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -26,7 +26,7 @@ from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer
 
 from .security_validator import SecurityValidator, ValidationFlags, ValidationResult
 
@@ -94,10 +94,10 @@ class PowerShellExecutor(QObject):
     """
     
     # Signals
-    command_started = pyqtSignal(str)  # command_id
-    command_completed = pyqtSignal(str, object)  # command_id, result
-    command_failed = pyqtSignal(str, str)  # command_id, error_message
-    output_received = pyqtSignal(str, str)  # command_id, output_line
+    command_started = Signal(str)  # command_id
+    command_completed = Signal(str, object)  # command_id, result
+    command_failed = Signal(str, str)  # command_id, error_message
+    output_received = Signal(str, str)  # command_id, output_line
     
     def __init__(self, security_validator: Optional[SecurityValidator] = None):
         super().__init__()

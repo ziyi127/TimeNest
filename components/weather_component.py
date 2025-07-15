@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,10 +18,10 @@ TimeNest 天气组件 - 增强版
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurve, QRect
-from PyQt6.QtWidgets import (QLabel, QHBoxLayout, QVBoxLayout, QGridLayout,
+from PySide6.QtCore import Qt, QThread, Signal, QTimer, QPropertyAnimation, QEasingCurve, QRect
+from PySide6.QtWidgets import (QLabel, QHBoxLayout, QVBoxLayout, QGridLayout,
                            QProgressBar, QFrame, QScrollArea, QWidget)
-from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient, QPen
+from PySide6.QtGui import QFont, QPixmap, QPainter, QColor, QLinearGradient, QPen
 import requests
 import json
 
@@ -30,10 +30,10 @@ from .base_component import BaseComponent
 class WeatherWorker(QThread):
     """天气数据获取工作线程 - 增强版"""
 
-    weather_updated = pyqtSignal(dict)  # 当前天气数据
-    forecast_updated = pyqtSignal(list)  # 预报数据
-    air_quality_updated = pyqtSignal(dict)  # 空气质量数据
-    error_occurred = pyqtSignal(str)  # 错误信息
+    weather_updated = Signal(dict)  # 当前天气数据
+    forecast_updated = Signal(list)  # 预报数据
+    air_quality_updated = Signal(dict)  # 空气质量数据
+    error_occurred = Signal(str)  # 错误信息
 
     def __init__(self, api_key: str, city: str, provider: str = "openweather"):
         super().__init__()

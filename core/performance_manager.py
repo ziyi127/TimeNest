@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
 from weakref import WeakValueDictionary
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal, QThread
+from PySide6.QtCore import QObject, QTimer, Signal, QThread
 
 T = TypeVar('T')
 
@@ -237,8 +237,8 @@ class PerformanceMonitor(QThread):
     定期收集系统性能指标，检测性能问题。
     """
     
-    metrics_updated = pyqtSignal(object)  # PerformanceMetrics
-    performance_warning = pyqtSignal(str, float)  # 警告类型, 数值
+    metrics_updated = Signal(object)  # PerformanceMetrics
+    performance_warning = Signal(str, float)  # 警告类型, 数值
     
     def __init__(self, interval_seconds: int = 5):
         """
@@ -395,9 +395,9 @@ class PerformanceManager(QObject):
     """
 
     # 信号定义
-    performance_warning = pyqtSignal(str, float)  # 警告类型, 数值
-    cache_stats_updated = pyqtSignal(dict)  # 缓存统计
-    optimization_applied = pyqtSignal(str)  # 优化类型
+    performance_warning = Signal(str, float)  # 警告类型, 数值
+    cache_stats_updated = Signal(dict)  # 缓存统计
+    optimization_applied = Signal(str)  # 优化类型
 
     def __init__(self, config_manager=None):
         """

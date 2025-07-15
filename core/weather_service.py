@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -24,9 +24,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime, timedelta
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread, pyqtSlot
-from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal, QTimer, QThread, Slot
+from PySide6.QtGui import QPixmap, QIcon
+from PySide6.QtWidgets import QApplication
 import os
 
 
@@ -485,10 +485,10 @@ class WeatherIconManager:
 class WeatherUpdateThread(QThread):
     """天气更新线程"""
     
-    weather_updated = pyqtSignal(WeatherData)
-    forecast_updated = pyqtSignal(list)
-    alerts_updated = pyqtSignal(list)
-    update_failed = pyqtSignal(str)
+    weather_updated = Signal(WeatherData)
+    forecast_updated = Signal(list)
+    alerts_updated = Signal(list)
+    update_failed = Signal(str)
     
     def __init__(self, provider: IWeatherProvider, location: str):
         super().__init__()
@@ -549,10 +549,10 @@ def cache_result(expire_seconds: int = 300):
 class WeatherService(QObject):
     """天气服务"""
     
-    weather_updated = pyqtSignal(WeatherData)
-    forecast_updated = pyqtSignal(list)
-    alerts_updated = pyqtSignal(list)
-    update_failed = pyqtSignal(str)
+    weather_updated = Signal(WeatherData)
+    forecast_updated = Signal(list)
+    alerts_updated = Signal(list)
+    update_failed = Signal(str)
     
     def __init__(self, icon_pack_dir: str = None):
         super().__init__()
@@ -704,7 +704,7 @@ class WeatherService(QObject):
             self.logger.error(f"更新天气失败: {e}", exc_info=True)
             self.update_failed.emit(str(e))
     
-    @pyqtSlot(WeatherData)
+    @Slot(WeatherData)
     def _on_weather_updated(self, weather_data: WeatherData):
         """天气更新完成"""
         try:
@@ -722,7 +722,7 @@ class WeatherService(QObject):
         except Exception as e:
             self.logger.error(f"处理天气更新失败: {e}", exc_info=True)
     
-    @pyqtSlot(list)
+    @Slot(list)
     def _on_forecast_updated(self, forecast: List[WeatherForecast]):
         """预报更新完成"""
         try:
@@ -737,7 +737,7 @@ class WeatherService(QObject):
         except Exception as e:
             self.logger.error(f"处理预报更新失败: {e}", exc_info=True)
     
-    @pyqtSlot(list)
+    @Slot(list)
     def _on_alerts_updated(self, alerts: List[WeatherAlert]):
         """预警更新完成"""
         try:
@@ -753,7 +753,7 @@ class WeatherService(QObject):
         except Exception as e:
             self.logger.error(f"处理预警更新失败: {e}", exc_info=True)
     
-    @pyqtSlot(str)
+    @Slot(str)
     def _on_update_failed(self, error: str):
         """更新失败"""
         self.update_failed.emit(error)

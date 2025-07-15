@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -31,8 +31,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 # 第三方库
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtGui import QColor, QPalette
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtGui import QColor, QPalette
 
 
 @dataclass
@@ -99,9 +99,9 @@ class ThemeManager(QObject):
     """
 
     # 信号定义
-    theme_changed = pyqtSignal(str)  # 主题名称
-    theme_loaded = pyqtSignal(int)   # 主题数量
-    theme_error = pyqtSignal(str)    # 错误信息
+    theme_changed = Signal(str)  # 主题名称
+    theme_loaded = Signal(int)   # 主题数量
+    theme_error = Signal(str)    # 错误信息
 
     def __init__(self, theme_dir: str = "themes") -> None:
         """
@@ -139,6 +139,54 @@ class ThemeManager(QObject):
             self.logger.error(error_msg)
             self.theme_error.emit(error_msg)
             raise
+
+    def _load_default_themes(self):
+        """加载默认主题"""
+        try:
+            # 创建默认的浅色主题
+            light_theme = {
+                "name": "浅色主题",
+                "type": "light",
+                "colors": {
+                    "primary": "#2196F3",
+                    "secondary": "#FFC107",
+                    "background": "#FFFFFF",
+                    "surface": "#F5F5F5",
+                    "text": "#000000",
+                    "text_secondary": "#666666"
+                }
+            }
+
+            # 创建默认的深色主题
+            dark_theme = {
+                "name": "深色主题",
+                "type": "dark",
+                "colors": {
+                    "primary": "#2196F3",
+                    "secondary": "#FFC107",
+                    "background": "#121212",
+                    "surface": "#1E1E1E",
+                    "text": "#FFFFFF",
+                    "text_secondary": "#CCCCCC"
+                }
+            }
+
+            # 保存默认主题到文件
+            light_theme_file = self.theme_dir / "light.json"
+            dark_theme_file = self.theme_dir / "dark.json"
+
+            if not light_theme_file.exists():
+                with open(light_theme_file, 'w', encoding='utf-8') as f:
+                    json.dump(light_theme, f, ensure_ascii=False, indent=2)
+
+            if not dark_theme_file.exists():
+                with open(dark_theme_file, 'w', encoding='utf-8') as f:
+                    json.dump(dark_theme, f, ensure_ascii=False, indent=2)
+
+            self.logger.info("默认主题加载完成")
+
+        except Exception as e:
+            self.logger.error(f"加载默认主题失败: {e}")
 
     def load_themes(self):
         """加载本地主题"""

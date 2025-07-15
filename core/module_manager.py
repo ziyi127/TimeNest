@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,8 +18,8 @@ TimeNest 核心模块管理器
 
 import logging
 from typing import Dict, Optional, Any, TYPE_CHECKING
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QDialog, QMessageBox
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QDialog, QMessageBox
 
 
 if TYPE_CHECKING:
@@ -30,9 +30,9 @@ class ModuleManager(QObject):
     """核心模块管理器"""
     
     # 信号定义
-    module_opened = pyqtSignal(str)  # 模块已打开
-    module_closed = pyqtSignal(str)  # 模块已关闭
-    module_error = pyqtSignal(str, str)  # 模块错误
+    module_opened = Signal(str)  # 模块已打开
+    module_closed = Signal(str)  # 模块已关闭
+    module_error = Signal(str, str)  # 模块错误
     
     def __init__(self, app_manager: 'AppManager'):
         super().__init__()
@@ -63,7 +63,7 @@ class ModuleManager(QObject):
                 return True
             
             # 延迟导入避免循环依赖
-            from ui.modules.schedule_management_dialog import ScheduleManagementDialog
+            # from ui.modules.schedule_management_dialog import ScheduleManagementDialog  # 已迁移到RinUI
             
             dialog = ScheduleManagementDialog(self.app_manager)
             dialog.finished.connect(lambda: self._on_module_closed(module_id))
@@ -93,7 +93,7 @@ class ModuleManager(QObject):
                 return True
             
             # 延迟导入避免循环依赖
-            from ui.modules.app_settings_dialog import AppSettingsDialog
+            # from ui.modules.app_settings_dialog import AppSettingsDialog  # 已迁移到RinUI
             
             dialog = AppSettingsDialog(self.app_manager)
             dialog.finished.connect(lambda: self._on_module_closed(module_id))
@@ -123,7 +123,7 @@ class ModuleManager(QObject):
                 return True
             
             # 延迟导入避免循环依赖
-            from ui.modules.plugin_marketplace_dialog import PluginMarketplaceDialog
+            # from ui.modules.plugin_marketplace_dialog import PluginMarketplaceDialog  # 已迁移到RinUI
             
             dialog = PluginMarketplaceDialog(self.app_manager)
             dialog.finished.connect(lambda: self._on_module_closed(module_id))
@@ -174,8 +174,8 @@ class ModuleManager(QObject):
                 # 显示进度对话框:
             
                 # 显示进度对话框
-                from PyQt6.QtWidgets import QProgressDialog
-                from PyQt6.QtCore import Qt
+                from PySide6.QtWidgets import QProgressDialog
+                from PySide6.QtCore import Qt
                 
                 progress = QProgressDialog("正在校准时间...", "取消", 0, 100)
                 progress.setWindowModality(Qt.WindowModality.WindowModal)

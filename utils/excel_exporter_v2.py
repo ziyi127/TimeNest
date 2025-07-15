@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ import pandas as pd
 from typing import Dict, List, Any, Optional, Union
 from pathlib import Path
 from datetime import datetime, time
-from PyQt6.QtCore import QObject, pyqtSignal, QThread
+from PySide6.QtCore import QObject, Signal, QThread
 from dataclasses import dataclass
 from enum import Enum
 
@@ -85,8 +85,8 @@ class ExportOptions:
 
 class ExcelExportThread(QThread):
     """Excel导出线程"""
-    progress_updated = pyqtSignal(int)
-    export_finished = pyqtSignal(bool, str)
+    progress_updated = Signal(int)
+    export_finished = Signal(bool, str)
     
     def __init__(self, schedule: Schedule, file_path: str, options: ExportOptions = None):
         super().__init__()
@@ -121,7 +121,7 @@ class ExcelExportThread(QThread):
 
 class ExcelExporterV2(QObject):
     """Excel导出工具类 v2"""
-    progress_updated = pyqtSignal(int)
+    progress_updated = Signal(int)
     
     def __init__(self):
         super().__init__()

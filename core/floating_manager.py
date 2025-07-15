@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -20,17 +20,17 @@ import logging
 from typing import Optional, Dict, Any
 from functools import lru_cache
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
-# 避免循环导入，使用 TYPE_CHECKING
-from typing import TYPE_CHECKING
+# 避免循环导入，使用 TYPE_CHECKINGKING
 
+from typing import TYPE_CHEC
 
-if TYPE_CHECKING:
-    from core.app_manager import AppManager
+from typing import TYPE_CHECKING  # 导入 TYPE_CHECKING 常量
+from core.app_manager import AppManager
 from core.config_manager import ConfigManager
 from core.theme_system import ThemeManager
-from ui.floating_widget import FloatingWidget
+# from ui.floating_widget import FloatingWidget  # 已迁移到RinUI
 
 
 class FloatingManager(QObject):
@@ -40,7 +40,7 @@ class FloatingManager(QObject):
     Args:
         app_manager (AppManager): 主应用管理器实例。
     """
-    visibility_changed = pyqtSignal(bool)
+    visibility_changed = Signal(bool)
 
     def __init__(self, app_manager: 'AppManager'):
         super().__init__()
@@ -49,7 +49,8 @@ class FloatingManager(QObject):
         self.config_manager = app_manager.config_manager
         self.theme_manager = app_manager.theme_manager
 
-        self.floating_widget: Optional[FloatingWidget] = None
+        # self.floating_widget: Optional[FloatingWidget] = None  # 已迁移到RinUI
+        self.floating_widget = None
         self._is_visible = False
 
         self._initialize_widget()
@@ -62,10 +63,10 @@ class FloatingManager(QObject):
         """初始化浮窗"""
         try:
             if self.config_manager.get_config('floating_widget.enabled', True):
-                self.floating_widget = FloatingWidget(self.app_manager)
-                self.logger.info("浮窗组件已创建。")
-                if self.config_manager.get_config('floating_widget.show_on_startup', True):
-                    self.show_widget()
+                # self.floating_widget = FloatingWidget(self.app_manager)  # 已迁移到RinUI
+                self.logger.info("浮窗组件已迁移到RinUI。")
+                # if self.config_manager.get_config('floating_widget.show_on_startup', True):
+                #     self.show_widget()
             else:
                 self.logger.info("浮窗组件已禁用，未创建。")
         except Exception as e:
@@ -129,7 +130,7 @@ class FloatingManager(QObject):
             self.logger.debug(f"接收到主题变更 '{theme_id}'，正在更新浮窗样式...")
             self.floating_widget.apply_theme()
 
-    def get_widget(self) -> Optional[FloatingWidget]:
+    def get_widget(self):
         """获取浮窗实例"""
         return self.floating_widget
 
@@ -174,8 +175,8 @@ class FloatingManager(QObject):
                 self.logger.error("应用管理器未初始化，无法显示设置对话框")
                 return
 
-            # 延迟导入避免循环依赖
-            from ui.floating_widget.floating_settings import FloatingSettingsDialog
+            # 延迟导入避免循环依赖 (已迁移到RinUI)
+            # from ui.floating_widget.floating_settings import FloatingSettingsDialog
 
             # 检查是否已有对话框打开
             if (hasattr(self, '_settings_dialog') and
@@ -186,8 +187,9 @@ class FloatingManager(QObject):
                 self._settings_dialog.activateWindow()
                 return
 
-            # 创建新对话框
-            self._settings_dialog = FloatingSettingsDialog(self.app_manager, self.floating_widget)
+            # 创建新对话框 (已迁移到RinUI)
+            # self._settings_dialog = FloatingSettingsDialog(self.app_manager, self.floating_widget)
+            self.logger.info("悬浮窗设置已迁移到RinUI界面")
             if self._settings_dialog:
                 self._settings_dialog.show()
             else:

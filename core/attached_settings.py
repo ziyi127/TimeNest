@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -23,8 +23,8 @@ T = TypeVar('T')
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QSpinBox, QDoubleSpinBox, QCheckBox, QComboBox, QTextEdit, QPushButton, QGroupBox, QFormLayout
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QSpinBox, QDoubleSpinBox, QCheckBox, QComboBox, QTextEdit, QPushButton, QGroupBox, QFormLayout
 import uuid
 import yaml
 
@@ -389,7 +389,7 @@ class TimeLayoutItemSettingsProvider(IAttachedSettingsProvider):
 class AttachedSettingsControl(QWidget):
     """附加设置控件"""
     
-    settings_changed = pyqtSignal(str, object)  # key, value
+    settings_changed = Signal(str, object)  # key, value
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -710,7 +710,7 @@ class AttachedSettingsManager:
 class AttachedSettingsHostService(QObject):
     """附加设置主机服务"""
     
-    settings_changed = pyqtSignal(object, str, object)  # obj, key, value
+    settings_changed = Signal(object, str, object)  # obj, key, value
     
     def __init__(self):
         super().__init__()

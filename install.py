@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TimeNest 自动安装程序
-自动创建虚拟环境并安装依赖
+TimeNest 2.0.0 Preview 自动安装程序
+自动创建虚拟环境并安装依赖 - RinUI版本
 """
 
 import sys
@@ -13,31 +13,31 @@ import time
 from pathlib import Path
 
 try:
-    from PyQt6.QtWidgets import (
+    from PySide6.QtWidgets import (
         QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
         QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
         QMessageBox, QFrame, QCheckBox, QComboBox
     )
-    from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
-    from PyQt6.QtGui import QFont, QPixmap, QIcon
+    from PySide6.QtCore import QThread, Signal, Qt, QTimer
+    from PySide6.QtGui import QFont, QPixmap, QIcon
 except ImportError:
-    print("正在安装PyQt6...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "PyQt6"])
-    from PyQt6.QtWidgets import (
+    print("正在安装PySide6...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
+    from PySide6.QtWidgets import (
         QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
         QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
         QMessageBox, QFrame, QCheckBox, QComboBox
     )
-    from PyQt6.QtCore import QThread, pyqtSignal, Qt, QTimer
-    from PyQt6.QtGui import QFont, QPixmap, QIcon
+    from PySide6.QtCore import QThread, Signal, Qt, QTimer
+    from PySide6.QtGui import QFont, QPixmap, QIcon
 
 
 class InstallWorker(QThread):
     """安装工作线程"""
-    progress_updated = pyqtSignal(int)
-    status_updated = pyqtSignal(str)
-    log_updated = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)
+    progress_updated = Signal(int)
+    status_updated = Signal(str)
+    log_updated = Signal(str)
+    finished = Signal(bool, str)
     
     def __init__(self, install_options):
         super().__init__()
@@ -151,8 +151,8 @@ class InstallWorker(QThread):
         try:
             # 检查主要依赖
             test_imports = [
-                "PyQt6",
-                "requests", 
+                "PySide6",
+                "requests",
                 "psutil",
                 "schedule"
             ]
@@ -241,7 +241,7 @@ class InstallWindow(QMainWindow):
         layout.setContentsMargins(20, 20, 20, 20)
         
         # 标题
-        title_label = QLabel("TimeNest 自动安装程序")
+        title_label = QLabel("TimeNest 2.0.0 Preview 自动安装程序")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px;")
         layout.addWidget(title_label)

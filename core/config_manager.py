@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -30,7 +30,7 @@ import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union, Callable, TypeVar, Generic
 from functools import lru_cache
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 # 类型变量定义
 T = TypeVar('T')
@@ -57,10 +57,10 @@ class ConfigManager(QObject):
     """
 
     # 信号定义
-    config_changed = pyqtSignal(str, object, object)  # 配置键, 旧值, 新值
-    config_loaded = pyqtSignal(str)  # 配置文件路径
-    config_saved = pyqtSignal(str)  # 配置文件路径
-    config_error = pyqtSignal(str)  # 错误信息
+    config_changed = Signal(str, object, object)  # 配置键, 旧值, 新值
+    config_loaded = Signal(str)  # 配置文件路径
+    config_saved = Signal(str)  # 配置文件路径
+    config_error = Signal(str)  # 错误信息
 
     def __init__(self, config_dir: Optional[str] = None) -> None:
         """

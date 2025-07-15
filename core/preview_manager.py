@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -18,7 +18,7 @@ TimeNest 预览管理器
 
 import logging
 from typing import Dict, Any, Optional, Callable
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from PySide6.QtCore import QObject, QTimer, Signal
 
 from core.theme_manager import ThemeManager
 from core.notification_system_v2 import NotificationSystemV2
@@ -33,8 +33,8 @@ class PreviewManager(QObject):
     """
     
     # 信号定义
-    preview_applied = pyqtSignal(str, dict)  # 预览已应用（类型，数据）
-    preview_canceled = pyqtSignal(str)       # 预览已取消（类型）
+    preview_applied = Signal(str, dict)  # 预览已应用（类型，数据）
+    preview_canceled = Signal(str)       # 预览已取消（类型）
     
     def __init__(self, theme_manager: Optional[ThemeManager] = None,
                  notification_system: Optional[NotificationSystemV2] = None,

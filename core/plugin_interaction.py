@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt6.QtCore import QObject
-    PYQT6_AVAILABLE = True
+    from PySide6.QtCore import QObject
+    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYQT6_AVAILABLE = False
+    PYSIDE6_AVAILABLE = False
     # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
@@ -23,7 +23,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import inspect
 import uuid
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 
 class PluginDependencyType(Enum):
@@ -108,7 +108,7 @@ class IPluginInteraction(ABC):
 class PluginEventBus(QObject):
     """插件事件总线"""
     
-    event_published = pyqtSignal(str, str, dict)  # 事件名, 发布者, 数据
+    event_published = Signal(str, str, dict)  # 事件名, 发布者, 数据
     
     def __init__(self):
         super().__init__()
@@ -186,10 +186,10 @@ class PluginEventBus(QObject):
 class PluginInteractionManager(QObject):
     """插件交互管理器"""
     
-    interface_registered = pyqtSignal(str, str)  # 接口名, 插件ID
-    interface_unregistered = pyqtSignal(str, str)  # 接口名, 插件ID
-    dependency_resolved = pyqtSignal(str, str)  # 插件ID, 依赖ID
-    dependency_failed = pyqtSignal(str, str, str)  # 插件ID, 依赖ID, 错误
+    interface_registered = Signal(str, str)  # 接口名, 插件ID
+    interface_unregistered = Signal(str, str)  # 接口名, 插件ID
+    dependency_resolved = Signal(str, str)  # 插件ID, 依赖ID
+    dependency_failed = Signal(str, str, str)  # 插件ID, 依赖ID, 错误
     
     def __init__(self):
         super().__init__()
