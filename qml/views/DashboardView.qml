@@ -264,7 +264,7 @@ ScrollView {
                 Row {
                     spacing: 16
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("添加课程")
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
@@ -273,21 +273,21 @@ ScrollView {
                         }
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("创建任务")
                         onClicked: {
                             createNewTask()
                         }
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("打开悬浮窗")
                         onClicked: {
                             toggleFloatingWindow()
                         }
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("刷新数据")
                         onClicked: {
                             refreshDashboard()

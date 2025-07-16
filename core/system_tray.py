@@ -60,48 +60,81 @@ class SystemTrayManager(QObject):
         
     def _init_tray(self):
         """初始化系统托盘"""
+        self.logger.info("开始初始化系统托盘...")
+
         if not SYSTEM_TRAY_AVAILABLE:
-            self.logger.error("系统托盘组件不可用")
+            self.logger.error("系统托盘组件不可用 - PySide6导入失败")
             return False
 
         if not QSystemTrayIcon.isSystemTrayAvailable():
-            self.logger.warning("系统托盘不可用")
+            self.logger.warning("系统托盘不可用 - 系统不支持托盘")
             return False
 
         try:
+            self.logger.info("创建托盘图标...")
             self._create_tray_icon()
+
+            self.logger.info("创建右键菜单...")
             self._create_context_menu()
+
+            self.logger.info("设置信号连接...")
             self._setup_connections()
 
             if self.tray_icon:
+                self.logger.info("显示托盘图标...")
                 self.tray_icon.show()
-                self.logger.info("系统托盘初始化完成")
-                return True
+
+                # 验证托盘是否真的可见
+                if self.tray_icon.isVisible():
+                    self.logger.info("✅ 系统托盘初始化完成并可见")
+                    return True
+                else:
+                    self.logger.error("❌ 托盘图标创建但不可见")
+                    return False
+            else:
+                self.logger.error("❌ 托盘图标创建失败")
+                return False
 
         except Exception as e:
-            self.logger.error(f"系统托盘初始化失败: {e}")
+            self.logger.error(f"❌ 系统托盘初始化失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
             return False
             
     def _create_tray_icon(self):
         """创建托盘图标"""
         try:
+            self.logger.info("正在创建QSystemTrayIcon对象...")
             self.tray_icon = QSystemTrayIcon(self)
 
+            self.logger.info("正在查找图标文件...")
             icon_path = self._get_icon_path()
+
             if icon_path and validate_path(icon_path, must_exist=True):
-                self.tray_icon.setIcon(QIcon(icon_path))
+                self.logger.info(f"使用自定义图标: {icon_path}")
+                icon = QIcon(icon_path)
+                self.tray_icon.setIcon(icon)
             else:
+                self.logger.warning("未找到自定义图标，使用系统默认图标")
                 try:
+                    from PySide6.QtWidgets import QApplication
                     style = QApplication.style()
                     if style:
                         icon = style.standardIcon(style.StandardPixmap.SP_ComputerIcon)
                         self.tray_icon.setIcon(icon)
+                        self.logger.info("使用系统默认图标")
+                    else:
+                        self.logger.warning("无法获取系统样式")
                 except Exception as e:
-                    self.logger.debug(f"设置默认图标失败: {e}")
+                    self.logger.warning(f"设置默认图标失败: {e}")
 
             self.tray_icon.setToolTip("TimeNest - 智能时间管理助手")
+            self.logger.info("托盘图标创建完成")
+
         except Exception as e:
             self.logger.error(f"创建托盘图标失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
             self.tray_icon = None
         
     def _get_icon_path(self) -> Optional[str]:

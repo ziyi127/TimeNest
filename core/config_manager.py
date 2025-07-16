@@ -77,7 +77,7 @@ class ConfigManager(QObject):
             else:
                 # 默认配置目录
                 home_dir = Path.home()
-                self.config_dir = home_dir / '.timenest'
+                self.config_dir = home_dir / '.TimeNest'
 
             # 确保配置目录存在
             self.config_dir.mkdir(parents=True, exist_ok=True)

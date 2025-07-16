@@ -67,27 +67,27 @@ ScrollView {
 
             Item { width: parent.width - 400 }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("新建课程")
                 onClicked: newCourseDialog.open()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("导入Excel")
                 onClicked: importFileDialog.open()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("导出Excel")
                 onClicked: exportFileDialog.open()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("创建模板")
                 onClicked: createExcelTemplate()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("刷新")
                 onClicked: loadCourses()
             }
@@ -403,7 +403,7 @@ ScrollView {
                 value: 0
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("取消")
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: importProgressDialog.close()

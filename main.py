@@ -28,35 +28,9 @@ if not PYSIDE6_AVAILABLE:
     print("PySide6 not available. Please install it using: pip install PySide6")
     sys.exit(1)
 
-# 安全初始化RinUI
-try:
-    # 首先应用RinUI补丁
-    from utils.rinui_patch import apply_rinui_patches
-    apply_rinui_patches()
-
-    # 然后尝试导入RinUI
-    import RinUI
-    from RinUI import RinUIWindow
-    logging.info("RinUI导入成功")
-
-    # 如果导入失败，使用备用方案
-except Exception as rinui_error:
-    logging.warning(f"RinUI导入失败: {rinui_error}")
-    try:
-        from utils.rinui_init import get_rinui_fallback
-        RinUI, RinUIWindow = get_rinui_fallback()
-        logging.info("使用RinUI备用实现")
-    except Exception as fallback_error:
-        logging.error(f"备用实现也失败: {fallback_error}")
-        # 最后的备用方案：使用PySide6
-        from PySide6.QtWidgets import QApplication, QMainWindow
-        class FallbackWindow(QMainWindow):
-            def __init__(self):
-                super().__init__()
-                self.setWindowTitle("TimeNest")
-                self.resize(800, 600)
-        RinUIWindow = FallbackWindow
-        RinUI = None
+# RinUI将在main函数中安全初始化
+RinUI = None
+RinUIWindow = None
 
 # 导入其他模块
 try:
@@ -173,35 +147,98 @@ def main():
     """
     # 设置日志
     logger = setup_logging()
+    logger.info("🚀 TimeNest 主函数开始执行")
 
     try:
         # 检查依赖
+        logger.info("🔍 正在检查依赖...")
         if not check_dependencies():
+            logger.error("❌ 依赖检查失败")
             sys.exit(1)
+        logger.info("✅ 依赖检查完成")
 
         # 设置应用
+        logger.info("⚙️ 正在设置应用...")
         setup_application()
         app = QApplication.instance()
+        logger.info("✅ 应用设置完成")
 
         # 设置退出策略 - 关闭最后一个窗口时不退出程序（因为有系统托盘）
         app.setQuitOnLastWindowClosed(False)
+        logger.info("✅ 退出策略设置完成")
 
-        logger.info(f"启动 {version_manager.get_app_name()} {version_manager.get_full_version()}")
+        logger.info(f"🎉 启动 {version_manager.get_app_name()} {version_manager.get_full_version()}")
+
+        # 安全初始化RinUI
+        logger.info("🎨 正在初始化RinUI...")
+        global RinUI, RinUIWindow
+        try:
+            # 首先应用RinUI补丁
+            from utils.rinui_patch import apply_rinui_patches
+            apply_rinui_patches()
+            logger.info("✅ RinUI补丁应用完成")
+
+            # 然后尝试导入RinUI
+            import RinUI
+            from RinUI import RinUIWindow
+            logger.info("✅ RinUI导入成功")
+
+        except Exception as rinui_error:
+            logger.warning(f"⚠️ RinUI导入失败: {rinui_error}")
+            try:
+                from utils.rinui_init import get_rinui_fallback
+                RinUI, RinUIWindow = get_rinui_fallback()
+                logger.info("✅ 使用RinUI备用实现")
+            except Exception as fallback_error:
+                logger.error(f"❌ 备用实现也失败: {fallback_error}")
+                # 最后的备用方案：使用PySide6
+                from PySide6.QtWidgets import QMainWindow
+                class FallbackWindow(QMainWindow):
+                    def __init__(self):
+                        super().__init__()
+                        self.setWindowTitle("TimeNest")
+                        self.resize(800, 600)
+                RinUIWindow = FallbackWindow
+                RinUI = None
+                logger.info("✅ 使用PySide6备用窗口")
 
         # 注册QML类型
+        logger.info("📝 正在注册QML类型...")
         register_qml_types()
+        logger.info("✅ QML类型注册完成")
 
         # 创建桥接对象
+        logger.info("🌉 正在创建桥接对象...")
         bridge = TimeNestBridge()
+        logger.info("✅ 桥接对象创建完成")
 
         # 创建系统托盘管理器
         tray_manager = None
-        if QSystemTrayIcon.isSystemTrayAvailable():
-            tray_manager = SystemTrayManager()
-            tray_notification_manager = TrayNotificationManager(tray_manager)
-            logger.info("系统托盘初始化完成")
-        else:
-            logger.warning("系统托盘不可用")
+        tray_notification_manager = None
+        logger.info("🔍 正在检查系统托盘可用性...")
+
+        try:
+            if QSystemTrayIcon.isSystemTrayAvailable():
+                logger.info("✅ 系统托盘可用，正在初始化...")
+                try:
+                    tray_manager = SystemTrayManager()
+                    if tray_manager and tray_manager.is_visible():
+                        tray_notification_manager = TrayNotificationManager(tray_manager)
+                        logger.info("🎉 系统托盘初始化完成")
+                    else:
+                        logger.error("❌ 系统托盘创建失败 - 托盘不可见")
+                        tray_manager = None
+                except Exception as e:
+                    logger.error(f"❌ 系统托盘初始化异常: {e}")
+                    import traceback
+                    logger.error(f"详细错误: {traceback.format_exc()}")
+                    tray_manager = None
+            else:
+                logger.warning("⚠️ 系统托盘不可用 - 系统不支持")
+        except Exception as e:
+            logger.error(f"❌ 检查系统托盘可用性时出错: {e}")
+            import traceback
+            logger.error(f"详细错误: {traceback.format_exc()}")
 
         # 创建悬浮窗管理器
         floating_manager = SimpleFloatingWindowManager()

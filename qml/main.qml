@@ -154,27 +154,44 @@ Window {
                     width: parent.width
                     spacing: 4
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("新建课程")
                         width: parent.width
                         flat: true
                         onClicked: showNewCourseDialog()
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("新建任务")
                         width: parent.width
                         flat: true
                         onClicked: showNewTaskDialog()
                     }
 
-                    Switch {
+                    RinUI.Switch {
                         text: qsTr("显示悬浮窗")
                         width: parent.width
                         checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false
                         onToggled: {
                             if (typeof timeNestBridge !== 'undefined') {
-                                timeNestBridge.toggleFloatingWindow()
+                                // 修复逻辑：根据checked状态直接显示或隐藏悬浮窗
+                                if (checked) {
+                                    timeNestBridge.showFloatingWindow()
+                                } else {
+                                    timeNestBridge.hideFloatingWindow()
+                                }
+                            }
+                        }
+
+                        // 定时更新状态
+                        Timer {
+                            interval: 1000
+                            running: true
+                            repeat: true
+                            onTriggered: {
+                                if (typeof timeNestBridge !== 'undefined') {
+                                    parent.checked = timeNestBridge.isFloatingWindowVisible()
+                                }
                             }
                         }
                     }

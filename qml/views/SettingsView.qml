@@ -57,12 +57,19 @@ ScrollView {
             title: qsTr("课程提醒")
             description: qsTr("启用课程开始前的提醒通知")
 
-            Switch {
+            RinUI.Switch {
                 checked: notificationsEnabled
                 onToggled: {
                     notificationsEnabled = checked
                     if (typeof timeNestBridge !== 'undefined') {
                         timeNestBridge.saveSetting("notifications_enabled", checked)
+                    }
+                }
+
+                Component.onCompleted: {
+                    if (typeof timeNestBridge !== 'undefined') {
+                        checked = timeNestBridge.getSetting("auto_start", false)
+                        autoStartEnabled = checked
                     }
                 }
             }
@@ -74,11 +81,19 @@ ScrollView {
             title: qsTr("任务提醒")
             description: qsTr("启用任务截止日期提醒")
 
-            Switch {
+            RinUI.Switch {
                 checked: notificationsEnabled
                 onToggled: {
+                    notificationsEnabled = checked
                     if (typeof timeNestBridge !== 'undefined') {
                         timeNestBridge.saveSetting("task_notifications_enabled", checked)
+                    }
+                }
+
+                Component.onCompleted: {
+                    if (typeof timeNestBridge !== 'undefined') {
+                        checked = timeNestBridge.getSetting("task_notifications_enabled", true)
+                        notificationsEnabled = checked
                     }
                 }
             }
@@ -90,17 +105,26 @@ ScrollView {
             title: qsTr("悬浮窗")
             description: qsTr("显示桌面悬浮窗")
 
-            Switch {
+            RinUI.Switch {
                 checked: floatingWindowEnabled
                 onToggled: {
                     floatingWindowEnabled = checked
                     if (typeof timeNestBridge !== 'undefined') {
                         timeNestBridge.saveSetting("floating_window_enabled", checked)
+                        // 修复逻辑：checked为true时显示，false时隐藏
                         if (checked) {
                             timeNestBridge.showFloatingWindow()
                         } else {
                             timeNestBridge.hideFloatingWindow()
                         }
+                    }
+                }
+
+                Component.onCompleted: {
+                    // 初始化时同步悬浮窗状态
+                    if (typeof timeNestBridge !== 'undefined') {
+                        checked = timeNestBridge.isFloatingWindowVisible()
+                        floatingWindowEnabled = checked
                     }
                 }
             }
@@ -112,12 +136,20 @@ ScrollView {
             title: qsTr("悬浮窗自动隐藏")
             description: qsTr("鼠标离开时自动隐藏悬浮窗")
 
-            Switch {
+            RinUI.Switch {
                 checked: autoHideEnabled
                 onToggled: {
                     autoHideEnabled = checked
                     if (typeof timeNestBridge !== 'undefined') {
                         timeNestBridge.saveSetting("floating_window_auto_hide", checked)
+                        timeNestBridge.setFloatingAutoHide(checked)
+                    }
+                }
+
+                Component.onCompleted: {
+                    if (typeof timeNestBridge !== 'undefined') {
+                        checked = timeNestBridge.getSetting("floating_window_auto_hide", false)
+                        autoHideEnabled = checked
                     }
                 }
             }
@@ -157,7 +189,7 @@ ScrollView {
             title: qsTr("天气显示")
             description: qsTr("在悬浮窗中显示天气信息")
 
-            Switch {
+            RinUI.Switch {
                 id: weatherEnabledCheckBox
                 checked: true  // 默认值，组件加载后再设置
 
@@ -183,7 +215,7 @@ ScrollView {
             title: qsTr("关于 TimeNest")
             description: qsTr("TimeNest v2.0.0 Preview\n基于 RinUI 的现代化时间管理工具")
 
-            Button {
+            RinUI.Button {
                 text: qsTr("查看详细信息")
                 icon.name: "ic_fluent_info_20_regular"
                 onClicked: {
@@ -197,24 +229,24 @@ ScrollView {
             width: parent.width
             spacing: 16
 
-            Button {
+            RinUI.Button {
                 text: qsTr("导出设置")
                 icon.name: "ic_fluent_arrow_export_20_regular"
                 onClicked: exportSettings()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("导入设置")
                 icon.name: "ic_fluent_arrow_import_20_regular"
                 onClicked: importSettings()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("重置设置")
                 icon.name: "ic_fluent_arrow_reset_20_regular"
                 onClicked: resetSettings()
             }
-            }
+        }
         }
 
     // JavaScript 函数

@@ -54,12 +54,12 @@ ScrollView {
 
             Item { width: parent.width - 300 }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("新建任务")
                 onClicked: newTaskDialog.open()
             }
 
-            Button {
+            RinUI.Button {
                 text: qsTr("刷新")
                 onClicked: loadTasks()
             }
@@ -272,7 +272,7 @@ ScrollView {
                 width: parent.width
                 spacing: 10
 
-                Button {
+                RinUI.Button {
                     text: qsTr("取消")
                     onClicked: {
                         newTaskDialog.close()
@@ -280,7 +280,7 @@ ScrollView {
                     }
                 }
 
-                Button {
+                RinUI.Button {
                     text: qsTr("创建")
                     enabled: taskTitleField.text.trim() !== ""
                     onClicked: {

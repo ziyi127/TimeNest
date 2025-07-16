@@ -57,7 +57,7 @@ ScrollView {
                 Row {
                     spacing: 16
 
-                    Button {
+                    RinUI.Button {
                         id: toggleFloatingButton
                         text: floatingWindowVisible ? qsTr("关闭悬浮窗") : qsTr("启动悬浮窗")
                         onClicked: {
@@ -65,14 +65,14 @@ ScrollView {
                         }
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("重置位置")
                         onClicked: {
                             resetFloatingPosition()
                         }
                     }
 
-                    CheckBox {
+                    RinUI.CheckBox {
                         id: forceTopCheckBox
                         text: qsTr("强制置顶")
                         checked: false
@@ -124,7 +124,7 @@ ScrollView {
                     color: isDarkMode ? "#ffffff" : "#000000"
                 }
 
-                CheckBox {
+                RinUI.CheckBox {
                     id: autoHideCheckBox
                     text: qsTr("自动隐藏 (鼠标离开时自动隐藏悬浮窗)")
                     checked: true
@@ -135,7 +135,7 @@ ScrollView {
                     }
                 }
 
-                CheckBox {
+                RinUI.CheckBox {
                     id: alwaysOnTopCheckBox
                     text: qsTr("始终置顶 (悬浮窗始终显示在最前面)")
                     checked: true
@@ -146,7 +146,7 @@ ScrollView {
                     }
                 }
 
-                CheckBox {
+                RinUI.CheckBox {
                     id: transparentCheckBox
                     text: qsTr("透明背景 (使用透明背景效果)")
                     checked: false
