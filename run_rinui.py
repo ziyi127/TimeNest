@@ -33,38 +33,36 @@ def install_rinui():
 
 def check_dependencies():
     """检查所有依赖"""
-    dependencies = {
-        'PySide6': 'PySide6',
-        'RinUI': 'RinUI',
-        'requests': 'requests',
-        'psutil': 'psutil',
-        'PyYAML': 'yaml'
-    }
+    from utils.common_imports import check_module_availability, get_missing_modules
 
-    missing = []
-    for name, module in dependencies.items():
-        try:
-            __import__(module)
-            print(f"✅ {name} 已安装")
-        except ImportError:
-            print(f"❌ {name} 未安装")
-            missing.append(name)
+    availability = check_module_availability()
+    missing = get_missing_modules()
+
+    for name, available in availability.items():
+        status = "✅ 已安装" if available else "❌ 未安装"
+        print(f"{status} {name}")
 
     return missing
 
 def install_dependencies(missing):
     """安装缺失的依赖"""
+    from utils.recovery_system import attempt_recovery
+
     if not missing:
         return True
 
     print(f"\n正在安装缺失的依赖: {', '.join(missing)}")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install"] + missing)
-        print("✅ 依赖安装成功")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ 依赖安装失败: {e}")
-        return False
+
+    for package in missing:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            print(f"✅ {package} 安装成功")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ {package} 安装失败: {e}")
+            if not attempt_recovery("pip_install_failed", {"package": package}):
+                return False
+
+    return True
 
 def main():
     """主函数"""

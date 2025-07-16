@@ -9,12 +9,23 @@ TimeNest 主应用入口 (RinUI版本)
 import sys
 import logging
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon
-from PySide6.QtCore import Qt, QTranslator, QLocale, QTimer
-from PySide6.QtGui import QIcon
 
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
+
+from utils.common_imports import (
+    PYSIDE6_AVAILABLE, QApplication, QSystemTrayIcon, QTimer, QIcon,
+    Qt, QTranslator, QLocale
+)
+from utils.shared_utilities import setup_encoding
+from utils.config_constants import (
+    APP_NAME, APP_VERSION, ORGANIZATION_NAME, ORGANIZATION_DOMAIN,
+    LOG_FORMAT, DEFAULT_DIRS
+)
+
+if not PYSIDE6_AVAILABLE:
+    print("PySide6 not available. Please install it using: pip install PySide6")
+    sys.exit(1)
 
 try:
     import RinUI
@@ -25,6 +36,7 @@ try:
     from core.simple_floating_window import SimpleFloatingWindowManager
     from PySide6.QtQml import qmlRegisterType
 except ImportError as e:
+    logging.error(f"Critical import error: {e}")
     print(f"Import error: {e}")
     print("Please ensure RinUI and all dependencies are properly installed")
     print("Run: pip install RinUI")
@@ -33,16 +45,14 @@ except ImportError as e:
 
 def setup_logging():
     """设置日志系统"""
-    log_dir = Path.home() / '.timenest' / 'logs'
-    log_dir.mkdir(parents=True, exist_ok=True)
-
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    for directory in DEFAULT_DIRS:
+        directory.mkdir(parents=True, exist_ok=True)
 
     logging.basicConfig(
         level=logging.INFO,
-        format=log_format,
+        format=LOG_FORMAT,
         handlers=[
-            logging.FileHandler(log_dir / 'timenest.log', encoding='utf-8'),
+            logging.FileHandler(DEFAULT_DIRS[1] / 'timenest.log', encoding='utf-8'),
             logging.StreamHandler(sys.stdout)
         ]
     )
@@ -56,14 +66,11 @@ def setup_logging():
 
 
 def setup_application():
-    """
-    设置 QApplication
-    """
-    # 设置应用属性（从版本管理器获取）
-    QApplication.setApplicationName(version_manager.get_app_name())
-    QApplication.setApplicationVersion(version_manager.get_full_version())
-    QApplication.setOrganizationName('TimeNest Team')
-    QApplication.setOrganizationDomain('timenest.org')
+    """设置 QApplication"""
+    QApplication.setApplicationName(APP_NAME)
+    QApplication.setApplicationVersion(APP_VERSION)
+    QApplication.setOrganizationName(ORGANIZATION_NAME)
+    QApplication.setOrganizationDomain(ORGANIZATION_DOMAIN)
     
     # 设置高DPI支持
     try:
@@ -92,40 +99,25 @@ def setup_application():
 
 
 def check_dependencies():
-    """
-    检查依赖项
-    """
-    missing_deps = []
-    
-    # 检查核心依赖
-    try:
-        import RinUI
-    except ImportError:
-        missing_deps.append('RinUI')
-    
-    try:
-        import PySide6
-    except ImportError:
-        missing_deps.append('PySide6')
-    
-    try:
-        import yaml
-    except ImportError:
-        missing_deps.append('PyYAML')
-    
-    try:
-        import requests
-    except ImportError:
-        missing_deps.append('requests')
-    
-    if missing_deps:
-        print("缺少以下依赖项:")
-        for dep in missing_deps:
+    """检查依赖项"""
+    from utils.common_imports import get_missing_modules
+
+    missing_deps = get_missing_modules()
+    critical_deps = ['RinUI']
+
+    missing_critical = [dep for dep in missing_deps if dep in critical_deps]
+
+    if missing_critical:
+        print("缺少关键依赖项:")
+        for dep in missing_critical:
             print(f"  - {dep}")
         print("\n请运行以下命令安装:")
-        print(f"pip install {' '.join(missing_deps)}")
+        print(f"pip install {' '.join(missing_critical)}")
         return False
-    
+
+    if missing_deps:
+        logging.warning(f"缺少可选依赖项: {', '.join(missing_deps)}")
+
     return True
 
 

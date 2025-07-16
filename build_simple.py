@@ -13,10 +13,10 @@ from pathlib import Path
 
 def build_timenest():
     """构建TimeNest可执行文件"""
-    if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8')
-    if hasattr(sys.stderr, 'reconfigure'):
-        sys.stderr.reconfigure(encoding='utf-8')
+    from utils.shared_utilities import setup_encoding
+    from utils.config_constants import PYINSTALLER_HIDDEN_IMPORTS, PYINSTALLER_EXCLUDES
+
+    setup_encoding()
 
     project_root = Path(__file__).parent
 
@@ -57,22 +57,10 @@ def build_timenest():
             cmd.extend(["--add-data", f"{file_path}{separator}."])
             print(f"Adding data file: {data_file}")
     
-    hidden_imports = [
-        "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets",
-        "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtSql",
-        "sqlite3", "json", "datetime", "pathlib", "logging",
-        "configparser", "openpyxl", "requests"
-    ]
-
-    excludes = [
-        "tkinter", "matplotlib", "numpy", "pandas", "scipy",
-        "PIL", "cv2", "tensorflow", "torch"
-    ]
-
-    for module in hidden_imports:
+    for module in PYINSTALLER_HIDDEN_IMPORTS:
         cmd.extend(["--hidden-import", module])
 
-    for module in excludes:
+    for module in PYINSTALLER_EXCLUDES:
         cmd.extend(["--exclude-module", module])
     
     # 添加主文件

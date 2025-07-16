@@ -8,7 +8,10 @@ RinUI 桥接类
 
 import logging
 from typing import Dict, Any, List, Optional
-from PySide6.QtCore import QObject, Signal, Slot, Property, QTimer
+
+from utils.common_imports import QObject, Signal, Slot, Property, QTimer
+from utils.shared_utilities import cleanup_timers, debounce
+from utils.config_constants import ERROR_MESSAGES, SUCCESS_MESSAGES
 from PySide6.QtQml import qmlRegisterType
 
 from utils.version_manager import version_manager
@@ -605,46 +608,13 @@ class TimeNestBridge(QObject):
     # 数据转换辅助方法
     def _convert_courses_to_qml(self, courses):
         """将课程数据转换为QML可用格式（优化版本）"""
-        if not courses:
-            return []
-
-        return [
-            {
-                'id': str(course.get('id', 0)),
-                'course_id': str(course.get('id', 0)),
-                'name': course.get('name') or '',
-                'teacher': course.get('teacher') or '',
-                'location': course.get('location') or '',
-                'time': course.get('time') or '',
-                'start_week': course.get('start_week', 1),
-                'end_week': course.get('end_week', 16),
-                'weeks': f"{course.get('start_week', 1)}-{course.get('end_week', 16)}周",
-                'day_of_week': course.get('day_of_week', 1),
-                'start_time': course.get('start_time') or '08:00',
-                'end_time': course.get('end_time') or '09:40'
-            }
-            for course in courses
-        ]
+        from utils.data_processing import convert_courses_to_qml_format
+        return convert_courses_to_qml_format(courses)
     
     def _convert_tasks_to_qml(self, tasks):
         """将任务数据转换为QML可用格式（优化版本）"""
-        if not tasks:
-            return []
-
-        return [
-            {
-                'id': str(task.get('id', 0)),
-                'task_id': str(task.get('id', 0)),
-                'title': task.get('title') or '',
-                'description': task.get('description') or '',
-                'priority': task.get('priority') or '中',
-                'status': task.get('status', '进行中'),
-                'due_date': task.get('due_date') or '',
-                'created_date': task.get('created_date') or '',
-                'completed': task.get('status', '进行中') == '已完成'
-            }
-            for task in tasks
-        ]
+        from utils.data_processing import convert_tasks_to_qml_format
+        return convert_tasks_to_qml_format(tasks)
 
     # 插件管理相关方法
     @Slot(result='QVariant')
@@ -1725,11 +1695,10 @@ class TimeNestBridge(QObject):
     def cleanup(self):
         """清理资源"""
         try:
-            for timer_name in ['timer', 'memory_monitor_timer']:
-                if hasattr(self, timer_name):
-                    timer = getattr(self, timer_name)
-                    if timer:
-                        timer.stop()
+            cleanup_timers(
+                getattr(self, 'timer', None),
+                getattr(self, 'memory_monitor_timer', None)
+            )
             self.logger.info("RinUI桥接资源已清理")
         except Exception as e:
             self.logger.error(f"清理资源失败: {e}")

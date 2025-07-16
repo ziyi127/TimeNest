@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-except ImportError:
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
+from utils.common_imports import QObject, Signal
 
 """
 TimeNest 数据管理器

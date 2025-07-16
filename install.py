@@ -13,23 +13,29 @@ import time
 from pathlib import Path
 
 try:
-    from PySide6.QtWidgets import (
-        QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
-        QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
-        QMessageBox, QFrame, QCheckBox, QComboBox
+    from utils.common_imports import (
+        PYSIDE6_AVAILABLE, QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+        QLabel, QProgressBar, QPushButton, QTextEdit, QFrame, QCheckBox,
+        QComboBox, QThread, Signal, QTimer, QFont, QIcon
     )
-    from PySide6.QtCore import QThread, Signal, Qt, QTimer
-    from PySide6.QtGui import QFont, QPixmap, QIcon
+    from PySide6.QtWidgets import QMainWindow, QMessageBox
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QPixmap
+    from utils.recovery_system import attempt_recovery
+    from utils.config_constants import RECOVERY_STRATEGIES, ENVIRONMENT_PRESETS
 except ImportError:
     print("正在安装PySide6...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "PySide6"])
-    from PySide6.QtWidgets import (
-        QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, 
-        QWidget, QLabel, QProgressBar, QPushButton, QTextEdit,
-        QMessageBox, QFrame, QCheckBox, QComboBox
+    from utils.common_imports import (
+        PYSIDE6_AVAILABLE, QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+        QLabel, QProgressBar, QPushButton, QTextEdit, QFrame, QCheckBox,
+        QComboBox, QThread, Signal, QTimer, QFont, QIcon
     )
-    from PySide6.QtCore import QThread, Signal, Qt, QTimer
-    from PySide6.QtGui import QFont, QPixmap, QIcon
+    from PySide6.QtWidgets import QMainWindow, QMessageBox
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QPixmap
+    from utils.recovery_system import attempt_recovery
+    from utils.config_constants import RECOVERY_STRATEGIES, ENVIRONMENT_PRESETS
 
 
 class InstallWorker(QThread):
@@ -159,6 +165,10 @@ class InstallWorker(QThread):
                     )
                     status = "✓ 验证通过" if result.returncode == 0 else "⚠ 验证失败"
                     self.log_updated.emit(f"{status} {module}")
+
+                    if result.returncode != 0:
+                        attempt_recovery("pip_install_failed", {"package": module})
+
                 except subprocess.TimeoutExpired:
                     self.log_updated.emit(f"⚠ {module} 验证超时")
 

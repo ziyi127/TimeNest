@@ -13,9 +13,9 @@ from pathlib import Path
 
 def main():
     """主函数 - 最简单的构建方式"""
-    for stream in [sys.stdout, sys.stderr]:
-        if hasattr(stream, 'reconfigure'):
-            stream.reconfigure(encoding='utf-8')
+    from utils.shared_utilities import setup_encoding
+
+    setup_encoding()
 
     print("Starting TimeNest build (fallback mode)...")
 
