@@ -4,7 +4,6 @@ import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import RinUI
-import "components"
 
 Window {
     id: mainWindow
@@ -154,21 +153,21 @@ Window {
                     width: parent.width
                     spacing: 4
 
-                    RinUI.Button {
+                    Button {
                         text: qsTr("新建课程")
                         width: parent.width
                         flat: true
                         onClicked: showNewCourseDialog()
                     }
 
-                    RinUI.Button {
+                    Button {
                         text: qsTr("新建任务")
                         width: parent.width
                         flat: true
                         onClicked: showNewTaskDialog()
                     }
 
-                    RinUI.Switch {
+                    Switch {
                         text: qsTr("显示悬浮窗")
                         width: parent.width
                         checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false

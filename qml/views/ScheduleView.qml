@@ -4,13 +4,10 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import RinUI
 
-ScrollView {
+Item {
     id: scheduleView
 
     property bool isDarkMode: false
-
-    contentWidth: availableWidth
-    contentHeight: mainColumn.implicitHeight
     property var coursesModel: ListModel {
         // 添加一些默认测试数据，确保页面不为空
         ListElement {
@@ -45,50 +42,54 @@ ScrollView {
         }
     }
 
-    Column {
+    ColumnLayout {
         id: mainColumn
-        width: scheduleView.availableWidth - 20
-        x: 10
-        y: 10
-        spacing: 10
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 16
 
         // 标题和操作按钮
-        Row {
-            width: parent.width
-            spacing: 10
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
 
             Text {
                 text: qsTr("课程表管理")
                 font.pixelSize: 24
                 font.bold: true
                 color: isDarkMode ? "#ffffff" : "#000000"
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignVCenter
             }
 
-            Item { width: parent.width - 400 }
+            Item { Layout.fillWidth: true }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("新建课程")
+                icon.name: "ic_fluent_add_20_regular"
                 onClicked: newCourseDialog.open()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("导入Excel")
+                icon.name: "ic_fluent_arrow_import_20_regular"
                 onClicked: importFileDialog.open()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("导出Excel")
+                icon.name: "ic_fluent_arrow_export_20_regular"
                 onClicked: exportFileDialog.open()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("创建模板")
+                icon.name: "ic_fluent_document_20_regular"
                 onClicked: createExcelTemplate()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("刷新")
+                icon.name: "ic_fluent_arrow_clockwise_20_regular"
                 onClicked: loadCourses()
             }
         }
@@ -150,92 +151,176 @@ ScrollView {
 
         // 课程列表
         Rectangle {
-            width: parent.width
-            height: 400
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: 300
             color: isDarkMode ? "#2d2d2d" : "#ffffff"
             radius: 8
             border.color: isDarkMode ? "#404040" : "#e0e0e0"
             border.width: 1
 
-            Column {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
+                anchors.margins: 16
+                spacing: 12
 
-                Text {
-                    text: qsTr("课程列表")
-                    font.pixelSize: 16
-                    font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: qsTr("课程列表")
+                        font.pixelSize: 18
+                        font.bold: true
+                        color: isDarkMode ? "#ffffff" : "#000000"
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: qsTr("共 %1 门课程").arg(coursesModel.count)
+                        font.pixelSize: 12
+                        color: isDarkMode ? "#cccccc" : "#666666"
+                        Layout.alignment: Qt.AlignVCenter
+                    }
                 }
 
                 ListView {
-                    width: parent.width
-                    height: scheduleView.height - 120  // 占满剩余空间，减去顶部按钮区域的高度
+                    id: courseListView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     model: coursesModel
                     spacing: 8
                     clip: true  // 确保内容不会溢出
 
+                    // 禁用循环滚动
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    // 滚动条设置
+                    ScrollBar.vertical: ScrollBar {
+                        active: true
+                        policy: ScrollBar.AsNeeded
+                        width: 8
+                        anchors.right: parent.right
+                        anchors.rightMargin: 2
+                    }
+
                     // 性能优化设置
-                    cacheBuffer: 200  // 缓存200像素的内容
+                    cacheBuffer: 100  // 减少缓存以避免过度渲染
                     reuseItems: true  // 重用列表项
+
+                    // 空状态提示
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - 40
+                        height: 120
+                        color: "transparent"
+                        visible: coursesModel.count === 0
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 12
+
+                            Text {
+                                text: "📚"
+                                font.pixelSize: 48
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Text {
+                                text: qsTr("暂无课程")
+                                font.pixelSize: 16
+                                font.bold: true
+                                color: isDarkMode ? "#ffffff" : "#000000"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            Text {
+                                text: qsTr("点击上方"新建课程"按钮添加您的第一门课程")
+                                font.pixelSize: 12
+                                color: isDarkMode ? "#cccccc" : "#666666"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                        }
+                    }
 
                     delegate: Rectangle {
                         id: courseItem
-                        width: ListView.view ? ListView.view.width : 400
-                        height: 80
+                        width: courseListView.width
+                        height: 90  // 稍微增加高度以容纳更好的布局
 
                         // 使用属性绑定减少重复计算
                         property color bgColor: isDarkMode ? "#3d3d3d" : "#f9f9f9"
                         property color borderColor: isDarkMode ? "#505050" : "#e0e0e0"
+                        property color hoverColor: isDarkMode ? "#4d4d4d" : "#f0f0f0"
 
-                        color: bgColor
-                        radius: 6
+                        color: mouseArea.containsMouse ? hoverColor : bgColor
+                        radius: 8
                         border.color: borderColor
                         border.width: 1
 
-                        // 添加缓存提示
-                        layer.enabled: true
-                        layer.smooth: true
-
-                        Row {
+                        // 鼠标悬停效果
+                        MouseArea {
+                            id: mouseArea
                             anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 15
+                            hoverEnabled: true
+                            acceptedButtons: Qt.NoButton  // 不处理点击，只处理悬停
+                        }
 
-                            Column {
-                                width: parent.width - 120
-                                spacing: 5
+                        // 主要内容布局
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 12
+
+                            // 课程信息区域
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 4
 
                                 Text {
                                     text: model.name || "未知课程"
                                     font.pixelSize: 16
                                     font.bold: true
                                     color: isDarkMode ? "#ffffff" : "#000000"
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
 
                                 Text {
-                                    text: qsTr("教师: ") + (model.teacher || "未知") + qsTr(" | 地点: ") + (model.location || "未知")
+                                    text: qsTr("教师: ") + (model.teacher || "未知")
                                     font.pixelSize: 12
                                     color: isDarkMode ? "#cccccc" : "#666666"
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    text: qsTr("地点: ") + (model.location || "未知")
+                                    font.pixelSize: 12
+                                    color: isDarkMode ? "#cccccc" : "#666666"
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
 
                                 Text {
                                     text: qsTr("时间: ") + (model.time || "未知") + qsTr(" | 周次: ") + (model.weeks || "未知")
-                                    font.pixelSize: 10
+                                    font.pixelSize: 11
                                     color: isDarkMode ? "#aaaaaa" : "#888888"
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
                             }
 
-                            Column {
-                                width: 100
-                                spacing: 5
+                            // 操作按钮区域
+                            ColumnLayout {
+                                Layout.preferredWidth: 80
+                                spacing: 6
 
                                 Button {
                                     text: qsTr("编辑")
                                     icon.name: "ic_fluent_edit_20_regular"
-                                    width: 80
-                                    height: 25
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    font.pixelSize: 11
                                     onClicked: {
                                         editCourse(model.course_id, model)
                                     }
@@ -244,10 +329,12 @@ ScrollView {
                                 Button {
                                     text: qsTr("删除")
                                     icon.name: "ic_fluent_delete_20_regular"
-                                    width: 80
-                                    height: 25
-                                    // 使用样式表来设置红色
-                                    property color buttonColor: "#d32f2f"
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 28
+                                    font.pixelSize: 11
+                                    // 删除按钮的红色样式
+                                    palette.button: "#d32f2f"
+                                    palette.buttonText: "#ffffff"
                                     onClicked: {
                                         deleteCourse(model.course_id)
                                     }
@@ -403,7 +490,7 @@ ScrollView {
                 value: 0
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("取消")
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: importProgressDialog.close()

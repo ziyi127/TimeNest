@@ -57,7 +57,7 @@ ScrollView {
             title: qsTr("课程提醒")
             description: qsTr("启用课程开始前的提醒通知")
 
-            RinUI.Switch {
+            Switch {
                 checked: notificationsEnabled
                 onToggled: {
                     notificationsEnabled = checked
@@ -81,7 +81,7 @@ ScrollView {
             title: qsTr("任务提醒")
             description: qsTr("启用任务截止日期提醒")
 
-            RinUI.Switch {
+            Switch {
                 checked: notificationsEnabled
                 onToggled: {
                     notificationsEnabled = checked
@@ -105,7 +105,7 @@ ScrollView {
             title: qsTr("悬浮窗")
             description: qsTr("显示桌面悬浮窗")
 
-            RinUI.Switch {
+            Switch {
                 checked: floatingWindowEnabled
                 onToggled: {
                     floatingWindowEnabled = checked
@@ -136,7 +136,7 @@ ScrollView {
             title: qsTr("悬浮窗自动隐藏")
             description: qsTr("鼠标离开时自动隐藏悬浮窗")
 
-            RinUI.Switch {
+            Switch {
                 checked: autoHideEnabled
                 onToggled: {
                     autoHideEnabled = checked
@@ -189,7 +189,7 @@ ScrollView {
             title: qsTr("天气显示")
             description: qsTr("在悬浮窗中显示天气信息")
 
-            RinUI.Switch {
+            Switch {
                 id: weatherEnabledCheckBox
                 checked: true  // 默认值，组件加载后再设置
 
@@ -215,7 +215,7 @@ ScrollView {
             title: qsTr("关于 TimeNest")
             description: qsTr("TimeNest v2.0.0 Preview\n基于 RinUI 的现代化时间管理工具")
 
-            RinUI.Button {
+            Button {
                 text: qsTr("查看详细信息")
                 icon.name: "ic_fluent_info_20_regular"
                 onClicked: {
@@ -229,19 +229,19 @@ ScrollView {
             width: parent.width
             spacing: 16
 
-            RinUI.Button {
+            Button {
                 text: qsTr("导出设置")
                 icon.name: "ic_fluent_arrow_export_20_regular"
                 onClicked: exportSettings()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("导入设置")
                 icon.name: "ic_fluent_arrow_import_20_regular"
                 onClicked: importSettings()
             }
 
-            RinUI.Button {
+            Button {
                 text: qsTr("重置设置")
                 icon.name: "ic_fluent_arrow_reset_20_regular"
                 onClicked: resetSettings()
