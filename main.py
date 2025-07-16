@@ -15,7 +15,7 @@ sys.path.insert(0, str(current_dir))
 
 from utils.common_imports import (
     PYSIDE6_AVAILABLE, QApplication, QSystemTrayIcon, QTimer, QIcon,
-    Qt, QTranslator, QLocale
+    Qt, QTranslator, QLocale, qmlRegisterType
 )
 from utils.shared_utilities import setup_encoding
 from utils.config_constants import (
@@ -34,7 +34,6 @@ try:
     from core.rinui_bridge import TimeNestBridge, register_qml_types
     from core.system_tray import SystemTrayManager, TrayNotificationManager
     from core.simple_floating_window import SimpleFloatingWindowManager
-    from PySide6.QtQml import qmlRegisterType
 except ImportError as e:
     logging.error(f"Critical import error: {e}")
     print(f"Import error: {e}")

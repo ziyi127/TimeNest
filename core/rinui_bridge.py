@@ -9,10 +9,9 @@ RinUI 桥接类
 import logging
 from typing import Dict, Any, List, Optional
 
-from utils.common_imports import QObject, Signal, Slot, Property, QTimer
+from utils.common_imports import QObject, Signal, Slot, Property, QTimer, qmlRegisterType
 from utils.shared_utilities import cleanup_timers, debounce
 from utils.config_constants import ERROR_MESSAGES, SUCCESS_MESSAGES
-from PySide6.QtQml import qmlRegisterType
 
 from utils.version_manager import version_manager
 from core.data_manager import DataManager

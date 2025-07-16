@@ -45,9 +45,10 @@ def safe_import(module_name: str, fallback: Any = None) -> OptionalModule:
     return OptionalModule(module_name, fallback)
 
 try:
-    from PySide6.QtCore import QObject, Signal, Slot, Property, QTimer
-    from PySide6.QtWidgets import QApplication, QWidget, QFrame, QVBoxLayout
+    from PySide6.QtCore import QObject, Signal, Slot, Property, QTimer, Qt, QTranslator, QLocale
+    from PySide6.QtWidgets import QApplication, QWidget, QFrame, QVBoxLayout, QSystemTrayIcon
     from PySide6.QtGui import QIcon
+    from PySide6.QtQml import qmlRegisterType
     PYSIDE6_AVAILABLE = True
 except ImportError:
     logger.error("PySide6 not available - using fallback implementations")
@@ -86,7 +87,62 @@ except ImportError:
             pass
         def timeout(self):
             return Signal()
-    
+
+    class QSystemTrayIcon:
+        def __init__(self, *args):
+            pass
+        def show(self):
+            pass
+        def hide(self):
+            pass
+        def setIcon(self, *args):
+            pass
+        def setToolTip(self, *args):
+            pass
+        def activated(self):
+            return Signal()
+        def messageClicked(self):
+            return Signal()
+        def showMessage(self, *args):
+            pass
+        def isSystemTrayAvailable(self):
+            return False
+
+    class Qt:
+        class WindowType:
+            WindowStaysOnTopHint = None
+            FramelessWindowHint = None
+            Tool = None
+        class AlignmentFlag:
+            AlignCenter = None
+            AlignLeft = None
+            AlignRight = None
+        class Key:
+            Key_Escape = None
+        class MouseButton:
+            LeftButton = None
+            RightButton = None
+
+    class QTranslator:
+        def __init__(self):
+            pass
+        def load(self, *args):
+            return False
+
+    class QLocale:
+        def __init__(self):
+            pass
+        @staticmethod
+        def system():
+            return QLocale()
+        def name(self):
+            return "en_US"
+
+    def qmlRegisterType(*args, **kwargs):
+        """Fallback QML register type function"""
+        pass
+
+    # Don't override the fallback classes with None - keep the class definitions above
     QApplication = QWidget = QFrame = QVBoxLayout = QIcon = None
 
 psutil = safe_import('psutil')
@@ -130,3 +186,13 @@ def get_available_modules() -> list:
 def get_missing_modules() -> list:
     """Get list of missing optional modules"""
     return [name for name, module in OPTIONAL_MODULES.items() if not module.available]
+
+# Explicit exports for all PySide6 components
+__all__ = [
+    'PYSIDE6_AVAILABLE',
+    'QObject', 'Signal', 'Slot', 'Property', 'QTimer', 'Qt', 'QTranslator', 'QLocale',
+    'QApplication', 'QWidget', 'QFrame', 'QVBoxLayout', 'QSystemTrayIcon',
+    'QIcon', 'qmlRegisterType',
+    'psutil', 'requests', 'openpyxl', 'yaml', 'pandas', 'numpy', 'PIL', 'plyer', 'cryptography',
+    'safe_import', 'OptionalModule', 'get_available_modules', 'get_missing_modules'
+]
