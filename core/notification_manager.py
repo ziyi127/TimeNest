@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 通知管理器
 负责上下课提醒、音效播放、语音提醒等功能
@@ -25,7 +15,6 @@ TimeNest 通知管理器
 - 性能优化和错误恢复
 """
 
-# 标准库
 import logging
 import uuid
 from abc import ABC, abstractmethod
@@ -41,18 +30,71 @@ from typing import (
 from functools import lru_cache
 from collections import deque
 
-# 第三方库
-from PySide6.QtCore import QMutex, QMutexLocker, QObject, Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QGuiApplication, QIcon
-from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QSoundEffect
-from PySide6.QtWidgets import QApplication, QStyle, QSystemTrayIcon
+from utils.common_imports import QObject, Signal, QTimer
+from utils.config_constants import DEFAULT_NOTIFICATION_SETTINGS
+from utils.shared_utilities import is_within_time_range, debounce
 
-# 本地模块
-from core.notification_service import NotificationPriority, NotificationRequest, NotificationType
-from models.schedule import ClassItem, Schedule
-# from ui.notification_window import NotificationWindow  # 已迁移到RinUI
-from utils.text_to_speech import TextToSpeech
+try:
+    from PySide6.QtCore import QMutex, QMutexLocker, Qt, QThread
+    from PySide6.QtGui import QGuiApplication, QIcon
+    from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QSoundEffect
+    from PySide6.QtWidgets import QApplication, QStyle, QSystemTrayIcon
+    QT_MULTIMEDIA_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 multimedia components not available")
+    QT_MULTIMEDIA_AVAILABLE = False
 
+    class QMutex:
+        pass
+
+    class QMutexLocker:
+        def __init__(self, *args):
+            pass
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+
+    class QThread:
+        pass
+
+    class QMediaPlayer:
+        pass
+
+    class QSoundEffect:
+        pass
+
+try:
+    from core.notification_service import NotificationPriority, NotificationRequest, NotificationType
+    from models.schedule import ClassItem, Schedule
+    from utils.text_to_speech import TextToSpeech
+except ImportError as e:
+    logging.error(f"Failed to import notification dependencies: {e}")
+
+    class NotificationPriority:
+        LOW = "low"
+        NORMAL = "normal"
+        HIGH = "high"
+
+    class NotificationRequest:
+        pass
+
+    class NotificationType:
+        INFO = "info"
+        WARNING = "warning"
+        ERROR = "error"
+
+    class ClassItem:
+        pass
+
+    class Schedule:
+        pass
+
+    class TextToSpeech:
+        def __init__(self):
+            pass
+        def speak(self, text):
+            pass
 
 if TYPE_CHECKING:
     from core.config_manager import ConfigManager

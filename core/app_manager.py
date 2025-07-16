@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 应用管理器
 负责协调和管理应用的各个核心组件
 """
 
-# 标准库
 import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 from functools import lru_cache
 
-# 第三方库
-from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtWidgets import QApplication
+from utils.common_imports import QObject, Signal, QTimer
+from utils.shared_utilities import cleanup_timers, retry_operation
+from utils.config_constants import ERROR_MESSAGES, SUCCESS_MESSAGES
+
+try:
+    from PySide6.QtWidgets import QApplication
+    QT_WIDGETS_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 widgets not available")
+    QT_WIDGETS_AVAILABLE = False
+
+    class QApplication:
+        @staticmethod
+        def instance():
+            return None
 
 # 本地模块
 from core.component_system import ComponentManager as ComponentSystemManager
@@ -709,6 +710,11 @@ class AppManager(QObject):
                         manager.cleanup()
                     except Exception as e:
                         self.logger.error(f"清理管理器失败: {e}")
+
+            cleanup_timers(
+                getattr(self, 'startup_timer', None),
+                getattr(self, 'health_check_timer', None)
+            )
 
             self.logger.info("应用资源清理完成")
 

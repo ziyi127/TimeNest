@@ -1,36 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 浮窗管理器
 负责浮窗的创建、销毁、状态管理和配置更新
 """
 
 import logging
-from typing import Optional, Dict, Any
-from functools import lru_cache
+from typing import Optional, Dict, Any, TYPE_CHECKING
 
-from PySide6.QtCore import QObject, Signal
+from utils.common_imports import QObject, Signal
 
-# 避免循环导入，使用 TYPE_CHECKINGKING
-
-from typing import TYPE_CHEC
-
-from typing import TYPE_CHECKING  # 导入 TYPE_CHECKING 常量
-from core.app_manager import AppManager
-from core.config_manager import ConfigManager
-from core.theme_system import ThemeManager
-# from ui.floating_widget import FloatingWidget  # 已迁移到RinUI
+if TYPE_CHECKING:
+    from core.app_manager import AppManager
+    from core.config_manager import ConfigManager
+    from core.theme_system import ThemeManager
 
 
 class FloatingManager(QObject):
@@ -42,22 +26,23 @@ class FloatingManager(QObject):
     """
     visibility_changed = Signal(bool)
 
-    def __init__(self, app_manager: 'AppManager'):
+    def __init__(self, app_manager):
         super().__init__()
         self.logger = logging.getLogger(f'{__name__}.FloatingManager')
         self.app_manager = app_manager
         self.config_manager = app_manager.config_manager
         self.theme_manager = app_manager.theme_manager
 
-        # self.floating_widget: Optional[FloatingWidget] = None  # 已迁移到RinUI
         self.floating_widget = None
         self._is_visible = False
 
         self._initialize_widget()
 
-        # 连接信号
-        self.config_manager.config_changed.connect(self.on_config_changed)
-        self.theme_manager.theme_changed.connect(self.on_theme_changed)
+        try:
+            self.config_manager.config_changed.connect(self.on_config_changed)
+            self.theme_manager.theme_changed.connect(self.on_theme_changed)
+        except Exception as e:
+            self.logger.error(f"连接信号失败: {e}")
 
     def _initialize_widget(self):
         """初始化浮窗"""
@@ -87,19 +72,31 @@ class FloatingManager(QObject):
 
     def show_widget(self):
         """显示浮窗"""
-        if self.floating_widget and not self._is_visible:
-            self.floating_widget.show_with_animation()
-            self._is_visible = True
-            self.visibility_changed.emit(True)
-            self.logger.info("浮窗已显示。")
+        try:
+            if self.floating_widget and not self._is_visible:
+                if hasattr(self.floating_widget, 'show_with_animation'):
+                    self.floating_widget.show_with_animation()
+                else:
+                    self.floating_widget.show()
+                self._is_visible = True
+                self.visibility_changed.emit(True)
+                self.logger.info("浮窗已显示。")
+        except Exception as e:
+            self.logger.error(f"显示浮窗失败: {e}")
 
     def hide_widget(self):
         """隐藏浮窗"""
-        if self.floating_widget and self._is_visible:
-            self.floating_widget.hide_with_animation()
-            self._is_visible = False
-            self.visibility_changed.emit(False)
-            self.logger.info("浮窗已隐藏。")
+        try:
+            if self.floating_widget and self._is_visible:
+                if hasattr(self.floating_widget, 'hide_with_animation'):
+                    self.floating_widget.hide_with_animation()
+                else:
+                    self.floating_widget.hide()
+                self._is_visible = False
+                self.visibility_changed.emit(False)
+                self.logger.info("浮窗已隐藏。")
+        except Exception as e:
+            self.logger.error(f"隐藏浮窗失败: {e}")
 
     def toggle_widget(self):
         """切换浮窗显示/隐藏状态"""
@@ -108,27 +105,34 @@ class FloatingManager(QObject):
         else:
             self.show_widget()
 
-    def on_config_changed(self, section: str, config: dict):
+    def on_config_changed(self, section: str, config: dict = None):
         """处理配置变更（优化版本）"""
         if section != 'floating_widget':
             return
 
         self.logger.debug("接收到浮窗配置变更，正在更新...")
-        if self.floating_widget:
-            enabled = self.config_manager.get_config('floating_widget.enabled', True)
-            if not enabled:
-                self.cleanup()
+        try:
+            if self.floating_widget:
+                enabled = self.config_manager.get_config('floating_widget.enabled', True)
+                if not enabled:
+                    self.cleanup()
+                else:
+                    if hasattr(self.floating_widget, 'update_from_config'):
+                        self.floating_widget.update_from_config()
             else:
-                self.floating_widget.update_from_config()
-        else:
-            # 如果之前被禁用了，现在启用
-            self._initialize_widget()
+                self._initialize_widget()
+        except Exception as e:
+            self.logger.error(f"配置变更处理失败: {e}")
 
     def on_theme_changed(self, theme_id: str):
         """处理主题变更"""
-        if self.floating_widget:
-            self.logger.debug(f"接收到主题变更 '{theme_id}'，正在更新浮窗样式...")
-            self.floating_widget.apply_theme()
+        try:
+            if self.floating_widget:
+                self.logger.debug(f"接收到主题变更 '{theme_id}'，正在更新浮窗样式...")
+                if hasattr(self.floating_widget, 'apply_theme'):
+                    self.floating_widget.apply_theme()
+        except Exception as e:
+            self.logger.error(f"主题变更处理失败: {e}")
 
     def get_widget(self):
         """获取浮窗实例"""
@@ -203,13 +207,19 @@ class FloatingManager(QObject):
     def cleanup(self):
         """清理资源"""
         self.logger.info("正在清理浮窗管理器...")
-        if self.floating_widget:
-            self.floating_widget.close()
-            self.floating_widget = None
         try:
-            self.config_manager.config_changed.disconnect(self.on_config_changed)
-            self.theme_manager.theme_changed.disconnect(self.on_theme_changed)
-        except TypeError:
-            # In case signals were already disconnected
-            pass
+            if self.floating_widget:
+                if hasattr(self.floating_widget, 'close'):
+                    self.floating_widget.close()
+                self.floating_widget = None
+
+            if hasattr(self.config_manager, 'config_changed'):
+                self.config_manager.config_changed.disconnect(self.on_config_changed)
+            if hasattr(self.theme_manager, 'theme_changed'):
+                self.theme_manager.theme_changed.disconnect(self.on_theme_changed)
+        except (TypeError, AttributeError) as e:
+            self.logger.debug(f"清理信号连接时出错: {e}")
+        except Exception as e:
+            self.logger.error(f"清理资源失败: {e}")
+
         self.logger.info("浮窗管理器清理完成。")

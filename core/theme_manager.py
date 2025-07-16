@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 主题管理器
 支持主题加载、切换、市场扩展
@@ -22,7 +12,6 @@ TimeNest 主题管理器
 - 主题缓存和优化
 """
 
-# 标准库
 import hashlib
 import json
 import logging
@@ -30,9 +19,24 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-# 第三方库
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QColor, QPalette
+from utils.common_imports import QObject, Signal
+from utils.data_processing import safe_json_load, safe_json_save
+from utils.shared_utilities import validate_path
+from utils.config_constants import DEFAULT_THEME_SETTINGS
+
+try:
+    from PySide6.QtGui import QColor, QPalette
+    QT_GUI_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 GUI components not available")
+    QT_GUI_AVAILABLE = False
+
+    class QColor:
+        def __init__(self, *args):
+            pass
+
+    class QPalette:
+        pass
 
 
 @dataclass
@@ -109,30 +113,42 @@ class ThemeManager(QObject):
 
         Args:
             theme_dir: 主题文件目录路径
-
-        Raises:
-            OSError: 当无法创建主题目录时
-            PermissionError: 当没有主题目录访问权限时
         """
         super().__init__()
 
         try:
             self.logger = logging.getLogger(f'{__name__}.ThemeManager')
-            self.theme_dir = Path(theme_dir)
+            self.theme_dir = validate_path(theme_dir, create_if_missing=True) or Path(theme_dir)
             self.themes: Dict[str, ThemeInfo] = {}
             self.current_theme: Optional[str] = None
-            self.theme_cache: Dict[str, str] = {}  # 主题文件哈希缓存
+            self.theme_cache: Dict[str, str] = {}
 
-            # 确保主题目录存在
-            self.theme_dir.mkdir(parents=True, exist_ok=True)
-
-            # 加载默认主题
             self._load_default_themes()
-
-            # 加载本地主题
             self.load_themes()
 
             self.logger.info(f"主题管理器初始化完成，主题目录: {self.theme_dir}")
+
+        except Exception as e:
+            self.logger.error(f"主题管理器初始化失败: {e}")
+            self._load_fallback_theme()
+
+    def _load_fallback_theme(self):
+        """加载后备主题"""
+        try:
+            fallback_theme = ThemeInfo(
+                name="fallback",
+                version="1.0.0",
+                author="TimeNest",
+                description="后备主题",
+                colors=DEFAULT_THEME_SETTINGS,
+                styles={},
+                fonts={}
+            )
+            self.themes["fallback"] = fallback_theme
+            self.current_theme = "fallback"
+            self.logger.info("已加载后备主题")
+        except Exception as e:
+            self.logger.error(f"加载后备主题失败: {e}")
 
         except (OSError, PermissionError) as e:
             error_msg = f"主题管理器初始化失败: {e}"

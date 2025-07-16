@@ -5,9 +5,12 @@ Excel课程表管理器
 
 import os
 import logging
-import pandas as pd
 from typing import List, Dict, Any, Optional
 from pathlib import Path
+
+from utils.common_imports import pandas
+from utils.shared_utilities import validate_path
+from utils.data_processing import safe_json_save, validate_course_data
 
 
 class ExcelScheduleManager:
@@ -17,35 +20,36 @@ class ExcelScheduleManager:
         self.logger = logging.getLogger(f'{__name__}.ExcelScheduleManager')
         self.template_path = "schedule_template.xlsx"
         self.config_path = "schedule_config.md"
+        self.pandas_available = pandas.available
         
     def create_template(self) -> bool:
         """创建Excel课程表模板"""
+        if not self.pandas_available:
+            self.logger.error("pandas不可用，无法创建Excel模板")
+            return False
+
         try:
-            # 创建课程表数据结构
             time_slots = [
                 "08:00-08:45", "08:55-09:40", "10:00-10:45", "10:55-11:40",
                 "14:00-14:45", "14:55-15:40", "16:00-16:45", "16:55-17:40",
                 "19:00-19:45", "19:55-20:40", "20:50-21:35"
             ]
-            
+
             weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-            
-            # 创建空的课程表DataFrame
-            schedule_data = {}
-            schedule_data["时间"] = time_slots
-            
+
+            schedule_data = {"时间": time_slots}
+
             for day in weekdays:
                 schedule_data[day] = [""] * len(time_slots)
-            
-            # 添加示例数据
+
             schedule_data["周一"][0] = "高等数学;张教授;教学楼A101;1-16周"
             schedule_data["周一"][1] = "线性代数;李教授;教学楼B203;1-8周;10-16周"
             schedule_data["周二"][2] = "大学英语;王教授;外语楼301;1-16周"
             schedule_data["周三"][0] = "计算机程序设计;赵教授;实验楼501;2-16周"
             schedule_data["周四"][3] = "大学物理;陈教授;理科楼201;1-12周"
             schedule_data["周五"][1] = "体育;刘教练;体育馆;1-16周"
-            
-            df = pd.DataFrame(schedule_data)
+
+            df = pandas.DataFrame(schedule_data)
             
             # 保存到Excel文件
             with pd.ExcelWriter(self.template_path, engine='openpyxl') as writer:
@@ -282,13 +286,25 @@ class ExcelScheduleManager:
 
     def import_from_excel(self, file_path: str, progress_callback=None) -> List[Dict[str, Any]]:
         """从Excel文件导入课程表"""
+        if not self.pandas_available:
+            self.logger.error("pandas不可用，无法导入Excel文件")
+            if progress_callback:
+                progress_callback(0, "pandas不可用，无法导入Excel文件")
+            return []
+
         courses = []
         try:
             if progress_callback:
                 progress_callback(10, "正在读取Excel文件...")
 
-            # 读取Excel文件
-            df = pd.read_excel(file_path, sheet_name=0)
+            validated_path = validate_path(file_path, must_exist=True)
+            if not validated_path:
+                self.logger.error(f"Excel文件不存在: {file_path}")
+                if progress_callback:
+                    progress_callback(0, f"文件不存在: {file_path}")
+                return []
+
+            df = pandas.read_excel(str(validated_path), sheet_name=0)
 
             if progress_callback:
                 progress_callback(20, "正在解析Excel结构...")
@@ -314,21 +330,20 @@ class ExcelScheduleManager:
 
             # 遍历每个时间段和星期
             for row_idx, time_slot in enumerate(time_column):
-                if pd.isna(time_slot) or str(time_slot).strip() == "":
+                if pandas.isna(time_slot) or str(time_slot).strip() == "":
                     processed_cells += len(weekdays)
                     continue
 
                 for col_idx, weekday in enumerate(weekdays):
                     processed_cells += 1
 
-                    # 更新进度
                     if progress_callback and processed_cells % 10 == 0:
                         progress = 30 + int((processed_cells / total_cells) * 50)
                         progress_callback(progress, f"正在解析课程数据... ({processed_cells}/{total_cells})")
 
                     cell_content = df.iloc[row_idx, col_idx + 1]
 
-                    if pd.isna(cell_content) or str(cell_content).strip() == "":
+                    if pandas.isna(cell_content) or str(cell_content).strip() == "":
                         continue
 
                     try:

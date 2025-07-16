@@ -5,9 +5,33 @@
 import os
 import logging
 from typing import Optional
-from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
-from PySide6.QtGui import QIcon, QAction
+
+from utils.common_imports import QObject, Signal, QTimer
+from utils.shared_utilities import validate_path
+
+try:
+    from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
+    from PySide6.QtGui import QIcon, QAction
+    SYSTEM_TRAY_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 system tray components not available")
+    SYSTEM_TRAY_AVAILABLE = False
+
+    class QSystemTrayIcon:
+        @staticmethod
+        def isSystemTrayAvailable():
+            return False
+
+    class QMenu:
+        pass
+
+    class QIcon:
+        def __init__(self, *args):
+            pass
+
+    class QAction:
+        def __init__(self, *args):
+            pass
 
 
 class SystemTrayManager(QObject):
@@ -36,56 +60,64 @@ class SystemTrayManager(QObject):
         
     def _init_tray(self):
         """初始化系统托盘"""
+        if not SYSTEM_TRAY_AVAILABLE:
+            self.logger.error("系统托盘组件不可用")
+            return False
+
         if not QSystemTrayIcon.isSystemTrayAvailable():
             self.logger.warning("系统托盘不可用")
             return False
-            
+
         try:
             self._create_tray_icon()
             self._create_context_menu()
             self._setup_connections()
-            
+
             if self.tray_icon:
                 self.tray_icon.show()
                 self.logger.info("系统托盘初始化完成")
                 return True
-                
+
         except Exception as e:
             self.logger.error(f"系统托盘初始化失败: {e}")
             return False
             
     def _create_tray_icon(self):
         """创建托盘图标"""
-        self.tray_icon = QSystemTrayIcon(self)
-        
-        # 设置图标
-        icon_path = self._get_icon_path()
-        if icon_path and os.path.exists(icon_path):
-            self.tray_icon.setIcon(QIcon(icon_path))
-        else:
-            # 使用系统默认图标
-            style = QApplication.style()
-            if style:
-                icon = style.standardIcon(style.StandardPixmap.SP_ComputerIcon)
-                self.tray_icon.setIcon(icon)
-        
-        # 设置提示文本
-        self.tray_icon.setToolTip("TimeNest - 智能时间管理助手")
+        try:
+            self.tray_icon = QSystemTrayIcon(self)
+
+            icon_path = self._get_icon_path()
+            if icon_path and validate_path(icon_path, must_exist=True):
+                self.tray_icon.setIcon(QIcon(icon_path))
+            else:
+                try:
+                    style = QApplication.style()
+                    if style:
+                        icon = style.standardIcon(style.StandardPixmap.SP_ComputerIcon)
+                        self.tray_icon.setIcon(icon)
+                except Exception as e:
+                    self.logger.debug(f"设置默认图标失败: {e}")
+
+            self.tray_icon.setToolTip("TimeNest - 智能时间管理助手")
+        except Exception as e:
+            self.logger.error(f"创建托盘图标失败: {e}")
+            self.tray_icon = None
         
     def _get_icon_path(self) -> Optional[str]:
         """获取图标路径"""
-        # 尝试多个可能的图标路径
         possible_paths = [
             "resources/icons/app_icon.png",
-            "resources/app_icon.png", 
+            "resources/app_icon.png",
             "app_icon.png",
             "icon.png"
         ]
-        
+
         for path in possible_paths:
-            if os.path.exists(path):
-                return path
-                
+            validated_path = validate_path(path, must_exist=True)
+            if validated_path:
+                return str(validated_path)
+
         return None
         
     def _create_context_menu(self):
