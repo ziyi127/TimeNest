@@ -1,34 +1,49 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 组件管理器
 负责UI组件的加载、管理和布局
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Type
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QWidget
 import uuid
+from typing import Dict, List, Optional, Any, Type
 
-from core.config_manager import ConfigManager
-from components.base_component import BaseComponent
-from components.schedule_component import ScheduleComponent
-from components.clock_component import ClockComponent
-from components.weather_component import WeatherComponent
-from components.countdown_component import CountdownComponent
-from components.carousel_component import CarouselComponent
-from components.container_component import ContainerComponent
+from utils.common_imports import QObject, Signal
+
+try:
+    from PySide6.QtWidgets import QWidget
+    QT_WIDGETS_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 widgets not available")
+    QT_WIDGETS_AVAILABLE = False
+
+    class QWidget:
+        def __init__(self, *args, **kwargs):
+            pass
+
+try:
+    from core.config_manager import ConfigManager
+    from components.base_component import BaseComponent
+    from components.schedule_component import ScheduleComponent
+    from components.clock_component import ClockComponent
+    from components.weather_component import WeatherComponent
+    from components.countdown_component import CountdownComponent
+    from components.carousel_component import CarouselComponent
+    from components.container_component import ContainerComponent
+    COMPONENTS_AVAILABLE = True
+except ImportError as e:
+    logging.error(f"Component imports failed: {e}")
+    COMPONENTS_AVAILABLE = False
+
+    class ConfigManager:
+        pass
+
+    class BaseComponent:
+        pass
+
+    ScheduleComponent = ClockComponent = WeatherComponent = BaseComponent
+    CountdownComponent = CarouselComponent = ContainerComponent = BaseComponent
 
 class ComponentManager(QObject):
     """组件管理器"""
@@ -39,22 +54,21 @@ class ComponentManager(QObject):
     component_updated = Signal(str, object)  # 组件ID, 组件对象
     layout_changed = Signal()  # 布局变化
     
-    def __init__(self, config_manager: ConfigManager):
+    def __init__(self, config_manager):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         self.config_manager = config_manager
-        
-        # 已注册的组件类型
+        self.components_available = COMPONENTS_AVAILABLE
+
         self.component_types: Dict[str, Type[BaseComponent]] = {}
-        
-        # 当前活动的组件实例
         self.active_components: Dict[str, BaseComponent] = {}
-        
-        # 组件配置
         self.component_configs: Dict[str, Dict[str, Any]] = {}
-        
-        # 布局配置
         self.layout_config: Dict[str, Any] = {}
+
+        if self.components_available:
+            self._register_builtin_components()
+        else:
+            self.logger.warning("组件系统不可用，使用后备模式")
         
         # 注册内置组件类型
         self._register_builtin_components()

@@ -12,6 +12,10 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+from utils.data_processing import safe_json_load
+from utils.shared_utilities import validate_path
+from utils.config_constants import APP_NAME, APP_VERSION
+
 
 class VersionManager:
     """版本管理器 - 统一管理应用信息"""
@@ -47,26 +51,29 @@ class VersionManager:
         ]
 
         for config_path in possible_paths:
-            if config_path.exists():
-                return config_path
+            validated_path = validate_path(config_path, must_exist=True)
+            if validated_path:
+                if self.logger:
+                    self.logger.debug(f"找到配置文件: {validated_path}")
+                return validated_path
 
-        # 如果都没找到，返回None
+        if self.logger:
+            self.logger.warning("未找到app_info.json配置文件")
         return None
     
     def _load_app_info(self):
         """加载应用信息"""
         self._app_info = self._get_default_app_info()  # 先设置默认值
 
-        if self._config_file and self._config_file.exists():
-            try:
-                with open(self._config_file, 'r', encoding='utf-8') as f:
-                    loaded_info = json.load(f)
-                    self._app_info = loaded_info
-                    if hasattr(self, 'logger') and self.logger:
-                        self.logger.info(f"成功加载应用信息: {self._config_file}")
-            except Exception as e:
+        if self._config_file:
+            config_data = safe_json_load(self._config_file, default={})
+            if config_data:
+                self._app_info.update(config_data)
                 if hasattr(self, 'logger') and self.logger:
-                    self.logger.error(f"加载应用信息失败: {e}")
+                    self.logger.info(f"成功加载应用信息: {self._config_file}")
+            else:
+                if hasattr(self, 'logger') and self.logger:
+                    self.logger.error(f"加载应用信息失败: {self._config_file}")
         else:
             if hasattr(self, 'logger') and self.logger:
                 self.logger.warning("未找到配置文件，使用默认配置")
@@ -75,17 +82,17 @@ class VersionManager:
         """获取默认应用信息"""
         return {
             "version": {
-                "number": "null",
-                "name": "null",
-                "build": "null",
-                "release_date": "null",
-                "full_version": "null"
+                "number": APP_VERSION,
+                "name": APP_VERSION,
+                "build": "20250116",
+                "release_date": "2025-01-16",
+                "full_version": APP_VERSION
             },
             "app": {
-                "name": "null",
-                "display_name": "null",
-                "description": "null",
-                "slogan": "null"
+                "name": APP_NAME,
+                "display_name": APP_NAME,
+                "description": "智能时间管理助手",
+                "slogan": "让时间更有价值"
             },
             "author": {
                 "name": "null",

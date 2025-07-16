@@ -10,6 +10,8 @@ import subprocess
 import sys
 from typing import Optional
 
+from utils.shared_utilities import safe_execute_command
+
 
 class TextToSpeech:
     """
@@ -21,12 +23,10 @@ class TextToSpeech:
     def __init__(self):
         """初始化TTS"""
         self.logger = logging.getLogger(f'{__name__}.TextToSpeech')
+        self.engine = None
         self.available = self._check_availability()
-        
-        
+
         if self.available:
-            self.logger.info("TTS初始化成功")
-        
             self.logger.info("TTS初始化成功")
         else:
             self.logger.warning("TTS不可用")
@@ -35,23 +35,13 @@ class TextToSpeech:
         """检查TTS是否可用"""
         try:
             if sys.platform.startswith('linux'):
-                # 检查 espeak 或 festival:
-                # 检查 espeak 或 festival
-                try:
-                    subprocess.run(['espeak', '--version'], 
-                                 capture_output=True, check=True)
+                if safe_execute_command(['espeak', '--version'], timeout=5):
                     self.engine = 'espeak'
                     return True
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    pass
-                
-                try:
-                    subprocess.run(['festival', '--version'], 
-                                 capture_output=True, check=True)
+
+                if safe_execute_command(['festival', '--version'], timeout=5):
                     self.engine = 'festival'
                     return True
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    pass
                 
                 # 使用 spd-say (speech-dispatcher)
                 try:
@@ -63,19 +53,19 @@ class TextToSpeech:
                     pass
                     
             elif sys.platform == 'darwin':
-                # macOS 使用 say 命令
-                try:
-                    subprocess.run(['say', '--version'], 
-                                 capture_output=True, check=True)
+                if safe_execute_command(['say', '--version'], timeout=5):
                     self.engine = 'say'
                     return True
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    pass
-                    
+
             elif sys.platform.startswith('win'):
-                # Windows 使用 PowerShell
-                self.engine = 'powershell'
-                return True
+                try:
+                    import win32com.client
+                    self.engine = 'sapi'
+                    return True
+                except ImportError:
+                    self.logger.warning("win32com不可用，使用PowerShell后备")
+                    self.engine = 'powershell'
+                    return True
             
             return False
             

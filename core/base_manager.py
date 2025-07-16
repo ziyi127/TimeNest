@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
-
 """
 TimeNest 基础管理器类
 提供所有管理器的通用功能和接口
@@ -21,7 +11,9 @@ import threading
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from functools import lru_cache
-from PySide6.QtCore import QObject, Signal, QTimer
+
+from utils.common_imports import QObject, Signal, QTimer
+from utils.shared_utilities import cleanup_timers
 
 
 if TYPE_CHECKING:

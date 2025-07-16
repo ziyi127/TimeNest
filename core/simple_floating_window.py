@@ -6,9 +6,38 @@ import logging
 import time
 from datetime import datetime
 from typing import Optional
-from PySide6.QtCore import QObject, Signal, QTimer, Qt, QPoint
-from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QApplication
-from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QFont
+
+from utils.common_imports import QObject, Signal, QTimer
+from utils.shared_utilities import cleanup_timers
+
+try:
+    from PySide6.QtCore import Qt, QPoint
+    from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QApplication
+    from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QFont
+    QT_GUI_AVAILABLE = True
+except ImportError:
+    logging.error("PySide6 GUI components not available")
+    QT_GUI_AVAILABLE = False
+
+    class Qt:
+        class WindowType:
+            WindowStaysOnTopHint = None
+            FramelessWindowHint = None
+            Tool = None
+            X11BypassWindowManagerHint = None
+
+        class WidgetAttribute:
+            WA_TranslucentBackground = None
+            WA_ShowWithoutActivating = None
+            WA_AlwaysShowToolTips = None
+
+    class QPoint:
+        def __init__(self, x=0, y=0):
+            pass
+
+    class QWidget:
+        def __init__(self, parent=None):
+            pass
 
 
 class SimpleFloatingWindow(QWidget):
@@ -21,27 +50,25 @@ class SimpleFloatingWindow(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.logger = logging.getLogger(f'{__name__}.SimpleFloatingWindow')
-        
-        # 窗口属性 - 增强置顶效果
-        self.setWindowFlags(
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.Tool |
-            Qt.WindowType.X11BypassWindowManagerHint  # Linux下绕过窗口管理器
-        )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)  # 显示时不激活
-        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)  # 始终显示工具提示
-        
-        # 窗口大小和位置
-        self.setFixedSize(450, 70)
-        self._position_window()
-        
-        # 拖拽相关
+        self.gui_available = QT_GUI_AVAILABLE
+
+        if self.gui_available:
+            self.setWindowFlags(
+                Qt.WindowType.WindowStaysOnTopHint |
+                Qt.WindowType.FramelessWindowHint |
+                Qt.WindowType.Tool |
+                Qt.WindowType.X11BypassWindowManagerHint
+            )
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+            self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
+
+            self.setFixedSize(450, 70)
+            self._position_window()
+
         self.dragging = False
         self.drag_position = QPoint()
-        
-        # 数据
+
         self.current_time = ""
         self.next_class = "暂无课程"
         self.weather_info = "25°C"
