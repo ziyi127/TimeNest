@@ -6,7 +6,7 @@ import QtQuick.Dialogs
 import RinUI
 import "components"
 
-RinWindow {
+Window {
     id: mainWindow
     width: 1200
     height: 800
@@ -23,19 +23,17 @@ RinWindow {
         anchors.fill: parent
         color: isDarkMode ? "#1e1e1e" : "#f5f5f5"
 
-        RinCard {
+        Rectangle {
             id: sidebar
             width: 280
             height: parent.height
-            radius: 0
-            borderWidth: 0
-            rightPadding: 0
-            leftPadding: 16
-            topPadding: 16
-            bottomPadding: 16
+            color: isDarkMode ? "#2d2d2d" : "#ffffff"
+            border.color: isDarkMode ? "#404040" : "#e0e0e0"
+            border.width: 1
 
             Column {
                 anchors.fill: parent
+                anchors.margins: 16
                 spacing: 16
 
                 Text {
@@ -61,7 +59,7 @@ RinWindow {
                     leftPadding: 8
                 }
 
-                RinNavigation {
+                ListView {
                     width: parent.width
                     height: 240
                     model: ListModel {
@@ -114,9 +112,9 @@ RinWindow {
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: 12
 
-                                RinIcon {
-                                    icon: model.iconName
-                                    size: 20
+                                Text {
+                                    text: "📋"  // Simple icon replacement
+                                    font.pixelSize: 20
                                     color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
                                 }
 
@@ -156,27 +154,25 @@ RinWindow {
                     width: parent.width
                     spacing: 4
 
-                    RinButton {
+                    Button {
                         text: qsTr("新建课程")
-                        icon: "add"
                         width: parent.width
                         flat: true
                         onClicked: showNewCourseDialog()
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("新建任务")
-                        icon: "add_task"
                         width: parent.width
                         flat: true
                         onClicked: showNewTaskDialog()
                     }
 
-                    RinSwitch {
+                    Switch {
                         text: qsTr("显示悬浮窗")
                         width: parent.width
                         checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false
-                        onClicked: {
+                        onToggled: {
                             if (typeof timeNestBridge !== 'undefined') {
                                 timeNestBridge.toggleFloatingWindow()
                             }
@@ -203,27 +199,23 @@ RinWindow {
                     width: parent.width
                     spacing: 4
 
-                    RinButton {
+                    Button {
                         text: qsTr("关于")
-                        icon: "info"
                         width: parent.width
                         flat: true
-                        onClicked: showAboutDialog()
+                        onClicked: console.log("About dialog disabled")
                     }
 
-                    RinButton {
+                    Button {
                         text: isDarkMode ? qsTr("浅色模式") : qsTr("深色模式")
-                        icon: isDarkMode ? "light_mode" : "dark_mode"
                         width: parent.width
                         flat: true
                         onClicked: isDarkMode = !isDarkMode
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("退出应用")
-                        icon: "power_settings_new"
                         width: parent.width
-                        accentColor: "#d32f2f"
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
                                 timeNestBridge.exitApplication()
@@ -315,12 +307,14 @@ RinWindow {
         }
     }
 
-    // 关于对话框
+    // 关于对话框 - 暂时注释掉
+    /*
     AboutDialog {
         id: aboutDialog
         isDarkMode: mainWindow.isDarkMode
         anchors.centerIn: parent
     }
+    */
 
     // 通知容器
     Item {
@@ -392,7 +386,7 @@ RinWindow {
 
 
 
-    RinDialog {
+    Dialog {
         id: newCourseDialog
         title: qsTr("新建课程")
         width: 400
@@ -413,31 +407,31 @@ RinWindow {
                 color: isDarkMode ? "#ffffff" : "#000000"
             }
 
-            RinTextField {
+            TextField {
                 id: courseNameField
                 width: parent.width
-                placeholder: qsTr("课程名称")
+                placeholderText: qsTr("课程名称")
             }
 
-            RinTextField {
+            TextField {
                 id: courseTeacherField
                 width: parent.width
-                placeholder: qsTr("任课教师")
+                placeholderText: qsTr("任课教师")
             }
 
-            RinTextField {
+            TextField {
                 id: courseLocationField
                 width: parent.width
-                placeholder: qsTr("上课地点")
+                placeholderText: qsTr("上课地点")
             }
 
-            RinTextField {
+            TextField {
                 id: courseTimeField
                 width: parent.width
-                placeholder: qsTr("上课时间 (如: 08:00-09:40)")
+                placeholderText: qsTr("上课时间 (如: 08:00-09:40)")
             }
 
-            RinComboBox {
+            ComboBox {
                 id: courseWeekdayCombo
                 width: parent.width
                 model: [qsTr("周一"), qsTr("周二"), qsTr("周三"), qsTr("周四"), qsTr("周五"), qsTr("周六"), qsTr("周日")]
@@ -446,10 +440,10 @@ RinWindow {
             Row {
                 spacing: 10
 
-                RinTextField {
+                TextField {
                     id: startWeekField
                     width: 80
-                    placeholder: qsTr("开始周")
+                    placeholderText: qsTr("开始周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
 
@@ -459,10 +453,10 @@ RinWindow {
                     color: isDarkMode ? "#ffffff" : "#000000"
                 }
 
-                RinTextField {
+                TextField {
                     id: endWeekField
                     width: 80
-                    placeholder: qsTr("结束周")
+                    placeholderText: qsTr("结束周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
             }
@@ -471,19 +465,16 @@ RinWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
-                RinButton {
+                Button {
                     text: qsTr("确定")
-                    accentColor: "#2196f3"
-                    icon: "check"
                     onClicked: {
                         createNewCourse()
                         newCourseDialog.close()
                     }
                 }
 
-                RinButton {
+                Button {
                     text: qsTr("取消")
-                    icon: "close"
                     onClicked: newCourseDialog.close()
                 }
             }
@@ -495,7 +486,7 @@ RinWindow {
         }
     }
 
-    RinDialog {
+    Dialog {
         id: newTaskDialog
         title: qsTr("新建任务")
         width: 400
@@ -516,10 +507,10 @@ RinWindow {
                 color: isDarkMode ? "#ffffff" : "#000000"
             }
 
-            RinTextField {
+            TextField {
                 id: taskTitleField
                 width: parent.width
-                placeholder: qsTr("任务标题")
+                placeholderText: qsTr("任务标题")
             }
 
             ScrollView {
@@ -533,35 +524,32 @@ RinWindow {
                 }
             }
 
-            RinComboBox {
+            ComboBox {
                 id: taskPriorityCombo
                 width: parent.width
                 model: [qsTr("低优先级"), qsTr("中优先级"), qsTr("高优先级"), qsTr("紧急")]
             }
 
-            RinTextField {
+            TextField {
                 id: taskDueDateField
                 width: parent.width
-                placeholder: qsTr("截止日期 (YYYY-MM-DD)")
+                placeholderText: qsTr("截止日期 (YYYY-MM-DD)")
             }
 
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
-                RinButton {
+                Button {
                     text: qsTr("确定")
-                    accentColor: "#2196f3"
-                    icon: "check"
                     onClicked: {
                         createNewTask()
                         newTaskDialog.close()
                     }
                 }
 
-                RinButton {
+                Button {
                     text: qsTr("取消")
-                    icon: "close"
                     onClicked: newTaskDialog.close()
                 }
             }
@@ -574,9 +562,11 @@ RinWindow {
     }
 
     // 全局函数
+    /*
     function showAboutDialog() {
         aboutDialog.open()
     }
+    */
 
     function showNewCourseDialog() {
         showingNewCourseDialog = true

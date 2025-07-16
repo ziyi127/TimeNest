@@ -7,6 +7,7 @@ TimeNest 主应用入口 (RinUI版本)
 """
 
 import sys
+import os
 import logging
 from pathlib import Path
 
@@ -66,11 +67,13 @@ def setup_logging():
 
 def setup_application():
     """设置 QApplication"""
+    import os  # Ensure os is available in function scope
+
     QApplication.setApplicationName(APP_NAME)
     QApplication.setApplicationVersion(APP_VERSION)
     QApplication.setOrganizationName(ORGANIZATION_NAME)
     QApplication.setOrganizationDomain(ORGANIZATION_DOMAIN)
-    
+
     # 设置高DPI支持
     try:
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
@@ -78,22 +81,22 @@ def setup_application():
     except AttributeError:
         # 如果属性不存在，说明是更新版本的PySide6，可以忽略
         pass
-    
+
     # 创建应用实例
     app = QApplication(sys.argv)
-    
+
     # 设置应用图标
     icon_paths = [
         'resources/icons/app_icon.png',
         'resources/icons/tray_icon.png',
         'app_icon.png'
     ]
-    
+
     for icon_path in icon_paths:
         if os.path.exists(icon_path):
             app.setWindowIcon(QIcon(icon_path))
             break
-    
+
     return app
 
 

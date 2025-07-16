@@ -5,11 +5,15 @@ import RinUI
 
 ScrollView {
     id: dashboardView
-    
+
     property bool isDarkMode: false
-    
+
+    contentWidth: availableWidth
+    contentHeight: mainColumn.implicitHeight
+
     Column {
-        width: dashboardView.width
+        id: mainColumn
+        width: dashboardView.availableWidth
         spacing: 24
         
         // 页面标题
@@ -20,22 +24,21 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        RinResponsiveRow {
+        Flow {
             width: parent.width
             spacing: 16
 
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                radius: 8
+            Frame {
+                width: 200
+                height: 120
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "calendar_today"
-                        size: 32
+                    Text {
+                        text: "📋" // "calendar_today"
+                        font.pixelSize: 32
                         color: "#2196f3"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -74,18 +77,17 @@ ScrollView {
                 }
             }
             
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                radius: 8
+            Frame {
+                width: 200
+                height: 120
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "task_alt"
-                        size: 32
+                    Text {
+                        text: "📋" // "task_alt"
+                        font.pixelSize: 32
                         color: "#ff9800"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -122,18 +124,17 @@ ScrollView {
                 }
             }
             
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                radius: 8
+            Frame {
+                width: 200
+                height: 120
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "check_circle"
-                        size: 32
+                    Text {
+                        text: "📋" // "check_circle"
+                        font.pixelSize: 32
                         color: "#4caf50"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -157,7 +158,7 @@ ScrollView {
             }
         }
         
-        RinCard {
+        Rectangle {
             width: parent.width
             height: 300
             radius: 8
@@ -243,7 +244,7 @@ ScrollView {
             }
         }
         
-        RinCard {
+        Rectangle {
             width: parent.width
             height: 150
             radius: 8
@@ -263,10 +264,8 @@ ScrollView {
                 Row {
                     spacing: 16
 
-                    RinButton {
+                    Button {
                         text: qsTr("添加课程")
-                        accentColor: "#2196f3"
-                        icon: "add"
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
                                 timeNestBridge.showNewCourseDialog()
@@ -274,25 +273,22 @@ ScrollView {
                         }
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("创建任务")
-                        icon: "add_task"
                         onClicked: {
                             createNewTask()
                         }
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("打开悬浮窗")
-                        icon: "picture_in_picture"
                         onClicked: {
                             toggleFloatingWindow()
                         }
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("刷新数据")
-                        icon: "refresh"
                         onClicked: {
                             refreshDashboard()
                         }

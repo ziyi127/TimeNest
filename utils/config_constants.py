@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 APP_NAME = "TimeNest"
-APP_VERSION = "2.0.0 Preview"
+APP_VERSION = "2.1.1 Preview"
 ORGANIZATION_NAME = "TimeNest Team"
 ORGANIZATION_DOMAIN = "timenest.app"
 

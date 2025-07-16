@@ -8,6 +8,9 @@ ScrollView {
     id: scheduleView
 
     property bool isDarkMode: false
+
+    contentWidth: availableWidth
+    contentHeight: mainColumn.implicitHeight
     property var coursesModel: ListModel {
         // 添加一些默认测试数据，确保页面不为空
         ListElement {
@@ -43,8 +46,10 @@ ScrollView {
     }
 
     Column {
-        anchors.fill: parent
-        anchors.margins: 10
+        id: mainColumn
+        width: scheduleView.availableWidth - 20
+        x: 10
+        y: 10
         spacing: 10
 
         // 标题和操作按钮
@@ -62,34 +67,28 @@ ScrollView {
 
             Item { width: parent.width - 400 }
 
-            RinButton {
+            Button {
                 text: qsTr("新建课程")
-                icon: "add"
-                accentColor: "#2196f3"
                 onClicked: newCourseDialog.open()
             }
 
-            RinButton {
+            Button {
                 text: qsTr("导入Excel")
-                icon: "upload_file"
                 onClicked: importFileDialog.open()
             }
 
-            RinButton {
+            Button {
                 text: qsTr("导出Excel")
-                icon: "download"
                 onClicked: exportFileDialog.open()
             }
 
-            RinButton {
+            Button {
                 text: qsTr("创建模板")
-                icon: "description"
                 onClicked: createExcelTemplate()
             }
 
-            RinButton {
+            Button {
                 text: qsTr("刷新")
-                icon: "refresh"
                 onClicked: loadCourses()
             }
         }
@@ -98,11 +97,9 @@ ScrollView {
             width: parent.width
             spacing: 20
 
-            RinCard {
+            Frame {
                 width: 150
                 height: 80
-                radius: 8
-                border.width: 1
 
                 Column {
                     anchors.centerIn: parent
@@ -125,13 +122,9 @@ ScrollView {
                 }
             }
 
-            Rectangle {
+            Frame {
                 width: 150
                 height: 80
-                color: isDarkMode ? "#2d2d2d" : "#f5f5f5"
-                radius: 8
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
 
                 Column {
                     anchors.centerIn: parent

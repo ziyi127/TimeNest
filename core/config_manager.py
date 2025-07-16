@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from utils.common_imports import QObject, Signal
-from utils.data_processing import safe_json_load, safe_json_save, merge_configs
-from utils.shared_utilities import validate_path
+from utils.data_processing import safe_json_load, safe_json_save
+from utils.shared_utilities import validate_path, merge_configs
 from utils.config_constants import get_default_config
 
 """

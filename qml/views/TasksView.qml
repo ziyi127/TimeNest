@@ -7,6 +7,9 @@ ScrollView {
     id: tasksView
 
     property bool isDarkMode: false
+
+    contentWidth: availableWidth
+    contentHeight: mainColumn.implicitHeight
     property var tasksModel: ListModel {
         // 添加一些默认测试数据，确保页面不为空
         ListElement {
@@ -30,9 +33,11 @@ ScrollView {
     }
 
     Column {
-        width: tasksView.width
+        id: mainColumn
+        width: tasksView.availableWidth - 40
+        x: 20
+        y: 20
         spacing: 20
-        anchors.margins: 20
 
         // 标题和操作按钮
         Row {
@@ -49,16 +54,13 @@ ScrollView {
 
             Item { width: parent.width - 300 }
 
-            RinButton {
+            Button {
                 text: qsTr("新建任务")
-                icon: "add"
-                accentColor: "#2196f3"
                 onClicked: newTaskDialog.open()
             }
 
-            RinButton {
+            Button {
                 text: qsTr("刷新")
-                icon: "refresh"
                 onClicked: loadTasks()
             }
         }
@@ -68,18 +70,17 @@ ScrollView {
             width: parent.width
             spacing: 20
 
-            RinCard {
+            Frame {
                 width: 150
                 height: 80
-                radius: 8
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 5
 
-                    RinIcon {
-                        icon: "pending_actions"
-                        size: 24
+                    Text {
+                        text: "📋" // "pending_actions"
+                        font.pixelSize: 24
                         color: "#ff9800"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -101,10 +102,9 @@ ScrollView {
                 }
             }
 
-            RinCard {
+            Frame {
                 width: 150
                 height: 80
-                radius: 8
 
                 Column {
                     anchors.centerIn: parent

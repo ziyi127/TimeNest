@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import RinUI
 
-RinDialog {
+Dialog {
     id: aboutDialog
 
     property bool isDarkMode: true
@@ -101,10 +101,13 @@ RinDialog {
                 }
             }
             
-            RinCard {
+            Rectangle {
                 width: parent.width
                 height: 100
                 radius: 8
+                color: isDarkMode ? "#2d2d2d" : "#ffffff"
+                border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                border.width: 1
 
                 Text {
                     anchors.centerIn: parent
@@ -117,9 +120,12 @@ RinDialog {
                 }
             }
             
-            RinCard {
+            Rectangle {
                 width: parent.width
                 radius: 8
+                color: isDarkMode ? "#2d2d2d" : "#ffffff"
+                border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                border.width: 1
 
                 Column {
                     anchors.fill: parent
@@ -178,7 +184,7 @@ RinDialog {
                 }
             }
             
-            RinCard {
+            Rectangle {
                 width: parent.width
                 radius: 8
 
@@ -503,10 +509,8 @@ RinDialog {
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: 10
 
-        RinButton {
+        Button {
             text: qsTr("确定")
-            accentColor: "#2196f3"
-            icon: "check"
             onClicked: aboutDialog.close()
         }
     }

@@ -8,9 +8,13 @@ ScrollView {
 
     property bool isDarkMode: false
     property var pluginsModel: ListModel {}
-    
+
+    contentWidth: availableWidth
+    contentHeight: mainColumn.implicitHeight
+
     Column {
-        width: pluginsView.width
+        id: mainColumn
+        width: pluginsView.availableWidth
         spacing: 24
         
         Text {
@@ -20,22 +24,21 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        RinResponsiveRow {
+        Flow {
             width: parent.width
             spacing: 16
 
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 100
-                radius: 8
+            Frame {
+                width: 200
+                height: 100
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "extension"
-                        size: 24
+                    Text {
+                        text: "📋" // "extension"
+                        font.pixelSize: 24
                         color: "#2196f3"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -57,18 +60,17 @@ ScrollView {
                 }
             }
 
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 100
-                radius: 8
+            Frame {
+                width: 200
+                height: 100
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "cloud_download"
-                        size: 24
+                    Text {
+                        text: "📋" // "cloud_download"
+                        font.pixelSize: 24
                         color: "#4caf50"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -90,18 +92,17 @@ ScrollView {
                 }
             }
 
-            RinCard {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 100
-                radius: 8
+            Frame {
+                width: 200
+                height: 100
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    RinIcon {
-                        icon: "update"
-                        size: 24
+                    Text {
+                        text: "📋" // "update"
+                        font.pixelSize: 24
                         color: "#ff9800"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }

@@ -23,9 +23,13 @@ ScrollView {
         }
     }
     property bool floatingWindowVisible: false
-    
+
+    contentWidth: availableWidth
+    contentHeight: mainColumn.implicitHeight
+
     Column {
-        width: floatingView.width
+        id: mainColumn
+        width: floatingView.availableWidth
         spacing: 24
         
         Text {
@@ -35,9 +39,8 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        RinCard {
+        Frame {
             width: parent.width
-            radius: 8
 
             Column {
                 anchors.fill: parent
@@ -54,25 +57,22 @@ ScrollView {
                 Row {
                     spacing: 16
 
-                    RinButton {
+                    Button {
                         id: toggleFloatingButton
                         text: floatingWindowVisible ? qsTr("关闭悬浮窗") : qsTr("启动悬浮窗")
-                        icon: floatingWindowVisible ? "visibility_off" : "picture_in_picture"
-                        accentColor: "#2196f3"
                         onClicked: {
                             toggleFloatingWindow()
                         }
                     }
 
-                    RinButton {
+                    Button {
                         text: qsTr("重置位置")
-                        icon: "center_focus_strong"
                         onClicked: {
                             resetFloatingPosition()
                         }
                     }
 
-                    RinCheckBox {
+                    CheckBox {
                         id: forceTopCheckBox
                         text: qsTr("强制置顶")
                         checked: false
