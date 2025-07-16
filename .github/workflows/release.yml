@@ -245,19 +245,19 @@ jobs:
         mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/bin
         mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/applications
         mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/pixmaps
-        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/timenest
+        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest
 
         # 复制可执行文件
-        cp dist/TimeNest TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/timenest
-        chmod +x TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/timenest
+        cp dist/TimeNest TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
+        chmod +x TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
 
         # 创建桌面文件
-        cat > TimeNest-${{ steps.version_info.outputs.version }}/usr/share/applications/timenest.desktop << EOF
+        cat > TimeNest-${{ steps.version_info.outputs.version }}/usr/share/applications/TimeNest.desktop << EOF
         [Desktop Entry]
         Name=TimeNest
         Comment=智能时间管理助手
-        Exec=timenest
-        Icon=timenest
+        Exec=TimeNest
+        Icon=TimeNest
         Terminal=false
         Type=Application
         Categories=Office;Utility;
@@ -265,13 +265,13 @@ jobs:
         EOF
 
         # 复制图标（如果存在）
-        if [ -f "resources/icons/app_icon.png" ]; then
-          cp resources/icons/app_icon.png TimeNest-${{ steps.version_info.outputs.version }}/usr/share/pixmaps/timenest.png
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png TimeNest-${{ steps.version_info.outputs.version }}/usr/share/pixmaps/TimeNest.png
         fi
 
         # 复制文档
-        cp README.md TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/timenest/
-        cp LICENSE TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/timenest/ || echo "LICENSE file not found"
+        cp README.md TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/
+        cp LICENSE TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/ || echo "LICENSE file not found"
 
     - name: Create Linux packages
       run: |
@@ -292,7 +292,7 @@ jobs:
 
         # 创建control文件
         cat > TimeNest-$VERSION/DEBIAN/control << EOF
-        Package: timenest
+        Package: TimeNest
         Version: $VERSION
         Section: utils
         Priority: optional
@@ -308,11 +308,11 @@ jobs:
 
         # 构建deb包
         if dpkg-deb --build TimeNest-$VERSION; then
-          mv TimeNest-$VERSION.deb timenest_$VERSION-1_amd64.deb
+          mv TimeNest-$VERSION.deb TimeNest_$VERSION-1_amd64.deb
           echo "Debian package created successfully"
         else
           echo "Debian package creation failed, creating tar.gz"
-          tar -czf timenest_$VERSION-1_amd64.deb.tar.gz TimeNest-$VERSION/
+          tar -czf TimeNest_$VERSION-1_amd64.deb.tar.gz TimeNest-$VERSION/
         fi
 
         # 创建简单的RPM替代包
@@ -321,11 +321,11 @@ jobs:
         mkdir -p rpm-package/usr/share/applications
         mkdir -p rpm-package/usr/share/pixmaps
 
-        cp dist/TimeNest rpm-package/usr/bin/timenest || echo "Executable not found"
-        cp TimeNest-$VERSION/usr/share/applications/timenest.desktop rpm-package/usr/share/applications/ || echo "Desktop file not found"
-        cp resources/app_icon.png rpm-package/usr/share/pixmaps/timenest.png || echo "Icon not found"
+        cp dist/TimeNest rpm-package/usr/bin/TimeNest || echo "Executable not found"
+        cp TimeNest-$VERSION/usr/share/applications/TimeNest.desktop rpm-package/usr/share/applications/ || echo "Desktop file not found"
+        cp resources/app_icon.png rpm-package/usr/share/pixmaps/TimeNest.png || echo "Icon not found"
 
-        tar -czf timenest-$VERSION-1.x86_64.rpm.tar.gz rpm-package/
+        tar -czf TimeNest-$VERSION-1.x86_64.rpm.tar.gz rpm-package/
         rm -rf rpm-package
 
 
@@ -336,11 +336,11 @@ jobs:
         mkdir -p arch-package/usr/share/applications
         mkdir -p arch-package/usr/share/pixmaps
 
-        cp dist/TimeNest arch-package/usr/bin/timenest || echo "Executable not found"
-        cp TimeNest-$VERSION/usr/share/applications/timenest.desktop arch-package/usr/share/applications/ || echo "Desktop file not found"
-        cp resources/app_icon.png arch-package/usr/share/pixmaps/timenest.png || echo "Icon not found"
+        cp dist/TimeNest arch-package/usr/bin/TimeNest || echo "Executable not found"
+        cp TimeNest-$VERSION/usr/share/applications/TimeNest.desktop arch-package/usr/share/applications/ || echo "Desktop file not found"
+        cp resources/app_icon.png arch-package/usr/share/pixmaps/TimeNest.png || echo "Icon not found"
 
-        tar -cJf timenest-$VERSION-1-x86_64.pkg.tar.xz arch-package/
+        tar -cJf TimeNest-$VERSION-1-x86_64.pkg.tar.xz arch-package/
         rm -rf arch-package
 
 
@@ -356,40 +356,40 @@ jobs:
           ## TimeNest ${{ steps.version_info.outputs.version }} - Linux 安装包
 
           ### 📦 Linux 下载
-          - **Debian/Ubuntu**: timenest_${{ steps.version_info.outputs.version }}-1_amd64.deb
-          - **Red Hat/CentOS/Fedora**: timenest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm
-          - **Arch Linux**: timenest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          - **Debian/Ubuntu**: TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb
+          - **Red Hat/CentOS/Fedora**: TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
+          - **Arch Linux**: TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
 
           ### 📋 安装说明
 
           **Debian/Ubuntu:**
           ```bash
-          sudo dpkg -i timenest_${{ steps.version_info.outputs.version }}-1_amd64.deb
+          sudo dpkg -i TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb
           sudo apt-get install -f  # 解决依赖问题
           ```
 
           **Red Hat/CentOS/Fedora:**
           ```bash
-          sudo rpm -ivh timenest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm
-          # 或使用 dnf/yum
-          sudo dnf install timenest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm
+          tar -xzf TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
+          sudo cp TimeNest /usr/local/bin/
           ```
 
           **Arch Linux:**
           ```bash
-          sudo pacman -U timenest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          tar -xJf TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          sudo cp usr/bin/TimeNest /usr/local/bin/
           ```
 
           ### 🚀 运行
           安装完成后，可以通过以下方式启动：
-          - 命令行: `timenest`
+          - 命令行: `TimeNest`
           - 应用菜单: 搜索 "TimeNest"
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
-          timenest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
-          timenest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          timenest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
+          TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
+          TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
 
     - name: Upload Linux artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -397,7 +397,160 @@ jobs:
       with:
         name: TimeNest-${{ github.sha }}-linux-packages
         path: |
-          timenest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
-          timenest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          timenest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
+          TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
+          TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # 安装基础依赖
+        pip install pyinstaller
+        # 安装项目依赖，忽略可能的错误
+        pip install -r requirements.txt || echo "Some dependencies may have failed, continuing..."
+        # 确保关键依赖已安装
+        pip install PySide6 PyYAML requests pandas numpy openpyxl
+
+    - name: Build macOS executable
+      run: |
+        # 设置环境变量
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+
+        # 构建可执行文件
+        pyinstaller --onefile \
+          --name TimeNest \
+          --add-data "qml:qml" \
+          --add-data "resources:resources" \
+          --add-data "themes:themes" \
+          --add-data "config:config" \
+          --add-data "app_info.json:." \
+          --hidden-import PySide6.QtCore \
+          --hidden-import PySide6.QtGui \
+          --hidden-import PySide6.QtWidgets \
+          --hidden-import PySide6.QtQml \
+          --hidden-import PySide6.QtQuick \
+          --hidden-import RinUI \
+          --hidden-import utils.common_imports \
+          --hidden-import utils.shared_utilities \
+          --hidden-import utils.config_constants \
+          --hidden-import utils.rinui_patch \
+          --hidden-import utils.rinui_init \
+          --windowed \
+          main.py
+
+    - name: Get version info
+      id: version_info_macos
+      run: |
+        if [ "${{ github.ref_type }}" = "tag" ]; then
+          VERSION="${{ github.ref_name }}"
+          VERSION=${VERSION#v}
+        else
+          VERSION=$(python -c "import json; print(json.load(open('app_info.json'))['version']['number'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Create macOS app bundle
+      run: |
+        VERSION=${{ steps.version_info_macos.outputs.version }}
+
+        # 创建应用程序包结构
+        mkdir -p TimeNest.app/Contents/MacOS
+        mkdir -p TimeNest.app/Contents/Resources
+
+        # 复制可执行文件
+        cp dist/TimeNest TimeNest.app/Contents/MacOS/TimeNest
+        chmod +x TimeNest.app/Contents/MacOS/TimeNest
+
+        # 创建Info.plist文件
+        cat > TimeNest.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>TimeNest</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.ziyi127.TimeNest</string>
+            <key>CFBundleName</key>
+            <string>TimeNest</string>
+            <key>CFBundleVersion</key>
+            <string>$VERSION</string>
+            <key>CFBundleShortVersionString</key>
+            <string>$VERSION</string>
+            <key>CFBundleInfoDictionaryVersion</key>
+            <string>6.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleSignature</key>
+            <string>????</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+            <key>NSHumanReadableCopyright</key>
+            <string>Copyright © 2025 ziyi127. All rights reserved.</string>
+        </dict>
+        </plist>
+        EOF
+
+        # 复制图标（如果存在）
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png TimeNest.app/Contents/Resources/app_icon.png
+        fi
+
+        # 创建DMG文件
+        hdiutil create -volname "TimeNest" -srcfolder TimeNest.app -ov -format UDZO TimeNest-$VERSION-macos.dmg
+
+    - name: Upload macOS package to release
+      if: github.ref_name == 'main' || github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version_info_macos.outputs.tag }}
+        name: TimeNest ${{ steps.version_info_macos.outputs.version }}
+        body: |
+          ## TimeNest ${{ steps.version_info_macos.outputs.version }} - macOS 版本
+
+          ### 📦 macOS 下载
+          - **macOS 应用程序**: TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
+
+          ### 📋 macOS 安装说明
+          1. 下载 DMG 文件
+          2. 双击打开 DMG 文件
+          3. 将 TimeNest.app 拖拽到 Applications 文件夹
+          4. 在 Applications 中找到 TimeNest 并启动
+
+          ### 💡 系统要求
+          - macOS 10.15 (Catalina) 或更高版本
+          - 支持 Intel 和 Apple Silicon (M1/M2) 处理器
+
+          ### ⚠️ 注意事项
+          首次运行时，可能需要在"系统偏好设置" > "安全性与隐私"中允许运行此应用程序。
+        draft: false
+        prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
+        files: |
+          TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
+
+    - name: Upload macOS artifacts (for non-release builds)
+      if: github.ref_name != 'main' && github.ref_type != 'tag'
+      uses: actions/upload-artifact@v4
+      with:
+        name: TimeNest-${{ github.sha }}-macos
+        path: |
+          TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
         retention-days: 30
