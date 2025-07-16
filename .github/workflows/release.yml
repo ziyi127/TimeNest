@@ -76,24 +76,35 @@ jobs:
       run: |
         if ("${{ github.ref_type }}" -eq "tag") {
           Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.ref_name }}-windows.zip
+        } elseif ("${{ github.ref_name }}" -eq "main") {
+          # 从app_info.json读取版本信息用于文件名
+          $appInfo = Get-Content app_info.json | ConvertFrom-Json
+          $version = $appInfo.version.number
+          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-v$version-windows.zip
         } else {
           Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.sha }}-windows.zip
         }
 
     - name: Get release info
       id: release_info
-      if: github.ref_type == 'tag'
       run: |
-        $tag = "${{ github.ref_name }}"
-        $version = $tag -replace '^v', ''
+        if ("${{ github.ref_type }}" -eq "tag") {
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''
+        } else {
+          # 从app_info.json读取版本信息
+          $appInfo = Get-Content app_info.json | ConvertFrom-Json
+          $version = $appInfo.version.number
+          $tag = "v$version"
+        }
         echo "version=$version" >> $env:GITHUB_OUTPUT
         echo "tag=$tag" >> $env:GITHUB_OUTPUT
 
     - name: Create Release
-      if: github.ref_type == 'tag'
+      if: github.ref_name == 'main' || github.ref_type == 'tag'
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref_name }}
+        tag_name: ${{ steps.release_info.outputs.tag }}
         name: TimeNest ${{ steps.release_info.outputs.version }}
         body: |
           ## TimeNest ${{ steps.release_info.outputs.version }}
@@ -102,15 +113,15 @@ jobs:
           - **Windows 便携版**: TimeNest-${{ steps.release_info.outputs.tag }}-windows.zip
 
           ### 🚀 新功能
-          - 完成 RinUI 框架迁移
-          - 更新到 2.1.0 Preview 版本
-          - 改进用户界面和用户体验
-          - 增强响应式设计
+          - 🔧 UI组件修复：修复了RinUI组件使用问题，所有页面现在正常显示
+          - ⚙️ 设置页面优化：使用原生SettingCard组件，提供更好的设置体验
+          - 🎨 界面稳定性：解决了页面空白和组件冲突问题
+          - 📱 响应式布局：优化了ScrollView和布局系统
 
           ### 🐛 修复
-          - 修复性能管理器重复代码问题
-          - 优化内存使用和性能监控
-          - 改进错误处理和日志记录
+          - 🚀 性能提升：移除了冲突的自定义组件，提升运行稳定性
+          - 修复RinUI组件属性错误导致的显示问题
+          - 优化页面布局和组件定位逻辑
 
           ### 📋 安装说明
           1. 下载 ZIP 文件
@@ -127,10 +138,10 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
         files: |
-          TimeNest-${{ github.ref_name }}-windows.zip
+          TimeNest-${{ steps.release_info.outputs.tag }}-windows.zip
 
-    - name: Upload Build Artifacts (for non-tag builds)
-      if: github.ref_type != 'tag'
+    - name: Upload Build Artifacts (for non-release builds)
+      if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
         name: TimeNest-${{ github.sha }}-windows
