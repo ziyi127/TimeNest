@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import RinUI
 
 ScrollView {
     id: scheduleView
@@ -61,43 +62,46 @@ ScrollView {
 
             Item { width: parent.width - 400 }
 
-            Button {
+            RinButton {
                 text: qsTr("新建课程")
+                icon: "add"
+                accentColor: "#2196f3"
                 onClicked: newCourseDialog.open()
             }
 
-            Button {
+            RinButton {
                 text: qsTr("导入Excel")
+                icon: "upload_file"
                 onClicked: importFileDialog.open()
             }
 
-            Button {
+            RinButton {
                 text: qsTr("导出Excel")
+                icon: "download"
                 onClicked: exportFileDialog.open()
             }
 
-            Button {
+            RinButton {
                 text: qsTr("创建模板")
+                icon: "description"
                 onClicked: createExcelTemplate()
             }
 
-            Button {
+            RinButton {
                 text: qsTr("刷新")
+                icon: "refresh"
                 onClicked: loadCourses()
             }
         }
 
-        // 课程统计
         Row {
             width: parent.width
             spacing: 20
 
-            Rectangle {
+            RinCard {
                 width: 150
                 height: 80
-                color: isDarkMode ? "#2d2d2d" : "#f5f5f5"
                 radius: 8
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
                 border.width: 1
 
                 Column {

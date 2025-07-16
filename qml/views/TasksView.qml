@@ -49,16 +49,16 @@ ScrollView {
 
             Item { width: parent.width - 300 }
 
-            Button {
+            RinButton {
                 text: qsTr("新建任务")
-                icon.name: "ic_fluent_add_20_regular"
-                highlighted: true
+                icon: "add"
+                accentColor: "#2196f3"
                 onClicked: newTaskDialog.open()
             }
 
-            Button {
+            RinButton {
                 text: qsTr("刷新")
-                icon.name: "ic_fluent_arrow_clockwise_20_regular"
+                icon: "refresh"
                 onClicked: loadTasks()
             }
         }
@@ -68,20 +68,43 @@ ScrollView {
             width: parent.width
             spacing: 20
 
-            SettingCard {
-                width: 150
-                icon: "ic_fluent_task_list_20_regular"
-                title: qsTr("待办任务")
-                description: getPendingTasksCount().toString()
-            }
-
-            Rectangle {
+            RinCard {
                 width: 150
                 height: 80
-                color: isDarkMode ? "#2d2d2d" : "#f5f5f5"
                 radius: 8
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    RinIcon {
+                        icon: "pending_actions"
+                        size: 24
+                        color: "#ff9800"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Text {
+                        text: qsTr("待办任务")
+                        font.pixelSize: 14
+                        color: isDarkMode ? "#cccccc" : "#666666"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Text {
+                        text: getPendingTasksCount().toString()
+                        font.pixelSize: 20
+                        font.bold: true
+                        color: isDarkMode ? "#ffffff" : "#000000"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                }
+            }
+
+            RinCard {
+                width: 150
+                height: 80
+                radius: 8
 
                 Column {
                     anchors.centerIn: parent

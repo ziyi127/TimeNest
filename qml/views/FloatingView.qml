@@ -35,12 +35,13 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        // 悬浮窗控制面板
-        Frame {
+        RinCard {
             width: parent.width
+            radius: 8
 
             Column {
-                width: parent.width
+                anchors.fill: parent
+                anchors.margins: 16
                 spacing: 16
 
                 Text {
@@ -53,26 +54,25 @@ ScrollView {
                 Row {
                     spacing: 16
 
-                    Button {
+                    RinButton {
                         id: toggleFloatingButton
                         text: floatingWindowVisible ? qsTr("关闭悬浮窗") : qsTr("启动悬浮窗")
-                        icon.name: floatingWindowVisible ? "ic_fluent_window_hide_20_regular" : "ic_fluent_window_20_regular"
-                        highlighted: true
+                        icon: floatingWindowVisible ? "visibility_off" : "picture_in_picture"
+                        accentColor: "#2196f3"
                         onClicked: {
                             toggleFloatingWindow()
                         }
                     }
 
-
-
-                    Button {
+                    RinButton {
                         text: qsTr("重置位置")
+                        icon: "center_focus_strong"
                         onClicked: {
                             resetFloatingPosition()
                         }
                     }
 
-                    CheckBox {
+                    RinCheckBox {
                         id: forceTopCheckBox
                         text: qsTr("强制置顶")
                         checked: false

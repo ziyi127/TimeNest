@@ -20,24 +20,25 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        // 插件统计
-        GridLayout {
+        RinResponsiveRow {
             width: parent.width
-            columns: 3
-            columnSpacing: 16
-            rowSpacing: 16
+            spacing: 16
 
-            Rectangle {
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
+
+                    RinIcon {
+                        icon: "extension"
+                        size: 24
+                        color: "#2196f3"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
 
                     Text {
                         text: getInstalledPluginsCount().toString()
@@ -56,17 +57,21 @@ ScrollView {
                 }
             }
 
-            Rectangle {
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
+
+                    RinIcon {
+                        icon: "cloud_download"
+                        size: 24
+                        color: "#4caf50"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
 
                     Text {
                         text: getAvailablePluginsCount().toString()
@@ -85,17 +90,21 @@ ScrollView {
                 }
             }
 
-            Rectangle {
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
+
+                    RinIcon {
+                        icon: "update"
+                        size: 24
+                        color: "#ff9800"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
 
                     Text {
                         text: getEnabledPluginsCount().toString()

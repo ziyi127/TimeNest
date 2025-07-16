@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import RinUI
 
-Dialog {
+RinDialog {
     id: aboutDialog
 
     property bool isDarkMode: true
@@ -101,13 +101,11 @@ Dialog {
                 }
             }
             
-            // 应用描述
-            Rectangle {
+            RinCard {
                 width: parent.width
                 height: 100
-                color: isDarkMode ? "#353535" : "#f9f9f9"
                 radius: 8
-                
+
                 Text {
                     anchors.centerIn: parent
                     text: typeof timeNestBridge !== 'undefined' ? timeNestBridge.appDescription : qsTr("智能时间管理助手")
@@ -119,85 +117,82 @@ Dialog {
                 }
             }
             
-            // 版本信息
-            GroupBox {
-                title: qsTr("版本信息")
+            RinCard {
                 width: parent.width
-                
-                background: Rectangle {
-                    color: isDarkMode ? "#353535" : "#f9f9f9"
-                    border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                    border.width: 1
-                    radius: 6
-                }
-                
-                label: Text {
-                    text: parent.title
-                    font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
-                }
-                
-                GridLayout {
+                radius: 8
+
+                Column {
                     anchors.fill: parent
-                    columns: 2
-                    columnSpacing: 16
-                    rowSpacing: 8
-                    
+                    anchors.margins: 16
+                    spacing: 12
+
                     Text {
-                        text: qsTr("应用版本:")
-                        font.pixelSize: 14
-                        color: isDarkMode ? "#cccccc" : "#666666"
-                    }
-                    
-                    Text {
-                        text: typeof timeNestBridge !== 'undefined' ? timeNestBridge.appVersion : "1.1.3 Preview"
-                        font.pixelSize: 14
+                        text: qsTr("版本信息")
+                        font.pixelSize: 16
+                        font.bold: true
                         color: isDarkMode ? "#ffffff" : "#000000"
                     }
-                    
-                    Text {
-                        text: qsTr("构建日期:")
-                        font.pixelSize: 14
-                        color: isDarkMode ? "#cccccc" : "#666666"
-                    }
-                    
-                    Text {
-                        text: "2025-01-14"
-                        font.pixelSize: 14
-                        color: isDarkMode ? "#ffffff" : "#000000"
-                    }
-                    
-                    Text {
-                        text: qsTr("UI框架:")
-                        font.pixelSize: 14
-                        color: isDarkMode ? "#cccccc" : "#666666"
-                    }
-                    
-                    Text {
-                        text: "RinUI + Qt Quick"
-                        font.pixelSize: 14
-                        color: isDarkMode ? "#ffffff" : "#000000"
+                
+                    GridLayout {
+                        width: parent.width
+                        columns: 2
+                        columnSpacing: 16
+                        rowSpacing: 8
+
+                        Text {
+                            text: qsTr("应用版本:")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+
+                        Text {
+                            text: typeof timeNestBridge !== 'undefined' ? timeNestBridge.appVersion : "2.1.0 Preview"
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("构建日期:")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+
+                        Text {
+                            text: "2025-07-15"
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("UI框架:")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+
+                        Text {
+                            text: "RinUI + Qt Quick"
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
                     }
                 }
             }
             
-            // 作者信息
-            GroupBox {
-                title: qsTr("作者信息")
+            RinCard {
                 width: parent.width
-                
-                background: Rectangle {
-                    color: isDarkMode ? "#353535" : "#f9f9f9"
-                    border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                    border.width: 1
-                    radius: 6
-                }
-                
-                label: Text {
-                    text: parent.title
-                    font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
-                }
+                radius: 8
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
+                    Text {
+                        text: qsTr("作者信息")
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: isDarkMode ? "#ffffff" : "#000000"
+                    }
                 
                 Column {
                     anchors.fill: parent
@@ -504,10 +499,14 @@ Dialog {
         }
     }
     
-    footer: DialogButtonBox {
-        Button {
+    footer: Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 10
+
+        RinButton {
             text: qsTr("确定")
-            DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            accentColor: "#2196f3"
+            icon: "check"
             onClicked: aboutDialog.close()
         }
     }

@@ -31,7 +31,7 @@ import threading
 import time
 from typing import Dict, Any, Optional, List, Callable, TypeVar, Generic
 from datetime import datetime, timedelta
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from collections import defaultdict, deque
 from weakref import WeakValueDictionary
 from PySide6.QtCore import QObject, QTimer, Signal, QThread
@@ -555,27 +555,7 @@ class PerformanceManager(QObject):
             if self.optimization_enabled:
                 if metrics.memory_percent > 80.0:  # 当内存使用率超过80%时
                     # 当内存使用率超过阈值时进行优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
-                    # 当内存使用率超过80%时触发优化
-                    self.optimize_memory()
+                    self.optimize_memory()  # 内存使用率超过阈值时进行优化
 
         except Exception as e:
             self.logger.error(f"处理性能指标更新失败: {e}")

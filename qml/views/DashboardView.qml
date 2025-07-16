@@ -20,39 +20,33 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        // 快速统计卡片
-        GridLayout {
+        RinResponsiveRow {
             width: parent.width
-            columns: 3
-            columnSpacing: 16
-            rowSpacing: 16
-            
-            // 今日课程卡片
-            Rectangle {
+            spacing: 16
+
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
-                
+
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
-                    
-                    Text {
-                        text: "📅"
-                        font.pixelSize: 32
+
+                    RinIcon {
+                        icon: "calendar_today"
+                        size: 32
+                        color: "#2196f3"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         text: qsTr("今日课程")
                         font.pixelSize: 16
                         color: isDarkMode ? "#cccccc" : "#666666"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         id: todayCoursesCount
                         text: "5"
@@ -63,7 +57,6 @@ ScrollView {
 
                         Component.onCompleted: {
                             if (typeof timeNestBridge !== 'undefined') {
-                                // 获取今日课程数量
                                 var courses = timeNestBridge.getScheduleData()
                                 var todayCount = 0
                                 var today = new Date()
@@ -81,32 +74,29 @@ ScrollView {
                 }
             }
             
-            // 待办任务卡片
-            Rectangle {
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
-                
+
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
-                    
-                    Text {
-                        text: "✅"
-                        font.pixelSize: 32
+
+                    RinIcon {
+                        icon: "task_alt"
+                        size: 32
+                        color: "#ff9800"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         text: qsTr("待办任务")
                         font.pixelSize: 16
                         color: isDarkMode ? "#cccccc" : "#666666"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         id: pendingTasksCount
                         text: "12"
@@ -132,25 +122,22 @@ ScrollView {
                 }
             }
             
-            // 已安装插件卡片
-            Rectangle {
+            RinCard {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
-                color: isDarkMode ? "#2d2d2d" : "#ffffff"
-                border.color: isDarkMode ? "#404040" : "#e0e0e0"
-                border.width: 1
                 radius: 8
-                
+
                 Column {
                     anchors.centerIn: parent
                     spacing: 8
-                    
-                    Text {
-                        text: "🧩"
-                        font.pixelSize: 32
+
+                    RinIcon {
+                        icon: "check_circle"
+                        size: 32
+                        color: "#4caf50"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         text: qsTr("已完成任务")
                         font.pixelSize: 16
@@ -170,13 +157,9 @@ ScrollView {
             }
         }
         
-        // 今日课程安排
-        Rectangle {
+        RinCard {
             width: parent.width
             height: 300
-            color: isDarkMode ? "#2d2d2d" : "#ffffff"
-            border.color: isDarkMode ? "#404040" : "#e0e0e0"
-            border.width: 1
             radius: 8
             
             Column {
@@ -260,13 +243,9 @@ ScrollView {
             }
         }
         
-        // 快速操作
-        Rectangle {
+        RinCard {
             width: parent.width
             height: 150
-            color: isDarkMode ? "#2d2d2d" : "#ffffff"
-            border.color: isDarkMode ? "#404040" : "#e0e0e0"
-            border.width: 1
             radius: 8
             
             Column {
@@ -283,31 +262,37 @@ ScrollView {
                 
                 Row {
                     spacing: 16
-                    
-                    Button {
+
+                    RinButton {
                         text: qsTr("添加课程")
-                        highlighted: true
+                        accentColor: "#2196f3"
+                        icon: "add"
                         onClicked: {
-                            // TODO: 打开添加课程对话框
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.showNewCourseDialog()
+                            }
                         }
                     }
-                    
-                    Button {
+
+                    RinButton {
                         text: qsTr("创建任务")
+                        icon: "add_task"
                         onClicked: {
                             createNewTask()
                         }
                     }
 
-                    Button {
+                    RinButton {
                         text: qsTr("打开悬浮窗")
+                        icon: "picture_in_picture"
                         onClicked: {
                             toggleFloatingWindow()
                         }
                     }
 
-                    Button {
+                    RinButton {
                         text: qsTr("刷新数据")
+                        icon: "refresh"
                         onClicked: {
                             refreshDashboard()
                         }

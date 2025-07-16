@@ -30,76 +30,218 @@ ScrollView {
             color: isDarkMode ? "#ffffff" : "#000000"
         }
         
-        // 外观设置
-        SettingCard {
+        RinCard {
             width: parent.width
-            icon: "ic_fluent_design_ideas_20_regular"
-            title: qsTr("外观设置")
-            description: qsTr("应用主题和界面设置")
+            radius: 8
 
-            ComboBox {
-                id: appThemeComboBox
-                model: [qsTr("浅色主题"), qsTr("深色主题"), qsTr("自动")]
-                currentIndex: 0
-                width: 150
-                onCurrentIndexChanged: {
-                    if (typeof timeNestBridge !== 'undefined') {
-                        timeNestBridge.saveSetting("app_theme", currentIndex)
+            Column {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                Row {
+                    width: parent.width
+                    spacing: 12
+
+                    RinIcon {
+                        icon: "palette"
+                        size: 24
+                        color: "#2196f3"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("外观设置")
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("应用主题和界面设置")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    RinComboBox {
+                        id: appThemeComboBox
+                        model: [qsTr("浅色主题"), qsTr("深色主题"), qsTr("自动")]
+                        currentIndex: 0
+                        width: 150
+                        onCurrentIndexChanged: {
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.saveSetting("app_theme", currentIndex)
+                            }
+                        }
                     }
                 }
             }
         }
         
-        // 通知设置
-        SettingCard {
+        RinCard {
             width: parent.width
-            icon: "ic_fluent_alert_20_regular"
-            title: qsTr("课程提醒")
-            description: qsTr("启用课程开始前的提醒通知")
+            radius: 8
 
-            Switch {
-                checked: notificationsEnabled
-                onToggled: {
-                    notificationsEnabled = checked
-                    if (typeof timeNestBridge !== 'undefined') {
-                        timeNestBridge.saveSetting("notifications_enabled", checked)
+            Column {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                Row {
+                    width: parent.width
+                    spacing: 12
+
+                    RinIcon {
+                        icon: "notifications"
+                        size: 24
+                        color: "#ff9800"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("课程提醒")
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("启用课程开始前的提醒通知")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    RinSwitch {
+                        checked: notificationsEnabled
+                        onToggled: {
+                            notificationsEnabled = checked
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.saveSetting("notifications_enabled", checked)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        SettingCard {
+        RinCard {
             width: parent.width
-            icon: "ic_fluent_task_list_20_regular"
-            title: qsTr("任务提醒")
-            description: qsTr("启用任务截止日期提醒")
+            radius: 8
 
-            Switch {
-                checked: notificationsEnabled
-                onToggled: {
-                    if (typeof timeNestBridge !== 'undefined') {
-                        timeNestBridge.saveSetting("task_notifications_enabled", checked)
+            Column {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                Row {
+                    width: parent.width
+                    spacing: 12
+
+                    RinIcon {
+                        icon: "task_alt"
+                        size: 24
+                        color: "#4caf50"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("任务提醒")
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("启用任务截止日期提醒")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    RinSwitch {
+                        checked: notificationsEnabled
+                        onToggled: {
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.saveSetting("task_notifications_enabled", checked)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        SettingCard {
+        RinCard {
             width: parent.width
-            icon: "ic_fluent_window_20_regular"
-            title: qsTr("悬浮窗")
-            description: qsTr("显示桌面悬浮窗")
+            radius: 8
 
-            Switch {
-                checked: floatingWindowEnabled
-                onToggled: {
-                    floatingWindowEnabled = checked
-                    if (typeof timeNestBridge !== 'undefined') {
-                        timeNestBridge.saveSetting("floating_window_enabled", checked)
-                        if (checked) {
-                            timeNestBridge.showFloatingWindow()
-                        } else {
-                            timeNestBridge.hideFloatingWindow()
+            Column {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                Row {
+                    width: parent.width
+                    spacing: 12
+
+                    RinIcon {
+                        icon: "picture_in_picture"
+                        size: 24
+                        color: "#9c27b0"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("悬浮窗")
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: isDarkMode ? "#ffffff" : "#000000"
+                        }
+
+                        Text {
+                            text: qsTr("显示桌面悬浮窗")
+                            font.pixelSize: 14
+                            color: isDarkMode ? "#cccccc" : "#666666"
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    RinSwitch {
+                        checked: floatingWindowEnabled
+                        onToggled: {
+                            floatingWindowEnabled = checked
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.saveSetting("floating_window_enabled", checked)
+                                if (checked) {
+                                    timeNestBridge.showFloatingWindow()
+                                } else {
+                                    timeNestBridge.hideFloatingWindow()
+                                }
+                            }
                         }
                     }
                 }

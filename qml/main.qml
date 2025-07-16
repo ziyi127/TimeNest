@@ -6,20 +6,15 @@ import QtQuick.Dialogs
 import RinUI
 import "components"
 
-Window {
+RinWindow {
     id: mainWindow
     width: 1200
     height: 800
     visible: true
     title: qsTr("TimeNest - 智能时间管理助手")
 
-    // 主题设置 - 默认白色主题
     property bool isDarkMode: false
-
-    // 应用状态
     property string currentView: "dashboard"
-
-    // 对话框状态
     property bool showingAboutDialog: false
     property bool showingNewCourseDialog: false
     property bool showingNewTaskDialog: false
@@ -27,9 +22,8 @@ Window {
     Rectangle {
         anchors.fill: parent
         color: isDarkMode ? "#1e1e1e" : "#f5f5f5"
-        
-        // 侧边栏
-        Frame {
+
+        RinCard {
             id: sidebar
             width: 280
             height: parent.height
@@ -44,7 +38,6 @@ Window {
                 anchors.fill: parent
                 spacing: 16
 
-                // 应用标题
                 Text {
                     text: qsTr("TimeNest")
                     font.pixelSize: 24
@@ -53,7 +46,6 @@ Window {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
-                // 分隔线
                 Rectangle {
                     width: parent.width
                     height: 1
@@ -61,7 +53,6 @@ Window {
                     radius: 0.5
                 }
 
-                // 核心功能区域
                 Text {
                     text: qsTr("核心功能")
                     font.pixelSize: 14
@@ -70,79 +61,82 @@ Window {
                     leftPadding: 8
                 }
 
-                ListView {
+                RinNavigation {
                     width: parent.width
-                    height: 240  // 6个项目 * 40高度
+                    height: 240
                     model: ListModel {
                         ListElement {
                             itemName: qsTr("仪表板")
-                            iconName: "ic_fluent_home_20_regular"
+                            iconName: "dashboard"
                             viewName: "dashboard"
                         }
                         ListElement {
                             itemName: qsTr("课程表")
-                            iconName: "ic_fluent_calendar_20_regular"
+                            iconName: "calendar_today"
                             viewName: "schedule"
                         }
                         ListElement {
                             itemName: qsTr("任务管理")
-                            iconName: "ic_fluent_task_list_20_regular"
+                            iconName: "task_alt"
                             viewName: "tasks"
                         }
                         ListElement {
                             itemName: qsTr("悬浮窗")
-                            iconName: "ic_fluent_window_20_regular"
+                            iconName: "picture_in_picture"
                             viewName: "floating"
                         }
                         ListElement {
                             itemName: qsTr("插件管理")
-                            iconName: "ic_fluent_puzzle_20_regular"
+                            iconName: "extension"
                             viewName: "plugins"
                         }
                         ListElement {
                             itemName: qsTr("设置")
-                            iconName: "ic_fluent_settings_20_regular"
+                            iconName: "settings"
                             viewName: "settings"
                         }
                     }
 
-                    delegate: ListViewDelegate {
+                    delegate: Item {
                         width: ListView.view.width
                         height: 40
 
                         property bool isSelected: currentView === model.viewName
 
-                        leftArea: IconWidget {
-                            icon: model.iconName
-                            size: 20
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-
-                        middleArea: Text {
-                            text: model.itemName
-                            font.pixelSize: 14
-                            color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
-                            font.bold: isSelected
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-
-                        onClicked: {
-                            currentView = model.viewName
-                        }
-
-                        // 选中状态的背景
                         Rectangle {
                             anchors.fill: parent
                             color: isSelected ? "#e3f2fd" : "transparent"
                             radius: 4
-                            z: -1
+
+                            Row {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 12
+
+                                RinIcon {
+                                    icon: model.iconName
+                                    size: 20
+                                    color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
+                                }
+
+                                Text {
+                                    text: model.itemName
+                                    font.pixelSize: 14
+                                    color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
+                                    font.bold: isSelected
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: currentView = model.viewName
+                            }
                         }
                     }
                 }
 
-                    // 分隔线
-                // 分隔线
                 Rectangle {
                     width: parent.width
                     height: 1
@@ -150,7 +144,6 @@ Window {
                     radius: 0.5
                 }
 
-                // 快捷操作区域
                 Text {
                     text: qsTr("快捷操作")
                     font.pixelSize: 14
@@ -163,25 +156,24 @@ Window {
                     width: parent.width
                     spacing: 4
 
-                    Button {
+                    RinButton {
                         text: qsTr("新建课程")
-                        icon.name: "ic_fluent_add_20_regular"
+                        icon: "add"
                         width: parent.width
                         flat: true
                         onClicked: showNewCourseDialog()
                     }
 
-                    Button {
+                    RinButton {
                         text: qsTr("新建任务")
-                        icon.name: "ic_fluent_task_list_add_20_regular"
+                        icon: "add_task"
                         width: parent.width
                         flat: true
                         onClicked: showNewTaskDialog()
                     }
 
-                    ToggleButton {
+                    RinSwitch {
                         text: qsTr("显示悬浮窗")
-                        icon.name: "ic_fluent_window_20_regular"
                         width: parent.width
                         checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false
                         onClicked: {
@@ -192,8 +184,6 @@ Window {
                     }
                 }
 
-                    // 分隔线
-                // 分隔线
                 Rectangle {
                     width: parent.width
                     height: 1
@@ -201,7 +191,6 @@ Window {
                     radius: 0.5
                 }
 
-                // 系统控制区域
                 Text {
                     text: qsTr("系统控制")
                     font.pixelSize: 14
@@ -214,29 +203,27 @@ Window {
                     width: parent.width
                     spacing: 4
 
-                    Button {
+                    RinButton {
                         text: qsTr("关于")
-                        icon.name: "ic_fluent_info_20_regular"
+                        icon: "info"
                         width: parent.width
                         flat: true
                         onClicked: showAboutDialog()
                     }
 
-                    // 主题切换
-                    Button {
+                    RinButton {
                         text: isDarkMode ? qsTr("浅色模式") : qsTr("深色模式")
-                        icon.name: isDarkMode ? "ic_fluent_weather_sunny_20_regular" : "ic_fluent_weather_moon_20_regular"
+                        icon: isDarkMode ? "light_mode" : "dark_mode"
                         width: parent.width
                         flat: true
                         onClicked: isDarkMode = !isDarkMode
                     }
 
-                    // 退出按钮
-                    Button {
+                    RinButton {
                         text: qsTr("退出应用")
-                        icon.name: "ic_fluent_power_20_regular"
+                        icon: "power_settings_new"
                         width: parent.width
-                        primaryColor: "#d32f2f"  // 红色警告色
+                        accentColor: "#d32f2f"
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
                                 timeNestBridge.exitApplication()
@@ -322,7 +309,7 @@ Window {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: 16
-            text: qsTr("TimeNest v1.1.3 Preview")
+            text: qsTr("TimeNest v2.1.0 Preview")
             color: isDarkMode ? "#cccccc" : "#666666"
             font.pixelSize: 12
         }
@@ -405,8 +392,7 @@ Window {
 
 
 
-    // 新建课程对话框
-    Dialog {
+    RinDialog {
         id: newCourseDialog
         title: qsTr("新建课程")
         width: 400
@@ -427,31 +413,31 @@ Window {
                 color: isDarkMode ? "#ffffff" : "#000000"
             }
 
-            TextField {
+            RinTextField {
                 id: courseNameField
                 width: parent.width
-                placeholderText: qsTr("课程名称")
+                placeholder: qsTr("课程名称")
             }
 
-            TextField {
+            RinTextField {
                 id: courseTeacherField
                 width: parent.width
-                placeholderText: qsTr("任课教师")
+                placeholder: qsTr("任课教师")
             }
 
-            TextField {
+            RinTextField {
                 id: courseLocationField
                 width: parent.width
-                placeholderText: qsTr("上课地点")
+                placeholder: qsTr("上课地点")
             }
 
-            TextField {
+            RinTextField {
                 id: courseTimeField
                 width: parent.width
-                placeholderText: qsTr("上课时间 (如: 08:00-09:40)")
+                placeholder: qsTr("上课时间 (如: 08:00-09:40)")
             }
 
-            ComboBox {
+            RinComboBox {
                 id: courseWeekdayCombo
                 width: parent.width
                 model: [qsTr("周一"), qsTr("周二"), qsTr("周三"), qsTr("周四"), qsTr("周五"), qsTr("周六"), qsTr("周日")]
@@ -460,10 +446,10 @@ Window {
             Row {
                 spacing: 10
 
-                TextField {
+                RinTextField {
                     id: startWeekField
                     width: 80
-                    placeholderText: qsTr("开始周")
+                    placeholder: qsTr("开始周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
 
@@ -473,10 +459,10 @@ Window {
                     color: isDarkMode ? "#ffffff" : "#000000"
                 }
 
-                TextField {
+                RinTextField {
                     id: endWeekField
                     width: 80
-                    placeholderText: qsTr("结束周")
+                    placeholder: qsTr("结束周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
             }
@@ -485,19 +471,19 @@ Window {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
-                Button {
+                RinButton {
                     text: qsTr("确定")
-                    highlighted: true
-                    icon.name: "ic_fluent_checkmark_20_regular"
+                    accentColor: "#2196f3"
+                    icon: "check"
                     onClicked: {
                         createNewCourse()
                         newCourseDialog.close()
                     }
                 }
 
-                Button {
+                RinButton {
                     text: qsTr("取消")
-                    icon.name: "ic_fluent_dismiss_20_regular"
+                    icon: "close"
                     onClicked: newCourseDialog.close()
                 }
             }
@@ -509,8 +495,7 @@ Window {
         }
     }
 
-    // 新建任务对话框
-    Dialog {
+    RinDialog {
         id: newTaskDialog
         title: qsTr("新建任务")
         width: 400
@@ -531,10 +516,10 @@ Window {
                 color: isDarkMode ? "#ffffff" : "#000000"
             }
 
-            TextField {
+            RinTextField {
                 id: taskTitleField
                 width: parent.width
-                placeholderText: qsTr("任务标题")
+                placeholder: qsTr("任务标题")
             }
 
             ScrollView {
@@ -548,35 +533,35 @@ Window {
                 }
             }
 
-            ComboBox {
+            RinComboBox {
                 id: taskPriorityCombo
                 width: parent.width
                 model: [qsTr("低优先级"), qsTr("中优先级"), qsTr("高优先级"), qsTr("紧急")]
             }
 
-            TextField {
+            RinTextField {
                 id: taskDueDateField
                 width: parent.width
-                placeholderText: qsTr("截止日期 (YYYY-MM-DD)")
+                placeholder: qsTr("截止日期 (YYYY-MM-DD)")
             }
 
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
 
-                Button {
+                RinButton {
                     text: qsTr("确定")
-                    highlighted: true
-                    icon.name: "ic_fluent_checkmark_20_regular"
+                    accentColor: "#2196f3"
+                    icon: "check"
                     onClicked: {
                         createNewTask()
                         newTaskDialog.close()
                     }
                 }
 
-                Button {
+                RinButton {
                     text: qsTr("取消")
-                    icon.name: "ic_fluent_dismiss_20_regular"
+                    icon: "close"
                     onClicked: newTaskDialog.close()
                 }
             }
