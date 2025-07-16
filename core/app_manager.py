@@ -329,48 +329,24 @@ class AppManager(QObject):
             return self._feature_loading_cache[feature_name]
 
         try:
-            if feature_name == "模块管理器":
-                result = self._initialize_feature(
-                    "模块管理器",
-                    "core.module_manager",
-                    "ModuleManager",
-                    (self,)
-                )
-            
-            self._initialize_feature(
-                "主题市场", 
-                "core.theme_marketplace", 
-                "ThemeMarketplace", 
-                (self.config_manager, self.theme_manager)
-            )
-            
-            self._initialize_feature(
-                "时间校准服务",
-                "core.time_calibration_service",
-                "TimeCalibrationService",
-                (self.config_manager,)
-            )
+            features = [
+                ("模块管理器", "core.module_manager", "ModuleManager", (self,)),
+                ("主题市场", "core.theme_marketplace", "ThemeMarketplace",
+                 (self.config_manager, self.theme_manager)),
+                ("时间校准服务", "core.time_calibration_service", "TimeCalibrationService",
+                 (self.config_manager,)),
+                ("插件开发工具", "core.plugin_development_tools", "PluginDevelopmentTools",
+                 (self.config_manager,)),
+                ("插件交互管理器", "core.plugin_interaction_enhanced", "PluginInteractionManager", ()),
+                ("Remind API v2", "core.remind_api_v2", "RemindAPIv2", (self,))
+            ]
 
-            self._initialize_feature(
-                "插件开发工具",
-                "core.plugin_development_tools",
-                "PluginDevelopmentTools",
-                (self.config_manager,)
-            )
-            
-            self._initialize_feature(
-                "插件交互管理器", 
-                "core.plugin_interaction_enhanced", 
-                "PluginInteractionManager",
-                fallback_module="core.plugin_interaction"
-            )
-            
-            self._initialize_feature(
-                "Remind API v2", 
-                "core.remind_api_v2", 
-                "RemindAPIv2", 
-                (self,)
-            )
+            for name, module, class_name, args in features:
+                if name == "插件交互管理器":
+                    self._initialize_feature(name, module, class_name,
+                                           fallback_module="core.plugin_interaction")
+                else:
+                    self._initialize_feature(name, module, class_name, args)
             
             self._initialize_feature(
                 "Excel导出增强",
@@ -720,18 +696,11 @@ class AppManager(QObject):
             # 保存状态
             self.save_state()
 
-            # 清理各个管理器和服务
             managers = [
-                # self.component_manager,
-                self.notification_manager,
-                # self.schedule_manager,
-                self.time_manager,
-                self.config_manager,
-                self.plugin_manager,
-                self.theme_manager,
-                self.floating_manager,
+                self.notification_manager, self.time_manager, self.config_manager,
+                self.plugin_manager, self.theme_manager, self.floating_manager,
                 getattr(self, 'plugin_interaction_manager', None),
-                getattr(self, 'remind_api_v2', None),
+                getattr(self, 'remind_api_v2', None)
             ]
 
             for manager in managers:

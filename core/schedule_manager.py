@@ -2,10 +2,7 @@
 
 try:
     from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
             pass
@@ -476,27 +473,25 @@ class ScheduleManager(QObject):
 
     def _invalidate_cache(self):
         """清除缓存"""
-        if hasattr(self, '_courses_cache'):
-            self._courses_cache = None
-            self._cache_timestamp = None
-        if hasattr(self, '_subjects_dict'):
-            self._subjects_dict.clear()
-        if hasattr(self, '_time_slots_dict'):
-            self._time_slots_dict.clear()
+        for attr in ['_courses_cache', '_cache_timestamp']:
+            if hasattr(self, attr):
+                setattr(self, attr, None)
+
+        for cache_dict in ['_subjects_dict', '_time_slots_dict']:
+            if hasattr(self, cache_dict):
+                getattr(self, cache_dict).clear()
 
     def _update_lookup_dicts(self):
         """更新查找字典"""
         if not self.current_schedule:
             return
 
-        # 构建subjects查找字典
         if not hasattr(self, '_subjects_dict'):
             self._subjects_dict = {}
-        self._subjects_dict = {s.id: s for s in self.current_schedule.subjects}
-
-        # 构建time_slots查找字典
         if not hasattr(self, '_time_slots_dict'):
             self._time_slots_dict = {}
+
+        self._subjects_dict = {s.id: s for s in self.current_schedule.subjects}
         self._time_slots_dict = {ts.id: ts for ts in self.current_schedule.time_slots}
 
     def get_all_courses(self) -> List[Dict[str, Any]]:

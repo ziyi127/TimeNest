@@ -13,21 +13,16 @@ from pathlib import Path
 
 def build_timenest():
     """构建TimeNest可执行文件"""
-
-    # 设置UTF-8编码
-    import sys
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
     if hasattr(sys.stderr, 'reconfigure'):
         sys.stderr.reconfigure(encoding='utf-8')
 
-    # 获取项目根目录
     project_root = Path(__file__).parent
 
     print("Starting TimeNest build...")
     print(f"Project directory: {project_root}")
-    
-    # 检查必要文件
+
     main_py = project_root / "main.py"
     if not main_py.exists():
         print("ERROR: main.py file not found")
@@ -62,40 +57,21 @@ def build_timenest():
             cmd.extend(["--add-data", f"{file_path}{separator}."])
             print(f"Adding data file: {data_file}")
     
-    # 添加隐藏导入
     hidden_imports = [
-        "PySide6.QtCore",
-        "PySide6.QtGui",
-        "PySide6.QtWidgets", 
-        "PySide6.QtQml",
-        "PySide6.QtQuick",
-        "PySide6.QtSql",
-        "sqlite3",
-        "json",
-        "datetime",
-        "pathlib",
-        "logging",
-        "configparser",
-        "openpyxl",
-        "requests",
+        "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets",
+        "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtSql",
+        "sqlite3", "json", "datetime", "pathlib", "logging",
+        "configparser", "openpyxl", "requests"
     ]
-    
+
+    excludes = [
+        "tkinter", "matplotlib", "numpy", "pandas", "scipy",
+        "PIL", "cv2", "tensorflow", "torch"
+    ]
+
     for module in hidden_imports:
         cmd.extend(["--hidden-import", module])
-    
-    # 排除不需要的模块
-    excludes = [
-        "tkinter",
-        "matplotlib", 
-        "numpy",
-        "pandas",
-        "scipy",
-        "PIL",
-        "cv2",
-        "tensorflow",
-        "torch",
-    ]
-    
+
     for module in excludes:
         cmd.extend(["--exclude-module", module])
     

@@ -3,10 +3,7 @@
 
 try:
     from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
 except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
     class QObject:
         def __init__(self, *args, **kwargs):
             pass
@@ -62,15 +59,12 @@ class DataBackupWorker(QThread):
                     try:
                         file_path = Path(file_path)
                         if file_path.exists():
-                            # 计算相对路径:
-                            # 计算相对路径
                             rel_path = file_path.relative_to(self.data_manager.data_dir)
                             zipf.write(file_path, rel_path)
-                            
-                            # 更新进度
+
                             progress = int((i + 1) / total_files * 100)
                             self.backup_progress.emit(progress)
-                            
+
                             self.logger.debug(f"已备份文件: {rel_path}")
                         
                     except Exception as e:

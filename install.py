@@ -149,27 +149,19 @@ class InstallWorker(QThread):
     def _verify_installation(self, python_path):
         """验证安装"""
         try:
-            # 检查主要依赖
-            test_imports = [
-                "PySide6",
-                "requests",
-                "psutil",
-                "schedule"
-            ]
-            
+            test_imports = ["PySide6", "requests", "psutil", "schedule"]
+
             for module in test_imports:
                 try:
                     result = subprocess.run(
                         [str(python_path), "-c", f"import {module}; print(f'{module} 导入成功')"],
                         capture_output=True, text=True, timeout=10
                     )
-                    if result.returncode == 0:
-                        self.log_updated.emit(f"✓ {module} 验证通过")
-                    else:
-                        self.log_updated.emit(f"⚠ {module} 验证失败")
+                    status = "✓ 验证通过" if result.returncode == 0 else "⚠ 验证失败"
+                    self.log_updated.emit(f"{status} {module}")
                 except subprocess.TimeoutExpired:
                     self.log_updated.emit(f"⚠ {module} 验证超时")
-                    
+
         except Exception as e:
             self.log_updated.emit(f"验证过程出错: {e}")
 

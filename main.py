@@ -7,14 +7,12 @@ TimeNest 主应用入口 (RinUI版本)
 """
 
 import sys
-import os
 import logging
 from pathlib import Path
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt, QTranslator, QLocale
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+from PySide6.QtCore import Qt, QTranslator, QLocale, QTimer
 from PySide6.QtGui import QIcon
 
-# 添加当前目录到 Python 路径
 current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
 
@@ -26,7 +24,6 @@ try:
     from core.system_tray import SystemTrayManager, TrayNotificationManager
     from core.simple_floating_window import SimpleFloatingWindowManager
     from PySide6.QtQml import qmlRegisterType
-    from PySide6.QtWidgets import QSystemTrayIcon
 except ImportError as e:
     print(f"Import error: {e}")
     print("Please ensure RinUI and all dependencies are properly installed")
@@ -35,17 +32,12 @@ except ImportError as e:
 
 
 def setup_logging():
-    """
-    设置日志系统
-    """
-    # 创建日志目录
+    """设置日志系统"""
     log_dir = Path.home() / '.timenest' / 'logs'
     log_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 配置日志格式
+
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    
-    # 配置日志处理器
+
     logging.basicConfig(
         level=logging.INFO,
         format=log_format,
@@ -54,7 +46,10 @@ def setup_logging():
             logging.StreamHandler(sys.stdout)
         ]
     )
-    
+
+    for lib in ['PySide6', 'RinUI']:
+        logging.getLogger(lib).setLevel(logging.WARNING if lib == 'PySide6' else logging.INFO)
+
     logger = logging.getLogger(__name__)
     logger.info("TimeNest RinUI版本启动")
     return logger

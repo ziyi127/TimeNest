@@ -37,14 +37,19 @@ class TimeNestBridge(QObject):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
 
-        # 外部管理器引用（由主程序设置）
         self.floating_manager = None
         self.tray_manager = None
 
-        # 初始化管理器
+        self._init_managers()
+        self._init_timers()
+        self._init_error_handling()
+
+        self.logger.info("RinUI桥接类初始化完成")
+
+    def _init_managers(self):
+        """初始化管理器"""
         try:
             self.data_manager = DataManager()
-            # 创建一个简单的配置管理器
             from core.config_manager import ConfigManager
             config_manager = ConfigManager()
             self.schedule_manager = ScheduleManager(config_manager)
@@ -52,45 +57,41 @@ class TimeNestBridge(QObject):
             self.theme_manager = ThemeManager()
             self.notification_manager = NotificationManager(config_manager)
             self.excel_manager = ExcelScheduleManager()
-
-            # 注意：系统托盘现在由主程序管理
             self.system_tray = None
-
         except Exception as e:
             self.logger.error(f"初始化管理器失败: {e}")
-            # 创建空的管理器实例
-            self.data_manager = None
-            self.schedule_manager = None
-            self.task_manager = None
-            self.theme_manager = None
-            self.notification_manager = None
-            self.system_tray = None
-        
-        # 定时器用于更新时间
+            self._set_null_managers()
+
+    def _set_null_managers(self):
+        """设置空管理器"""
+        for attr in ['data_manager', 'schedule_manager', 'task_manager',
+                     'theme_manager', 'notification_manager', 'system_tray']:
+            setattr(self, attr, None)
+
+    def _init_timers(self):
+        """初始化定时器"""
         self.timer = QTimer()
         self.timer.timeout.connect(self.updateCurrentTime)
-        self.timer.start(1000)  # 每秒更新
+        self.timer.start(1000)
 
-        # 内存监控定时器（降低频率，提高稳定性）
         self.memory_monitor_timer = QTimer()
         self.memory_monitor_timer.timeout.connect(self._monitor_memory)
-        self.memory_monitor_timer.start(300000)  # 每5分钟检查一次内存
+        self.memory_monitor_timer.start(300000)
 
-        # 错误恢复机制
+    def _init_error_handling(self):
+        """初始化错误处理"""
         self._error_count = 0
         self._max_errors = 10
         self._last_error_time = None
 
-        self.logger.info("RinUI桥接类初始化完成")
 
     def _handle_error(self, error_msg: str, exception: Exception = None):
         """统一错误处理"""
         try:
-            from datetime import datetime, timedelta
+            from datetime import datetime
 
             current_time = datetime.now()
 
-            # 错误频率控制
             if self._last_error_time and (current_time - self._last_error_time).total_seconds() < 60:
                 self._error_count += 1
             else:
@@ -98,38 +99,33 @@ class TimeNestBridge(QObject):
 
             self._last_error_time = current_time
 
-            # 如果错误过于频繁，进入安全模式
             if self._error_count > self._max_errors:
                 self.logger.critical(f"错误过于频繁，进入安全模式: {error_msg}")
                 self._enter_safe_mode()
                 return
 
-            # 记录错误但不显示给用户
+            log_msg = f"处理错误: {error_msg}"
             if exception:
-                self.logger.debug(f"处理错误: {error_msg} - {exception}")
-            else:
-                self.logger.debug(f"处理错误: {error_msg}")
+                log_msg += f" - {exception}"
+            self.logger.debug(log_msg)
 
         except Exception as e:
-            # 错误处理本身出错，记录但不抛出
             self.logger.debug(f"错误处理失败: {e}")
 
     def _enter_safe_mode(self):
         """进入安全模式"""
         try:
-            # 停止所有定时器
-            if hasattr(self, 'timer') and self.timer:
-                self.timer.stop()
-            if hasattr(self, 'memory_monitor_timer') and self.memory_monitor_timer:
-                self.memory_monitor_timer.stop()
+            timers = [('timer', 5000), ('memory_monitor_timer', None)]
 
-            # 重置错误计数
+            for timer_name, restart_interval in timers:
+                if hasattr(self, timer_name):
+                    timer = getattr(self, timer_name)
+                    if timer:
+                        timer.stop()
+                        if restart_interval and timer_name == 'timer':
+                            timer.start(restart_interval)
+
             self._error_count = 0
-
-            # 重启关键定时器
-            if hasattr(self, 'timer') and self.timer:
-                self.timer.start(5000)  # 降低频率到5秒
-
             self.logger.info("已进入安全模式，降低系统负载")
 
         except Exception as e:
@@ -612,59 +608,43 @@ class TimeNestBridge(QObject):
         if not courses:
             return []
 
-        # 预分配列表大小以提高性能
-        qml_courses = []
-        qml_courses.reserve = len(courses) if hasattr(list, 'reserve') else None
-
-        for course in courses:
-            # 使用更高效的字符串转换
-            course_id = course.get('id', 0)
-            course_id_str = str(course_id)
-
-            start_week = course.get('start_week', 1)
-            end_week = course.get('end_week', 16)
-
-            qml_course = {
-                'id': course_id_str,
-                'course_id': course_id_str,
+        return [
+            {
+                'id': str(course.get('id', 0)),
+                'course_id': str(course.get('id', 0)),
                 'name': course.get('name') or '',
                 'teacher': course.get('teacher') or '',
                 'location': course.get('location') or '',
                 'time': course.get('time') or '',
-                'start_week': start_week,
-                'end_week': end_week,
-                'weeks': f"{start_week}-{end_week}周",
+                'start_week': course.get('start_week', 1),
+                'end_week': course.get('end_week', 16),
+                'weeks': f"{course.get('start_week', 1)}-{course.get('end_week', 16)}周",
                 'day_of_week': course.get('day_of_week', 1),
                 'start_time': course.get('start_time') or '08:00',
                 'end_time': course.get('end_time') or '09:40'
             }
-            qml_courses.append(qml_course)
-        return qml_courses
+            for course in courses
+        ]
     
     def _convert_tasks_to_qml(self, tasks):
         """将任务数据转换为QML可用格式（优化版本）"""
         if not tasks:
             return []
 
-        qml_tasks = []
-        for task in tasks:
-            task_id = task.get('id', 0)
-            task_id_str = str(task_id)
-            status = task.get('status', '进行中')
-
-            qml_task = {
-                'id': task_id_str,
-                'task_id': task_id_str,
+        return [
+            {
+                'id': str(task.get('id', 0)),
+                'task_id': str(task.get('id', 0)),
                 'title': task.get('title') or '',
                 'description': task.get('description') or '',
                 'priority': task.get('priority') or '中',
-                'status': status,
+                'status': task.get('status', '进行中'),
                 'due_date': task.get('due_date') or '',
                 'created_date': task.get('created_date') or '',
-                'completed': status == '已完成'
+                'completed': task.get('status', '进行中') == '已完成'
             }
-            qml_tasks.append(qml_task)
-        return qml_tasks
+            for task in tasks
+        ]
 
     # 插件管理相关方法
     @Slot(result='QVariant')
@@ -1719,41 +1699,37 @@ class TimeNestBridge(QObject):
         try:
             import psutil
             import gc
+            from datetime import datetime
 
-            # 获取当前进程内存使用
             process = psutil.Process()
-            memory_info = process.memory_info()
-            memory_mb = memory_info.rss / 1024 / 1024
+            memory_mb = process.memory_info().rss / (1024 * 1024)
 
-            # 提高阈值到1GB，静默触发垃圾回收
             if memory_mb > 1024:
                 self.logger.debug(f"内存使用: {memory_mb:.1f}MB，执行清理")
                 gc.collect()
 
-                # 清理缓存
                 if hasattr(self.schedule_manager, '_invalidate_cache'):
                     self.schedule_manager._invalidate_cache()
 
-            # 减少日志频率（每30分钟记录一次）
-            if not hasattr(self, '_last_memory_log') or \
-               (datetime.now() - self._last_memory_log).total_seconds() > 1800:
+            if (not hasattr(self, '_last_memory_log') or
+                (datetime.now() - self._last_memory_log).total_seconds() > 1800):
                 self.logger.debug(f"内存使用: {memory_mb:.1f}MB")
                 self._last_memory_log = datetime.now()
 
         except ImportError:
-            # psutil不可用时停止监控
             self.memory_monitor_timer.stop()
             self.logger.debug("psutil不可用，停止内存监控")
         except Exception as e:
-            self.logger.debug(f"内存监控: {e}")  # 降级为debug日志
+            self.logger.debug(f"内存监控: {e}")
 
     def cleanup(self):
         """清理资源"""
         try:
-            if hasattr(self, 'timer') and self.timer:
-                self.timer.stop()
-            if hasattr(self, 'memory_monitor_timer') and self.memory_monitor_timer:
-                self.memory_monitor_timer.stop()
+            for timer_name in ['timer', 'memory_monitor_timer']:
+                if hasattr(self, timer_name):
+                    timer = getattr(self, timer_name)
+                    if timer:
+                        timer.stop()
             self.logger.info("RinUI桥接资源已清理")
         except Exception as e:
             self.logger.error(f"清理资源失败: {e}")

@@ -49,52 +49,25 @@ class TaskManager:
     def _get_default_tasks(self) -> List[Dict[str, Any]]:
         """获取默认任务数据"""
         today = date.today().isoformat()
+        tasks_data = [
+            ('完成数学作业', '第三章习题1-20题', '高', '进行中', '2025-01-16'),
+            ('准备英语演讲', '主题：我的大学生活', '中', '进行中', '2025-01-18'),
+            ('实验报告', '数据结构实验三', '高', '进行中', '2025-01-20'),
+            ('复习计算机网络', '第1-5章内容', '中', '已完成', '2025-01-15'),
+            ('购买教材', '下学期课程教材', '低', '已完成', '2025-01-10')
+        ]
+
         return [
             {
-                'id': 1,
-                'title': '完成数学作业',
-                'description': '第三章习题1-20题',
-                'priority': '高',
-                'status': '进行中',
-                'due_date': '2025-01-16',
-                'created_date': today
-            },
-            {
-                'id': 2,
-                'title': '准备英语演讲',
-                'description': '主题：我的大学生活',
-                'priority': '中',
-                'status': '进行中',
-                'due_date': '2025-01-18',
-                'created_date': today
-            },
-            {
-                'id': 3,
-                'title': '实验报告',
-                'description': '数据结构实验三',
-                'priority': '高',
-                'status': '进行中',
-                'due_date': '2025-01-20',
-                'created_date': today
-            },
-            {
-                'id': 4,
-                'title': '复习计算机网络',
-                'description': '第1-5章内容',
-                'priority': '中',
-                'status': '已完成',
-                'due_date': '2025-01-15',
-                'created_date': today
-            },
-            {
-                'id': 5,
-                'title': '购买教材',
-                'description': '下学期课程教材',
-                'priority': '低',
-                'status': '已完成',
-                'due_date': '2025-01-10',
+                'id': i + 1,
+                'title': title,
+                'description': desc,
+                'priority': priority,
+                'status': status,
+                'due_date': due_date,
                 'created_date': today
             }
+            for i, (title, desc, priority, status, due_date) in enumerate(tasks_data)
         ]
     
     def get_all_tasks(self) -> List[Dict[str, Any]]:
@@ -168,9 +141,9 @@ class TaskManager:
                 self.save_tasks()
                 self.logger.info(f"删除任务: ID {task_id}")
                 return True
-            else:
-                self.logger.warning(f"未找到要删除的任务: ID {task_id}")
-                return False
+
+            self.logger.warning(f"未找到要删除的任务: ID {task_id}")
+            return False
         except Exception as e:
             self.logger.error(f"删除任务失败: {e}")
             return False

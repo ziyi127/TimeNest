@@ -40,7 +40,7 @@ def check_dependencies():
         'psutil': 'psutil',
         'PyYAML': 'yaml'
     }
-    
+
     missing = []
     for name, module in dependencies.items():
         try:
@@ -49,14 +49,14 @@ def check_dependencies():
         except ImportError:
             print(f"❌ {name} 未安装")
             missing.append(name)
-    
+
     return missing
 
 def install_dependencies(missing):
     """安装缺失的依赖"""
     if not missing:
         return True
-    
+
     print(f"\n正在安装缺失的依赖: {', '.join(missing)}")
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install"] + missing)
