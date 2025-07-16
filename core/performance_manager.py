@@ -321,22 +321,18 @@ class PerformanceMonitor(QThread):
             return PerformanceMetrics(timestamp=datetime.now())
     
     def _check_performance_warnings(self, metrics: PerformanceMetrics) -> None:
-        """检查性能警告"""
-        if metrics.cpu_percent > self.cpu_threshold:
-            self.performance_warning.emit("high_cpu", metrics.cpu_percent)
-            self.performance_warning.emit("high_cpu", metrics.cpu_percent)
-        
-        
-        if metrics.memory_percent > self.memory_threshold:
-            self.performance_warning.emit("high_memory", metrics.memory_percent)
-        
-            self.performance_warning.emit("high_memory", metrics.memory_percent)
-        
-        
-        if metrics.response_time > self.response_time_threshold:
-            self.performance_warning.emit("slow_response", metrics.response_time)
-        
-            self.performance_warning.emit("slow_response", metrics.response_time)
+        """检查性能指标（静默模式，不发出警告）"""
+        # 静默监控，只记录调试日志
+        if metrics.cpu_percent > 95:  # 提高阈值到95%
+            self.logger.debug(f"CPU使用率: {metrics.cpu_percent:.1f}%")
+
+        if metrics.memory_percent > 95:  # 提高阈值到95%
+            self.logger.debug(f"内存使用率: {metrics.memory_percent:.1f}%")
+
+        if metrics.response_time > 5000:  # 提高阈值到5秒
+            self.logger.debug(f"响应时间: {metrics.response_time:.1f}ms")
+
+        # 不再发出performance_warning信号，避免用户看到警告
     
     def get_average_metrics(self, minutes: int = 5) -> Optional[PerformanceMetrics]:
         """

@@ -288,36 +288,47 @@ ScrollView {
 
     function exportSettings() {
         if (typeof timeNestBridge !== 'undefined') {
-            // TODO: 实现设置导出功能
-            timeNestBridge.showNotification("导出设置", "设置导出功能待实现")
+            try {
+                var result = timeNestBridge.exportSettings()
+                if (result) {
+                    console.log("设置导出成功:", result)
+                }
+            } catch (e) {
+                console.error("导出设置失败:", e)
+                timeNestBridge.showNotification("导出失败", "设置导出失败")
+            }
         }
     }
 
     function importSettings() {
         if (typeof timeNestBridge !== 'undefined') {
-            // TODO: 实现设置导入功能
-            timeNestBridge.showNotification("导入设置", "设置导入功能待实现")
+            try {
+                var success = timeNestBridge.importSettings()
+                if (success) {
+                    console.log("设置导入成功")
+                    loadSettings()  // 重新加载设置
+                }
+            } catch (e) {
+                console.error("导入设置失败:", e)
+                timeNestBridge.showNotification("导入失败", "设置导入失败")
+            }
         }
     }
 
     function resetSettings() {
         if (typeof timeNestBridge !== 'undefined') {
-            // 重置所有设置为默认值
-            autoStartEnabled = false
-            notificationsEnabled = true
-            floatingWindowEnabled = true
-            autoHideEnabled = false
-            currentTheme = "auto"
-
-            // 保存重置后的设置
-            saveSetting("auto_start_enabled", autoStartEnabled)
-            saveSetting("notifications_enabled", notificationsEnabled)
-            saveSetting("floating_window_enabled", floatingWindowEnabled)
-            saveSetting("floating_window_auto_hide", autoHideEnabled)
-            saveSetting("theme_mode", currentTheme)
-
-            // 更新UI
-            updateThemeComboBox()
+            try {
+                var success = timeNestBridge.resetSettings()
+                if (success) {
+                    console.log("设置重置成功")
+                    loadSettings()  // 重新加载设置
+                }
+            } catch (e) {
+                console.error("重置设置失败:", e)
+                timeNestBridge.showNotification("重置失败", "设置重置失败")
+            }
+        }
+    }
 
             timeNestBridge.showNotification("重置设置", "所有设置已重置为默认值")
         }

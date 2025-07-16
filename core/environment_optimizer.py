@@ -115,15 +115,16 @@ class EnvironmentOptimizer(BaseManager):
         self.monitoring_timer = QTimer()
         self.monitoring_timer.timeout.connect(self._collect_metrics)
         
-        # 配置参数
+        # 配置参数（提高阈值，减少警告）
         self.optimizer_settings = {
-            'monitoring_interval': 30,  # 秒
-            'metrics_history_limit': 1000,
-            'cpu_warning_threshold': 80.0,
-            'memory_warning_threshold': 85.0,
-            'disk_warning_threshold': 90.0,
+            'monitoring_interval': 60,  # 增加到60秒
+            'metrics_history_limit': 500,  # 减少历史记录
+            'cpu_warning_threshold': 95.0,  # 提高到95%
+            'memory_warning_threshold': 95.0,  # 提高到95%
+            'disk_warning_threshold': 95.0,  # 提高到95%
             'auto_optimization': True,
-            'focus_mode_strict': False
+            'focus_mode_strict': False,
+            'silent_mode': True  # 启用静默模式
         }
         
         # 阈值设置
@@ -316,23 +317,28 @@ class EnvironmentOptimizer(BaseManager):
             self.logger.error(f"评估环境状态失败: {e}")
     
     def _check_warning_thresholds(self, metrics: EnvironmentMetrics):
-        """检查警告阈值"""
+        """检查警告阈值（静默模式）"""
         try:
-            cpu_threshold = self.optimizer_settings.get('cpu_warning_threshold', 80.0)
-            memory_threshold = self.optimizer_settings.get('memory_warning_threshold', 85.0)
-            disk_threshold = self.optimizer_settings.get('disk_warning_threshold', 90.0)
-            
+            # 检查是否启用静默模式
+            if self.optimizer_settings.get('silent_mode', True):
+                return  # 静默模式下不发出警告
+
+            cpu_threshold = self.optimizer_settings.get('cpu_warning_threshold', 95.0)
+            memory_threshold = self.optimizer_settings.get('memory_warning_threshold', 95.0)
+            disk_threshold = self.optimizer_settings.get('disk_warning_threshold', 95.0)
+
+            # 只在极端情况下记录日志，不发出信号
             if metrics.cpu_usage > cpu_threshold:
-                self.performance_warning.emit("CPU使用率", metrics.cpu_usage)
-            
+                self.logger.debug(f"CPU使用率: {metrics.cpu_usage:.1f}%")
+
             if metrics.memory_usage > memory_threshold:
-                self.performance_warning.emit("内存使用率", metrics.memory_usage)
-            
+                self.logger.debug(f"内存使用率: {metrics.memory_usage:.1f}%")
+
             if metrics.disk_usage > disk_threshold:
-                self.performance_warning.emit("磁盘使用率", metrics.disk_usage)
-                
+                self.logger.debug(f"磁盘使用率: {metrics.disk_usage:.1f}%")
+
         except Exception as e:
-            self.logger.error(f"检查警告阈值失败: {e}")
+            self.logger.debug(f"性能检查: {e}")
     
     def _generate_optimization_suggestions(self):
         """生成优化建议"""

@@ -158,6 +158,123 @@ class TaskManager:
             self.logger.error(f"添加任务失败: {e}")
             return False
 
+    def delete_task(self, task_id: int) -> bool:
+        """删除任务"""
+        try:
+            original_count = len(self.tasks)
+            self.tasks = [task for task in self.tasks if task.get('id') != task_id]
+
+            if len(self.tasks) < original_count:
+                self.save_tasks()
+                self.logger.info(f"删除任务: ID {task_id}")
+                return True
+            else:
+                self.logger.warning(f"未找到要删除的任务: ID {task_id}")
+                return False
+        except Exception as e:
+            self.logger.error(f"删除任务失败: {e}")
+            return False
+
+    def update_task_status(self, task_id: int, status: str) -> bool:
+        """更新任务状态"""
+        try:
+            for task in self.tasks:
+                if task.get('id') == task_id:
+                    task['status'] = status
+                    self.save_tasks()
+                    self.logger.info(f"更新任务状态: ID {task_id} -> {status}")
+                    return True
+
+            self.logger.warning(f"未找到要更新的任务: ID {task_id}")
+            return False
+        except Exception as e:
+            self.logger.error(f"更新任务状态失败: {e}")
+            return False
+
+    def toggle_task_complete(self, task_id: int) -> bool:
+        """切换任务完成状态"""
+        try:
+            for task in self.tasks:
+                if task.get('id') == task_id:
+                    current_status = task.get('status', '进行中')
+                    new_status = '已完成' if current_status != '已完成' else '进行中'
+                    task['status'] = new_status
+                    self.save_tasks()
+                    self.logger.info(f"切换任务状态: ID {task_id} -> {new_status}")
+                    return True
+
+            self.logger.warning(f"未找到要切换的任务: ID {task_id}")
+            return False
+        except Exception as e:
+            self.logger.error(f"切换任务状态失败: {e}")
+            return False
+
+    def update_task(self, task_id: int, task_data: Dict[str, Any]) -> bool:
+        """更新任务信息"""
+        try:
+            for task in self.tasks:
+                if task.get('id') == task_id:
+                    # 更新允许的字段
+                    updatable_fields = ['title', 'description', 'priority', 'status', 'due_date']
+                    for field in updatable_fields:
+                        if field in task_data:
+                            task[field] = task_data[field]
+
+                    self.save_tasks()
+                    self.logger.info(f"更新任务: ID {task_id}")
+                    return True
+
+            self.logger.warning(f"未找到要更新的任务: ID {task_id}")
+            return False
+        except Exception as e:
+            self.logger.error(f"更新任务失败: {e}")
+            return False
+
+    def get_task_by_id(self, task_id: int) -> Optional[Dict[str, Any]]:
+        """根据ID获取任务"""
+        try:
+            for task in self.tasks:
+                if task.get('id') == task_id:
+                    return task.copy()
+            return None
+        except Exception as e:
+            self.logger.error(f"获取任务失败: {e}")
+            return None
+
+    def get_tasks_by_status(self, status: str) -> List[Dict[str, Any]]:
+        """根据状态获取任务"""
+        try:
+            return [task.copy() for task in self.tasks if task.get('status') == status]
+        except Exception as e:
+            self.logger.error(f"获取任务失败: {e}")
+            return []
+
+    def get_tasks_by_priority(self, priority: str) -> List[Dict[str, Any]]:
+        """根据优先级获取任务"""
+        try:
+            return [task.copy() for task in self.tasks if task.get('priority') == priority]
+        except Exception as e:
+            self.logger.error(f"获取任务失败: {e}")
+            return []
+
+    def clear_completed_tasks(self) -> bool:
+        """清除已完成的任务"""
+        try:
+            original_count = len(self.tasks)
+            self.tasks = [task for task in self.tasks if task.get('status') != '已完成']
+
+            if len(self.tasks) < original_count:
+                self.save_tasks()
+                cleared_count = original_count - len(self.tasks)
+                self.logger.info(f"清除了 {cleared_count} 个已完成任务")
+                return True
+            else:
+                self.logger.info("没有已完成的任务需要清除")
+                return False
+        except Exception as e:
+            self.logger.error(f"清除已完成任务失败: {e}")
+            return False
+
     def update_task(self, task_id: int, task_data: Dict[str, Any]) -> bool:
         """更新任务"""
         try:

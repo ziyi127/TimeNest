@@ -620,39 +620,26 @@ class AppManager(QObject):
 
     def _on_performance_warning(self, warning_type: str, value: float) -> None:
         """
-        处理性能警告
+        处理性能警告（静默处理，不显示用户通知）
 
         Args:
             warning_type: 警告类型 ('high_cpu', 'high_memory', 'slow_response')
             value: 警告数值
         """
         try:
-            self.logger.warning(f"性能警告: {warning_type} = {value}")
+            # 只记录调试日志，不显示警告
+            self.logger.debug(f"性能指标: {warning_type} = {value}")
 
-            # 根据警告类型采取相应措施
-            if warning_type == "high_memory" and value > 90:
-                # 内存使用率过高，尝试优化
+            # 静默优化，不通知用户
+            if warning_type == "high_memory" and value > 95:  # 提高阈值到95%
+                # 内存使用率极高时，静默优化
                 if hasattr(self, 'performance_manager') and self.performance_manager:
                     self.performance_manager.optimize_memory()
 
-                # 通知用户
-                if hasattr(self, 'notification_manager') and self.notification_manager:
-                    self.notification_manager.show_notification(
-                        "性能警告",
-                        f"内存使用率过高: {value:.1f}%，正在尝试优化...",
-                        "warning"
-                    )
-
-            elif warning_type == "high_cpu" and value > 95:
-                # CPU使用率过高
-                self.logger.warning(f"CPU使用率过高: {value:.1f}%")
-
-            elif warning_type == "slow_response" and value > 2000:
-                # 响应时间过慢
-                self.logger.warning(f"响应时间过慢: {value:.1f}ms")
+            # 不再显示任何用户通知或警告弹窗
 
         except Exception as e:
-            self.logger.error(f"处理性能警告失败: {e}", exc_info=True)
+            self.logger.debug(f"性能优化处理: {e}")  # 降级为debug日志
 
     def get_manager(self, manager_type: str) -> Optional[QObject]:
         """
