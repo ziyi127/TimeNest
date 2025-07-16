@@ -28,18 +28,62 @@ if not PYSIDE6_AVAILABLE:
     print("PySide6 not available. Please install it using: pip install PySide6")
     sys.exit(1)
 
+# 安全初始化RinUI
 try:
+    # 首先应用RinUI补丁
+    from utils.rinui_patch import apply_rinui_patches
+    apply_rinui_patches()
+
+    # 然后尝试导入RinUI
     import RinUI
     from RinUI import RinUIWindow
+    logging.info("RinUI导入成功")
+
+    # 如果导入失败，使用备用方案
+except Exception as rinui_error:
+    logging.warning(f"RinUI导入失败: {rinui_error}")
+    try:
+        from utils.rinui_init import get_rinui_fallback
+        RinUI, RinUIWindow = get_rinui_fallback()
+        logging.info("使用RinUI备用实现")
+    except Exception as fallback_error:
+        logging.error(f"备用实现也失败: {fallback_error}")
+        # 最后的备用方案：使用PySide6
+        from PySide6.QtWidgets import QApplication, QMainWindow
+        class FallbackWindow(QMainWindow):
+            def __init__(self):
+                super().__init__()
+                self.setWindowTitle("TimeNest")
+                self.resize(800, 600)
+        RinUIWindow = FallbackWindow
+        RinUI = None
+
+# 导入其他模块
+try:
+
+    # 导入其他模块
     from utils.version_manager import version_manager
     from core.rinui_bridge import TimeNestBridge, register_qml_types
     from core.system_tray import SystemTrayManager, TrayNotificationManager
     from core.simple_floating_window import SimpleFloatingWindowManager
+
 except ImportError as e:
     logging.error(f"Critical import error: {e}")
     print(f"Import error: {e}")
     print("Please ensure RinUI and all dependencies are properly installed")
     print("Run: pip install RinUI")
+    # 尝试显示错误对话框
+    try:
+        from PySide6.QtWidgets import QApplication, QMessageBox
+        app = QApplication(sys.argv)
+        QMessageBox.critical(None, "TimeNest 启动错误", f"导入模块失败:\n{e}\n\n请检查依赖是否正确安装。")
+        app.quit()
+    except:
+        pass
+    sys.exit(1)
+except Exception as e:
+    logging.error(f"Unexpected error during initialization: {e}")
+    print(f"Initialization error: {e}")
     sys.exit(1)
 
 
