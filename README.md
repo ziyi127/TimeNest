@@ -1,4 +1,4 @@
-# TimeNest 2.0.0 Preview
+# TimeNest 2.1.0 Preview
 
 <div align="center">
 
@@ -21,7 +21,7 @@
 
 ## 📖 项目简介
 
-TimeNest 2.0.0 Preview 是一个基于 Python、RinUI 和 PySide6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。本版本完全采用 RinUI 框架重构，提供了全新的现代化用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
+TimeNest 2.1.0 Preview 是一个基于 Python、RinUI 和 PySide6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。本版本完全采用 RinUI 框架重构，提供了全新的现代化用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
 
 ### 🎯 设计理念
 
@@ -34,7 +34,7 @@ TimeNest 2.0.0 Preview 是一个基于 Python、RinUI 和 PySide6 开发的现�
 
 ## 🔄 架构升级
 
-TimeNest 2.0.0 Preview 完全基于 RinUI 现代化架构构建：
+TimeNest 2.1.0 Preview 完全基于 RinUI 现代化架构构建：
 
 - **当前架构**: RinUI + QML 声明式UI
 - **旧版架构**: PySide6 Widgets (已完全移除)
@@ -551,7 +551,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## 📞 联系我们
+## � 发布管理
+
+### 创建新版本发布
+
+TimeNest 使用基于 Git 标签的自动化发布流程。当推送标签到仓库时，GitHub Actions 会自动构建并创建发布。
+
+#### 方法一：使用 Python 脚本（推荐）
+
+```bash
+# 运行发布创建脚本
+python scripts/create_release.py
+```
+
+#### 方法二：使用 Windows 批处理脚本
+
+```cmd
+# 在 Windows 中运行
+scripts\create_release.bat
+```
+
+#### 方法三：手动创建标签
+
+```bash
+# 创建标签
+git tag -a v2.1.0 -m "Release 2.1.0"
+
+# 推送标签到远程仓库
+git push origin v2.1.0
+```
+
+### 发布流程说明
+
+1. **标签格式**: 使用 `v` 前缀，如 `v2.1.0`、`v2.1.0-Preview`
+2. **自动构建**: 推送标签后，GitHub Actions 自动构建 Windows 可执行文件
+3. **自动发布**: 构建完成后自动创建 GitHub Release
+4. **预发布标记**: 包含 `Preview`、`Beta`、`RC` 的版本会标记为预发布
+
+### 版本号规范
+
+- **主版本号**: 重大功能更新或架构变更
+- **次版本号**: 新功能添加或重要改进
+- **修订版本号**: Bug 修复和小幅改进
+- **预发布标识**: Preview、Beta、RC 等
+
+示例：
+- `2.1.0` - 正式版本
+- `2.1.0-Preview` - 预览版本
+- `2.1.1` - 修复版本
+
+## �📞 联系我们
 
 <div align="center">
 

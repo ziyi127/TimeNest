@@ -2,24 +2,26 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main, develop ]  # 任何推送到main或develop分支都触发
+    tags:
+      - 'v*'  # 推送标签时触发发布
+    branches: [ main, develop ]  # 推送到分支时只构建，不发布
   pull_request:
-    branches: [ main ]  # PR合并也触发
+    branches: [ main ]
   workflow_dispatch:  # 手动触发
 
 jobs:
   build:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -72,44 +74,65 @@ jobs:
         
     - name: Create ZIP archive
       run: |
-        Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.ref_name }}-windows.zip
-        
+        if ("${{ github.ref_type }}" -eq "tag") {
+          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.ref_name }}-windows.zip
+        } else {
+          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.sha }}-windows.zip
+        }
+
     - name: Get release info
       id: release_info
+      if: github.ref_type == 'tag'
       run: |
         $tag = "${{ github.ref_name }}"
         $version = $tag -replace '^v', ''
         echo "version=$version" >> $env:GITHUB_OUTPUT
         echo "tag=$tag" >> $env:GITHUB_OUTPUT
-        
+
     - name: Create Release
+      if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ github.ref_name }}
         name: TimeNest ${{ steps.release_info.outputs.version }}
         body: |
           ## TimeNest ${{ steps.release_info.outputs.version }}
-          
+
           ### 📦 下载
           - **Windows 便携版**: TimeNest-${{ steps.release_info.outputs.tag }}-windows.zip
-          
+
           ### 🚀 新功能
-          - 请在此处添加新功能描述
-          
+          - 完成 RinUI 框架迁移
+          - 更新到 2.1.0 Preview 版本
+          - 改进用户界面和用户体验
+          - 增强响应式设计
+
           ### 🐛 修复
-          - 请在此处添加bug修复描述
-          
+          - 修复性能管理器重复代码问题
+          - 优化内存使用和性能监控
+          - 改进错误处理和日志记录
+
           ### 📋 安装说明
           1. 下载 ZIP 文件
           2. 解压到任意目录
           3. 运行 TimeNest.exe
-          
+
           ### 💡 系统要求
           - Windows 10/11
-          - .NET Framework 4.7.2 或更高版本
-          
+          - Python 3.8+ (如果从源码运行)
+          - RinUI 框架支持
+
           ### ⚠️ 注意事项
-          这是一个预览版本，可能包含未完成的功能或已知问题。建议在非生产环境中使用。
+          这是一个预览版本，包含最新的 RinUI 界面改进。建议在测试环境中先行体验。
         draft: false
         prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
         files: |
           TimeNest-${{ github.ref_name }}-windows.zip
+
+    - name: Upload Build Artifacts (for non-tag builds)
+      if: github.ref_type != 'tag'
+      uses: actions/upload-artifact@v4
+      with:
+        name: TimeNest-${{ github.sha }}-windows
+        path: TimeNest-${{ github.sha }}-windows.zip
+        retention-days: 30
