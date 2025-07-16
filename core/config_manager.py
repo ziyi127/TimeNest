@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 
-try:
-    from PySide6.QtCore import QObject
-    PYSIDE6_AVAILABLE = True
-except ImportError:
-    PYSIDE6_AVAILABLE = False
-    # 提供备用实现
-    class QObject:
-        def __init__(self, *args, **kwargs):
-            pass
+from utils.common_imports import QObject, Signal
+from utils.data_processing import safe_json_load, safe_json_save, merge_configs
+from utils.shared_utilities import validate_path
+from utils.config_constants import get_default_config
 
 """
 TimeNest 配置管理器
