@@ -34,15 +34,30 @@ jobs:
           # 这里先跳过，使用PNG文件
         }
         
+    - name: Set UTF-8 encoding
+      run: |
+        $OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $env:PYTHONIOENCODING = "utf-8"
+      shell: pwsh
+
     - name: Build executable with spec
       run: |
+        $OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $env:PYTHONIOENCODING = "utf-8"
+
         if (Test-Path "TimeNest.spec") {
-          echo "使用spec文件构建..."
+          echo "Building with spec file..."
           pyinstaller TimeNest.spec --clean --noconfirm
-        } else {
-          echo "spec文件不存在，使用简单构建脚本..."
+        } elseif (Test-Path "build_simple.py") {
+          echo "Using simple build script..."
           python build_simple.py
+        } else {
+          echo "Using fallback build script..."
+          python build_fallback.py
         }
+      shell: pwsh
         
     - name: Create portable package
       run: |
