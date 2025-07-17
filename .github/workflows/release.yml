@@ -205,17 +205,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x86_64, arm64]
+        arch: [x86_64]  # 移除arm64，因为GitHub Actions不支持真正的ARM64交叉编译
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up QEMU for ARM64 emulation
-      if: matrix.arch == 'arm64'
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: arm64
+
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -252,8 +248,7 @@ jobs:
         # 确保关键依赖已安装
         pip install PySide6 PyYAML requests pandas numpy openpyxl
 
-    - name: Build Linux executable (x86_64)
-      if: matrix.arch == 'x86_64'
+    - name: Build Linux executable
       run: |
         # 设置环境变量
         export QT_QPA_PLATFORM=offscreen
@@ -284,23 +279,7 @@ jobs:
           --windowed \
           main.py
 
-    - name: Build Linux executable (ARM64)
-      if: matrix.arch == 'arm64'
-      run: |
-        # ARM64构建 - 创建简化版本
-        echo "Building ARM64 version..."
-        mkdir -p dist
 
-        # 创建ARM64可执行文件占位符
-        cat > dist/TimeNest << 'EOF'
-        #!/bin/bash
-        echo "TimeNest ARM64 version"
-        echo "This is a placeholder for ARM64 build"
-        python3 main.py "$@"
-        EOF
-        chmod +x dist/TimeNest
-
-        echo "ARM64 build completed (placeholder)"
 
     - name: Get version info and architecture
       id: version_info
@@ -408,9 +387,9 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
 
     - name: Upload Linux artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -418,9 +397,9 @@ jobs:
       with:
         name: TimeNest-${{ github.sha }}-linux-${{ matrix.arch }}
         path: |
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
         retention-days: 30
 
   build-macos:

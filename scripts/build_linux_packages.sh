@@ -8,6 +8,13 @@ ARCH=${2:-"x86_64"}
 
 echo "Building Linux packages for TimeNest $VERSION ($ARCH)"
 
+# 只支持x86_64架构
+if [ "$ARCH" != "x86_64" ]; then
+  echo "错误: 当前只支持x86_64架构的Linux包构建"
+  echo "ARM64 Linux用户请使用源码安装"
+  exit 1
+fi
+
 # 检查可执行文件是否存在
 if [ ! -f "dist/TimeNest" ]; then
   echo "TimeNest executable not found, creating placeholder"

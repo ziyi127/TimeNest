@@ -74,7 +74,38 @@ python run_rinui.py
 | **存储空间** | 500MB | 1GB+ |
 | **显示器** | 1024x768 | 1920x1080+ |
 
-### 快速安装
+### 📦 下载预编译版本
+
+#### 支持的平台和架构
+
+| 平台 | x86_64 | ARM64 | 下载格式 |
+|------|--------|-------|----------|
+| **Windows** | ✅ | ✅ | `.exe` 安装程序 |
+| **macOS** | ✅ | ✅ | `.dmg` 磁盘映像 |
+| **Linux** | ✅ | ❌ | `.deb` `.rpm` `.pkg` |
+
+> **注意**: ARM64 Linux 用户请使用源码安装，详见 [ARM64 Linux 支持说明](docs/ARM64_LINUX_SUPPORT.md)
+
+#### 下载链接
+
+前往 [Releases 页面](https://github.com/ziyi127/TimeNest/releases) 下载最新版本：
+
+```
+Windows:
+├── TimeNest_2.2.2_x86_64.exe.zip  (Intel/AMD 64位)
+└── TimeNest_2.2.2_arm64.exe.zip   (ARM64)
+
+macOS:
+├── TimeNest_2.2.2_x86_64.dmg.zip  (Intel Mac)
+└── TimeNest_2.2.2_arm64.dmg.zip   (Apple Silicon)
+
+Linux (仅 x86_64):
+├── TimeNest_2.2.2_x86_64.deb.zip  (Debian/Ubuntu)
+├── TimeNest_2.2.2_x86_64.rpm.zip  (RedHat/CentOS)
+└── TimeNest_2.2.2_x86_64.pkg.zip  (Arch Linux)
+```
+
+### 🛠️ 源码安装
 
 ```bash
 # 克隆项目
