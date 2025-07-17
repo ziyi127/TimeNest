@@ -153,7 +153,7 @@ ScrollView {
 
                     Item { Layout.fillWidth: true }
 
-                    RinUI.Button {
+                    Button {
                         text: qsTr("浏览市场")
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
@@ -162,7 +162,7 @@ ScrollView {
                         }
                     }
 
-                    RinUI.Button {
+                    Button {
                         text: qsTr("安装本地插件")
                         onClicked: {
                             if (typeof timeNestBridge !== 'undefined') {
@@ -287,14 +287,14 @@ ScrollView {
                                     }
                                 }
 
-                                RinUI.Switch {
+                                Switch {
                                     checked: model.enabled
                                     onToggled: {
                                         togglePlugin(model.name, checked)
                                     }
                                 }
 
-                                RinUI.Button {
+                                Button {
                                     text: qsTr("设置")
                                     flat: true
                                     enabled: model.enabled
@@ -303,7 +303,7 @@ ScrollView {
                                     }
                                 }
 
-                                RinUI.Button {
+                                Button {
                                     text: qsTr("卸载")
                                     flat: true
                                     onClicked: {

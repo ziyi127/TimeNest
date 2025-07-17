@@ -235,7 +235,7 @@ Item {
                             }
 
                             Text {
-                                text: qsTr("点击上方"新建课程"按钮添加您的第一门课程")
+                                text: qsTr("点击上方\"新建课程\"按钮添加您的第一门课程")
                                 font.pixelSize: 12
                                 color: isDarkMode ? "#cccccc" : "#666666"
                                 anchors.horizontalCenter: parent.horizontalCenter

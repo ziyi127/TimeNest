@@ -571,74 +571,79 @@ Window {
         anchors.centerIn: parent
         visible: showingNewCourseDialog
 
-        Column {
+        Item {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 15
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 15
 
             Text {
                 text: qsTr("课程信息")
                 font.pixelSize: 16
                 font.bold: true
                 color: isDarkMode ? "#ffffff" : "#000000"
+                Layout.fillWidth: true
             }
 
             TextField {
                 id: courseNameField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("课程名称")
             }
 
             TextField {
                 id: courseTeacherField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("任课教师")
             }
 
             TextField {
                 id: courseLocationField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("上课地点")
             }
 
             TextField {
                 id: courseTimeField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("上课时间 (如: 08:00-09:40)")
             }
 
             ComboBox {
                 id: courseWeekdayCombo
-                width: parent.width
+                Layout.fillWidth: true
                 model: [qsTr("周一"), qsTr("周二"), qsTr("周三"), qsTr("周四"), qsTr("周五"), qsTr("周六"), qsTr("周日")]
             }
 
-            Row {
+            RowLayout {
+                Layout.fillWidth: true
                 spacing: 10
 
                 TextField {
                     id: startWeekField
-                    width: 80
+                    Layout.preferredWidth: 80
                     placeholderText: qsTr("开始周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
 
                 Text {
                     text: qsTr("到")
-                    anchors.verticalCenter: parent.verticalCenter
+                    Layout.alignment: Qt.AlignVCenter
                     color: isDarkMode ? "#ffffff" : "#000000"
                 }
 
                 TextField {
                     id: endWeekField
-                    width: 80
+                    Layout.preferredWidth: 80
                     placeholderText: qsTr("结束周")
                     validator: IntValidator { bottom: 1; top: 30 }
                 }
             }
 
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
                 spacing: 10
 
                 Button {
@@ -653,6 +658,7 @@ Window {
                     text: qsTr("取消")
                     onClicked: newCourseDialog.close()
                 }
+            }
             }
         }
 
@@ -671,27 +677,31 @@ Window {
         anchors.centerIn: parent
         visible: showingNewTaskDialog
 
-        Column {
+        Item {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 15
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 15
 
             Text {
                 text: qsTr("任务信息")
                 font.pixelSize: 16
                 font.bold: true
                 color: isDarkMode ? "#ffffff" : "#000000"
+                Layout.fillWidth: true
             }
 
             TextField {
                 id: taskTitleField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("任务标题")
             }
 
             ScrollView {
-                width: parent.width
-                height: 100
+                Layout.fillWidth: true
+                Layout.preferredHeight: 100
 
                 TextArea {
                     id: taskDescriptionArea
@@ -702,18 +712,18 @@ Window {
 
             ComboBox {
                 id: taskPriorityCombo
-                width: parent.width
+                Layout.fillWidth: true
                 model: [qsTr("低优先级"), qsTr("中优先级"), qsTr("高优先级"), qsTr("紧急")]
             }
 
             TextField {
                 id: taskDueDateField
-                width: parent.width
+                Layout.fillWidth: true
                 placeholderText: qsTr("截止日期 (YYYY-MM-DD)")
             }
 
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
                 spacing: 10
 
                 Button {
@@ -728,6 +738,7 @@ Window {
                     text: qsTr("取消")
                     onClicked: newTaskDialog.close()
                 }
+            }
             }
         }
 

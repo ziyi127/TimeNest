@@ -1,10 +1,10 @@
 {
   "version": {
-    "number": "2.1.2",
+    "number": "2.2.0",
     "name": "Release",
     "build": "20250717",
     "release_date": "2025-07-17",
-    "full_version": "2.1.2 Release"
+    "full_version": "2.2.0 Release"
   },
   "app": {
     "name": "TimeNest",
