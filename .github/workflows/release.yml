@@ -401,8 +401,8 @@ jobs:
         # 极限压缩RPM包
         echo "Creating extremely compressed RPM packages..."
         7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}.rpm.7z" rpm-package/
-        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}.rpm.tar.zst" rpm-package/
-        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}.rpm.tar.xz" rpm-package/
+        tar -cf - rpm-package/ | zstd -19 --ultra -22 -T0 > "TimeNest_${VERSION}_${ARCH}.rpm.tar.zst"
+        tar -cf - rpm-package/ | xz -9 -e -T0 > "TimeNest_${VERSION}_${ARCH}.rpm.tar.xz"
         rm -rf rpm-package
 
         # 创建Arch包替代
@@ -418,8 +418,8 @@ jobs:
         # 极限压缩Arch包
         echo "Creating extremely compressed Arch packages..."
         7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}.pkg.7z" arch-package/
-        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}.pkg.tar.xz" arch-package/
-        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}.pkg.tar.zst" arch-package/
+        tar -cf - arch-package/ | xz -9 -e -T0 > "TimeNest_${VERSION}_${ARCH}.pkg.tar.xz"
+        tar -cf - arch-package/ | zstd -19 --ultra -22 -T0 > "TimeNest_${VERSION}_${ARCH}.pkg.tar.zst"
         rm -rf arch-package
 
         # 创建通用Linux便携版
@@ -443,8 +443,8 @@ jobs:
         # 极限压缩便携版
         echo "Creating extremely compressed portable packages..."
         7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}_portable.7z" TimeNest-portable-linux/
-        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}_portable.tar.zst" TimeNest-portable-linux/
-        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}_portable.tar.xz" TimeNest-portable-linux/
+        tar -cf - TimeNest-portable-linux/ | zstd -19 --ultra -22 -T0 > "TimeNest_${VERSION}_${ARCH}_portable.tar.zst"
+        tar -cf - TimeNest-portable-linux/ | xz -9 -e -T0 > "TimeNest_${VERSION}_${ARCH}_portable.tar.xz"
         rm -rf TimeNest-portable-linux
 
         # 显示压缩效果
@@ -664,11 +664,11 @@ jobs:
         echo "Created 7z compressed app bundle"
 
         # 创建zstd压缩的tar包
-        tar -I "zstd -19 --ultra -22 -T0" -cf TimeNest_${VERSION}_${ARCH}.app.tar.zst TimeNest.app/
+        tar -cf - TimeNest.app/ | zstd -19 --ultra -22 -T0 > TimeNest_${VERSION}_${ARCH}.app.tar.zst
         echo "Created zstd compressed tar"
 
         # 创建xz压缩的tar包
-        tar -I "xz -9 -e -T0" -cf TimeNest_${VERSION}_${ARCH}.app.tar.xz TimeNest.app/
+        tar -cf - TimeNest.app/ | xz -9 -e -T0 > TimeNest_${VERSION}_${ARCH}.app.tar.xz
         echo "Created xz compressed tar"
 
         # 创建便携版ZIP（使用7z极限压缩）
@@ -682,7 +682,7 @@ jobs:
 
         # 显示压缩效果
         echo "Package sizes comparison:"
-        ls -lh TimeNest-$VERSION-macos.* | awk '{print $5 "\t" $9}' | sort -h
+        ls -lh TimeNest_${VERSION}_${ARCH}.* | awk '{print $5 "\t" $9}' | sort -h
 
     - name: Upload macOS package to release
       if: github.ref_name == 'main' || github.ref_type == 'tag'
