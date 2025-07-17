@@ -1438,7 +1438,7 @@ class TimeNestBridge(QObject):
         """打开用户手册"""
         try:
             import webbrowser
-            webbrowser.open("https://ziyi127.github.io/TimeNest-Website/manual")
+            webbrowser.open("https://timenest.qzz.io/manual")
             self.logger.info("已打开用户手册")
         except Exception as e:
             self.logger.error(f"打开用户手册失败: {e}")
@@ -2087,7 +2087,7 @@ X-GNOME-Autostart-enabled=true
             self.logger.info("打开用户手册")
 
             # 打开在线文档
-            manual_url = "https://ziyi127.github.io/TimeNest-Website/docs"
+            manual_url = "https://timenest.qzz.io/docs"
             webbrowser.open(manual_url)
             self.showNotification("帮助", "已打开用户手册")
 
@@ -2193,7 +2193,7 @@ X-GNOME-Autostart-enabled=true
             self.logger.info("打开插件市场")
 
             # 打开插件市场网站
-            market_url = "https://github.com/ziyi127/TimeNest-Store"
+            market_url = "https://timenest.qzz.io/plugins"
             webbrowser.open(market_url)
             self.showNotification("插件市场", "已打开插件市场")
 

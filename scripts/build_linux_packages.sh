@@ -65,11 +65,11 @@ Section: utils
 Priority: optional
 Architecture: $([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64")
 Depends: python3 (>= 3.8), python3-tk
-Maintainer: ziyi127 <ziyihed@outlook.com>
+Maintainer: ziyi127 <admin@timenest.qzz.io>
 Description: 智能时间管理助手
  TimeNest是一个基于Python和RinUI开发的现代化课程表管理工具，
  专为学生、教师和教育工作者设计。
-Homepage: https://ziyi127.github.io/TimeNest-Website
+Homepage: https://timenest.qzz.io
 EOF
 
 # 构建deb包
@@ -121,7 +121,7 @@ Uninstallation:
 2. sudo rm /usr/share/applications/TimeNest.desktop
 3. sudo rm /usr/share/pixmaps/TimeNest.png
 
-For more information, visit: https://ziyi127.github.io/TimeNest-Website
+For more information, visit: https://timenest.qzz.io
 EOF
 
 # 创建tar.gz包
@@ -145,9 +145,9 @@ cat > arch-package/.PKGINFO << EOF
 pkgname = TimeNest
 pkgver = $VERSION-1
 pkgdesc = 智能时间管理助手
-url = https://ziyi127.github.io/TimeNest-Website
+url = https://timenest.qzz.io
 builddate = $(date +%s)
-packager = ziyi127 <ziyihed@outlook.com>
+packager = ziyi127 <admin@timenest.qzz.io>
 size = $(du -sb arch-package | cut -f1)
 arch = $([ "$ARCH" = "x86_64" ] && echo "x86_64" || echo "aarch64")
 depend = python

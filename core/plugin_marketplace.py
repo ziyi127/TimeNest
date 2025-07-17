@@ -195,7 +195,7 @@ class PluginMarketplace(QObject):
         self.config_manager = config_manager
         
         # 商城配置
-        self.marketplace_url = "https://github.com/ziyi127/TimeNest-Store"
+        self.marketplace_url = "https://timenest.qzz.io/plugins"
         self.api_base_url = "https://api.github.com/repos/ziyi127/TimeNest-Store"
         self.raw_base_url = "https://raw.githubusercontent.com/ziyi127/TimeNest-Store/main"
         

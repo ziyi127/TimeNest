@@ -106,7 +106,7 @@ def openPluginMarket(self):
     """打开插件市场"""
     try:
         import webbrowser
-        market_url = "https://github.com/ziyi127/TimeNest-Store"
+        market_url = "https://timenest.qzz.io/plugins"
         webbrowser.open(market_url)
         self.showNotification("插件市场", "已打开插件市场")
     except Exception as e:

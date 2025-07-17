@@ -193,7 +193,7 @@ Item {
                 
                 // 文档链接
                 Text {
-                    text: "<a href='https://github.com/ziyi127/TimeNest/blob/main/cluster_interface.py'>查看集群控制接口文档</a>"
+                    text: "<a href='https://timenest.qzz.io/docs/cluster-control'>查看集群控制接口文档</a>"
                     onLinkActivated: Qt.openUrlExternally(link)
                     color: "blue"
                     MouseArea {

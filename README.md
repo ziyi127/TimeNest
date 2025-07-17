@@ -13,7 +13,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
 
-[🌐 官方网站](https://ziyi127.github.io/TimeNest-Website) | [📖 文档](https://ziyi127.github.io/TimeNest-Website/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
 
 </div>
 
@@ -648,11 +648,11 @@ git push origin v2.2.0
 
 ### 🌐 官方渠道
 
-[![官方网站](https://img.shields.io/badge/🌐_官方网站-ziyi127.github.io/TimeNest--Website-blue?style=for-the-badge)](https://ziyi127.github.io/TimeNest-Website)
+[![官方网站](https://img.shields.io/badge/🌐_官方网站-timenest.qzz.io-blue?style=for-the-badge)](https://timenest.qzz.io)
 
 [![GitHub](https://img.shields.io/badge/GitHub-ziyi127/TimeNest-black?style=for-the-badge&logo=github)](https://github.com/ziyi127/TimeNest)
 
-[![Email](https://img.shields.io/badge/📧_邮箱-ziyihed@outlook.com-red?style=for-the-badge)](mailto:ziyihed@outlook.com)
+[![Email](https://img.shields.io/badge/📧_邮箱-admin@timenest.qzz.io-red?style=for-the-badge)](mailto:admin@timenest.qzz.io)
 
 ### 💬 社区交流
 

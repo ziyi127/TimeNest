@@ -95,7 +95,7 @@ jobs:
         !define APP_VERSION "$version"
         !define APP_ARCH "$arch"
         !define PUBLISHER "ziyi127"
-        !define WEB_SITE "https://ziyi127.github.io/TimeNest-Website"
+        !define WEB_SITE "https://timenest.qzz.io"
         !define INSTALL_DIR "`$PROGRAMFILES64\TimeNest"
 
         Name "`${APP_NAME} `${APP_VERSION}"
