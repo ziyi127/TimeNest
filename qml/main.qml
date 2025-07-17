@@ -477,7 +477,7 @@ Window {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: 16
-            text: qsTr("TimeNest v2.1.0 Preview")
+            text: qsTr("TimeNest v2.2.0 Release")
             color: isDarkMode ? "#cccccc" : "#666666"
             font.pixelSize: 12
         }
@@ -571,13 +571,8 @@ Window {
         anchors.centerIn: parent
         visible: showingNewCourseDialog
 
-        Item {
-            anchors.fill: parent
-            anchors.margins: 20
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 15
+        contentItem: ColumnLayout {
+            spacing: 15
 
             Text {
                 text: qsTr("课程信息")
@@ -659,7 +654,6 @@ Window {
                     onClicked: newCourseDialog.close()
                 }
             }
-            }
         }
 
         onClosed: {
@@ -677,13 +671,8 @@ Window {
         anchors.centerIn: parent
         visible: showingNewTaskDialog
 
-        Item {
-            anchors.fill: parent
-            anchors.margins: 20
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 15
+        contentItem: ColumnLayout {
+            spacing: 15
 
             Text {
                 text: qsTr("任务信息")
@@ -738,7 +727,6 @@ Window {
                     text: qsTr("取消")
                     onClicked: newTaskDialog.close()
                 }
-            }
             }
         }
 

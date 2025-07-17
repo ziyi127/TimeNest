@@ -152,7 +152,7 @@ Dialog {
                         }
 
                         Text {
-                            text: typeof timeNestBridge !== 'undefined' ? timeNestBridge.appVersion : "2.1.0 Preview"
+                            text: typeof timeNestBridge !== 'undefined' ? timeNestBridge.appVersion : "2.2.0 Release"
                             font.pixelSize: 14
                             color: isDarkMode ? "#ffffff" : "#000000"
                         }

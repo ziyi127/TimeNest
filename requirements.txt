@@ -1,4 +1,4 @@
-# TimeNest 2.1.1 Preview 项目依赖
+# TimeNest 2.2.0 Release 项目依赖
 # Python 智能时间管理助手 - RinUI版本
 
 # ===== 核心运行时依赖 =====
@@ -69,5 +69,5 @@ wheel>=0.41.0
 # pip install -r requirements.txt
 #
 # 构建命令:
-# python release.py "2.1.1 Preview"
+# python release.py "2.2.0 Release"
 # build_release.bat

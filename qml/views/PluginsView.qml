@@ -187,7 +187,7 @@ ScrollView {
                         ListElement {
                             name: "番茄钟插件"
                             description: "番茄工作法计时器"
-                            version: "2.1.0"
+                            version: "2.2.0"
                             author: "Community"
                             enabled: true
                             hasUpdate: true
