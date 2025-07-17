@@ -26,9 +26,9 @@
     "documentation": "https://timenest.qzz.io/docs"
   },
   "legal": {
-    "license": "MIT License",
+    "license": "Apache License 2.0",
     "license_url": "https://github.com/ziyi127/TimeNest/blob/main/LICENSE",
-    "copyright": "© 2024-2025 ziyi127. All rights reserved."
+    "copyright": "© 2024-2025 TimeNest Team. All rights reserved."
   },
   "technical": {
     "python_version_min": "3.8.0",

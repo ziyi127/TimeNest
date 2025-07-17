@@ -33,7 +33,7 @@ your_plugin/
     "max_app_version": "",
     "homepage": "https://your-plugin-homepage.com",
     "repository": "https://github.com/your/repo",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "tags": ["tag1", "tag2", "tag3"],
     "dependencies": [],
     "permissions": [
