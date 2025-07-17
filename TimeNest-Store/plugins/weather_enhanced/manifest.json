@@ -1,0 +1,60 @@
+{
+    "id": "weather_enhanced",
+    "name": "增强天气插件",
+    "version": "1.0.0",
+    "description": "提供详细的天气信息显示，包括温度、湿度、风速等多项指标",
+    "author": "TimeNest Team",
+    "plugin_class": "WeatherEnhancedPlugin",
+    "plugin_type": "component",
+    "api_version": "1.0.0",
+    "min_app_version": "1.0.0",
+    "max_app_version": "",
+    "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/weather_enhanced",
+    "repository": "https://github.com/ziyi127/TimeNest-Store",
+    "license": "MIT",
+    "tags": ["weather", "component", "utility"],
+    "dependencies": [],
+    "permissions": [
+        "network_access",
+        "config_access"
+    ],
+    "settings": {
+        "api_key": {
+            "type": "string",
+            "default": "",
+            "description": "天气API密钥（可选，留空使用模拟数据）",
+            "required": false
+        },
+        "update_interval": {
+            "type": "integer",
+            "default": 300,
+            "min": 60,
+            "max": 3600,
+            "description": "更新间隔（秒）"
+        },
+        "show_humidity": {
+            "type": "boolean",
+            "default": true,
+            "description": "显示湿度信息"
+        },
+        "show_wind": {
+            "type": "boolean",
+            "default": true,
+            "description": "显示风速信息"
+        },
+        "temperature_unit": {
+            "type": "choice",
+            "default": "celsius",
+            "choices": ["celsius", "fahrenheit"],
+            "description": "温度单位"
+        },
+        "location": {
+            "type": "string",
+            "default": "北京",
+            "description": "显示天气的城市"
+        }
+    },
+    "changelog": {
+        "1.0.0": "初始版本发布，支持基本天气显示功能"
+    }
+}

@@ -1,0 +1,87 @@
+{
+    "id": "dark_theme",
+    "name": "深色主题包",
+    "version": "1.5.2",
+    "description": "精美的深色主题集合，保护眼睛，提升夜间使用体验",
+    "author": "Design Studio",
+    "plugin_class": "DarkThemePlugin",
+    "plugin_type": "theme",
+    "api_version": "1.0.0",
+    "min_app_version": "1.0.0",
+    "max_app_version": "",
+    "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/dark_theme",
+    "repository": "https://github.com/ziyi127/TimeNest-Store",
+    "license": "MIT",
+    "tags": ["theme", "dark", "design"],
+    "dependencies": [],
+    "permissions": [
+        "theme_access",
+        "config_access"
+    ],
+    "settings": {
+        "theme_variant": {
+            "type": "choice",
+            "default": "midnight",
+            "choices": ["midnight", "charcoal", "obsidian", "slate"],
+            "description": "深色主题变体"
+        },
+        "accent_color": {
+            "type": "choice",
+            "default": "blue",
+            "choices": ["blue", "green", "purple", "orange", "red"],
+            "description": "强调色"
+        },
+        "auto_switch": {
+            "type": "boolean",
+            "default": false,
+            "description": "根据系统时间自动切换"
+        },
+        "switch_time_start": {
+            "type": "string",
+            "default": "18:00",
+            "description": "自动切换开始时间（HH:MM）"
+        },
+        "switch_time_end": {
+            "type": "string",
+            "default": "06:00",
+            "description": "自动切换结束时间（HH:MM）"
+        },
+        "apply_to_floating": {
+            "type": "boolean",
+            "default": true,
+            "description": "应用到浮窗"
+        },
+        "apply_to_dialogs": {
+            "type": "boolean",
+            "default": true,
+            "description": "应用到对话框"
+        }
+    },
+    "themes": [
+        {
+            "id": "midnight",
+            "name": "午夜蓝",
+            "description": "深邃的午夜蓝色主题"
+        },
+        {
+            "id": "charcoal",
+            "name": "炭黑",
+            "description": "经典的炭黑色主题"
+        },
+        {
+            "id": "obsidian",
+            "name": "黑曜石",
+            "description": "纯黑的黑曜石主题"
+        },
+        {
+            "id": "slate",
+            "name": "石板灰",
+            "description": "优雅的石板灰主题"
+        }
+    ],
+    "changelog": {
+        "1.5.2": "修复兼容性问题，新增多种配色方案",
+        "1.5.0": "新增自动切换功能",
+        "1.0.0": "初始版本发布"
+    }
+}

@@ -42,11 +42,37 @@ class TimeNestBridge(QObject):
         self.floating_manager = None
         self.tray_manager = None
 
+        # 初始化集群控制接口
+        self._init_cluster_control()
+
         self._init_managers()
         self._init_timers()
         self._init_error_handling()
 
         self.logger.info("RinUI桥接类初始化完成")
+
+    def _init_cluster_control(self):
+        """初始化集群控制接口"""
+        try:
+            from cluster_interface import ClusterControlInterface, ClusterConfig
+
+            # 加载集群配置
+            self.cluster_config = ClusterConfig()
+            self.cluster_config.load_from_file("config/cluster_config.json")
+
+            # 创建集群控制接口
+            config = self.cluster_config.get_config()
+            self.cluster_interface = ClusterControlInterface(
+                enabled=config["cluster_control"]["enabled"],
+                cluster_id=config["cluster_control"]["cluster_id"],
+                manager_url=config["cluster_control"]["manager_url"]
+            )
+
+            self.logger.info("集群控制接口初始化完成")
+        except Exception as e:
+            self.logger.error(f"集群控制接口初始化失败: {e}")
+            self.cluster_interface = None
+            self.cluster_config = None
 
     def _init_managers(self):
         """初始化管理器"""
@@ -2218,6 +2244,72 @@ X-GNOME-Autostart-enabled=true
 
         except Exception as e:
             self.logger.error(f"卸载插件失败: {e}")
+
+    # ================ 集群控制 ================
+    @Slot(result=bool)
+    def isClusterControlEnabled(self):
+        """检查集群控制是否启用"""
+        if hasattr(self, 'cluster_interface') and self.cluster_interface:
+            return self.cluster_interface.enabled
+        return False
+
+    @Slot(result=str)
+    def getClusterId(self):
+        """获取集群ID"""
+        if hasattr(self, 'cluster_interface') and self.cluster_interface:
+            return self.cluster_interface.cluster_id
+        return ""
+
+    @Slot(result=str)
+    def getClusterManagerUrl(self):
+        """获取集群管理器URL"""
+        if hasattr(self, 'cluster_interface') and self.cluster_interface:
+            return self.cluster_interface.manager_url or ""
+        return ""
+
+    @Slot(bool, result=bool)
+    def setClusterControlEnabled(self, enabled):
+        """设置集群控制启用状态"""
+        if not hasattr(self, 'cluster_interface') or not self.cluster_interface:
+            return False
+
+        if enabled:
+            self.cluster_interface.enable()
+        else:
+            self.cluster_interface.disable()
+
+        # 保存配置
+        if hasattr(self, 'cluster_config') and self.cluster_config:
+            config = self.cluster_config.get_config()
+            config["cluster_control"]["enabled"] = enabled
+            self.cluster_config.update_config(config)
+            self.cluster_config.save_to_file("config/cluster_config.json")
+
+        return True
+
+    @Slot(str, result=bool)
+    def setClusterManagerUrl(self, url):
+        """设置集群管理器URL"""
+        if not hasattr(self, 'cluster_interface') or not self.cluster_interface:
+            return False
+
+        self.cluster_interface.manager_url = url
+
+        # 保存配置
+        if hasattr(self, 'cluster_config') and self.cluster_config:
+            config = self.cluster_config.get_config()
+            config["cluster_control"]["manager_url"] = url
+            self.cluster_config.update_config(config)
+            self.cluster_config.save_to_file("config/cluster_config.json")
+
+        return True
+
+    @Slot(result=dict)
+    def getClusterStatus(self):
+        """获取集群状态"""
+        if hasattr(self, 'cluster_interface') and self.cluster_interface:
+            return self.cluster_interface.get_status()
+        return {"enabled": False, "cluster_id": "", "manager_url": "", "node_info": {}}
 
 
 def register_qml_types():

@@ -1,0 +1,142 @@
+{
+    "version": "1.0.0",
+    "last_updated": "2025-01-14T12:00:00Z",
+    "repository_name": "TimeNest-Store",
+    "repository_url": "https://github.com/ziyi127/TimeNest-Store",
+    "description": "TimeNest官方插件商城，提供丰富的插件扩展功能",
+    "featured": ["weather_enhanced", "pomodoro_timer", "dark_theme"],
+    "categories": [
+        {
+            "id": "component",
+            "name": "组件",
+            "description": "浮窗显示组件"
+        },
+        {
+            "id": "utility",
+            "name": "工具",
+            "description": "实用工具插件"
+        },
+        {
+            "id": "theme",
+            "name": "主题",
+            "description": "界面主题包"
+        },
+        {
+            "id": "integration",
+            "name": "集成",
+            "description": "第三方服务集成"
+        },
+        {
+            "id": "notification",
+            "name": "通知",
+            "description": "通知增强插件"
+        }
+    ],
+    "plugins": [
+        {
+            "id": "weather_enhanced",
+            "name": "增强天气插件",
+            "version": "1.0.0",
+            "description": "提供详细的天气信息显示，包括温度、湿度、风速等多项指标",
+            "author": "TimeNest Team",
+            "category": "component",
+            "download_url": "https://github.com/ziyi127/TimeNest-Store/releases/download/v1.0.0/weather_enhanced_v1.0.0.zip",
+            "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/weather_enhanced",
+            "repository": "https://github.com/ziyi127/TimeNest-Store",
+            "license": "MIT",
+            "tags": ["weather", "component", "utility"],
+            "downloads": 1250,
+            "rating": 4.8,
+            "size": 2621440,
+            "checksum": "sha256:a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+            "dependencies": [],
+            "min_app_version": "1.0.0",
+            "max_app_version": "",
+            "screenshots": [
+                "https://github.com/ziyi127/TimeNest-Store/raw/main/plugins/weather_enhanced/screenshots/main.png"
+            ],
+            "changelog": "v1.0.0: 初始版本发布，支持基本天气显示功能",
+            "created_at": "2025-01-14T10:00:00Z",
+            "updated_at": "2025-01-14T12:00:00Z"
+        },
+        {
+            "id": "pomodoro_timer",
+            "name": "番茄钟插件",
+            "version": "2.1.0",
+            "description": "专业的番茄工作法计时器，帮助提高工作效率和专注力",
+            "author": "Productivity Team",
+            "category": "utility",
+            "download_url": "https://github.com/ziyi127/TimeNest-Store/releases/download/v2.1.0/pomodoro_timer_v2.1.0.zip",
+            "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/pomodoro_timer",
+            "repository": "https://github.com/ziyi127/TimeNest-Store",
+            "license": "MIT",
+            "tags": ["productivity", "timer", "focus"],
+            "downloads": 3420,
+            "rating": 4.9,
+            "size": 1887436,
+            "checksum": "sha256:b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567a",
+            "dependencies": [],
+            "min_app_version": "1.0.0",
+            "max_app_version": "",
+            "screenshots": [
+                "https://github.com/ziyi127/TimeNest-Store/raw/main/plugins/pomodoro_timer/screenshots/timer.png",
+                "https://github.com/ziyi127/TimeNest-Store/raw/main/plugins/pomodoro_timer/screenshots/settings.png"
+            ],
+            "changelog": "v2.1.0: 新增自定义时长设置，优化通知提醒",
+            "created_at": "2025-01-10T08:00:00Z",
+            "updated_at": "2025-01-14T11:30:00Z"
+        },
+        {
+            "id": "dark_theme",
+            "name": "深色主题包",
+            "version": "1.5.2",
+            "description": "精美的深色主题集合，保护眼睛，提升夜间使用体验",
+            "author": "Design Studio",
+            "category": "theme",
+            "download_url": "https://github.com/ziyi127/TimeNest-Store/releases/download/v1.5.2/dark_theme_v1.5.2.zip",
+            "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/dark_theme",
+            "repository": "https://github.com/ziyi127/TimeNest-Store",
+            "license": "MIT",
+            "tags": ["theme", "dark", "design"],
+            "downloads": 5680,
+            "rating": 4.7,
+            "size": 3355443,
+            "checksum": "sha256:c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567ab2",
+            "dependencies": [],
+            "min_app_version": "1.0.0",
+            "max_app_version": "",
+            "screenshots": [
+                "https://github.com/ziyi127/TimeNest-Store/raw/main/plugins/dark_theme/screenshots/preview.png"
+            ],
+            "changelog": "v1.5.2: 修复兼容性问题，新增多种配色方案",
+            "created_at": "2025-01-08T14:00:00Z",
+            "updated_at": "2025-01-13T16:45:00Z"
+        },
+        {
+            "id": "calendar_sync",
+            "name": "日历同步插件",
+            "version": "1.3.1",
+            "description": "与Google日历、Outlook等主流日历服务同步，显示即将到来的事件",
+            "author": "Sync Solutions",
+            "category": "integration",
+            "download_url": "https://github.com/ziyi127/TimeNest-Store/releases/download/v1.3.1/calendar_sync_v1.3.1.zip",
+            "homepage": "https://github.com/ziyi127/TimeNest-Store/tree/main/plugins/calendar_sync",
+            "repository": "https://github.com/ziyi127/TimeNest-Store",
+            "license": "MIT",
+            "tags": ["calendar", "sync", "integration"],
+            "downloads": 2890,
+            "rating": 4.6,
+            "size": 4294967,
+            "checksum": "sha256:d4e5f6789012345678901234567890abcdef1234567890abcdef1234567abc3",
+            "dependencies": [],
+            "min_app_version": "1.0.0",
+            "max_app_version": "",
+            "screenshots": [
+                "https://github.com/ziyi127/TimeNest-Store/raw/main/plugins/calendar_sync/screenshots/calendar.png"
+            ],
+            "changelog": "v1.3.1: 修复Google日历API兼容性问题",
+            "created_at": "2025-01-05T09:30:00Z",
+            "updated_at": "2025-01-12T13:20:00Z"
+        }
+    ]
+}

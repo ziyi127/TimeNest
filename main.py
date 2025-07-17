@@ -40,6 +40,7 @@ try:
     from core.rinui_bridge import TimeNestBridge, register_qml_types
     from core.system_tray import SystemTrayManager, TrayNotificationManager
     from core.simple_floating_window import SimpleFloatingWindowManager
+    from cluster_interface import ClusterControlInterface, ClusterConfig
 
 except ImportError as e:
     logging.error(f"Critical import error: {e}")
