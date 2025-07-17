@@ -77,22 +77,55 @@ jobs:
         if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
         if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
         
-    - name: Create ZIP archive
+    - name: Create extremely compressed Windows packages
       run: |
-        if ("${{ github.ref_type }}" -eq "tag") {
-          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.ref_name }}-windows.zip
-        } elseif ("${{ github.ref_name }}" -eq "main") {
-          # 从app_info.json读取版本信息用于文件名
-          $appInfo = Get-Content app_info.json | ConvertFrom-Json
-          $version = $appInfo.version.number
-          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-v$version-windows.zip
-        } else {
-          Compress-Archive -Path TimeNest-portable\* -DestinationPath TimeNest-${{ github.sha }}-windows.zip
+        # 安装7-Zip for extreme compression
+        choco install 7zip -y
+        $env:PATH += ";C:\Program Files\7-Zip"
+
+        $version = "${{ steps.release_info.outputs.version }}"
+        $arch = "${{ steps.release_info.outputs.architecture }}"
+        $filename = "TimeNest_${version}_${arch}"
+
+        # 创建多种极限压缩格式
+        echo "Creating extremely compressed packages..."
+
+        # 7z格式 - 最高压缩比
+        7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on -mmemuse=p75 "$filename.7z" "TimeNest-portable\*"
+        echo "Created 7z package with maximum compression"
+
+        # ZIP格式 - 兼容性最好
+        7z a -tzip -mx=9 -mfb=273 -mpass=15 -mmt=on "$filename.zip" "TimeNest-portable\*"
+        echo "Created ZIP package with maximum compression"
+
+        # RAR格式 - 高压缩比
+        if (Get-Command "rar" -ErrorAction SilentlyContinue) {
+          rar a -m5 -s -ma5 "$filename.rar" "TimeNest-portable\*"
+          echo "Created RAR package with maximum compression"
         }
 
-    - name: Get release info
+        # 显示文件大小对比
+        echo "Package sizes:"
+        Get-ChildItem "$filename.*" | ForEach-Object {
+          $sizeKB = [math]::Round($_.Length / 1KB, 2)
+          $sizeMB = [math]::Round($_.Length / 1MB, 2)
+          Write-Host "$($_.Name): $sizeKB KB ($sizeMB MB)"
+        }
+
+    - name: Get release info and architecture
       id: release_info
       run: |
+        # 检测架构
+        $arch = $env:PROCESSOR_ARCHITECTURE
+        switch ($arch) {
+          "AMD64" { $archName = "x86_64" }
+          "ARM64" { $archName = "arm64" }
+          "x86" { $archName = "x86" }
+          default { $archName = $arch.ToLower() }
+        }
+
+        echo "architecture=$archName" >> $env:GITHUB_OUTPUT
+
         if ("${{ github.ref_type }}" -eq "tag") {
           $tag = "${{ github.ref_name }}"
           $version = $tag -replace '^v', ''
@@ -145,7 +178,9 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
         files: |
-          TimeNest-${{ steps.release_info.outputs.tag }}-windows.zip
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.7z
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.rar
 
     - name: Upload Build Artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -228,9 +263,28 @@ jobs:
           --windowed \
           main.py
 
-    - name: Get version info
+    - name: Get version info and architecture
       id: version_info
       run: |
+        # 检测架构
+        ARCH=$(uname -m)
+        case $ARCH in
+          x86_64|amd64)
+            ARCH_NAME="x86_64"
+            ;;
+          aarch64|arm64)
+            ARCH_NAME="arm64"
+            ;;
+          armv7l|armhf)
+            ARCH_NAME="armhf"
+            ;;
+          *)
+            ARCH_NAME=$ARCH
+            ;;
+        esac
+
+        echo "architecture=$ARCH_NAME" >> $GITHUB_OUTPUT
+
         if [ "${{ github.ref_type }}" = "tag" ]; then
           VERSION="${{ github.ref_name }}"
           VERSION=${VERSION#v}
@@ -273,7 +327,12 @@ jobs:
         cp README.md TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/
         cp LICENSE TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/ || echo "LICENSE file not found"
 
-    - name: Create Linux packages
+    - name: Install extreme compression tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y p7zip-full xz-utils gzip bzip2 zstd lz4 pigz pbzip2
+
+    - name: Create extremely compressed Linux packages
       run: |
         VERSION=${{ steps.version_info.outputs.version }}
 
@@ -306,16 +365,30 @@ jobs:
         Homepage: https://ziyi127.github.io/TimeNest-Website
         EOF
 
-        # 构建deb包
+        # 构建deb包并极限压缩
+        ARCH="${{ steps.version_info.outputs.architecture }}"
         if dpkg-deb --build TimeNest-$VERSION; then
-          mv TimeNest-$VERSION.deb TimeNest_$VERSION-1_amd64.deb
+          mv TimeNest-$VERSION.deb TimeNest_${VERSION}_${ARCH}.deb
           echo "Debian package created successfully"
+
+          # 创建多种极限压缩格式
+          echo "Creating extremely compressed deb packages..."
+
+          # 7z格式 - 最高压缩比
+          7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}.deb.7z" "TimeNest_${VERSION}_${ARCH}.deb"
+
+          # zstd格式 - 快速解压
+          zstd -19 --ultra -22 --long=31 -T0 "TimeNest_${VERSION}_${ARCH}.deb" -o "TimeNest_${VERSION}_${ARCH}.deb.zst"
+
+          # xz格式 - Linux标准
+          xz -9 -e -T0 --keep "TimeNest_${VERSION}_${ARCH}.deb"
+
         else
-          echo "Debian package creation failed, creating tar.gz"
-          tar -czf TimeNest_$VERSION-1_amd64.deb.tar.gz TimeNest-$VERSION/
+          echo "Debian package creation failed, creating compressed archive"
+          7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_$VERSION-1_amd64.deb.7z" TimeNest-$VERSION/
         fi
 
-        # 创建简单的RPM替代包
+        # 创建RPM替代包
         echo "Creating RPM alternative package..."
         mkdir -p rpm-package/usr/bin
         mkdir -p rpm-package/usr/share/applications
@@ -325,12 +398,14 @@ jobs:
         cp TimeNest-$VERSION/usr/share/applications/TimeNest.desktop rpm-package/usr/share/applications/ || echo "Desktop file not found"
         cp resources/app_icon.png rpm-package/usr/share/pixmaps/TimeNest.png || echo "Icon not found"
 
-        tar -czf TimeNest-$VERSION-1.x86_64.rpm.tar.gz rpm-package/
+        # 极限压缩RPM包
+        echo "Creating extremely compressed RPM packages..."
+        7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}.rpm.7z" rpm-package/
+        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}.rpm.tar.zst" rpm-package/
+        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}.rpm.tar.xz" rpm-package/
         rm -rf rpm-package
 
-
-
-        # 创建简单的Arch包替代
+        # 创建Arch包替代
         echo "Creating Arch package alternative..."
         mkdir -p arch-package/usr/bin
         mkdir -p arch-package/usr/share/applications
@@ -340,8 +415,41 @@ jobs:
         cp TimeNest-$VERSION/usr/share/applications/TimeNest.desktop arch-package/usr/share/applications/ || echo "Desktop file not found"
         cp resources/app_icon.png arch-package/usr/share/pixmaps/TimeNest.png || echo "Icon not found"
 
-        tar -cJf TimeNest-$VERSION-1-x86_64.pkg.tar.xz arch-package/
+        # 极限压缩Arch包
+        echo "Creating extremely compressed Arch packages..."
+        7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}.pkg.7z" arch-package/
+        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}.pkg.tar.xz" arch-package/
+        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}.pkg.tar.zst" arch-package/
         rm -rf arch-package
+
+        # 创建通用Linux便携版
+        echo "Creating portable Linux package..."
+        mkdir -p TimeNest-portable-linux
+        cp dist/TimeNest TimeNest-portable-linux/
+        cp README.md TimeNest-portable-linux/
+        cp LICENSE TimeNest-portable-linux/ || echo "LICENSE not found"
+        if [ -d "resources" ]; then cp -r resources TimeNest-portable-linux/; fi
+        if [ -d "themes" ]; then cp -r themes TimeNest-portable-linux/; fi
+        if [ -d "config" ]; then cp -r config TimeNest-portable-linux/; fi
+
+        # 创建启动脚本
+        cat > TimeNest-portable-linux/run.sh << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")"
+        ./TimeNest
+        EOF
+        chmod +x TimeNest-portable-linux/run.sh
+
+        # 极限压缩便携版
+        echo "Creating extremely compressed portable packages..."
+        7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on "TimeNest_${VERSION}_${ARCH}_portable.7z" TimeNest-portable-linux/
+        tar -I "zstd -19 --ultra -22 -T0" -cf "TimeNest_${VERSION}_${ARCH}_portable.tar.zst" TimeNest-portable-linux/
+        tar -I "xz -9 -e -T0" -cf "TimeNest_${VERSION}_${ARCH}_portable.tar.xz" TimeNest-portable-linux/
+        rm -rf TimeNest-portable-linux
+
+        # 显示压缩效果
+        echo "Package sizes comparison:"
+        ls -lh TimeNest* | awk '{print $5 "\t" $9}' | sort -h
 
 
     - name: Upload Linux packages to release
@@ -387,9 +495,18 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
-          TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.7z
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.zst
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.xz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.7z
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.tar.zst
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.7z
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.tar.zst
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}_portable.7z
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}_portable.tar.zst
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}_portable.tar.xz
 
     - name: Upload Linux artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -451,9 +568,25 @@ jobs:
           --windowed \
           main.py
 
-    - name: Get version info
+    - name: Get version info and architecture
       id: version_info_macos
       run: |
+        # 检测架构
+        ARCH=$(uname -m)
+        case $ARCH in
+          x86_64|amd64)
+            ARCH_NAME="x86_64"
+            ;;
+          arm64|aarch64)
+            ARCH_NAME="arm64"
+            ;;
+          *)
+            ARCH_NAME=$ARCH
+            ;;
+        esac
+
+        echo "architecture=$ARCH_NAME" >> $GITHUB_OUTPUT
+
         if [ "${{ github.ref_type }}" = "tag" ]; then
           VERSION="${{ github.ref_name }}"
           VERSION=${VERSION#v}
@@ -463,7 +596,12 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Create macOS app bundle
+    - name: Install macOS compression tools
+      run: |
+        # 安装额外的压缩工具
+        brew install p7zip xz zstd
+
+    - name: Create extremely compressed macOS packages
       run: |
         VERSION=${{ steps.version_info_macos.outputs.version }}
 
@@ -512,8 +650,39 @@ jobs:
           cp resources/app_icon.png TimeNest.app/Contents/Resources/app_icon.png
         fi
 
-        # 创建DMG文件
-        hdiutil create -volname "TimeNest" -srcfolder TimeNest.app -ov -format UDZO TimeNest-$VERSION-macos.dmg
+        # 创建多种极限压缩格式
+        echo "Creating extremely compressed macOS packages..."
+
+        ARCH="${{ steps.version_info_macos.outputs.architecture }}"
+
+        # 创建标准DMG（最高压缩）
+        hdiutil create -volname "TimeNest" -srcfolder TimeNest.app -ov -format UDBZ -imagekey bzip2-level=9 TimeNest_${VERSION}_${ARCH}.dmg
+        echo "Created BZIP2 compressed DMG"
+
+        # 创建7z压缩的app包
+        7z a -t7z -mx=9 -mfb=273 -ms=on -mqs=on -mmt=on TimeNest_${VERSION}_${ARCH}.app.7z TimeNest.app/
+        echo "Created 7z compressed app bundle"
+
+        # 创建zstd压缩的tar包
+        tar -I "zstd -19 --ultra -22 -T0" -cf TimeNest_${VERSION}_${ARCH}.app.tar.zst TimeNest.app/
+        echo "Created zstd compressed tar"
+
+        # 创建xz压缩的tar包
+        tar -I "xz -9 -e -T0" -cf TimeNest_${VERSION}_${ARCH}.app.tar.xz TimeNest.app/
+        echo "Created xz compressed tar"
+
+        # 创建便携版ZIP（使用7z极限压缩）
+        mkdir -p TimeNest-portable-macos
+        cp -r TimeNest.app TimeNest-portable-macos/
+        cp README.md TimeNest-portable-macos/
+        cp LICENSE TimeNest-portable-macos/ || echo "LICENSE not found"
+
+        7z a -tzip -mx=9 -mfb=273 -mpass=15 -mmt=on TimeNest_${VERSION}_${ARCH}_portable.zip TimeNest-portable-macos/
+        echo "Created portable ZIP with extreme compression"
+
+        # 显示压缩效果
+        echo "Package sizes comparison:"
+        ls -lh TimeNest-$VERSION-macos.* | awk '{print $5 "\t" $9}' | sort -h
 
     - name: Upload macOS package to release
       if: github.ref_name == 'main' || github.ref_type == 'tag'
@@ -544,7 +713,11 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
         files: |
-          TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.app.7z
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.app.tar.zst
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.app.tar.xz
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}_portable.zip
 
     - name: Upload macOS artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
