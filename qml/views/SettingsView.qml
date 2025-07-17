@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import RinUI
+import "../components"
 
 ScrollView {
     id: settingsView
@@ -208,6 +209,20 @@ ScrollView {
             }
         }
 
+        // 集群控制
+        SettingCard {
+            width: parent.width
+            icon: "ic_fluent_server_20_regular"
+            title: qsTr("集群控制")
+            description: qsTr("管理多个TimeNest实例")
+
+            Button {
+                text: qsTr("集群设置")
+                icon.name: "ic_fluent_settings_20_regular"
+                onClicked: clusterSettingsDialog.open()
+            }
+        }
+
         // 关于
         SettingCard {
             width: parent.width
@@ -371,5 +386,33 @@ ScrollView {
     // 组件加载完成时加载设置
     Component.onCompleted: {
         loadSettings()
+    }
+
+    // 集群设置对话框
+    Dialog {
+        id: clusterSettingsDialog
+        title: qsTr("集群控制设置")
+        width: 500
+        height: 400
+        anchors.centerIn: Overlay.overlay
+        modal: true
+
+        contentItem: ClusterControlSettings {
+            anchors.fill: parent
+            anchors.margins: 10
+
+            onClusterEnabledChanged: {
+                console.log("集群控制状态已更改:", enabled)
+            }
+
+            onManagerUrlChanged: {
+                console.log("管理器URL已更改:", url)
+            }
+        }
+
+        footer: DialogButtonBox {
+            standardButtons: DialogButtonBox.Close
+            onRejected: clusterSettingsDialog.close()
+        }
     }
 }
