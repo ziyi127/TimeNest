@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*'  # 推送标签时触发发布
-    branches: [ main, develop ]  # 推送到分支时只构建，不发布
+    branches: [ main ]  # 推送到main分支时自动创建release
   pull_request:
     branches: [ main ]
   workflow_dispatch:  # 手动触发
