@@ -364,8 +364,7 @@ ScrollView {
 
     function showAboutDialog() {
         if (typeof timeNestBridge !== 'undefined') {
-            // TODO: 显示关于对话框
-            timeNestBridge.showNotification("关于", "TimeNest - 现代化时间管理工具")
+            timeNestBridge.showAboutDialog()
         }
     }
 

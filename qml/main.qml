@@ -64,70 +64,114 @@ Window {
                     model: ListModel {
                         ListElement {
                             itemName: qsTr("仪表板")
-                            iconName: "dashboard"
+                            iconEmoji: "📊"
                             viewName: "dashboard"
+                            description: qsTr("概览和统计")
                         }
                         ListElement {
                             itemName: qsTr("课程表")
-                            iconName: "calendar_today"
+                            iconEmoji: "📅"
                             viewName: "schedule"
+                            description: qsTr("课程安排管理")
                         }
                         ListElement {
                             itemName: qsTr("任务管理")
-                            iconName: "task_alt"
+                            iconEmoji: "✅"
                             viewName: "tasks"
+                            description: qsTr("任务和提醒")
                         }
                         ListElement {
                             itemName: qsTr("悬浮窗")
-                            iconName: "picture_in_picture"
+                            iconEmoji: "🪟"
                             viewName: "floating"
+                            description: qsTr("桌面悬浮显示")
                         }
                         ListElement {
                             itemName: qsTr("插件管理")
-                            iconName: "extension"
+                            iconEmoji: "🧩"
                             viewName: "plugins"
+                            description: qsTr("扩展功能")
                         }
                         ListElement {
                             itemName: qsTr("设置")
-                            iconName: "settings"
+                            iconEmoji: "⚙️"
                             viewName: "settings"
+                            description: qsTr("应用配置")
                         }
                     }
 
                     delegate: Item {
                         width: ListView.view.width
-                        height: 40
+                        height: 48
 
                         property bool isSelected: currentView === model.viewName
+                        property bool isHovered: mouseArea.containsMouse
 
                         Rectangle {
                             anchors.fill: parent
-                            color: isSelected ? "#e3f2fd" : "transparent"
-                            radius: 4
+                            anchors.margins: 2
+                            color: {
+                                if (isSelected) return isDarkMode ? "#3d5afe" : "#2196f3"
+                                if (isHovered) return isDarkMode ? "#404040" : "#f0f0f0"
+                                return "transparent"
+                            }
+                            radius: 8
 
-                            Row {
+                            // 选中状态的左侧指示条
+                            Rectangle {
+                                width: 4
+                                height: parent.height - 8
                                 anchors.left: parent.left
-                                anchors.leftMargin: 12
+                                anchors.leftMargin: 4
                                 anchors.verticalCenter: parent.verticalCenter
+                                color: isSelected ? "#ffffff" : "transparent"
+                                radius: 2
+                                visible: isSelected
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 12
                                 spacing: 12
 
                                 Text {
-                                    text: "📋"  // Simple icon replacement
+                                    text: model.iconEmoji
                                     font.pixelSize: 20
-                                    color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
 
-                                Text {
-                                    text: model.itemName
-                                    font.pixelSize: 14
-                                    color: isSelected ? "#2196f3" : (isDarkMode ? "#ffffff" : "#000000")
-                                    font.bold: isSelected
-                                    anchors.verticalCenter: parent.verticalCenter
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    Text {
+                                        text: model.itemName
+                                        font.pixelSize: 14
+                                        font.bold: isSelected
+                                        color: {
+                                            if (isSelected) return "#ffffff"
+                                            return isDarkMode ? "#ffffff" : "#000000"
+                                        }
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Text {
+                                        text: model.description
+                                        font.pixelSize: 11
+                                        color: {
+                                            if (isSelected) return "#e3f2fd"
+                                            return isDarkMode ? "#cccccc" : "#666666"
+                                        }
+                                        Layout.fillWidth: true
+                                        visible: isSelected || isHovered
+                                    }
                                 }
                             }
 
                             MouseArea {
+                                id: mouseArea
                                 anchors.fill: parent
+                                hoverEnabled: true
                                 onClicked: currentView = model.viewName
                             }
                         }
@@ -149,47 +193,122 @@ Window {
                     leftPadding: 8
                 }
 
-                Column {
+                ColumnLayout {
                     width: parent.width
-                    spacing: 4
+                    spacing: 8
 
-                    Button {
-                        text: qsTr("新建课程")
-                        width: parent.width
-                        flat: true
-                        onClicked: showNewCourseDialog()
-                    }
+                    // 新建操作
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 80
+                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        radius: 8
+                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.width: 1
 
-                    Button {
-                        text: qsTr("新建任务")
-                        width: parent.width
-                        flat: true
-                        onClicked: showNewTaskDialog()
-                    }
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 8
 
-                    Switch {
-                        text: qsTr("显示悬浮窗")
-                        width: parent.width
-                        checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false
-                        onToggled: {
-                            if (typeof timeNestBridge !== 'undefined') {
-                                // 修复逻辑：根据checked状态直接显示或隐藏悬浮窗
-                                if (checked) {
-                                    timeNestBridge.showFloatingWindow()
-                                } else {
-                                    timeNestBridge.hideFloatingWindow()
+                            Text {
+                                text: qsTr("创建新内容")
+                                font.pixelSize: 12
+                                font.bold: true
+                                color: isDarkMode ? "#ffffff" : "#000000"
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+
+                                Button {
+                                    text: "📚 课程"
+                                    Layout.fillWidth: true
+                                    flat: true
+                                    font.pixelSize: 11
+                                    onClicked: {
+                                        if (typeof timeNestBridge !== 'undefined') {
+                                            timeNestBridge.showNewCourseDialog()
+                                        }
+                                    }
+                                }
+
+                                Button {
+                                    text: "✅ 任务"
+                                    Layout.fillWidth: true
+                                    flat: true
+                                    font.pixelSize: 11
+                                    onClicked: {
+                                        if (typeof timeNestBridge !== 'undefined') {
+                                            timeNestBridge.showNewTaskDialog()
+                                        }
+                                    }
                                 }
                             }
                         }
+                    }
 
-                        // 定时更新状态
-                        Timer {
-                            interval: 1000
-                            running: true
-                            repeat: true
-                            onTriggered: {
-                                if (typeof timeNestBridge !== 'undefined') {
-                                    parent.checked = timeNestBridge.isFloatingWindowVisible()
+                    // 悬浮窗控制
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 60
+                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        radius: 8
+                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.width: 1
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 12
+
+                            Text {
+                                text: "🪟"
+                                font.pixelSize: 20
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                Text {
+                                    text: qsTr("悬浮窗")
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: isDarkMode ? "#ffffff" : "#000000"
+                                }
+
+                                Text {
+                                    text: qsTr("桌面时间显示")
+                                    font.pixelSize: 10
+                                    color: isDarkMode ? "#cccccc" : "#666666"
+                                }
+                            }
+
+                            Switch {
+                                checked: typeof timeNestBridge !== 'undefined' ? timeNestBridge.isFloatingWindowVisible() : false
+                                onToggled: {
+                                    if (typeof timeNestBridge !== 'undefined') {
+                                        // 修复逻辑：根据checked状态直接显示或隐藏悬浮窗
+                                        if (checked) {
+                                            timeNestBridge.showFloatingWindow()
+                                        } else {
+                                            timeNestBridge.hideFloatingWindow()
+                                        }
+                                    }
+                                }
+
+                                // 定时更新状态
+                                Timer {
+                                    interval: 1000
+                                    running: true
+                                    repeat: true
+                                    onTriggered: {
+                                        if (typeof timeNestBridge !== 'undefined') {
+                                            parent.checked = timeNestBridge.isFloatingWindowVisible()
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -211,30 +330,71 @@ Window {
                     leftPadding: 8
                 }
 
-                Column {
+                ColumnLayout {
                     width: parent.width
-                    spacing: 4
+                    spacing: 8
 
-                    Button {
-                        text: qsTr("关于")
-                        width: parent.width
-                        flat: true
-                        onClicked: console.log("About dialog disabled")
+                    // 主题切换
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 50
+                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        radius: 8
+                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.width: 1
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 12
+
+                            Text {
+                                text: isDarkMode ? "🌙" : "☀️"
+                                font.pixelSize: 18
+                            }
+
+                            Text {
+                                text: isDarkMode ? qsTr("深色模式") : qsTr("浅色模式")
+                                font.pixelSize: 12
+                                color: isDarkMode ? "#ffffff" : "#000000"
+                                Layout.fillWidth: true
+                            }
+
+                            Switch {
+                                checked: isDarkMode
+                                onToggled: isDarkMode = !isDarkMode
+                            }
+                        }
                     }
 
-                    Button {
-                        text: isDarkMode ? qsTr("浅色模式") : qsTr("深色模式")
-                        width: parent.width
-                        flat: true
-                        onClicked: isDarkMode = !isDarkMode
-                    }
+                    // 应用信息和控制
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
 
-                    Button {
-                        text: qsTr("退出应用")
-                        width: parent.width
-                        onClicked: {
-                            if (typeof timeNestBridge !== 'undefined') {
-                                timeNestBridge.exitApplication()
+                        Button {
+                            text: "ℹ️ 关于"
+                            Layout.fillWidth: true
+                            flat: true
+                            font.pixelSize: 11
+                            onClicked: {
+                                if (typeof timeNestBridge !== 'undefined') {
+                                    timeNestBridge.showAboutDialog()
+                                }
+                            }
+                        }
+
+                        Button {
+                            text: "🚪 退出"
+                            Layout.fillWidth: true
+                            flat: true
+                            font.pixelSize: 11
+                            palette.button: "#d32f2f"
+                            palette.buttonText: "#ffffff"
+                            onClicked: {
+                                if (typeof timeNestBridge !== 'undefined') {
+                                    timeNestBridge.exitApplication()
+                                }
                             }
                         }
                     }

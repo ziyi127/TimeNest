@@ -94,13 +94,14 @@ Item {
             }
         }
 
-        Row {
-            width: parent.width
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 80
             spacing: 20
 
             Frame {
-                width: 150
-                height: 80
+                Layout.preferredWidth: 150
+                Layout.preferredHeight: 80
 
                 Column {
                     anchors.centerIn: parent
@@ -124,8 +125,8 @@ Item {
             }
 
             Frame {
-                width: 150
-                height: 80
+                Layout.preferredWidth: 150
+                Layout.preferredHeight: 80
 
                 Column {
                     anchors.centerIn: parent

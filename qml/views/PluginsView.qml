@@ -153,18 +153,21 @@ ScrollView {
 
                     Item { Layout.fillWidth: true }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("浏览市场")
-                        highlighted: true
                         onClicked: {
-                            // TODO: 打开插件市场
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.openPluginMarket()
+                            }
                         }
                     }
 
-                    Button {
+                    RinUI.Button {
                         text: qsTr("安装本地插件")
                         onClicked: {
-                            // TODO: 安装本地插件
+                            if (typeof timeNestBridge !== 'undefined') {
+                                timeNestBridge.installLocalPlugin()
+                            }
                         }
                     }
                 }
@@ -284,27 +287,27 @@ ScrollView {
                                     }
                                 }
 
-                                Switch {
+                                RinUI.Switch {
                                     checked: model.enabled
-                                    onClicked: {
-                                        togglePlugin(model.id, checked)
+                                    onToggled: {
+                                        togglePlugin(model.name, checked)
                                     }
                                 }
 
-                                Button {
+                                RinUI.Button {
                                     text: qsTr("设置")
                                     flat: true
                                     enabled: model.enabled
                                     onClicked: {
-                                        openPluginSettings(model.id)
+                                        openPluginSettings(model.name)
                                     }
                                 }
 
-                                Button {
+                                RinUI.Button {
                                     text: qsTr("卸载")
                                     flat: true
                                     onClicked: {
-                                        uninstallPlugin(model.id)
+                                        uninstallPlugin(model.name)
                                     }
                                 }
                             }

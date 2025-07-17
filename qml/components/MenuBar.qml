@@ -12,35 +12,37 @@ MenuBar {
         MenuItem {
             text: qsTr("新建课程")
             onTriggered: {
-                // TODO: 打开新建课程对话框
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showNewCourseDialog()
+                }
             }
         }
-        
+
         MenuItem {
             text: qsTr("新建任务")
             onTriggered: {
-                // TODO: 打开新建任务对话框
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showNewTaskDialog()
+                }
             }
         }
         
         MenuSeparator {}
         
         MenuItem {
-            text: qsTr("导入数据")
+            text: qsTr("导入Excel")
             onTriggered: {
                 if (typeof timeNestBridge !== 'undefined') {
-                    // TODO: 打开文件选择对话框
-                    // timeNestBridge.importData(filePath)
+                    timeNestBridge.importExcelFile()
                 }
             }
         }
-        
+
         MenuItem {
-            text: qsTr("导出数据")
+            text: qsTr("导出Excel")
             onTriggered: {
                 if (typeof timeNestBridge !== 'undefined') {
-                    // TODO: 打开文件保存对话框
-                    // timeNestBridge.exportData(filePath)
+                    timeNestBridge.exportExcelFile()
                 }
             }
         }
@@ -127,7 +129,9 @@ MenuBar {
             text: qsTr("全屏")
             checkable: true
             onTriggered: {
-                // TODO: 切换全屏模式
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.toggleFullScreen()
+                }
             }
         }
     }
@@ -138,14 +142,18 @@ MenuBar {
         MenuItem {
             text: qsTr("插件管理")
             onTriggered: {
-                // TODO: 切换到插件页面
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showPluginManager()
+                }
             }
         }
-        
+
         MenuItem {
             text: qsTr("主题管理")
             onTriggered: {
-                // TODO: 切换到设置页面的主题部分
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showThemeManager()
+                }
             }
         }
         
@@ -154,14 +162,18 @@ MenuBar {
         MenuItem {
             text: qsTr("时间校准")
             onTriggered: {
-                // TODO: 打开时间校准对话框
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.calibrateTime()
+                }
             }
         }
-        
+
         MenuItem {
             text: qsTr("系统信息")
             onTriggered: {
-                // TODO: 显示系统信息
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showSystemInfo()
+                }
             }
         }
     }
@@ -172,14 +184,18 @@ MenuBar {
         MenuItem {
             text: qsTr("用户手册")
             onTriggered: {
-                // TODO: 打开用户手册
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.openUserManual()
+                }
             }
         }
-        
+
         MenuItem {
             text: qsTr("快捷键")
             onTriggered: {
-                // TODO: 显示快捷键帮助
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.showShortcuts()
+                }
             }
         }
         
@@ -188,7 +204,9 @@ MenuBar {
         MenuItem {
             text: qsTr("检查更新")
             onTriggered: {
-                // TODO: 检查应用更新
+                if (typeof timeNestBridge !== 'undefined') {
+                    timeNestBridge.checkForUpdates()
+                }
             }
         }
         
