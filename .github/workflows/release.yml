@@ -160,8 +160,8 @@ jobs:
       if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
-        name: TimeNest-${{ github.sha }}-windows
-        path: TimeNest-${{ github.sha }}-windows.zip
+        name: TimeNest-${{ github.sha }}-windows-${{ matrix.arch }}
+        path: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
         retention-days: 30
 
   build-linux:
@@ -369,34 +369,33 @@ jobs:
           ## TimeNest ${{ steps.version_info.outputs.version }} - Linux 安装包
 
           ### 📦 Linux 下载
-          - **Debian/Ubuntu**: TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb
-          - **Red Hat/CentOS/Fedora**: TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          - **Arch Linux**: TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          - **便携版**: TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
 
           ### 📋 安装说明
 
-          **Debian/Ubuntu:**
+          **便携版使用:**
           ```bash
-          sudo dpkg -i TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb
-          sudo apt-get install -f  # 解决依赖问题
+          # 解压文件
+          tar -xzf TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
+
+          # 进入目录
+          cd TimeNest-portable-linux
+
+          # 运行程序
+          ./run.sh
+          # 或直接运行
+          ./TimeNest
           ```
 
-          **Red Hat/CentOS/Fedora:**
-          ```bash
-          tar -xzf TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          sudo cp TimeNest /usr/local/bin/
-          ```
-
-          **Arch Linux:**
-          ```bash
-          tar -xJf TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
-          sudo cp usr/bin/TimeNest /usr/local/bin/
-          ```
+          ### 💡 系统要求
+          - Linux 发行版（Ubuntu 18.04+、CentOS 7+、Debian 10+ 等）
+          - 架构: ${{ matrix.arch }}
+          - Python 3.8+ 运行时环境
 
           ### 🚀 运行
-          安装完成后，可以通过以下方式启动：
-          - 命令行: `TimeNest`
-          - 应用菜单: 搜索 "TimeNest"
+          解压后可以通过以下方式启动：
+          - 使用启动脚本: `./run.sh`
+          - 直接运行: `./TimeNest`
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
@@ -406,11 +405,9 @@ jobs:
       if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
-        name: TimeNest-${{ github.sha }}-linux-packages
+        name: TimeNest-${{ github.sha }}-linux-${{ matrix.arch }}
         path: |
-          TimeNest_${{ steps.version_info.outputs.version }}-1_amd64.deb*
-          TimeNest-${{ steps.version_info.outputs.version }}-1.x86_64.rpm.tar.gz
-          TimeNest-${{ steps.version_info.outputs.version }}-1-x86_64.pkg.tar.xz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
         retention-days: 30
 
   build-macos:
@@ -558,17 +555,17 @@ jobs:
           ## TimeNest ${{ steps.version_info_macos.outputs.version }} - macOS 版本
 
           ### 📦 macOS 下载
-          - **macOS 应用程序**: TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
+          - **macOS 应用程序**: TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.zip
 
           ### 📋 macOS 安装说明
-          1. 下载 DMG 文件
-          2. 双击打开 DMG 文件
+          1. 下载 ZIP 文件
+          2. 解压 ZIP 文件
           3. 将 TimeNest.app 拖拽到 Applications 文件夹
           4. 在 Applications 中找到 TimeNest 并启动
 
           ### 💡 系统要求
           - macOS 10.15 (Catalina) 或更高版本
-          - 支持 Intel 和 Apple Silicon (M1/M2) 处理器
+          - 架构: ${{ matrix.arch }}
 
           ### ⚠️ 注意事项
           首次运行时，可能需要在"系统偏好设置" > "安全性与隐私"中允许运行此应用程序。
@@ -581,7 +578,7 @@ jobs:
       if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
-        name: TimeNest-${{ github.sha }}-macos
+        name: TimeNest-${{ github.sha }}-macos-${{ matrix.arch }}
         path: |
-          TimeNest-${{ steps.version_info_macos.outputs.version }}-macos.dmg
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.zip
         retention-days: 30
