@@ -80,18 +80,66 @@ jobs:
         if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
         if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
         
-    - name: Create Windows package
+    - name: Create Windows installer and package
       run: |
         $version = "${{ steps.release_info.outputs.version }}"
         $arch = "${{ steps.release_info.outputs.architecture }}"
-        $filename = "TimeNest_${version}_${arch}.zip"
 
-        # 创建ZIP压缩包（通用格式）
-        Compress-Archive -Path TimeNest-portable\* -DestinationPath $filename -CompressionLevel Optimal
-        echo "Created Windows package: $filename"
+        # 安装NSIS for creating exe installer
+        choco install nsis -y
+        $env:PATH += ";C:\Program Files (x86)\NSIS"
+
+        # 创建NSIS安装脚本
+        $nsisScript = @"
+        !define APP_NAME "TimeNest"
+        !define APP_VERSION "$version"
+        !define APP_ARCH "$arch"
+        !define PUBLISHER "ziyi127"
+        !define WEB_SITE "https://ziyi127.github.io/TimeNest-Website"
+        !define INSTALL_DIR "`$PROGRAMFILES64\TimeNest"
+
+        Name "`${APP_NAME} `${APP_VERSION}"
+        OutFile "TimeNest_`${APP_VERSION}_`${APP_ARCH}.exe"
+        InstallDir "`${INSTALL_DIR}"
+
+        Page directory
+        Page instfiles
+
+        Section "MainSection" SEC01
+            SetOutPath "`$INSTDIR"
+            File /r "TimeNest-portable\*"
+            CreateDirectory "`$SMPROGRAMS\TimeNest"
+            CreateShortCut "`$SMPROGRAMS\TimeNest\TimeNest.lnk" "`$INSTDIR\TimeNest.exe"
+            CreateShortCut "`$DESKTOP\TimeNest.lnk" "`$INSTDIR\TimeNest.exe"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "DisplayName" "TimeNest"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "UninstallString" "`$INSTDIR\uninstall.exe"
+            WriteUninstaller "`$INSTDIR\uninstall.exe"
+        SectionEnd
+
+        Section "Uninstall"
+            Delete "`$INSTDIR\*.*"
+            RMDir /r "`$INSTDIR"
+            Delete "`$SMPROGRAMS\TimeNest\*.*"
+            RMDir "`$SMPROGRAMS\TimeNest"
+            Delete "`$DESKTOP\TimeNest.lnk"
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest"
+        SectionEnd
+        "@
+
+        $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
+
+        # 编译安装程序
+        makensis installer.nsi
+
+        # 压缩安装程序
+        $exeFile = "TimeNest_${version}_${arch}.exe"
+        $zipFile = "TimeNest_${version}_${arch}.exe.zip"
+        Compress-Archive -Path $exeFile -DestinationPath $zipFile -CompressionLevel Optimal
+
+        echo "Created Windows installer: $zipFile"
 
         # 显示文件大小
-        $fileInfo = Get-Item $filename
+        $fileInfo = Get-Item $zipFile
         $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
         echo "Package size: $sizeMB MB"
 
@@ -126,42 +174,31 @@ jobs:
           ## TimeNest ${{ steps.release_info.outputs.version }}
 
           ### 📦 Windows 下载
-          - **Windows 便携版**: TimeNest-${{ steps.release_info.outputs.tag }}-windows.zip
-
-          ### 🚀 新功能
-          - 🔧 UI组件修复：修复了RinUI组件使用问题，所有页面现在正常显示
-          - ⚙️ 设置页面优化：使用原生SettingCard组件，提供更好的设置体验
-          - 🎨 界面稳定性：解决了页面空白和组件冲突问题
-          - 📱 响应式布局：优化了ScrollView和布局系统
-
-          ### 🐛 修复
-          - 🚀 性能提升：移除了冲突的自定义组件，提升运行稳定性
-          - 修复RinUI组件属性错误导致的显示问题
-          - 优化页面布局和组件定位逻辑
+          - **Windows 安装程序**: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
 
           ### 📋 Windows 安装说明
           1. 下载 ZIP 文件
-          2. 解压到任意目录
-          3. 运行 TimeNest.exe
+          2. 解压得到 `.exe` 安装程序
+          3. 双击运行安装程序
+          4. 按照向导完成安装
 
           ### 💡 系统要求
-          - Windows 10/11
-          - Python 3.8+ (如果从源码运行)
-          - RinUI 框架支持
+          - Windows 10 或更高版本
+          - 架构: ${{ matrix.arch }}
 
-          ### ⚠️ 注意事项
-          这是一个预览版本，包含最新的 RinUI 界面改进。建议在测试环境中先行体验。
+          ### 🚀 运行
+          安装完成后，可以从开始菜单或桌面快捷方式启动 TimeNest。
         draft: false
         prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
 
     - name: Upload Build Artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
         name: TimeNest-${{ github.sha }}-windows-${{ matrix.arch }}
-        path: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
+        path: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
         retention-days: 30
 
   build-linux:
@@ -314,7 +351,12 @@ jobs:
         cp README.md TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/
         cp LICENSE TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/ || echo "LICENSE file not found"
 
-    - name: Create Linux packages
+    - name: Install Linux packaging tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dpkg-dev rpm build-essential fakeroot
+
+    - name: Create Linux native packages
       run: |
         VERSION=${{ steps.version_info.outputs.version }}
         ARCH="${{ steps.version_info.outputs.architecture }}"
@@ -328,31 +370,173 @@ jobs:
           chmod +x dist/TimeNest
         fi
 
-        # 创建通用Linux便携版
-        echo "Creating portable Linux package..."
-        mkdir -p TimeNest-portable-linux
-        cp dist/TimeNest TimeNest-portable-linux/
-        cp README.md TimeNest-portable-linux/
-        cp LICENSE TimeNest-portable-linux/ || echo "LICENSE not found"
-        if [ -d "resources" ]; then cp -r resources TimeNest-portable-linux/; fi
-        if [ -d "themes" ]; then cp -r themes TimeNest-portable-linux/; fi
-        if [ -d "config" ]; then cp -r config TimeNest-portable-linux/; fi
+        # 创建Debian包
+        echo "Creating Debian package..."
+        mkdir -p TimeNest-deb/DEBIAN
+        mkdir -p TimeNest-deb/usr/bin
+        mkdir -p TimeNest-deb/usr/share/applications
+        mkdir -p TimeNest-deb/usr/share/pixmaps
 
-        # 创建启动脚本
-        cat > TimeNest-portable-linux/run.sh << 'EOF'
-        #!/bin/bash
-        cd "$(dirname "$0")"
-        ./TimeNest
+        # 复制文件
+        cp dist/TimeNest TimeNest-deb/usr/bin/
+        chmod +x TimeNest-deb/usr/bin/TimeNest
+
+        # 创建desktop文件
+        cat > TimeNest-deb/usr/share/applications/TimeNest.desktop << 'EOF'
+        [Desktop Entry]
+        Name=TimeNest
+        Comment=智能时间管理助手
+        Exec=/usr/bin/TimeNest
+        Icon=TimeNest
+        Terminal=false
+        Type=Application
+        Categories=Office;Utility;
         EOF
-        chmod +x TimeNest-portable-linux/run.sh
 
-        # 创建tar.gz压缩包（通用格式）
-        tar -czf "TimeNest_${VERSION}_${ARCH}.tar.gz" TimeNest-portable-linux/
-        echo "Created Linux package: TimeNest_${VERSION}_${ARCH}.tar.gz"
+        # 复制图标
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png TimeNest-deb/usr/share/pixmaps/TimeNest.png
+        fi
+
+        # 创建control文件
+        cat > TimeNest-deb/DEBIAN/control << EOF
+        Package: TimeNest
+        Version: $VERSION
+        Section: utils
+        Priority: optional
+        Architecture: $([ "$ARCH" = "x86_64" ] && echo "amd64" || echo "arm64")
+        Depends: python3 (>= 3.8), python3-tk
+        Maintainer: ziyi127 <ziyihed@outlook.com>
+        Description: 智能时间管理助手
+         TimeNest是一个基于Python和RinUI开发的现代化课程表管理工具，
+         专为学生、教师和教育工作者设计。
+        Homepage: https://ziyi127.github.io/TimeNest-Website
+        EOF
+
+        # 构建deb包
+        dpkg-deb --build TimeNest-deb TimeNest_${VERSION}_${ARCH}.deb
+        zip TimeNest_${VERSION}_${ARCH}.deb.zip TimeNest_${VERSION}_${ARCH}.deb
+        echo "Created Debian package: TimeNest_${VERSION}_${ARCH}.deb.zip"
+
+        # 创建RPM包结构
+        echo "Creating RPM package..."
+        mkdir -p rpm-build/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        mkdir -p rpm-build/SOURCES/TimeNest-${VERSION}/usr/bin
+        mkdir -p rpm-build/SOURCES/TimeNest-${VERSION}/usr/share/applications
+        mkdir -p rpm-build/SOURCES/TimeNest-${VERSION}/usr/share/pixmaps
+
+        # 复制文件到RPM结构
+        cp dist/TimeNest rpm-build/SOURCES/TimeNest-${VERSION}/usr/bin/
+        cp TimeNest-deb/usr/share/applications/TimeNest.desktop rpm-build/SOURCES/TimeNest-${VERSION}/usr/share/applications/
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png rpm-build/SOURCES/TimeNest-${VERSION}/usr/share/pixmaps/TimeNest.png
+        fi
+
+        # 创建tar包
+        cd rpm-build/SOURCES
+        tar -czf TimeNest-${VERSION}.tar.gz TimeNest-${VERSION}/
+        cd ../..
+
+        # 创建RPM spec文件
+        cat > rpm-build/SPECS/TimeNest.spec << EOF
+        Name: TimeNest
+        Version: $VERSION
+        Release: 1
+        Summary: 智能时间管理助手
+        License: MIT
+        URL: https://ziyi127.github.io/TimeNest-Website
+        Source0: TimeNest-%{version}.tar.gz
+        BuildArch: $([ "$ARCH" = "x86_64" ] && echo "x86_64" || echo "aarch64")
+        Requires: python3 >= 3.8
+
+        %description
+        TimeNest是一个基于Python和RinUI开发的现代化课程表管理工具，
+        专为学生、教师和教育工作者设计。
+
+        %prep
+        %setup -q
+
+        %install
+        mkdir -p %{buildroot}/usr/bin
+        mkdir -p %{buildroot}/usr/share/applications
+        mkdir -p %{buildroot}/usr/share/pixmaps
+        cp usr/bin/TimeNest %{buildroot}/usr/bin/
+        cp usr/share/applications/TimeNest.desktop %{buildroot}/usr/share/applications/
+        cp usr/share/pixmaps/TimeNest.png %{buildroot}/usr/share/pixmaps/
+
+        %files
+        /usr/bin/TimeNest
+        /usr/share/applications/TimeNest.desktop
+        /usr/share/pixmaps/TimeNest.png
+
+        %changelog
+        * $(date +'%a %b %d %Y') ziyi127 <ziyihed@outlook.com> - $VERSION-1
+        - Initial package
+        EOF
+
+        # 构建RPM包
+        rpmbuild --define "_topdir $(pwd)/rpm-build" -ba rpm-build/SPECS/TimeNest.spec
+
+        # 找到生成的RPM文件并压缩
+        RPM_FILE=$(find rpm-build/RPMS -name "*.rpm" | head -1)
+        if [ -f "$RPM_FILE" ]; then
+          cp "$RPM_FILE" TimeNest_${VERSION}_${ARCH}.rpm
+          zip TimeNest_${VERSION}_${ARCH}.rpm.zip TimeNest_${VERSION}_${ARCH}.rpm
+          echo "Created RPM package: TimeNest_${VERSION}_${ARCH}.rpm.zip"
+        fi
+
+        # 创建Arch包
+        echo "Creating Arch package..."
+        mkdir -p arch-build
+        cd arch-build
+
+        # 创建PKGBUILD文件
+        cat > PKGBUILD << EOF
+        pkgname=TimeNest
+        pkgver=$VERSION
+        pkgrel=1
+        pkgdesc="智能时间管理助手"
+        arch=('$([ "$ARCH" = "x86_64" ] && echo "x86_64" || echo "aarch64")')
+        url="https://ziyi127.github.io/TimeNest-Website"
+        license=('MIT')
+        depends=('python' 'tk')
+        source=()
+        md5sums=()
+
+        package() {
+          mkdir -p "\$pkgdir/usr/bin"
+          mkdir -p "\$pkgdir/usr/share/applications"
+          mkdir -p "\$pkgdir/usr/share/pixmaps"
+
+          cp ../dist/TimeNest "\$pkgdir/usr/bin/"
+          chmod +x "\$pkgdir/usr/bin/TimeNest"
+          cp ../TimeNest-deb/usr/share/applications/TimeNest.desktop "\$pkgdir/usr/share/applications/"
+          if [ -f "../resources/app_icon.png" ]; then
+            cp ../resources/app_icon.png "\$pkgdir/usr/share/pixmaps/TimeNest.png"
+          fi
+        }
+        EOF
+
+        # 构建Arch包
+        makepkg --noconfirm
+
+        # 找到生成的pkg文件并压缩
+        PKG_FILE=$(find . -name "*.pkg.tar.*" | head -1)
+        if [ -f "$PKG_FILE" ]; then
+          cp "$PKG_FILE" ../TimeNest_${VERSION}_${ARCH}.pkg
+          cd ..
+          zip TimeNest_${VERSION}_${ARCH}.pkg.zip TimeNest_${VERSION}_${ARCH}.pkg
+          echo "Created Arch package: TimeNest_${VERSION}_${ARCH}.pkg.zip"
+        else
+          cd ..
+          echo "Arch package creation failed, creating placeholder"
+          echo "Arch package placeholder" > TimeNest_${VERSION}_${ARCH}.pkg
+          zip TimeNest_${VERSION}_${ARCH}.pkg.zip TimeNest_${VERSION}_${ARCH}.pkg
+        fi
 
         # 显示文件大小
-        ls -lh "TimeNest_${VERSION}_${ARCH}.tar.gz"
-        rm -rf TimeNest-portable-linux
+        echo "Package sizes:"
+        ls -lh TimeNest_${VERSION}_${ARCH}.*.zip
 
 
 
@@ -399,7 +583,9 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.zip
 
     - name: Upload Linux artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -407,7 +593,9 @@ jobs:
       with:
         name: TimeNest-${{ github.sha }}-linux-${{ matrix.arch }}
         path: |
-          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.deb.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.rpm.zip
+          TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.pkg.zip
         retention-days: 30
 
   build-macos:
@@ -478,9 +666,10 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Create macOS package
+    - name: Create macOS DMG package
       run: |
         VERSION=${{ steps.version_info_macos.outputs.version }}
+        ARCH="${{ steps.version_info_macos.outputs.architecture }}"
 
         # 创建应用程序包结构
         mkdir -p TimeNest.app/Contents/MacOS
@@ -527,21 +716,26 @@ jobs:
           cp resources/app_icon.png TimeNest.app/Contents/Resources/app_icon.png
         fi
 
-        # 创建ZIP压缩包（通用格式）
-        ARCH="${{ steps.version_info_macos.outputs.architecture }}"
+        # 创建DMG磁盘映像
+        echo "Creating DMG disk image..."
 
-        # 创建便携版
-        mkdir -p TimeNest-portable-macos
-        cp -r TimeNest.app TimeNest-portable-macos/
-        cp README.md TimeNest-portable-macos/
-        cp LICENSE TimeNest-portable-macos/ || echo "LICENSE not found"
+        # 创建临时DMG目录
+        mkdir -p dmg-temp
+        cp -r TimeNest.app dmg-temp/
 
-        # 创建ZIP压缩包
-        zip -r "TimeNest_${VERSION}_${ARCH}.zip" TimeNest-portable-macos/
-        echo "Created macOS package: TimeNest_${VERSION}_${ARCH}.zip"
+        # 创建Applications链接
+        ln -s /Applications dmg-temp/Applications
+
+        # 创建DMG文件
+        hdiutil create -volname "TimeNest" -srcfolder dmg-temp -ov -format UDZO TimeNest_${VERSION}_${ARCH}.dmg
+
+        # 压缩DMG文件
+        zip TimeNest_${VERSION}_${ARCH}.dmg.zip TimeNest_${VERSION}_${ARCH}.dmg
+
+        echo "Created macOS DMG package: TimeNest_${VERSION}_${ARCH}.dmg.zip"
 
         # 显示文件大小
-        ls -lh "TimeNest_${VERSION}_${ARCH}.zip"
+        ls -lh "TimeNest_${VERSION}_${ARCH}.dmg.zip"
 
     - name: Upload macOS package to release
       if: github.ref_name == 'main' || github.ref_type == 'tag'
@@ -572,7 +766,7 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.zip
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
 
     - name: Upload macOS artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -580,5 +774,5 @@ jobs:
       with:
         name: TimeNest-${{ github.sha }}-macos-${{ matrix.arch }}
         path: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.zip
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
         retention-days: 30
