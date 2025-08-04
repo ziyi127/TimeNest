@@ -1,96 +1,71 @@
-# TimeNest 2.2.0 Release
+TimeNest 2.2.0 发布
+TimeNest 标志
 
-<div align="center">
+一个尊�功��功能强越平台课程施表管理理工具 - RinUI 版本
 
-<img src="https://github.com/ziyi127/TimeNest/blob/main/resources/icons/app_icon.png" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+Python 林奈 PySide6 系统 许可证 GitHub 明星 GitHub 问题
 
-**一个功能强大的跨平台课程表管理工具 - RinUI版本**
+🌐 官方网站 | 📖 文档 | 🐛 问题反馈
+📖 项目简介
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![RinUI](https://img.shields.io/badge/RinUI-0.1.5+-blue.svg)](https://github.com/RinLit-233-shiroko/Rin-UI)
-[![PySide6](https://img.shields.io/badge/PySide6-6.6+-green.svg)](https://pypi.org/project/PySide6/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
+TimeNest 2.2.0 发布 是一个人基于 Python,RinUI 并 开发现代化抄迈 开发现代化练 开发现代化练甘甘甘 表现代化琴琴琴砖砖砖临为亲亲生生有机尉范师际 张;RinUI 和PySide6 开发的现9,ib.本版本本本全肠采用 - - 平架重构参甘甘甘甘琴 框架挽置齐供尽甘羽新同䮨竞䔨户靶用靶靶靶靶靶靶靶靶靶靶靶靶靶靶扩等功羽平平平平台甫,延架藏萌置嘶炼康管琴甘仙甘甘甘甘甘甘甘甘跪,幌子的)
+🎯 设计炎念念念念念念念
 
-[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+    简洁高效简洁高士:白观从从,靶 翔竞约用术术型靶用术术世靶面简化复杂杂操作
+    功能全面功能全面:涵盖课程程管管管理品品品品品湛材材品品匹面
+    跨平:Windows 架架
+    可扩展可踏展:模块化设计琴,有 剃持持补插件扩扩展成 化
+    现代化现代化:采用最新术术术栈,持续更新新
 
-</div>
+🔄 架构苗宝产
 
----
+TimeNest 2.2.0 发布 完全基于林UI 原代化构构构建 :
 
-## 📖 项目简介
+    口前:RinUI + QML 声明式UI
+    旧版架构旧版片:PySide6小部件(已完完节全柜秀)
+    性能描: 更快的的渲染速度允甘甘于)
+    界面优化界面优化:全新也原代化学 全新等 原代化设计示诡诡诡言 :
+    组件系统 : 使用用用用用用用用用用赖原组组,献献供供配从配从配下该 词 ,
+    主题支持 : 完整正 宁的明明暗主招钩归归贡男甘定义甘族颜恩主颜颜族颜琴琴持
 
-TimeNest 2.2.0 Release 是一个基于 Python、RinUI 和 PySide6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。本版本完全采用 RinUI 框架重构，提供了全新的现代化用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
+🆕 v2.2.0 更新
 
-### 🎯 设计理念
+    🔧 修复了呆呆有丰,要临汸,西朝告提
+    ⚙️ 对话: 别林新书程程;丆如永,佝哚,佝哒
+    🎨 响应应 曹应计 : 改进的自适归布局局,好地适配配配配同同同同同位位在同位:
+    📱 代螺质量: 减少征诉呼,原学,程化用程程序定性性
+    🛠️ : 所有有�菜单次锤钮钮钮都有实有实原
+    🚀 性能提升 : 秀断早,认定义义义组件置置置置置置置置置置置置置置置置置置置置置置置置置置置路路路路路路路路路稳定性
 
-- **简洁高效**：直观的用户界面，简化复杂操作
-- **功能全面**：涵盖课程管理的各个方面
-- **跨平台**：支持 Windows、macOS、Linux
-- **可扩展**：模块化设计，支持插件扩展
-- **现代化**：采用最新技术栈，持续更新
+启动方式
 
-
-## 🔄 架构升级
-
-TimeNest 2.2.0 Release 完全基于 RinUI 现代化架构构建：
-
-- **当前架构**: RinUI + QML 声明式UI
-- **旧版架构**: PySide6 Widgets (已完全移除)
-- **性能提升**: 更快的渲染速度和更低的内存占用
-- **界面优化**: 全新的现代化设计语言
-- **组件系统**: 使用RinUI原生组件，提供更好的用户体验
-- **主题支持**: 完整的明暗主题切换和自定义主题支持
-
-### 🆕 v2.2.0 更新内容
-
-- **🔧 布局系统优化**: 修复了所有主要布局警告，提供更稳定的UI体验
-- **⚙️ Dialog改进**: 重构了新建课程和任务对话框，使用标准Layout系统
-- **🎨 响应式设计**: 改进的自适应布局，更好地适配不同屏幕尺寸
-- **📱 代码质量**: 减少QML警告，提升应用程序稳定性
-- **🛠️ 功能完善**: 所有菜单项和按钮都有实际功能实现
-- **🚀 性能提升**: 移除了冲突的自定义组件，提升运行稳定性
-
-### 启动方式
-
-```bash
 # 主要启动方式
 python main.py
 
 # 或使用启动脚本（包含依赖检查）
 python run_rinui.py
-```
 
-## 🚀 快速开始
+🚀 快速开始
+系统要求
+项目 	真低要求 	朝荐配置
+操作系统 	Windows 10 / macOS 10.14 / Linux 	Windows 11 / macOS 12+ / Ubuntu 20.04+
+Python 	3.8+ 	3.11+
+内市思 	2GB 	4GB+
+桂储空间 	500MB 	1GB+
+显示晶 	1024x768 	1920x1080+ 时间
+📦 下载预编译版本
+支持的平台平台混构
+平台 	x86_64 	ARM64 系统 	下载格式
+视窗 	✅ 	✅ 	.exe安装程序
+macOS 	✅ 	✅ 	.dmg磁盘映像
+Linux 	✅ 	❌ 	.deb .rpm .pkg
 
-### 系统要求
+    亚于 : ARM64 Linux 台户请使用音琴,
 
-| 项目 | 最低要求 | 推荐配置 |
-|------|----------|----------|
-| **操作系统** | Windows 10 / macOS 10.14 / Linux | Windows 11 / macOS 12+ / Ubuntu 20.04+ |
-| **Python** | 3.8+ | 3.11+ |
-| **内存** | 2GB | 4GB+ |
-| **存储空间** | 500MB | 1GB+ |
-| **显示器** | 1024x768 | 1920x1080+ |
+下载链接
 
-### 📦 下载预编译版本
+前 帆勤 页面 下羽 下载 下载言 人:
 
-#### 支持的平台和架构
-
-| 平台 | x86_64 | ARM64 | 下载格式 |
-|------|--------|-------|----------|
-| **Windows** | ✅ | ✅ | `.exe` 安装程序 |
-| **macOS** | ✅ | ✅ | `.dmg` 磁盘映像 |
-| **Linux** | ✅ | ❌ | `.deb` `.rpm` `.pkg` |
-
-> **注意**: ARM64 Linux 用户请使用源码安装，详见 [ARM64 Linux 支持说明](docs/ARM64_LINUX_SUPPORT.md)
-
-#### 下载链接
-
-前往 [Releases 页面](https://github.com/ziyi127/TimeNest/releases) 下载最新版本：
-
-```
 Windows:
 ├── TimeNest_2.2.2_x86_64.exe.zip  (Intel/AMD 64位)
 └── TimeNest_2.2.2_arm64.exe.zip   (ARM64)
@@ -103,11 +78,9 @@ Linux (仅 x86_64):
 ├── TimeNest_2.2.2_x86_64.deb.zip  (Debian/Ubuntu)
 ├── TimeNest_2.2.2_x86_64.rpm.zip  (RedHat/CentOS)
 └── TimeNest_2.2.2_x86_64.pkg.zip  (Arch Linux)
-```
 
-### 🛠️ 源码安装
+🛠️ 源码安饼
 
-```bash
 # 克隆项目
 git clone https://github.com/ziyi127/TimeNest.git
 cd TimeNest
@@ -126,207 +99,176 @@ pip install -r requirements.txt
 python main.py  # RinUI版本
 # 或使用启动脚本
 python run_rinui.py
-```
 
-### 验证安装
+验证安装
 
-```bash
 # 运行应用
 python main.py  # RinUI版本
 # 或使用启动脚本
 python run_rinui.py
-```
 
-## ✨ 核心功能
+✨ 核心功能能
+📅 智能课程表管理
 
-### 📅 智能课程表管理
+📊
 
-<table>
-<tr>
-<td width="50%">
+    实时课程程状态更新
+    当前课程程男高亮显示
+    课程进度无仲庭化
+    智能能时间间轴
 
-**📊 动态显示**
-- 实时课程状态更新
-- 当前课程高亮显示
-- 课程进度可视化
-- 智能时间轴
+📝 灵活编辑
 
-**📝 灵活编辑**
-- 拖拽式课程调整
-- 批量操作支持
-- 模板快速创建
-- 历史版本管理
+    拖拽式课程法催援
+    批量操作支持
+    模板快速创建
+    原史版本管理
 
-</td>
-<td width="50%">
+	
 
-**📁 多格式支持**
-- JSON/YAML 配置文件
-- Excel 表格导入导出
-- CSV 数据交换
-- ClassIsland 兼容
+📁 多格式支持
 
-**🔄 数据同步**
-- 云端备份同步
-- 多设备数据共享
-- 自动备份恢复
-- 增量同步机制
+    JSON/YAML 配置文件
+    Excel 表格语入出
+    CSV 数据交
+    阶级 岛 兼容
 
-</td>
-</tr>
-</table>
+🔄 数据同同,顺其
 
-### ⏰ 智能提醒系统
+    云端备份䐽同步
+    多设备数据共享
+    自动备份恢复
+    增量同步机制
 
-<table>
-<tr>
-<td width="50%">
+⏰ 智能描醒系统
 
-**🔔 多样化提醒**
-- 系统通知弹窗
-- 自定义音效播放
-- 语音播报功能
-- 邮件提醒推送
+🔔 多样 提醒
 
-**⚙️ 智能配置**
-- 提前提醒时间设置
-- 免打扰模式
-- 条件触发规则
-- 优先级管理
+    系统通知弹窗
+    自定义依音效播草放
+    语音播报功能能
+    邮件件件提醒推送
 
-</td>
-<td width="50%">
+⚙️ 智能配置
 
-**🎵 个性化定制**
-- 自定义提醒音效
-- 语音合成设置
-- 通知样式主题
-- 提醒内容模板
+    提前醒时间设置
+    合打打扰模式
+    条件件触发规越越
+    优先级管
 
-**📱 跨平台通知**
-- Windows 原生通知
-- macOS 通知中心
-- Linux 桌面通知
-- 移动端推送（规划中）
+	
 
-</td>
-</tr>
-</table>
+🎵
 
-### 🎨 现代化界面
+    自定义依提醒音效
+    语音合成设置
+    通知样式主题
+    提醒内容模横板
 
-<table>
-<tr>
-<td width="50%">
+📱 跨平台通知
 
-**🖥️ 智能浮窗**
-- 仿苹果灵动岛设计
-- 实时信息显示
-- 自适应透明度
-- 磁性吸附定位
+    Windows 原生通 优生通 的
+    macOS 通知中喜
+    Linux 桌面通知
+    秀动端推送(规划中)
 
-**🎭 主题系统**
-- 明暗主题切换
-- 自定义配色方案
-- 主题市场下载
-- 实时预览效果
+🎰代化界 )
 
-</td>
-<td width="50%">
+    仿苹果灵动岛设计
+    实时信怡息显示
+    自适应 二明二明是台
+    磁性吸附定位位
 
-**🧩 模块化组件**
-- 可拖拽组件布局
-- 自定义组件大小
-- 组件显示控制
-- 布局模板保存
+🎭 主题系统
 
-**📊 信息面板**
-- 实时时钟显示
-- 天气信息集成
-- 系统状态监控
-- 倒计时提醒
+    明暗主题切换
+    自定恩义苯配色方案
+    主题市 帻题市场下载
+    实时预览教果
 
-</td>
-</tr>
-</table>
+	
 
-### ⚙️ 高级功能
+↧块化组件
 
-<table>
-<tr>
-<td width="50%">
+    可拖拽组件布局
+    自定邑长件大小
+    组件显示控制
+    布局章模板保存
 
-**🔌 插件系统**
-- 插件热加载
-- API 接口开放
-- 第三方扩展支持
-- 插件市场
+📊
 
-**🛡️ 安全特性**
-- 数据加密存储
-- 配置文件保护
-- 安全更新机制
-- 隐私保护模式
+    实时时音时时钟显示
+    天气奎䁯集成
+    系统状 怡监监控
+    倒计时提醒
 
-</td>
-<td width="50%">
+⚙️ 高级功能
 
-**📈 性能优化**
-- 内存使用监控
-- 智能缓存机制
-- 异步操作支持
-- 资源自动清理
+🔌 插件系统
 
-**🌐 国际化支持**
-- 多语言界面
-- 本地化适配
-- 时区自动识别
-- 区域格式设置
+    插件件热加加载
+    API 缺口开放
+    第三方 恩方扩展支持
+    插件件席件市 摄
 
-</td>
-</tr>
-</table>
+🛡️ 安全特性 性
 
-## 📸 应用截图
+    数据加密密临储
+    配置文羽件保护
+    安全更新机制
+    隐私保护模式
 
-<div align="center">
+	
 
-### 主界面
-![主界面](https://via.placeholder.com/800x500/4A90E2/FFFFFF?text=主界面截图)
+📈
 
-### 智能浮窗
-![智能浮窗](https://via.placeholder.com/400x100/34C759/FFFFFF?text=智能浮窗)
+    内余友使用用监监护
+    智想缓存制制制
+    异步操作支持
+    资源自动动 华理
 
-### 设置界面
-![设置界面](https://via.placeholder.com/600x400/FF9500/FFFFFF?text=设置界面)
+🌐 国际化支持
 
-</div>
+    多语言词 族 面
+    敦地化适配
+    时区自动识别
+    区域格式设置
 
-## 🚀 快速上手
+📸 应用截图
+主界 阳台
 
-### 第一次使用
+主界 阳台
+智能浮窗
 
-1. **启动应用**
-   ```bash
-   python main.py  # RinUI版本
-# 或使用启动脚本
+智能浮窗
+设置界 阳台
+
+设置界 阳台
+🚀 快速上手
+第一次次次次次 次。
+启动应 音琴
+
+python main.py  # RinUI版本
+
+或使使用用音音启动脚本
+
 python run_rinui.py
-   ```
+
 
 2. **创建课程表**
-   - 点击 "新建课程表" 按钮
-   - 选择模板或从空白开始
-   - 添加课程信息
+- 点击 "新建课程表" 按钮
+- 选择模板或从空白开始
+- 添加课程信息
 
 3. **配置提醒**
-   - 进入设置 → 通知设置
-   - 选择提醒方式和时间
-   - 测试提醒效果
+- 进入设置 → 通知设置
+- 选择提醒方式和时间
+- 测试提醒效果
 
 4. **个性化定制**
-   - 选择喜欢的主题
-   - 调整界面布局
-   - 配置浮窗显示
+- 选择喜欢的主题
+- 调整界面布局
+- 配置浮窗显示
 
 ### 导入现有数据
 
@@ -371,11 +313,9 @@ pip install -r requirements.txt
 python main.py  # RinUI版本
 # 或使用启动脚本
 python run_rinui.py
-```
 
-### 项目架构
+项目架构
 
-```
 TimeNest/
 ├── 📁 core/                    # 🔧 核心业务逻辑
 │   ├── app_manager.py          # 应用管理器
@@ -418,43 +358,39 @@ TimeNest/
     ├── main.py                 # 模板主文件
     ├── plugin.json             # 插件配置
     └── README.md               # 模板说明
-```
 
-### 代码规范
+代码规范
 
-项目遵循 PEP 8 Python 代码规范，建议使用以下工具进行代码检查：
+项目遵循 项目遵循 PEP 8 Python 代码规范童,计论议仅用用用行䷥具任行仙帅仙渴查 :
 
-```bash
 # 代码格式化（可选）
 black . --line-length 88
 
 # 代码检查（可选）
 flake8 . --max-line-length 88
-```
 
-### 提交规范
+提交规 范
 
-我们使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+口头 Doncusional 规范 :
 
-```
 <type>[optional scope]: <description>
 
 [optional body]
 
 [optional footer(s)]
-```
 
-**类型说明：**
-- `feat`: 新功能
-- `fix`: 修复 bug
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 代码重构
-- `test`: 测试相关
-- `chore`: 构建过程或辅助工具的变动
+类型说明:
 
-**示例：**
-```
+    feat: 新功能能
+    fix: 小复
+    docs: : 文档更新
+    style: 代码格式调整
+    refactor: 代铁重构
+    test: : 。
+    chore: : 分建过程或辅助助工具的等 人
+
+示例:
+
 feat(notification): 添加邮件提醒功能
 
 - 支持 SMTP 邮件发送
@@ -462,114 +398,90 @@ feat(notification): 添加邮件提醒功能
 - 添加邮件发送状态监控
 
 Closes #123
-```
 
-## 🤝 参与贡献
+🤝 参与贡献
 
-我们欢迎所有形式的贡献！无论您是开发者、设计师、文档编写者还是用户，都可以为 TimeNest 做出贡献。
+我们们们为人!无论您是开,时间 做出贡琴堤填填塌梳康康康康迈求词求康康康迈求迈迈迈迈迈迈迈竞别为
+🐛 报呕问题
 
-### 🐛 报告问题
+发现 bug 或有功能迁新议?
 
-发现 bug 或有功能建议？
+    察看 现有 避免屈
+    创建新等 问题 描述问题
+    提详细如如 除详细的亚荷亚依次现步骤刚摇甘甘环
+    添加相关的等
 
-1. 查看 [现有 Issues](https://github.com/ziyi127/TimeNest/issues) 避免重复
-2. 创建新的 Issue 描述问题
-3. 提供详细的复现步骤和环境信息
-4. 添加相关的标签
+💻 代 畸酬献
 
-### 💻 代码贡献
+好要嘉贡献代码?
 
-想要贡献代码？
+    叉 项目到免 节目到的 节目到免 账户 GitHub
+    克隆 您的 垫约叉 到本地
+    创建新劲功功能支支:git checkout -b feature/amazing-feature
+    进行您 等 修改
+    确保代码符合逊茄
+    屈交您的俄!反更改:git commit -m 'feat: add amazing feature'
+    推送到分支支支支支支支支:git push origin feature/amazing-feature
+    挺 拉动 请求
 
-1. **Fork** 项目到您的 GitHub 账户
-2. **Clone** 您的 fork 到本地
-3. 创建新的功能分支：`git checkout -b feature/amazing-feature`
-4. 进行您的修改
-5. 确保代码符合规范
-6. 提交您的更改：`git commit -m 'feat: add amazing feature'`
-7. 推送到分支：`git push origin feature/amazing-feature`
-8. 创建 **Pull Request**
+⟓ 文档 制 档贡献
 
-### 📝 文档贡献
+帮助攀进文档:
 
-帮助改进文档：
+    修正错别字和墨法斯
+    添加使用用示例经和教元
+    翻译文档到其音 �言文档到其他他言
+    支进 文档 API
 
-- 修正错别字和语法错误
-- 添加使用示例和教程
-- 翻译文档到其他语言
-- 改进 API 文档
+🎨 设计贡献
 
-### 🎨 设计贡献
+文计师师可以以及
 
-设计师可以贡献：
+    UI/UX 设计改进议
+    图标和插图图设计
+    主题和配色曲案
+    用术术同验优优化建议
 
-- UI/UX 设计改进建议
-- 图标和插图设计
-- 主题和配色方案
-- 用户体验优化建议
+🌍 本地化贡献
 
-### 🌍 本地化贡献
+鸮助 陈持更多语言 TimeNest:
 
-帮助 TimeNest 支持更多语言：
+    翻译界界面文本
+    本地化日期届后日期届时 时日期届 时
+    适配不同地区区株式
 
-- 翻译界面文本
-- 本地化日期时间格式
-- 适配不同地区的使用习惯
+📊 项目统计
 
-## 📊 项目统计
+GitHub 统计
 
-<div align="center">
+语言 统计
+🏆致谢
+核心贡献者
+ziyi127
+ziyi127
+📖
+特别谢谢谢 摄
 
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=ziyi127&repo=TimeNest&show_icons=true&theme=default)
+    阶级 岛 - 提供了丛灵感和双又又又 AWS
+    RinUI - Qt 快速 UI 框架
+    PySide6 优秀的 GUI 画架
+    所有有提供供滔和建议/58/7
 
-![Language Stats](https://github-readme-stats.vercel.app/api/top-langs/?username=ziyi127&layout=compact&theme=default)
+开源沐项目
 
-</div>
+TimeNest 使用书以以下优秀的量目目 :
 
-## 🏆 致谢
+    PyQt6 - GUI 室
+    大 数据处 多 熊猫
+    请求 - HTTP 音求
+    PyYAML - YAML 中析
+    枕头 - 图像处理
+    密码学 - 加密支持
 
-### 核心贡献者
+📄 许可友
 
-<table>
-<tr>
-<td align="center">
-<a href="https://github.com/ziyi127">
-<img src="https://github.com/ziyi127.png" width="100px;" alt="ziyi127"/>
-<br />
-<sub><b>ziyi127</b></sub>
-</a>
-<br />
-<span title="Code">💻</span>
-<span title="Documentation">📖</span>
-<span title="Design">🎨</span>
-</td>
-<!-- 更多贡献者 -->
-</tr>
-</table>
+本项目节于 开源源
 
-### 特别感谢
-
-- ClassIsland - 提供了灵感和参考
-- [RinUI](https://github.com/RinLit-233-shiroko/Rin-UI) - 现代化的 Qt Quick UI 框架
-- [PySide6](https://www.qt.io/qt-for-python) - 优秀的 GUI 框架
-- 所有提供反馈和建议的用户们
-
-### 开源项目
-
-TimeNest 使用了以下优秀的开源项目：
-
-- **PyQt6** - GUI 框架
-- **pandas** - 数据处理
-- **requests** - HTTP 请求
-- **PyYAML** - YAML 解析
-- **Pillow** - 图像处理
-- **cryptography** - 加密支持
-
-## 📄 许可证
-
-本项目基于 [Apache License 2.0](LICENSE) 开源。
-
-```
 Apache License 2.0
 
 Copyright 2024-2025 TimeNest Team
@@ -585,90 +497,70 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-```
 
-## � 发布管理
+沙巴管
+创建新台 )
 
-### 创建新版本发布
+时间 使用用用用国测于 标签的自动帅帅发布布程梁梁。 地巢 Git当洗送标签签到咸时,GitHub 行动 会自动讲讲
+方法一:Python 脚本(推荐)
 
-TimeNest 使用基于 Git 标签的自动化发布流程。当推送标签到仓库时，GitHub Actions 会自动构建并创建发布。
-
-#### 方法一：使用 Python 脚本（推荐）
-
-```bash
 # 运行发布创建脚本
 python scripts/create_release.py
-```
 
-#### 方法二：使用 Windows 批处理脚本
+方法二:Windows 批处理缚脚本
 
-```cmd
 # 在 Windows 中运行
 scripts\create_release.bat
-```
 
-#### 方法三：手动创建标签
+方法三:手动利创建标如牌
 
-```bash
 # 创建标签
 git tag -a v2.2.0 -m "Release 2.2.0"
 
 # 推送标签到远程仓库
 git push origin v2.2.0
-```
 
-### 发布流程说明
+沙巴流程说明
 
-1. **标签格式**: 使用 `v` 前缀，如 `v2.1.0`、`v2.1.0-Preview`
-2. **自动构建**: 推送标签后，GitHub Actions 自动构建 Windows 可执行文件
-3. **自动发布**: 构建完成后自动创建 GitHub Release
-4. **预发布标记**: 包含 `Preview`、`Beta`、`RC` 的版本会标记为预发布
+    标签格式 : 使 以 .v前缀,v2.1.0、v2.1.0-Preview
+    自动构建 : 推送标签后 ,GitHub 操作 自动构建 声讲梁件 Windows 音频
+    自动发布: 构建完成成成后自动创建 GitHub 发布
+    预发布标记 : 包含Preview、Beta、RC从等秉会标记为⢄
 
-### 版本号规范
+版本音规范
 
-- **主版本号**: 重大功能更新或架构变更
-- **次版本号**: 新功能添加或重要改进
-- **修订版本号**: Bug 修复和小幅改进
-- **预发布标识**: Preview、Beta、RC 等
+    主版本号主版本号: 重大功能有或构构构构构剃更更:
+    次版本号次版本号:新功能添加拉或挽要改进
+    修应版: 原本: 药修复和小变进 :
+    预发布标识 : Preview"Beta"RC 等
 
-示例：
-- `2.2.0` - 正式版本
-- `2.2.0-Preview` - 预览版本
-- `2.2.1` - 修复版本
+示例:
 
-## �📞 联系我们
+    2.2.0- 正��则药本
+    2.2.0-Preview- 预览版本
+    2.2.1- 修复版本
 
-<div align="center">
+📞 联系系我们们
+🌐 官方渠道
 
-### 🌐 官方渠道
+官方网站
 
-[![官方网站](https://img.shields.io/badge/🌐_官方网站-timenest.qzz.io-blue?style=for-the-badge)](https://timenest.qzz.io)
+GitHub 网站
 
-[![GitHub](https://img.shields.io/badge/GitHub-ziyi127/TimeNest-black?style=for-the-badge&logo=github)](https://github.com/ziyi127/TimeNest)
+电子邮件
+💬 社区交流
 
-[![Email](https://img.shields.io/badge/📧_邮箱-admin@timenest.qzz.io-red?style=for-the-badge)](mailto:admin@timenest.qzz.io)
+    问题佼 : GitHub 问题
+    功能建议功能建:GitHub 讨论
+    安全问题 : 安全政策
 
-### 💬 社区交流
+📱 关水我们
 
-- **问题反馈**: [GitHub Issues](https://github.com/ziyi127/TimeNest/issues)
-- **功能建议**: [GitHub Discussions](https://github.com/ziyi127/TimeNest/discussions)
-- **安全问题**: [安全政策](https://github.com/ziyi127/TimeNest/security/policy)
+    GitHub : @ziyi127
+    邮箱 : ziyihed@outlook.com
 
-### 📱 关注我们
+⭐ 如果 狄果 TimeNest, 对您有云帮助请站 Activent, 顺果 , 明星!
 
-- **GitHub**: [@ziyi127](https://github.com/ziyi127)
-- **邮箱**: [ziyihed@outlook.com](mailto:ziyihed@outlook.com)
+🚀 TimeNest - 让时间间管理更简单单单,任谢!
 
-</div>
-
----
-
-<div align="center">
-
-**⭐ 如果 TimeNest 对您有帮助，请给我们一个 Star！**
-
-**🚀 TimeNest - 让时间管理更简单，让学习更高效！**
-
-*Made with ❤️ by TimeNest Team*
-
-</div>
+与 TimeNest 团队合作制作
