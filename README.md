@@ -309,8 +309,8 @@ python run_rinui.py
 1. **启动应用**
    ```bash
    python main.py  # RinUI版本
-# 或使用启动脚本
-python run_rinui.py
+   # 或使用启动脚本
+   python run_rinui.py
    ```
 
 2. **创建课程表**
