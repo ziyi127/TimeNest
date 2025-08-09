@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 from PySide6.QtCore import QObject, Signal, QTimer
 import ntplib
 import threading
@@ -152,6 +152,21 @@ class TimeService(QObject):
             self.logger.error(f"初始化NTP客户端失败: {e}")
             self._sync_status_message = str(e)
             self.sync_status_changed.emit(self._sync_status_message)
+            
+    def get_current_time_str(self) -> str:
+        """获取当前时间字符串"""
+        current_time = self.get_current_local_datetime()
+        return current_time.strftime("%H:%M:%S")
+        
+    def get_time_info(self) -> Dict[str, Any]:
+        """获取时间信息"""
+        current_time = self.get_current_local_datetime()
+        return {
+            "current_time": current_time,
+            "time_str": current_time.strftime("%H:%M:%S"),
+            "date_str": current_time.strftime("%Y-%m-%d"),
+            "weekday": current_time.weekday()
+        }
 
 # 全局时间服务实例
 time_service_instance: Optional[TimeService] = None
