@@ -46,7 +46,7 @@ except ImportError as e:
     logging.error(f"Critical import error: {e}")
     print(f"Import error: {e}")
     print("Please ensure RinUI and all dependencies are properly installed")
-    print("Run: pip install RinUI")
+    print("Please Run: pip install RinUI")
     # 尝试显示错误对话框
     try:
         from PySide6.QtWidgets import QApplication, QMessageBox
@@ -80,7 +80,7 @@ def setup_logging():
         logging.getLogger(lib).setLevel(logging.WARNING if lib == 'PySide6' else logging.INFO)
 
     logger = logging.getLogger(__name__)
-    logger.info("TimeNest RinUI版本启动")
+    logger.info("TimeNest RinUI版本正在启动")
     return logger
 
 
@@ -111,11 +111,7 @@ def setup_application():
         'app_icon.png'
     ]
 
-    for icon_path in icon_paths:
-        if os.path.exists(icon_path):
-            app.setWindowIcon(QIcon(icon_path))
-            break
-
+    
     return app
 
 
@@ -225,7 +221,7 @@ def main():
                     tray_manager = SystemTrayManager()
                     if tray_manager and tray_manager.is_visible():
                         tray_notification_manager = TrayNotificationManager(tray_manager)
-                        logger.info("🎉 系统托盘初始化完成")
+                        logger.info("系统托盘初始化完成")
                     else:
                         logger.error("❌ 系统托盘创建失败 - 托盘不可见")
                         tray_manager = None

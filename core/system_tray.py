@@ -7,7 +7,14 @@ import logging
 from typing import Optional
 
 from utils.common_imports import QObject, Signal, QTimer
-from utils.shared_utilities import validate_path
+
+def validate_path(path, must_exist=False):
+    """简单的路径验证工具"""
+    if not path:
+        return None
+    if must_exist and not os.path.exists(path):
+        return None
+    return path
 
 try:
     from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
@@ -165,7 +172,7 @@ class SystemTrayManager(QObject):
         self.context_menu.addSeparator()
         
         # 悬浮窗控制
-        self.floating_action = QAction("🔲 显示悬浮窗", self)
+        self.floating_action = QAction("🔲 不显示悬浮窗", self)
         self.floating_action.setCheckable(True)
         self.floating_action.triggered.connect(self._on_floating_toggle)
         self.context_menu.addAction(self.floating_action)
@@ -213,7 +220,7 @@ class SystemTrayManager(QObject):
         self.floating_window_visible = visible
         if self.floating_action:
             self.floating_action.setChecked(visible)
-            self.floating_action.setText("🔲 隐藏悬浮窗" if visible else "🔲 显示悬浮窗")
+            self.floating_action.setText("🔲 现在显示悬浮窗" if visible else "🔲 现在不显示悬浮窗")
             
     def show_message(self, title: str, message: str, 
                     icon: QSystemTrayIcon.MessageIcon = QSystemTrayIcon.MessageIcon.Information,
