@@ -1,8 +1,7 @@
 import sys
 import logging
-from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtCore import QCoreApplication, Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QPoint
-from PySide6.QtGui import QScreen
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QCoreApplication, Qt
 
 from ui.main_window import MainWindow
 from ui.settings_window import SettingsWindow
@@ -24,7 +23,6 @@ from core.components.group_component import GroupComponent
 from core.components.slide_component import SlideComponent
 from core.components.separator_component import SeparatorComponent
 from core.components.tray_icon import create_tray_icon
-from core.components.user_preferences import user_preferences
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,6 @@ class TimeNestApplication:
         self.time_service = TimeService()
         self.profile_service = None
         self.lessons_service = None
-        self.window_animation = None  # 窗口动画管理器
         
         # 初始化应用程序
         self.init_application(argv or sys.argv)
@@ -80,19 +77,7 @@ class TimeNestApplication:
         # 初始化托盘图标
         self.init_tray_icon()
         
-        # 连接主题变化信号
-        theme_manager.theme_changed_signal.connect(self.on_theme_changed)
-        
-        # 初始化窗口动画
-        self.init_window_animation()
-        
         logger.info("TimeNest应用程序初始化完成")
-        
-    def init_window_animation(self):
-        """初始化窗口动画效果"""
-        logger.info("正在初始化窗口动画效果")
-        # 创建通用窗口动画
-        self.window_animation = WindowAnimationManager()
         
     def init_services(self):
         """初始化核心服务"""
@@ -114,44 +99,44 @@ class TimeNestApplication:
             # 启用基本服务作为后备
             self.profile_service = None
             self.lessons_service = None
-            # 记录错误并继续运行
-            logger.warning("使用基本服务模式运行应用")
         
     def init_component_registry(self):
         """初始化组件注册服务 - 仿ClassIsland组件注册机制"""
         logger.info("正在注册组件")
         
-        # 定义内置组件映射 - 使用ClassIsland兼容的GUID
-        component_mappings = {
-            "9E1AF71D-8F77-4B21-A342-448787104DD9": {"name": "时钟组件", "type": ClockComponent},
-            "DF3F8295-21F6-482E-BADA-FA0E5F14BB66": {"name": "日期组件", "type": DateComponent},
-            "1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8": {"name": "课程表组件", "type": ScheduleComponent},
-            "EE8F66BD-C423-4E7C-AB46-AA9976B00E08": {"name": "文本组件", "type": TextComponent},
-            "A1B2C3D4-E5F6-7890-ABCD-EF1234567890": {"name": "天气组件", "type": WeatherComponent},
-            "F0E1D2C3-B4A5-6789-0123-456789ABCDEF": {"name": "倒计时组件", "type": CountDownComponent},
-            "12345678-90AB-CDEF-1234-567890ABCDEF": {"name": "滚动组件", "type": RollingComponent},
-            "ABCDEF12-3456-7890-ABCD-EF1234567890": {"name": "分组组件", "type": GroupComponent},
-            "SLIDE123-4567-8901-2345-678901234567": {"name": "幻灯片组件", "type": SlideComponent},
-            "SEP12345-6789-0123-4567-890123456789": {"name": "分割线组件", "type": SeparatorComponent},
-        }
+        # 注册内置组件 - 使用ClassIsland兼容的GUID
+        component_mappings = [
+            ("9E1AF71D-8F77-4B21-A342-448787104DD9", "时钟组件", ClockComponent),
+            ("DF3F8295-21F6-482E-BADA-FA0E5F14BB66", "日期组件", DateComponent),
+            ("1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8", "课程表组件", ScheduleComponent),
+            ("EE8F66BD-C423-4E7C-AB46-AA9976B00E08", "文本组件", TextComponent),
+            ("A1B2C3D4-E5F6-7890-ABCD-EF1234567890", "天气组件", WeatherComponent),
+            ("F0E1D2C3-B4A5-6789-0123-456789ABCDEF", "倒计时组件", CountDownComponent),
+            ("12345678-90AB-CDEF-1234-567890ABCDEF", "滚动组件", RollingComponent),
+            ("ABCDEF12-3456-7890-ABCD-EF1234567890", "分组组件", GroupComponent),
+            ("SLIDE123-4567-8901-2345-678901234567", "幻灯片组件", SlideComponent),
+            ("SEP12345-6789-0123-4567-890123456789", "分割线组件", SeparatorComponent),
+        ]
         
-        # 注册所有组件
         registered_count = 0
-        for guid, component_info in component_mappings.items():
-            component = self.component_registry.get_component_info(guid)
-            if component:
-                component.component_type = component_info["type"]
-                component.name = component_info["name"]
-                logger.info(f"已注册组件: {component_info['name']} ({guid})")
-                registered_count += 1
-            else:
-                logger.warning(f"无法找到组件: {component_info['name']} ({guid})")
+        for guid, name, component_class in component_mappings:
+            try:
+                component_info = self.component_registry.get_component_info(guid)
+                if component_info:
+                    component_info.component_type = component_class
+                    component_info.name = name
+                    logger.info(f"已注册组件: {name} ({guid})")
+                    registered_count += 1
+                else:
+                    logger.warning(f"无法获取组件信息: {name} ({guid})")
+            except Exception as e:
+                logger.error(f"注册组件 {name} 时发生错误: {e}")
         
         # 确保所有组件类型都已正确设置
         self.component_registry._register_builtin_components()
         logger.info(f"组件注册完成，共注册 {registered_count} 个组件，总组件数: {len(self.component_registry.registered_components)}")
         
-        # 连接组件事件处理
+        # 为组件注册设置信号连接
         self.component_registry.component_added.connect(self.on_component_added)
         self.component_registry.component_removed.connect(self.on_component_removed)
             
@@ -200,35 +185,11 @@ class TimeNestApplication:
             self.tray_icon.update_menu_visibility()
         
     def show_main_window(self):
-        """显示主窗口 - 带有动画效果"""
+        """显示主窗口"""
         if self.main_window:
-            self.window_animation.animate_show(self.main_window)
-            
-    def hide_main_window(self):
-        """隐藏主窗口 - 带有动画效果"""
-        if self.main_window:
-            self.window_animation.animate_hide(self.main_window)
-            
-    def toggle_main_window_minimize(self):
-        """切换主窗口最小化状态 - 带有动画效果"""
-        if self.main_window:
-            self.window_animation.animate_minimize(self.main_window)
-            
-    def center_window(self, window: QWidget):
-        """将窗口居中显示"""
-        if window:
-            screen = self.app.primaryScreen()
-            if screen:
-                screen_geometry = screen.geometry()
-                window_geometry = window.frameGeometry()
-                center_point = screen_geometry.center()
-                window_geometry.moveCenter(center_point)
-                window.move(window_geometry.topLeft())
-                
-    def animate_window_transition(self, old_window: QWidget, new_window: QWidget):
-        """窗口切换动画效果"""
-        if old_window and new_window:
-            self.window_animation.animate_window_transition(old_window, new_window)
+            self.main_window.show()
+            self.main_window.raise_()
+            self.main_window.activateWindow()
             
     def hide_main_window(self):
         """隐藏主窗口"""
@@ -243,7 +204,7 @@ class TimeNestApplication:
             self.app.quit()
             
     def open_settings(self):
-        """打开设置窗口 - 带有动画和过渡效果"""
+        """打开设置窗口"""
         logger.info("打开应用设置")
         # 创建或显示设置窗口
         if self.tray_icon:
@@ -251,63 +212,38 @@ class TimeNestApplication:
             
         if self.settings_window is None:
             self.settings_window = SettingsWindow(self.main_window)
-            # 居中显示
-            self.center_window(self.settings_window)
-        else:
-            # 如果已经存在，先隐藏再显示
-            self.window_animation.animate_hide(self.settings_window)
             
-        # 如果有其他窗口打开，执行窗口切换动画
-        if self.profile_window and self.profile_window.isVisible():
-            self.animate_window_transition(self.profile_window, self.settings_window)
-        else:
-            # 否则直接显示设置窗口
-            self.window_animation.animate_show(self.settings_window)
-            
+        self.settings_window.show()
         self.settings_window.raise_()
         self.settings_window.activateWindow()
             
     def open_profiles(self):
-        """打开档案窗口 - 带有动画和过渡效果"""
-        logger.info("打开档案管理")
+        """打开档案编辑窗口"""
+        logger.info("打开档案编辑")
+        # 创建或显示档案编辑窗口
         if self.tray_icon:
-            self.tray_icon.show_message("档案管理", "正在打开档案管理窗口...")
+            self.tray_icon.show_message("编辑档案", "正在打开档案编辑窗口...")
             
         if self.profile_window is None:
             self.profile_window = ProfileWindow(self.main_window)
-            # 居中显示
-            self.center_window(self.profile_window)
-        else:
-            # 如果已经存在，先隐藏再显示
-            self.window_animation.animate_hide(self.profile_window)
             
-        # 如果有其他窗口打开，执行窗口切换动画
-        if self.settings_window and self.settings_window.isVisible():
-            self.animate_window_transition(self.settings_window, self.profile_window)
-        else:
-            # 否则直接显示档案窗口
-            self.window_animation.animate_show(self.profile_window)
-            
+        self.profile_window.show()
         self.profile_window.raise_()
         self.profile_window.activateWindow()
             
     def restart_application(self):
         """重启应用程序"""
         logger.info("用户请求重启应用程序")
+        # 仿ClassIsland方式重启应用
         if self.tray_icon:
             self.tray_icon.show_message("重启应用", "正在重启TimeNest...")
-            
-        # 保存当前应用程序参数
-        argv = sys.argv
-        
-        # 关闭应用程序
+        # 先关闭当前应用
         self.shutdown()
-        
         # 重新启动应用程序
         import subprocess
-        subprocess.Popen([sys.executable] + argv)
-        
-        # 退出当前实例
+        import sys
+        import os
+        subprocess.Popen([sys.executable] + sys.argv)
         if self.app:
             self.app.quit()
             
@@ -326,40 +262,30 @@ class TimeNestApplication:
                 self.tray_icon.show_message("帮助文档", "无法打开帮助文档")
             
     def load_temp_class_plan(self):
-        """加载临时课表 - 带有动画效果"""
+        """加载临时课表"""
         logger.info("加载临时课表")
+        # 创建或显示临时课表窗口
         if self.tray_icon:
-            self.tray_icon.show_message("临时课表", "正在加载临时课表...")
+            self.tray_icon.show_message("临时课表", "正在打开临时课表窗口...")
             
         if self.temp_class_plan_window is None:
             self.temp_class_plan_window = TempClassPlanWindow(self.main_window)
-            # 居中显示
-            self.center_window(self.temp_class_plan_window)
-        else:
-            # 如果已经存在，先隐藏再显示
-            self.window_animation.animate_hide(self.temp_class_plan_window)
             
-        # 显示窗口
-        self.window_animation.animate_show(self.temp_class_plan_window)
+        self.temp_class_plan_window.show()
         self.temp_class_plan_window.raise_()
         self.temp_class_plan_window.activateWindow()
             
     def swap_classes(self):
-        """换课功能 - 带有动画效果"""
-        logger.info("打开换课界面")
+        """换课功能"""
+        logger.info("换课功能")
+        # 创建或显示换课窗口
         if self.tray_icon:
-            self.tray_icon.show_message("换课", "正在打开换课界面...")
+            self.tray_icon.show_message("换课", "正在打开换课窗口...")
             
         if self.swap_window is None:
             self.swap_window = SwapWindow(self.main_window)
-            # 居中显示
-            self.center_window(self.swap_window)
-        else:
-            # 如果已经存在，先隐藏再显示
-            self.window_animation.animate_hide(self.swap_window)
             
-        # 显示窗口
-        self.window_animation.animate_show(self.swap_window)
+        self.swap_window.show()
         self.swap_window.raise_()
         self.swap_window.activateWindow()
             
@@ -376,21 +302,22 @@ class TimeNestApplication:
         
     def run(self):
         """运行应用程序"""
-        logger.info("正在启动TimeNest应用程序")
-        
-        # 显示主窗口
         if self.main_window:
+            logger.info("显示主窗口")
             self.main_window.show()
-        
+            
         # 运行应用程序事件循环
         if self.app:
+            logger.info("启动应用程序事件循环")
             return self.app.exec()
-        return 0
             
     def shutdown(self):
         """关闭应用程序"""
-        logger.info("正在关闭TimeNest应用程序")
-        # 在这里可以添加清理逻辑（如保存配置、释放资源等）
+        logger.info("正在关闭应用程序")
+        # 清理资源
+        if self.app:
+            self.app.quit()
+        logger.info("应用程序已关闭")
         
     def on_component_added(self, component_info):
         """处理组件添加事件"""

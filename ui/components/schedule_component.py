@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, time
 from typing import Optional, List, Dict, Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QGridLayout, QFrame
-from PySide6.QtCore import QTimer, Qt, Signal, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 
 from models.component_settings.schedule_component_settings import ScheduleComponentSettings
@@ -52,9 +52,6 @@ class ScheduleComponent(QWidget):
         self.is_class_plan_loaded = False
         self.next_class_time_layout_item = None
         
-        # 动画
-        self.lesson_animations = {}
-        
         # 初始化UI
         self.init_ui()
         
@@ -93,10 +90,11 @@ class ScheduleComponent(QWidget):
                 background-color: #0078D4;  /* AccentFillColorDefaultBrush */
                 color: white;               /* TextOnAccentFillColorPrimaryBrush */
                 border-radius: 16px;
-                padding: 2px 8px;
-                margin: 0 2px 0 0;
-                font-size: 12px;
+                padding: 4px 12px;
+                margin: 0 4px 0 0;
+                font-size: 13px;
                 font-weight: bold;
+                min-width: 40px;
             }
         """)
         self.tomorrow_label.setVisible(False)  # 默认隐藏
@@ -106,7 +104,7 @@ class ScheduleComponent(QWidget):
         self.main_lessons_listbox.setObjectName("MainLessonsListBox")
         self.main_lessons_listbox_layout = QVBoxLayout(self.main_lessons_listbox)
         self.main_lessons_listbox_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_lessons_listbox_layout.setSpacing(2)
+        self.main_lessons_listbox_layout.setSpacing(6)  # 增加间距
         
         # 空课程表占位符
         self.empty_placeholder = QLabel()
@@ -115,7 +113,7 @@ class ScheduleComponent(QWidget):
         self.empty_placeholder.setVisible(False)
         self.empty_placeholder.setStyleSheet("""
             QLabel#EmptyPlaceholder {
-                color: #AAAAAA;
+                color: #888888;
                 font-size: 14px;
                 font-style: italic;
             }
@@ -145,6 +143,9 @@ class ScheduleComponent(QWidget):
         # 应用初始样式
         self.apply_styles()
         
+        # 设置最小高度
+        self.setMinimumHeight(80)
+        
     def apply_styles(self):
         """应用样式"""
         # 根据状态应用不同的样式类
@@ -172,27 +173,34 @@ class ScheduleComponent(QWidget):
         
     def update_content(self):
         """更新课程表内容"""
-        # 获取当前日期
-        if self.exact_time_service:
-            current_date = self.exact_time_service.get_current_local_datetime().date()
-        else:
-            current_date = datetime.now().date()
+        try:
+            # 获取当前日期
+            if self.exact_time_service:
+                current_date = self.exact_time_service.get_current_local_datetime().date()
+            else:
+                current_date = datetime.now().date()
+                
+            # 获取今天的课程表
+            self.current_class_plan = self.get_current_class_plan(current_date)
+            self.tomorrow_class_plan = self.get_class_plan_by_date(current_date + timedelta(days=1))
             
-        # 获取今天的课程表
-        self.current_class_plan = self.get_current_class_plan(current_date)
-        self.tomorrow_class_plan = self.get_class_plan_by_date(current_date + timedelta(days=1))
-        
-        # 更新明天标签显示
-        self.update_tomorrow_label()
-        
-        # 更新课程列表
-        self.update_lessons_list()
-        
-        # 更新占位符
-        self.update_empty_placeholder()
-        
-        # 更新样式
-        self.apply_styles()
+            # 更新明天标签显示
+            self.update_tomorrow_label()
+            
+            # 更新课程列表
+            self.update_lessons_list()
+            
+            # 更新占位符
+            self.update_empty_placeholder()
+            
+            # 更新样式
+            self.apply_styles()
+            
+        except Exception as e:
+            self.logger.error(f"更新课程表组件内容时出错: {e}")
+            # 出错时显示错误信息
+            self.empty_placeholder.setText("课程表加载错误")
+            self.empty_placeholder.setVisible(True)
         
     def get_current_class_plan(self, date: datetime.date) -> Optional[Dict[str, Any]]:
         """获取当前日期的课程表"""
@@ -260,9 +268,6 @@ class ScheduleComponent(QWidget):
             if widget:
                 widget.deleteLater()
                 
-        # 清除动画引用
-        self.lesson_animations.clear()
-                
         # 确定使用哪个课程表
         target_class_plan = None
         show_tomorrow = False
@@ -287,23 +292,14 @@ class ScheduleComponent(QWidget):
             lesson_widget = self.create_lesson_widget(lesson, i)
             self.main_lessons_listbox_layout.addWidget(lesson_widget)
             
-            # 为新添加的课程项添加淡入动画
-            animation = QPropertyAnimation(lesson_widget, b"windowOpacity")
-            animation.setDuration(500)
-            animation.setStartValue(0)
-            animation.setEndValue(1)
-            animation.setEasingCurve(QEasingCurve.OutQuad)
-            self.lesson_animations[i] = animation
-            animation.start()
-            
     def create_lesson_widget(self, lesson: Dict[str, Any], index: int) -> QWidget:
         """创建课程项控件"""
         widget = QFrame()
         widget.setObjectName(f"LessonItem_{index}")
         widget.setFrameStyle(QFrame.NoFrame)
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(6, 3, 6, 3)  # 增加内边距提高可读性
-        layout.setSpacing(12)  # 增加元素间距
+        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setSpacing(8)
         
         # 课程名称
         name_label = QLabel(lesson.get("name", "未知课程"))
@@ -312,7 +308,6 @@ class ScheduleComponent(QWidget):
             QLabel {
                 font-weight: normal;
                 font-size: 14px;
-                color: #FFFFFF;
             }
         """)
         
@@ -324,9 +319,8 @@ class ScheduleComponent(QWidget):
         time_label.setObjectName(f"LessonTime_{index}")
         time_label.setStyleSheet("""
             QLabel {
-                color: #CCCCCC;
+                color: #666666;
                 font-size: 12px;
-                font-family: 'Consolas', 'Courier New', monospace;
             }
         """)
         
@@ -339,16 +333,12 @@ class ScheduleComponent(QWidget):
         widget.setStyleSheet("""
             QFrame {
                 background-color: transparent;
-                border-radius: 6px;
-                padding: 2px 0;
+                border-radius: 4px;
             }
             QFrame:hover {
-                background-color: rgba(0, 120, 212, 0.2);
+                background-color: rgba(0, 120, 212, 0.1);
             }
         """)
-        
-        # 设置初始透明度为0，用于动画
-        widget.setWindowOpacity(0)
         
         return widget
         
@@ -371,15 +361,6 @@ class ScheduleComponent(QWidget):
                 else:
                     self.empty_placeholder.setText(self.settings.placeholder_text_no_class)
                 self.empty_placeholder.setVisible(True)
-                
-                # 添加淡入动画
-                if not hasattr(self, 'placeholder_animation'):
-                    self.placeholder_animation = QPropertyAnimation(self.empty_placeholder, b"windowOpacity")
-                    self.placeholder_animation.setDuration(1000)
-                    self.placeholder_animation.setStartValue(0)
-                    self.placeholder_animation.setEndValue(1)
-                    self.placeholder_animation.setEasingCurve(QEasingCurve.OutQuad)
-                self.placeholder_animation.start()
             else:
                 self.empty_placeholder.setVisible(False)
         else:

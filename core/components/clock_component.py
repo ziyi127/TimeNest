@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
-from PySide6.QtCore import QTimer, Qt, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QFont
 
 from core.models.component_settings.clock_component_settings import ClockComponentSettings
@@ -16,9 +16,6 @@ class ClockComponent(QWidget):
         self.current_time = datetime.now()
         self.is_time_separator_showing = True
         
-        # 动画
-        self.fade_animation = None
-        
         # 服务依赖
         self.lessons_service = lessons_service
         self.exact_time_service = exact_time_service
@@ -29,7 +26,6 @@ class ClockComponent(QWidget):
         
         # 初始化UI
         self.init_ui()
-        self.init_animations()
         
         # 连接事件
         if self.lessons_service:
@@ -58,16 +54,18 @@ class ClockComponent(QWidget):
         self.main_time_display.setObjectName("mainTimeDisplay")
         
         # 设置字体样式 - 更接近ClassIsland风格
-        font = QFont("Microsoft YaHei", 16, QFont.Bold)  # 增大字体
+        font = QFont("Microsoft YaHei", 16, QFont.Weight.Bold)
         self.main_time_display.setFont(font)
         
-        # 应用样式表
+        # 应用样式表 - 改进的样式
         self.main_time_display.setStyleSheet("""
-            QLabel {
+            QLabel#mainTimeDisplay {
                 color: white;
                 background: transparent;
-                font-family: "Microsoft YaHei", "Segoe UI";
-                text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+                font-family: "Microsoft YaHei";
+                font-weight: bold;
+                text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+                qproperty-alignment: AlignVCenter | AlignLeft;
             }
         """)
         
@@ -79,45 +77,38 @@ class ClockComponent(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground)
         
         # 设置固定高度以确保正确显示
-        self.setFixedHeight(36)
-    
-    def init_animations(self):
-        """初始化动画"""
-        self.fade_animation = QPropertyAnimation(self.main_time_display, b"windowOpacity")
-        self.fade_animation.setDuration(200)
-        self.fade_animation.setEasingCurve(QEasingCurve.OutQuad)
+        self.setFixedHeight(36)  # 稍微增加高度以适应更好的显示效果
+        
+        # 启用鼠标穿透，允许点击穿透到下方
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
     
     def update_content(self):
         """更新时间显示内容"""
-        # 获取当前时间 - 根据设置决定使用实时时间还是精确时间
-        if self.settings.show_real_time:
-            self.current_time = datetime.now()
-        elif self.exact_time_service:
-            self.current_time = self.exact_time_service.get_current_local_datetime()
-        else:
-            self.current_time = datetime.now()
+        try:
+            # 获取当前时间 - 根据设置决定使用实时时间还是精确时间
+            if self.settings.show_real_time:
+                self.current_time = datetime.now()
+            elif self.exact_time_service:
+                self.current_time = self.exact_time_service.get_current_local_datetime()
+            else:
+                self.current_time = datetime.now()
+                
+            # 根据设置决定时间格式
+            if self.settings.show_seconds:
+                time_format = "{:%H:%M:%S}"
+            else:
+                time_format = "{:%H:%M}"
+                
+            # 更新主时间显示
+            self.main_time_display.setText(self.current_time.strftime(time_format))
             
-        # 根据设置决定时间格式
-        if self.settings.show_seconds:
-            time_format = "{:%H:%M:%S}"
-        else:
-            time_format = "{:%H:%M}"
+            # 更新分隔符显示状态 - 严格按照ClassIsland逻辑
+            self.update_separator_visibility()
             
-        # 更新主时间显示
-        old_text = self.main_time_display.text()
-        new_text = self.current_time.strftime(time_format)
-        
-        # 如果文本发生变化，添加淡入淡出动画
-        if old_text != new_text:
-            # 简单的文本变化动画
-            self.fade_animation.setStartValue(0.7)
-            self.fade_animation.setEndValue(1.0)
-            self.fade_animation.start()
-            
-        self.main_time_display.setText(new_text)
-        
-        # 更新分隔符显示状态 - 严格按照ClassIsland逻辑
-        self.update_separator_visibility()
+        except Exception as e:
+            self.logger.error(f"更新时钟组件内容时出错: {e}")
+            # 出错时显示错误信息
+            self.main_time_display.setText("时间错误")
     
     def update_separator_visibility(self):
         """更新分隔符可见性 - 严格按照ClassIsland逻辑实现"""

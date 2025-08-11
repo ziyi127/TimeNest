@@ -25,8 +25,6 @@ class TrayIcon(QSystemTrayIcon):
     show_help = Signal()
     load_temp_class_plan = Signal()
     swap_classes = Signal()
-    minimize_window = Signal()  # 新增最小化窗口信号
-    restore_window = Signal()   # 新增恢复窗口信号
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -98,15 +96,6 @@ class TrayIcon(QSystemTrayIcon):
         
         menu.addAction(self.show_action)
         menu.addAction(self.hide_action)
-        
-        # 最小化/恢复主窗口菜单项
-        self.minimize_action = QAction("最小化主窗口", menu)
-        self.minimize_action.triggered.connect(self.minimize_window.emit)
-        menu.addAction(self.minimize_action)
-        
-        self.restore_action = QAction("恢复主窗口", menu)
-        self.restore_action.triggered.connect(self.restore_window.emit)
-        menu.addAction(self.restore_action)
         
         # 清除全部提醒菜单项
         self.clear_notifications_action = QAction("清除全部提醒", menu)
@@ -199,10 +188,6 @@ class TrayIcon(QSystemTrayIcon):
         self.show_action.setVisible(not self.is_main_window_visible)
         self.hide_action.setVisible(self.is_main_window_visible)
         
-        # 总是显示最小化菜单项（由窗口管理器决定是否可用）
-        self.minimize_action.setVisible(True)
-        self.restore_action.setVisible(True)
-        
     def update_notification_status(self, has_notifications: bool):
         """更新通知状态"""
         self.clear_notifications_action.setVisible(has_notifications)
@@ -213,8 +198,8 @@ class TrayIcon(QSystemTrayIcon):
             # 单击托盘图标时切换主窗口可见性
             self.toggle_main_window_visibility()
         elif reason == QSystemTrayIcon.ActivationReason.MiddleClick:
-            # 中键点击时最小化窗口
-            self.minimize_window.emit()
+            # 中键点击时显示设置
+            self.open_settings.emit()
             
     def show_crash_test(self):
         """显示崩溃测试窗口"""
