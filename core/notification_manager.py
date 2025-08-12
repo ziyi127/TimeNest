@@ -1165,29 +1165,7 @@ class NotificationManager(QObject):
             self.logger.error(f"加载通知设置失败: {e}")
             return default_settings
     
-    def _init_tray_icon(self):
-        """初始化系统托盘图标"""
-        from PySide6.QtCore import Qt  # 确保Qt在本地作用域可用
-        try:
-            if QSystemTrayIcon.isSystemTrayAvailable():
-                self.tray_icon = QSystemTrayIcon()
-                # 设置图标
-                icon_path = Path(__file__).parent.parent / "resources" / "icons" / "tray_icon.png"
-                if icon_path.exists():
-                    self.tray_icon.setIcon(QIcon(str(icon_path)))
-                else:
-                    # 使用默认图标
-                    self.tray_icon.setIcon(QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
-                self.tray_icon.setToolTip("TimeNest - 课程表助手")
-                self.tray_icon.show()
-                self.logger.info("系统托盘图标初始化完成")
-            else:
-                self.logger.warning("系统不支持托盘图标")
-                
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            self.logger.error(f"初始化托盘图标失败: {e}")
+   
 
     def check_pending_notifications(self):
         """检查待处理的通知"""
