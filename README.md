@@ -258,8 +258,8 @@ python run_rinui.py
 1. **start begin application program**
    ```bash
    python main.py  # rinui version this
-# or use start begin script
-python run_rinui.py
+   # or use start begin script
+   python run_rinui.py
    ```
 
 2. **create build course cheng table**
