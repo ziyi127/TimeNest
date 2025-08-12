@@ -37,6 +37,8 @@ try:
 
     # 导入其他模块
     from utils.version_manager import version_manager
+    from core.config_manager import ConfigManager
+    from core.theme_system import ThemeManager
     from core.rinui_bridge import TimeNestBridge, register_qml_types
     from core.system_tray import SystemTrayManager, TrayNotificationManager
     from core.simple_floating_window import SimpleFloatingWindowManager
@@ -204,9 +206,19 @@ def main():
         register_qml_types()
         logger.info("✅ QML类型注册完成")
 
+        # 创建配置管理器
+        logger.info("🔧 Creating config manager...")
+        config_manager = ConfigManager()
+        logger.info("✅ Config manager created")
+
+        # 创建主题管理器
+        logger.info("🎨 Creating theme manager...")
+        theme_manager = ThemeManager(config_manager=config_manager)
+        logger.info("✅ Theme manager created")
+
         # 创建桥接对象
         logger.info("🌉 正在创建桥接对象...")
-        bridge = TimeNestBridge()
+        bridge = TimeNestBridge(theme_manager=theme_manager)
         logger.info("✅ 桥接对象创建完成")
 
         # 创建系统托盘管理器

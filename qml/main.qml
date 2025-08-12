@@ -12,7 +12,6 @@ Window {
     visible: true
     title: qsTr("TimeNest - 智能时间管理助手")
 
-    property bool isDarkMode: false
     property string currentView: "dashboard"
     property bool showingAboutDialog: false
     property bool showingNewCourseDialog: false
@@ -20,14 +19,14 @@ Window {
 
     Rectangle {
         anchors.fill: parent
-        color: isDarkMode ? "#1e1e1e" : "#f5f5f5"
+        color: timeNestBridge.themeColors.background
 
         Rectangle {
             id: sidebar
             width: 280
             height: parent.height
-            color: isDarkMode ? "#2d2d2d" : "#ffffff"
-            border.color: isDarkMode ? "#404040" : "#e0e0e0"
+            color: timeNestBridge.themeColors.card
+            border.color: timeNestBridge.themeColors.border
             border.width: 1
 
             Column {
@@ -39,14 +38,14 @@ Window {
                     text: qsTr("TimeNest")
                     font.pixelSize: 24
                     font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
+                    color: timeNestBridge.themeColors.text_primary
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: isDarkMode ? "#404040" : "#e0e0e0"
+                    color: timeNestBridge.themeColors.border
                     radius: 0.5
                 }
 
@@ -54,7 +53,7 @@ Window {
                     text: qsTr("核心功能")
                     font.pixelSize: 14
                     font.bold: true
-                    color: isDarkMode ? "#cccccc" : "#666666"
+                    color: timeNestBridge.themeColors.text_secondary
                     leftPadding: 8
                 }
 
@@ -111,8 +110,8 @@ Window {
                             anchors.fill: parent
                             anchors.margins: 2
                             color: {
-                                if (isSelected) return isDarkMode ? "#3d5afe" : "#2196f3"
-                                if (isHovered) return isDarkMode ? "#404040" : "#f0f0f0"
+                                if (isSelected) return timeNestBridge.themeColors.primary
+                                if (isHovered) return timeNestBridge.themeColors.surface
                                 return "transparent"
                             }
                             radius: 8
@@ -124,7 +123,7 @@ Window {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 4
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: isSelected ? "#ffffff" : "transparent"
+                                color: isSelected ? timeNestBridge.themeColors.background : "transparent"
                                 radius: 2
                                 visible: isSelected
                             }
@@ -148,20 +147,14 @@ Window {
                                         text: model.itemName
                                         font.pixelSize: 14
                                         font.bold: isSelected
-                                        color: {
-                                            if (isSelected) return "#ffffff"
-                                            return isDarkMode ? "#ffffff" : "#000000"
-                                        }
+                                        color: isSelected ? timeNestBridge.themeColors.background : timeNestBridge.themeColors.text_primary
                                         Layout.fillWidth: true
                                     }
 
                                     Text {
                                         text: model.description
                                         font.pixelSize: 11
-                                        color: {
-                                            if (isSelected) return "#e3f2fd"
-                                            return isDarkMode ? "#cccccc" : "#666666"
-                                        }
+                                        color: isSelected ? timeNestBridge.themeColors.background : timeNestBridge.themeColors.text_secondary
                                         Layout.fillWidth: true
                                         visible: isSelected || isHovered
                                     }
@@ -181,7 +174,7 @@ Window {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: isDarkMode ? "#404040" : "#e0e0e0"
+                    color: timeNestBridge.themeColors.border
                     radius: 0.5
                 }
 
@@ -189,7 +182,7 @@ Window {
                     text: qsTr("快捷操作")
                     font.pixelSize: 14
                     font.bold: true
-                    color: isDarkMode ? "#cccccc" : "#666666"
+                    color: timeNestBridge.themeColors.text_secondary
                     leftPadding: 8
                 }
 
@@ -201,9 +194,9 @@ Window {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 80
-                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        color: timeNestBridge.themeColors.surface
                         radius: 8
-                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.color: timeNestBridge.themeColors.border
                         border.width: 1
 
                         ColumnLayout {
@@ -215,7 +208,7 @@ Window {
                                 text: qsTr("创建新内容")
                                 font.pixelSize: 12
                                 font.bold: true
-                                color: isDarkMode ? "#ffffff" : "#000000"
+                                color: timeNestBridge.themeColors.text_primary
                             }
 
                             RowLayout {
@@ -253,9 +246,9 @@ Window {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 60
-                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        color: timeNestBridge.themeColors.surface
                         radius: 8
-                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.color: timeNestBridge.themeColors.border
                         border.width: 1
 
                         RowLayout {
@@ -276,13 +269,13 @@ Window {
                                     text: qsTr("悬浮窗")
                                     font.pixelSize: 12
                                     font.bold: true
-                                    color: isDarkMode ? "#ffffff" : "#000000"
+                                    color: timeNestBridge.themeColors.text_primary
                                 }
 
                                 Text {
                                     text: qsTr("桌面时间显示")
                                     font.pixelSize: 10
-                                    color: isDarkMode ? "#cccccc" : "#666666"
+                                    color: timeNestBridge.themeColors.text_secondary
                                 }
                             }
 
@@ -318,7 +311,7 @@ Window {
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: isDarkMode ? "#404040" : "#e0e0e0"
+                    color: timeNestBridge.themeColors.border
                     radius: 0.5
                 }
 
@@ -326,7 +319,7 @@ Window {
                     text: qsTr("系统控制")
                     font.pixelSize: 14
                     font.bold: true
-                    color: isDarkMode ? "#cccccc" : "#666666"
+                    color: timeNestBridge.themeColors.text_secondary
                     leftPadding: 8
                 }
 
@@ -338,9 +331,9 @@ Window {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 50
-                        color: isDarkMode ? "#333333" : "#f8f9fa"
+                        color: timeNestBridge.themeColors.surface
                         radius: 8
-                        border.color: isDarkMode ? "#404040" : "#e0e0e0"
+                        border.color: timeNestBridge.themeColors.border
                         border.width: 1
 
                         RowLayout {
@@ -349,20 +342,23 @@ Window {
                             spacing: 12
 
                             Text {
-                                text: isDarkMode ? "🌙" : "☀️"
+                                text: timeNestBridge.getCurrentTheme() === "builtin_dark" ? "🌙" : "☀️"
                                 font.pixelSize: 18
                             }
 
                             Text {
-                                text: isDarkMode ? qsTr("深色模式") : qsTr("浅色模式")
+                                text: timeNestBridge.getCurrentTheme() === "builtin_dark" ? qsTr("深色模式") : qsTr("浅色模式")
                                 font.pixelSize: 12
-                                color: isDarkMode ? "#ffffff" : "#000000"
+                                color: timeNestBridge.themeColors.text_primary
                                 Layout.fillWidth: true
                             }
 
                             Switch {
-                                checked: isDarkMode
-                                onToggled: isDarkMode = !isDarkMode
+                                checked: timeNestBridge.getCurrentTheme() === "builtin_dark"
+                                onToggled: {
+                                    var newTheme = checked ? "builtin_dark" : "builtin_light";
+                                    timeNestBridge.applyTheme(newTheme);
+                                }
                             }
                         }
                     }
@@ -429,9 +425,7 @@ Window {
                 }
                 
                 onLoaded: {
-                    if (item) {
-                        item.isDarkMode = Qt.binding(function() { return mainWindow.isDarkMode })
-                    }
+                    // isDarkMode is no longer needed, views can access timeNestBridge directly
                 }
             }
         }
@@ -443,8 +437,8 @@ Window {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 30
-        color: isDarkMode ? "#2d2d2d" : "#f0f0f0"
-        border.color: isDarkMode ? "#404040" : "#d0d0d0"
+        color: timeNestBridge.themeColors.surface
+        border.color: timeNestBridge.themeColors.border
         border.width: 1
         
         Row {
@@ -455,13 +449,13 @@ Window {
             
             Text {
                 text: qsTr("就绪")
-                color: isDarkMode ? "#ffffff" : "#000000"
+                color: timeNestBridge.themeColors.text_primary
                 font.pixelSize: 12
             }
             
             Text {
                 text: Qt.formatDateTime(new Date(), "yyyy-MM-dd hh:mm:ss")
-                color: isDarkMode ? "#cccccc" : "#666666"
+                color: timeNestBridge.themeColors.text_secondary
                 font.pixelSize: 12
                 
                 Timer {
@@ -478,7 +472,7 @@ Window {
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: 16
             text: qsTr("TimeNest v2.2.0 Release")
-            color: isDarkMode ? "#cccccc" : "#666666"
+            color: timeNestBridge.themeColors.text_secondary
             font.pixelSize: 12
         }
     }
@@ -487,7 +481,6 @@ Window {
     /*
     AboutDialog {
         id: aboutDialog
-        isDarkMode: mainWindow.isDarkMode
         anchors.centerIn: parent
     }
     */
@@ -510,7 +503,6 @@ Window {
                 var notification = component.createObject(notificationContainer, {
                     "title": title,
                     "message": message,
-                    "isDarkMode": mainWindow.isDarkMode,
                     "y": notifications.length * 80
                 })
 
@@ -542,9 +534,9 @@ Window {
             console.log("任务数据已更新")
         }
 
-        function onThemeChanged(themeName) {
+        function onThemeColorsChanged() {
             // 处理主题变更
-            console.log("主题已切换到:", themeName)
+            console.log("Theme colors changed!")
         }
 
         function onSystemTrayClicked() {
@@ -578,7 +570,7 @@ Window {
                 text: qsTr("课程信息")
                 font.pixelSize: 16
                 font.bold: true
-                color: isDarkMode ? "#ffffff" : "#000000"
+                color: timeNestBridge.themeColors.text_primary
                 Layout.fillWidth: true
             }
 
@@ -626,7 +618,7 @@ Window {
                 Text {
                     text: qsTr("到")
                     Layout.alignment: Qt.AlignVCenter
-                    color: isDarkMode ? "#ffffff" : "#000000"
+                    color: timeNestBridge.themeColors.text_primary
                 }
 
                 TextField {
@@ -678,7 +670,7 @@ Window {
                 text: qsTr("任务信息")
                 font.pixelSize: 16
                 font.bold: true
-                color: isDarkMode ? "#ffffff" : "#000000"
+                color: timeNestBridge.themeColors.text_primary
                 Layout.fillWidth: true
             }
 
