@@ -17,7 +17,6 @@ from utils.version_manager import version_manager
 from core.data_manager import DataManager
 from core.schedule_manager import ScheduleManager
 from core.task_manager import TaskManager
-from core.theme_manager import ThemeManager
 from core.notification_manager import NotificationManager
 from core.excel_schedule_manager import ExcelScheduleManager
 
@@ -30,13 +29,15 @@ class TimeNestBridge(QObject):
     tasksChanged = Signal()
     settingsChanged = Signal()
     themeChanged = Signal(str)  # theme_name
+    themeColorsChanged = Signal()
     notificationReceived = Signal(str, str)  # title, message
     floatingWindowToggled = Signal(bool)  # visible
     systemTrayClicked = Signal()
     pluginsChanged = Signal()  # 插件变化信号
     
-    def __init__(self, parent=None):
+    def __init__(self, theme_manager, parent=None):
         super().__init__(parent)
+        self.theme_manager = theme_manager
         self.logger = logging.getLogger(__name__)
 
         self.floating_manager = None
@@ -48,6 +49,9 @@ class TimeNestBridge(QObject):
         self._init_managers()
         self._init_timers()
         self._init_error_handling()
+
+        self._theme_colors = self.theme_manager.get_theme_colors()
+        self.theme_manager.theme_changed.connect(self._on_theme_changed)
 
         self.logger.info("RinUI桥接类初始化完成")
 
@@ -82,7 +86,6 @@ class TimeNestBridge(QObject):
             config_manager = ConfigManager()
             self.schedule_manager = ScheduleManager(config_manager)
             self.task_manager = TaskManager()
-            self.theme_manager = ThemeManager()
             self.notification_manager = NotificationManager(config_manager)
             self.excel_manager = ExcelScheduleManager()
             self.system_tray = None
@@ -93,7 +96,7 @@ class TimeNestBridge(QObject):
     def _set_null_managers(self):
         """设置空管理器"""
         for attr in ['data_manager', 'schedule_manager', 'task_manager',
-                     'theme_manager', 'notification_manager', 'system_tray']:
+                     'notification_manager', 'system_tray']:
             setattr(self, attr, None)
 
     def _init_timers(self):
@@ -400,35 +403,34 @@ class TimeNestBridge(QObject):
         self.logger.info(f"通知: {title} - {message}")
 
     # 主题相关方法
+    @Property('QVariant', notify=themeColorsChanged)
+    def themeColors(self):
+        return self._theme_colors
+
+    @Slot(str)
+    def _on_theme_changed(self, theme_id):
+        if self.theme_manager:
+            self._theme_colors = self.theme_manager.get_theme_colors()
+            self.themeColorsChanged.emit()
+            self.themeChanged.emit(theme_id)
+
     @Slot(result='QVariant')
     def getAvailableThemes(self):
         """获取可用主题列表"""
         try:
             if self.theme_manager:
-                themes = []
-                for name, theme_info in self.theme_manager.themes.items():
-                    themes.append({
-                        'name': name,
-                        'display_name': theme_info.get('display_name', name),
-                        'description': theme_info.get('description', ''),
-                        'author': theme_info.get('author', ''),
-                        'version': theme_info.get('version', '1.0.0')
-                    })
-                return themes
+                return [theme.metadata.to_dict() for theme in self.theme_manager.get_available_themes()]
             return []
         except Exception as e:
             self.logger.error(f"获取主题列表失败: {e}")
             return []
 
     @Slot(str, result=bool)
-    def applyTheme(self, theme_name):
+    def applyTheme(self, theme_id):
         """应用主题"""
         try:
             if self.theme_manager:
-                success = self.theme_manager.apply_theme(theme_name)
-                if success:
-                    self.themeChanged.emit(theme_name)
-                return success
+                return self.theme_manager.apply_theme(theme_id)
             return False
         except Exception as e:
             self.logger.error(f"应用主题失败: {e}")
@@ -439,22 +441,11 @@ class TimeNestBridge(QObject):
         """获取当前主题"""
         try:
             if self.theme_manager:
-                return self.theme_manager.current_theme or "default"
-            return "default"
+                return self.theme_manager.get_current_theme_id() or "builtin_light"
+            return "builtin_light"
         except Exception as e:
             self.logger.error(f"获取当前主题失败: {e}")
-            return "default"
-
-    @Slot(str)
-    def applyTheme(self, theme_mode):
-        """应用主题"""
-        try:
-            self.saveSetting("theme_mode", theme_mode)
-            # 发送主题变化信号
-            self.themeChanged.emit(theme_mode)
-            self.logger.info(f"应用主题: {theme_mode}")
-        except Exception as e:
-            self.logger.error(f"应用主题失败: {e}")
+            return "builtin_light"
 
     # 悬浮窗相关方法
     @Slot(result=bool)

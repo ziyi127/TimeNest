@@ -6,8 +6,6 @@ import RinUI
 ScrollView {
     id: dashboardView
 
-    property bool isDarkMode: false
-
     contentWidth: availableWidth
     contentHeight: mainColumn.implicitHeight
 
@@ -21,7 +19,7 @@ ScrollView {
             text: qsTr("仪表板")
             font.pixelSize: 32
             font.bold: true
-            color: isDarkMode ? "#ffffff" : "#000000"
+            color: timeNestBridge.themeColors.text_primary
         }
         
         Flow {
@@ -46,7 +44,7 @@ ScrollView {
                     Text {
                         text: qsTr("今日课程")
                         font.pixelSize: 16
-                        color: isDarkMode ? "#cccccc" : "#666666"
+                        color: timeNestBridge.themeColors.text_secondary
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
@@ -55,7 +53,7 @@ ScrollView {
                         text: "5"
                         font.pixelSize: 24
                         font.bold: true
-                        color: isDarkMode ? "#ffffff" : "#000000"
+                        color: timeNestBridge.themeColors.text_primary
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Component.onCompleted: {
@@ -95,7 +93,7 @@ ScrollView {
                     Text {
                         text: qsTr("待办任务")
                         font.pixelSize: 16
-                        color: isDarkMode ? "#cccccc" : "#666666"
+                        color: timeNestBridge.themeColors.text_secondary
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
@@ -104,7 +102,7 @@ ScrollView {
                         text: "12"
                         font.pixelSize: 24
                         font.bold: true
-                        color: isDarkMode ? "#ffffff" : "#000000"
+                        color: timeNestBridge.themeColors.text_primary
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         Component.onCompleted: {
@@ -142,7 +140,7 @@ ScrollView {
                     Text {
                         text: qsTr("已完成任务")
                         font.pixelSize: 16
-                        color: isDarkMode ? "#cccccc" : "#666666"
+                        color: timeNestBridge.themeColors.text_secondary
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
@@ -151,7 +149,7 @@ ScrollView {
                         text: "2"
                         font.pixelSize: 24
                         font.bold: true
-                        color: isDarkMode ? "#ffffff" : "#000000"
+                        color: timeNestBridge.themeColors.text_primary
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
@@ -172,7 +170,7 @@ ScrollView {
                     text: qsTr("今日课程安排")
                     font.pixelSize: 18
                     font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
+                    color: timeNestBridge.themeColors.text_primary
                 }
                 
                 ListView {
@@ -192,7 +190,7 @@ ScrollView {
                         height: 50
                         color: {
                             if (model.status === "current") {
-                                return isDarkMode ? "#0d4f3c" : "#e8f5e8"
+                                return timeNestBridge.themeColors.success
                             } else {
                                 return "transparent"
                             }
@@ -208,7 +206,7 @@ ScrollView {
                             Text {
                                 text: model.time
                                 font.pixelSize: 14
-                                color: isDarkMode ? "#cccccc" : "#666666"
+                                color: timeNestBridge.themeColors.text_secondary
                                 width: 100
                                 anchors.verticalCenter: parent.verticalCenter
                             }
@@ -217,7 +215,7 @@ ScrollView {
                                 text: model.subject
                                 font.pixelSize: 14
                                 font.bold: model.status === "current"
-                                color: isDarkMode ? "#ffffff" : "#000000"
+                                color: timeNestBridge.themeColors.text_primary
                                 width: 120
                                 anchors.verticalCenter: parent.verticalCenter
                             }
@@ -225,7 +223,7 @@ ScrollView {
                             Text {
                                 text: model.location
                                 font.pixelSize: 14
-                                color: isDarkMode ? "#cccccc" : "#666666"
+                                color: timeNestBridge.themeColors.text_secondary
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
@@ -258,7 +256,7 @@ ScrollView {
                     text: qsTr("快速操作")
                     font.pixelSize: 18
                     font.bold: true
-                    color: isDarkMode ? "#ffffff" : "#000000"
+                    color: timeNestBridge.themeColors.text_primary
                 }
                 
                 Row {

@@ -652,6 +652,13 @@ class ThemeManager(QObject):
         """获取当前主题ID"""
         return self.current_theme_id
 
+    def get_theme_colors(self) -> Dict[str, str]:
+        """获取当前主题的颜色字典"""
+        if self.current_theme:
+            return self.current_theme.colors.to_dict()
+        # Return default theme colors if no theme is set
+        return ThemeColors().to_dict()
+
 
 class ThemeMarketManager(QObject):
     """主题市场管理器"""
