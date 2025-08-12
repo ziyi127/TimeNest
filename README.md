@@ -13,7 +13,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
 
-[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions) | [👙 Windows 版下载](https://www.bilibili.com/video/BV1GJ411x7h7/)
 
 </div>
 
