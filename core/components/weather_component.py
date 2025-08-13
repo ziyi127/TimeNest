@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QPixmap, QMovie
+from PySide6.QtGui import QPixmap
 
 from core.models.component_settings.weather_component_settings import WeatherComponentSettings
 

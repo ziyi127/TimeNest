@@ -25,6 +25,12 @@ class LessonControlSettings(QObject):
         self._is_non_exact_countdown_enabled = False
         self._class_change_highlight_color = "#FFD700"  # 金色高亮
         self._class_change_highlight_duration = 3000  # 高亮持续时间，单位毫秒
+        
+        # 浮动窗口透明度设置
+        self._floating_window_hover_transparency = 0.3  # 鼠标悬停时的透明度
+        self._floating_window_touch_transparency = 0.2   # 触控点击时的透明度
+        self._enable_floating_window_hover_effect = True  # 是否启用悬停透明效果
+        self._enable_floating_window_touch_effect = True  # 是否启用触控透明效果
 
     @property
     def show_extra_info_on_time_point(self):
@@ -201,3 +207,53 @@ class LessonControlSettings(QObject):
         if self._class_change_highlight_duration != value:
             self._class_change_highlight_duration = value
             self.setting_changed.emit("class_change_highlight_duration", value)
+            
+    # 浮动窗口透明度相关设置
+    
+    @property
+    def floating_window_hover_transparency(self):
+        """浮动窗口鼠标悬停时的透明度 (0.0-1.0)"""
+        return self._floating_window_hover_transparency
+
+    @floating_window_hover_transparency.setter
+    def floating_window_hover_transparency(self, value):
+        # 确保值在有效范围内
+        value = max(0.0, min(1.0, value))
+        if self._floating_window_hover_transparency != value:
+            self._floating_window_hover_transparency = value
+            self.setting_changed.emit("floating_window_hover_transparency", value)
+            
+    @property
+    def floating_window_touch_transparency(self):
+        """浮动窗口触控点击时的透明度 (0.0-1.0)"""
+        return self._floating_window_touch_transparency
+
+    @floating_window_touch_transparency.setter
+    def floating_window_touch_transparency(self, value):
+        # 确保值在有效范围内
+        value = max(0.0, min(1.0, value))
+        if self._floating_window_touch_transparency != value:
+            self._floating_window_touch_transparency = value
+            self.setting_changed.emit("floating_window_touch_transparency", value)
+            
+    @property
+    def enable_floating_window_hover_effect(self):
+        """是否启用浮动窗口鼠标悬停透明效果"""
+        return self._enable_floating_window_hover_effect
+
+    @enable_floating_window_hover_effect.setter
+    def enable_floating_window_hover_effect(self, value):
+        if self._enable_floating_window_hover_effect != value:
+            self._enable_floating_window_hover_effect = value
+            self.setting_changed.emit("enable_floating_window_hover_effect", value)
+            
+    @property
+    def enable_floating_window_touch_effect(self):
+        """是否启用浮动窗口触控透明效果"""
+        return self._enable_floating_window_touch_effect
+
+    @enable_floating_window_touch_effect.setter
+    def enable_floating_window_touch_effect(self, value):
+        if self._enable_floating_window_touch_effect != value:
+            self._enable_floating_window_touch_effect = value
+            self.setting_changed.emit("enable_floating_window_touch_effect", value)

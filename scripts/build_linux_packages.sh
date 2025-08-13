@@ -47,9 +47,13 @@ EOF
     dpkg-deb --build "${DEB_DIR}" "${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
     
     # 压缩DEB包
-    zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.deb.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
+    if command -v zip >/dev/null 2>&1; then
+        zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.deb.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
+    else
+        echo "警告: zip命令未找到，跳过压缩DEB包"
+    fi
     
-    echo "DEB package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb.zip"
+    echo "DEB package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 }
 
 # 创建RPM包
@@ -93,7 +97,11 @@ EOF
     # 构建RPM包（模拟）
     echo "RPM package would be built here"
     touch "${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm"
-    zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm"
+    if command -v zip >/dev/null 2>&1; then
+        zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm"
+    else
+        echo "警告: zip命令未找到，跳过压缩RPM包"
+    fi
     
     echo "RPM package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.rpm.zip"
 }
@@ -132,10 +140,19 @@ package() {
 EOF
     
     # 创建tar包
-    tar -czf "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.tar.gz" PKGBUILD
+    if command -v tar >/dev/null 2>&1; then
+        tar -czf "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.tar.gz" PKGBUILD
+    else
+        echo "警告: tar命令未找到，无法创建Arch包"
+        touch "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.tar.gz"
+    fi
     
     # 压缩包
-    zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.tar.gz"
+    if command -v zip >/dev/null 2>&1; then
+        zip "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.zip" "${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.tar.gz"
+    else
+        echo "警告: zip命令未找到，跳过压缩Arch包"
+    fi
     
     echo "Arch package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.pkg.zip"
 }
@@ -149,27 +166,76 @@ build_portable() {
     mkdir -p "${PORTABLE_DIR}"
     
     # 复制可执行文件和资源
-    cp -r "${PACKAGE_DIR}/usr/bin/TimeNest" "${PORTABLE_DIR}/"
-    cp -r "${PACKAGE_DIR}/usr/share" "${PORTABLE_DIR}/"
+    if [ -d "${PACKAGE_DIR}/usr/bin" ]; then
+        cp -r "${PACKAGE_DIR}/usr/bin/TimeNest" "${PORTABLE_DIR}/" 2>/dev/null || echo "警告: 未找到TimeNest可执行文件"
+    fi
+    
+    if [ -d "${PACKAGE_DIR}/usr/share" ]; then
+        cp -r "${PACKAGE_DIR}/usr/share" "${PORTABLE_DIR}/" 2>/dev/null || echo "警告: 未找到共享资源文件"
+    fi
     
     # 创建启动脚本
     cat > "${PORTABLE_DIR}/run.sh" << 'EOF'
 #!/bin/bash
+# TimeNest 便携式启动脚本
+
+# 获取脚本所在目录
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# 设置PYTHONPATH
 export PYTHONPATH="${DIR}:${PYTHONPATH}"
+
+# 切换到脚本目录
 cd "${DIR}"
-./TimeNest
+
+# 运行TimeNest
+if [ -f "./TimeNest" ]; then
+    ./TimeNest
+elif [ -f "./usr/bin/TimeNest" ]; then
+    ./usr/bin/TimeNest
+else
+    echo "错误: 未找到TimeNest可执行文件"
+    exit 1
+fi
 EOF
     
     chmod +x "${PORTABLE_DIR}/run.sh"
     
     # 创建tar.gz包
-    tar -czf "${PACKAGE_NAME}_${VERSION}_${ARCH}.tar.gz" -C "${PORTABLE_DIR}" .
+    if command -v tar >/dev/null 2>&1; then
+        tar -czf "${PACKAGE_NAME}_${VERSION}_${ARCH}.tar.gz" -C "${PORTABLE_DIR}" .
+        echo "Portable package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.tar.gz"
+    else
+        echo "警告: tar命令未找到，无法创建便携式包"
+    fi
+}
+
+# 检查必要命令是否存在
+check_dependencies() {
+    local missing_deps=()
     
-    echo "Portable package created: ${PACKAGE_NAME}_${VERSION}_${ARCH}.tar.gz"
+    if ! command -v mkdir >/dev/null 2>&1; then
+        missing_deps+=("mkdir")
+    fi
+    
+    if ! command -v cp >/dev/null 2>&1; then
+        missing_deps+=("cp")
+    fi
+    
+    if ! command -v cat >/dev/null 2>&1; then
+        missing_deps+=("cat")
+    fi
+    
+    if [ ${#missing_deps[@]} -ne 0 ]; then
+        echo "错误: 缺少必要命令: ${missing_deps[*]}"
+        exit 1
+    fi
+    
+    echo "依赖检查通过"
 }
 
 # 执行构建
+check_dependencies
 build_deb
 build_rpm
 build_arch

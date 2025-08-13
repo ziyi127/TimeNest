@@ -1,7 +1,7 @@
 import sys
 import logging
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import Qt
 
 from ui.main_window import MainWindow
 from ui.settings_window import SettingsWindow
@@ -99,7 +99,7 @@ class TimeNestApplication:
             # 启用基本服务作为后备
             self.profile_service = None
             self.lessons_service = None
-        
+            
     def init_component_registry(self):
         """初始化组件注册服务 - 仿ClassIsland组件注册机制"""
         logger.info("正在注册组件")
@@ -189,7 +189,8 @@ class TimeNestApplication:
         if self.main_window:
             self.main_window.show()
             self.main_window.raise_()
-            self.main_window.activateWindow()
+            # 不再激活窗口，避免干扰用户当前操作
+            # self.main_window.activateWindow()
             
     def hide_main_window(self):
         """隐藏主窗口"""
@@ -210,12 +211,16 @@ class TimeNestApplication:
         if self.tray_icon:
             self.tray_icon.show_message("应用设置", "正在打开设置窗口...")
             
-        if self.settings_window is None:
-            self.settings_window = SettingsWindow(self.main_window)
-            
-        self.settings_window.show()
-        self.settings_window.raise_()
-        self.settings_window.activateWindow()
+        try:
+            if self.settings_window is None:
+                self.settings_window = SettingsWindow(self.main_window)
+                
+            self.settings_window.show()
+            self.settings_window.raise_()
+            # 不再激活窗口，避免干扰用户当前操作
+            # self.settings_window.activateWindow()
+        except Exception as e:
+            logger.error(f"打开设置窗口时出错: {e}")
             
     def open_profiles(self):
         """打开档案编辑窗口"""
@@ -224,28 +229,40 @@ class TimeNestApplication:
         if self.tray_icon:
             self.tray_icon.show_message("编辑档案", "正在打开档案编辑窗口...")
             
-        if self.profile_window is None:
-            self.profile_window = ProfileWindow(self.main_window)
-            
-        self.profile_window.show()
-        self.profile_window.raise_()
-        self.profile_window.activateWindow()
+        try:
+            if self.profile_window is None:
+                self.profile_window = ProfileWindow(self.main_window)
+                
+            self.profile_window.show()
+            self.profile_window.raise_()
+            # 不再激活窗口，避免干扰用户当前操作
+            # self.profile_window.activateWindow()
+        except Exception as e:
+            logger.error(f"打开档案编辑窗口时出错: {e}")
             
     def restart_application(self):
         """重启应用程序"""
         logger.info("用户请求重启应用程序")
-        # 仿ClassIsland方式重启应用
-        if self.tray_icon:
-            self.tray_icon.show_message("重启应用", "正在重启TimeNest...")
-        # 先关闭当前应用
-        self.shutdown()
-        # 重新启动应用程序
-        import subprocess
-        import sys
-        import os
-        subprocess.Popen([sys.executable] + sys.argv)
-        if self.app:
-            self.app.quit()
+        try:
+            # 仿ClassIsland方式重启应用
+            if self.tray_icon:
+                self.tray_icon.show_message("重启应用", "正在重启TimeNest...")
+            # 先关闭当前应用
+            self.shutdown()
+            # 重新启动应用程序
+            import subprocess
+            import sys
+            # 使用跨平台方式启动进程
+            if sys.platform == "win32":
+                # Windows平台
+                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NEW_CONSOLE)
+            else:
+                # Unix/Linux/macOS平台
+                subprocess.Popen([sys.executable] + sys.argv)
+            if self.app:
+                self.app.quit()
+        except Exception as e:
+            logger.error(f"重启应用程序时出错: {e}")
             
     def show_help(self):
         """显示帮助"""
@@ -268,12 +285,16 @@ class TimeNestApplication:
         if self.tray_icon:
             self.tray_icon.show_message("临时课表", "正在打开临时课表窗口...")
             
-        if self.temp_class_plan_window is None:
-            self.temp_class_plan_window = TempClassPlanWindow(self.main_window)
-            
-        self.temp_class_plan_window.show()
-        self.temp_class_plan_window.raise_()
-        self.temp_class_plan_window.activateWindow()
+        try:
+            if self.temp_class_plan_window is None:
+                self.temp_class_plan_window = TempClassPlanWindow(self.main_window)
+                
+            self.temp_class_plan_window.show()
+            self.temp_class_plan_window.raise_()
+            # 不再激活窗口，避免干扰用户当前操作
+            # self.temp_class_plan_window.activateWindow()
+        except Exception as e:
+            logger.error(f"打开临时课表窗口时出错: {e}")
             
     def swap_classes(self):
         """换课功能"""
@@ -282,12 +303,16 @@ class TimeNestApplication:
         if self.tray_icon:
             self.tray_icon.show_message("换课", "正在打开换课窗口...")
             
-        if self.swap_window is None:
-            self.swap_window = SwapWindow(self.main_window)
-            
-        self.swap_window.show()
-        self.swap_window.raise_()
-        self.swap_window.activateWindow()
+        try:
+            if self.swap_window is None:
+                self.swap_window = SwapWindow(self.main_window)
+                
+            self.swap_window.show()
+            self.swap_window.raise_()
+            # 不再激活窗口，避免干扰用户当前操作
+            # self.swap_window.activateWindow()
+        except Exception as e:
+            logger.error(f"打开换课窗口时出错: {e}")
             
     def clear_notifications(self):
         """清除通知"""
@@ -314,9 +339,35 @@ class TimeNestApplication:
     def shutdown(self):
         """关闭应用程序"""
         logger.info("正在关闭应用程序")
-        # 清理资源
-        if self.app:
-            self.app.quit()
+        try:
+            # 清理所有窗口
+            if self.settings_window:
+                self.settings_window.close()
+                self.settings_window = None
+                
+            if self.profile_window:
+                self.profile_window.close()
+                self.profile_window = None
+                
+            if self.swap_window:
+                self.swap_window.close()
+                self.swap_window = None
+                
+            if self.temp_class_plan_window:
+                self.temp_class_plan_window.close()
+                self.temp_class_plan_window = None
+                
+            # 隐藏主窗口
+            if self.main_window:
+                self.main_window.hide()
+                
+            # 隐藏托盘图标
+            if self.tray_icon:
+                self.tray_icon.hide()
+                
+        except Exception as e:
+            logger.error(f"关闭应用程序时出错: {e}")
+            
         logger.info("应用程序已关闭")
         
     def on_component_added(self, component_info):
@@ -338,13 +389,21 @@ def main(argv=None):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # 创建并运行应用程序
-    app = TimeNestApplication(argv)
-    exit_code = app.run()
-    app.shutdown()
-    return exit_code
+    try:
+        # 创建并运行应用程序
+        app = TimeNestApplication(argv)
+        exit_code = app.run()
+        app.shutdown()
+        return exit_code
+    except Exception as e:
+        logger.error(f"运行应用程序时出错: {e}")
+        return 1
 
 
 if __name__ == "__main__":
-    exit_code = main(sys.argv)
-    sys.exit(exit_code)
+    try:
+        exit_code = main(sys.argv)
+        sys.exit(exit_code)
+    except Exception as e:
+        logger.error(f"应用程序启动时出错: {e}")
+        sys.exit(1)

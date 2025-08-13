@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 
 # 添加项目根目录到Python路径
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.resolve()
 sys.path.insert(0, str(project_root))
 
 from core.application import TimeNestApplication
@@ -37,13 +37,18 @@ def get_app_data_path():
         if appdata:
             return Path(appdata) / 'TimeNest'
         else:
+            # 如果APPDATA环境变量不存在，使用用户目录下的.config
             return Path.home() / '.config' / 'TimeNest'
     elif sys.platform == "darwin":
         # macOS: ~/Library/Application Support/TimeNest/
         return Path.home() / 'Library' / 'Application Support' / 'TimeNest'
     else:
-        # Linux: ~/.config/TimeNest/
-        return Path.home() / '.config' / 'TimeNest'
+        # Linux和其他类Unix系统: ~/.config/TimeNest/
+        config_home = os.environ.get('XDG_CONFIG_HOME', '')
+        if config_home:
+            return Path(config_home) / 'TimeNest'
+        else:
+            return Path.home() / '.config' / 'TimeNest'
 
 def main():
     """应用程序主入口点"""

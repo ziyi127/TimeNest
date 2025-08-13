@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime, timedelta, time
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QGridLayout, QFrame
-from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtCore import QTimer, Qt, Signal, QEasingCurve, QPropertyAnimation
 from PySide6.QtGui import QColor, QFont
 
 from models.component_settings.schedule_component_settings import ScheduleComponentSettings
@@ -51,6 +51,9 @@ class ScheduleComponent(QWidget):
         self.is_lesson_confirmed = False
         self.is_class_plan_loaded = False
         self.next_class_time_layout_item = None
+        
+        # 动画相关
+        self.animations = []
         
         # 初始化UI
         self.init_ui()
@@ -145,6 +148,9 @@ class ScheduleComponent(QWidget):
         
         # 设置最小高度
         self.setMinimumHeight(80)
+        
+        # 启用鼠标跟踪
+        self.setMouseTracking(True)
         
     def apply_styles(self):
         """应用样式"""
@@ -257,6 +263,8 @@ class ScheduleComponent(QWidget):
         # 如果有明天的课程表且需要显示，则显示标签
         if show_tomorrow and self.tomorrow_class_plan and not tomorrow_schedule_empty:
             self.tomorrow_label.setVisible(True)
+            # 添加淡入动画
+            self.animate_fade_in(self.tomorrow_label)
         else:
             self.tomorrow_label.setVisible(False)
             
@@ -291,6 +299,8 @@ class ScheduleComponent(QWidget):
         for i, lesson in enumerate(lessons):
             lesson_widget = self.create_lesson_widget(lesson, i)
             self.main_lessons_listbox_layout.addWidget(lesson_widget)
+            # 添加动画效果
+            self.animate_fade_in(lesson_widget, i * 50)
             
     def create_lesson_widget(self, lesson: Dict[str, Any], index: int) -> QWidget:
         """创建课程项控件"""
@@ -298,8 +308,8 @@ class ScheduleComponent(QWidget):
         widget.setObjectName(f"LessonItem_{index}")
         widget.setFrameStyle(QFrame.NoFrame)
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(4, 2, 4, 2)
-        layout.setSpacing(8)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(12)
         
         # 课程名称
         name_label = QLabel(lesson.get("name", "未知课程"))
@@ -308,6 +318,7 @@ class ScheduleComponent(QWidget):
             QLabel {
                 font-weight: normal;
                 font-size: 14px;
+                color: #FFFFFF;
             }
         """)
         
@@ -319,8 +330,11 @@ class ScheduleComponent(QWidget):
         time_label.setObjectName(f"LessonTime_{index}")
         time_label.setStyleSheet("""
             QLabel {
-                color: #666666;
+                color: #AAAAAA;
                 font-size: 12px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+                padding: 2px 6px;
             }
         """)
         
@@ -333,10 +347,11 @@ class ScheduleComponent(QWidget):
         widget.setStyleSheet("""
             QFrame {
                 background-color: transparent;
-                border-radius: 4px;
+                border-radius: 8px;
+                padding: 4px 0;
             }
             QFrame:hover {
-                background-color: rgba(0, 120, 212, 0.1);
+                background-color: rgba(255, 255, 255, 0.1);
             }
         """)
         
@@ -361,6 +376,7 @@ class ScheduleComponent(QWidget):
                 else:
                     self.empty_placeholder.setText(self.settings.placeholder_text_no_class)
                 self.empty_placeholder.setVisible(True)
+                self.animate_fade_in(self.empty_placeholder)
             else:
                 self.empty_placeholder.setVisible(False)
         else:
@@ -401,6 +417,39 @@ class ScheduleComponent(QWidget):
     def debug_trigger_on_state_changed(self):
         """调试触发状态变化事件"""
         self.current_time_state_changed.emit()
+        
+    def animate_fade_in(self, widget, delay=0):
+        """淡入动画效果"""
+        if not widget:
+            return
+            
+        # 创建动画对象
+        animation = QPropertyAnimation(widget, b"windowOpacity")
+        animation.setDuration(300)
+        animation.setStartValue(0.0)
+        animation.setEndValue(1.0)
+        animation.setEasingCurve(QEasingCurve.OutCubic)
+        
+        # 添加延迟
+        if delay > 0:
+            timer = QTimer()
+            timer.timeout.connect(lambda: (animation.start(), timer.deleteLater()))
+            timer.setSingleShot(True)
+            timer.start(delay)
+        else:
+            animation.start()
+            
+        # 保存动画引用防止被垃圾回收
+        self.animations.append(animation)
+        animation.finished.connect(lambda: self._remove_animation(animation))
+        
+    def _remove_animation(self, animation):
+        """从动画列表中移除已完成的动画"""
+        try:
+            if animation and animation in self.animations:
+                self.animations.remove(animation)
+        except Exception as e:
+            self.logger.debug(f"移除动画时发生错误: {e}")
         
     def sync_with_lessons_service(self):
         """与课程服务同步状态"""

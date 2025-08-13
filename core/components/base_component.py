@@ -38,8 +38,8 @@ class BaseComponent(QObject):
 class TimeNestClockComponent(BaseComponent):
     """TimeNest时钟组件"""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, settings=None):
+        super().__init__(settings)
         self.name = "时钟"
         self.component_id = "9E1AF71D-8F77-4B21-A342-448787104DD9"
         self.description = "显示现在的时间，支持精确到秒。"
@@ -56,8 +56,8 @@ class TimeNestClockComponent(BaseComponent):
 class TimeNestDateComponent(BaseComponent):
     """TimeNest日期组件"""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, settings=None):
+        super().__init__(settings)
         self.name = "日期"
         self.component_id = "DF3F8295-21F6-482E-BADA-FA0E5F14BB66"
         self.description = "显示今天的日期和星期。"
@@ -74,8 +74,8 @@ class TimeNestDateComponent(BaseComponent):
 class TimeNestScheduleComponent(BaseComponent):
     """TimeNest课程表组件"""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, settings=None):
+        super().__init__(settings)
         self.name = "课程表"
         self.component_id = "1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8"
         self.description = "显示当前的课程表信息。"

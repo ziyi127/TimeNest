@@ -1,4 +1,4 @@
-from typing import Dict, Type, Any, Optional
+from typing import Dict, Type, Optional
 from PySide6.QtCore import QObject, Signal
 
 

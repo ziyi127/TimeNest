@@ -22,7 +22,7 @@ def build_executable():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
     
     # 获取项目根目录
-    project_root = Path(__file__).parent
+    project_root = Path(__file__).parent.resolve()
     
     # 构建命令
     cmd = [
@@ -37,6 +37,14 @@ def build_executable():
     icon_path = project_root / "assets" / "logo.svg"
     if icon_path.exists():
         cmd.extend(["--icon", str(icon_path)])
+    else:
+        # 尝试其他可能的图标文件
+        icon_extensions = [".png", ".ico", ".icns"]
+        for ext in icon_extensions:
+            alt_icon_path = project_root / "assets" / f"logo{ext}"
+            if alt_icon_path.exists():
+                cmd.extend(["--icon", str(alt_icon_path)])
+                break
     
     print(f"执行命令: {' '.join(cmd)}")
     
@@ -54,6 +62,8 @@ def build_executable():
                 if file.is_file():
                     size = file.stat().st_size
                     print(f"  {file.name}: {size} bytes")
+        else:
+            print("警告: 未找到dist目录")
         
     except subprocess.CalledProcessError as e:
         print(f"构建失败: {e}")
@@ -62,5 +72,25 @@ def build_executable():
         print(f"发生错误: {e}")
         sys.exit(1)
 
+def check_environment():
+    """检查构建环境"""
+    print("检查构建环境...")
+    
+    # 检查Python版本
+    print(f"Python版本: {sys.version}")
+    if sys.version_info < (3, 7):
+        print("警告: 建议使用Python 3.7或更高版本")
+    
+    # 检查操作系统
+    print(f"操作系统: {sys.platform}")
+    
+    # 检查PySide6
+    try:
+        import PySide6
+        print(f"PySide6版本: {PySide6.__version__}")
+    except ImportError:
+        print("警告: 未安装PySide6")
+
 if __name__ == "__main__":
+    check_environment()
     build_executable()

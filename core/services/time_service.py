@@ -139,37 +139,6 @@ class TimeService(QObject):
         final_time = base_time + timedelta(seconds=self.time_offset_seconds + self.debug_time_offset_seconds)
         self.last_time = final_time
         return final_time
-            
-    def get_current_local_datetime(self) -> datetime:
-        """获取当前精确当地时间"""
-        system_time = datetime.now()
-        
-        if self.is_exact_time_enabled and self.ntp_client:
-            if self.waiting_for_system_time_changed:
-                return self.last_time
-                
-            # 使用NTP时间
-            try:
-                response = self.ntp_client.request(self.exact_time_server)
-                ntp_time = datetime.fromtimestamp(response.tx_time)
-                base_time = ntp_time
-            except Exception:
-                # 如果NTP同步失败，回退到系统时间
-                base_time = system_time
-        else:
-            # 使用系统时间
-            base_time = system_time
-            
-        # 处理时间回退情况
-        base_time = base_time if base_time > self.prev_datetime or not self.need_waiting else self.prev_datetime
-        
-        if self.need_waiting and base_time > self.prev_datetime:
-            self.need_waiting = False
-            
-        # 应用时间偏移
-        final_time = base_time + timedelta(seconds=self.time_offset_seconds + self.debug_time_offset_seconds)
-        self.last_time = final_time
-        return final_time
         
     def set_time_offset(self, offset_seconds: float):
         """设置时间偏移（秒）"""

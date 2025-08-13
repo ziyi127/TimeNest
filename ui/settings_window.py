@@ -3,7 +3,7 @@ import logging
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                               QTreeWidget, QTreeWidgetItem, QStackedWidget, 
                               QLabel, QPushButton, QFrame, QSplitter, QGroupBox,
-                              QCheckBox, QComboBox, QSpinBox)
+                              QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 
@@ -290,6 +290,40 @@ class SettingsWindow(QMainWindow):
         window_layout.addWidget(self.window_opacity_spinbox)
         
         layout.addWidget(window_group)
+        
+        # 浮动窗口设置组
+        floating_window_group = QGroupBox("浮动窗口设置")
+        floating_window_layout = QVBoxLayout(floating_window_group)
+        
+        # 鼠标悬停透明度设置
+        self.hover_effect_checkbox = QCheckBox("启用鼠标悬停透明效果")
+        self.hover_effect_checkbox.setChecked(True)
+        floating_window_layout.addWidget(self.hover_effect_checkbox)
+        
+        hover_opacity_layout = QHBoxLayout()
+        hover_opacity_layout.addWidget(QLabel("鼠标悬停透明度 (0.0-1.0):"))
+        self.hover_opacity_spinbox = QDoubleSpinBox()
+        self.hover_opacity_spinbox.setRange(0.0, 1.0)
+        self.hover_opacity_spinbox.setSingleStep(0.1)
+        self.hover_opacity_spinbox.setValue(0.3)
+        hover_opacity_layout.addWidget(self.hover_opacity_spinbox)
+        floating_window_layout.addLayout(hover_opacity_layout)
+        
+        # 触控点击透明度设置
+        self.touch_effect_checkbox = QCheckBox("启用触控点击透明效果")
+        self.touch_effect_checkbox.setChecked(True)
+        floating_window_layout.addWidget(self.touch_effect_checkbox)
+        
+        touch_opacity_layout = QHBoxLayout()
+        touch_opacity_layout.addWidget(QLabel("触控点击透明度 (0.0-1.0):"))
+        self.touch_opacity_spinbox = QDoubleSpinBox()
+        self.touch_opacity_spinbox.setRange(0.0, 1.0)
+        self.touch_opacity_spinbox.setSingleStep(0.1)
+        self.touch_opacity_spinbox.setValue(0.2)
+        touch_opacity_layout.addWidget(self.touch_opacity_spinbox)
+        floating_window_layout.addLayout(touch_opacity_layout)
+        
+        layout.addWidget(floating_window_group)
         
         layout.addStretch()
         return page

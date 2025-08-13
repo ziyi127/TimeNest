@@ -1,8 +1,8 @@
 import sys
 import logging
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
-from PySide6.QtCore import Qt, QTimer, QRect, QPoint, Signal
-from PySide6.QtGui import QScreen, QColor, QPalette, QFont
+from PySide6.QtCore import Qt, QTimer, QPoint, Signal, QEasingCurve, QPropertyAnimation
+from PySide6.QtGui import QScreen, QFont, QPalette
 
 from ui.components.schedule_component import ScheduleComponent
 from core.components.clock_component import ClockComponent
@@ -29,6 +29,14 @@ class MainWindow(QMainWindow):
         # 窗口状态
         self.is_visible = True
         self.is_floating = True
+        self.is_expanded = False
+        
+        # 动画相关
+        self.opacity_animation = None
+        self.geometry_animation = None
+        
+        # 保存动画引用防止被垃圾回收
+        self.animations = []
         
         self.init_ui()
         self.init_window_properties()
@@ -76,9 +84,9 @@ class MainWindow(QMainWindow):
             }
             #MainWindowRoot {
                 background-color: rgba(20, 20, 20, 220);  /* 更深的背景色 */
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 40);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 30);
+                box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
             }
             #LeftContainer, #RightContainer {
                 background: transparent;
@@ -98,8 +106,7 @@ class MainWindow(QMainWindow):
             Qt.WindowType.FramelessWindowHint |      # 无边框
             Qt.WindowType.WindowStaysOnTopHint |     # 置顶
             Qt.WindowType.Tool |                     # 工具窗口
-            Qt.WindowType.WindowTransparentForInput | # 点击穿透
-            Qt.WindowType.SubWindow                   # 子窗口（避免与配置窗口冲突）
+            Qt.WindowType.SubWindow                  # 子窗口（避免与配置窗口冲突）
         )
         
         # 设置窗口透明背景
@@ -107,11 +114,17 @@ class MainWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         
         # 设置窗口大小和位置 - 仿ClassIsland尺寸
-        self.resize(600, 40)  # 更宽的窗口以容纳更多组件
+        self.resize(600, 60)  # 更宽的窗口以容纳更多组件
         self.move_to_top_center()
         
         # 设置窗口透明度
         self.setWindowOpacity(0.95)
+        
+        # 启用鼠标事件
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+        
+        # 连接鼠标事件
+        self.setMouseTracking(True)
         
     def move_to_top_center(self):
         """将窗口移动到屏幕顶部中央 - 仿ClassIsland停靠机制"""
@@ -120,7 +133,7 @@ class MainWindow(QMainWindow):
             screen_geometry = screen.geometry()
             # 停靠在屏幕顶部中央
             x = screen_geometry.center().x() - self.width() // 2
-            y = screen_geometry.top() + 30  # 距离顶部30像素，避免与系统栏冲突
+            y = screen_geometry.top() + 10  # 距离顶部10像素，避免与系统栏冲突
             self.move(x, y)
             
     def init_components(self):
@@ -187,6 +200,38 @@ class MainWindow(QMainWindow):
         """屏幕变化处理"""
         # 当屏幕分辨率或配置发生变化时，重新调整窗口位置
         self.move_to_top_center()
+        
+    def enterEvent(self, event):
+        """鼠标进入窗口事件"""
+        self.animate_opacity(1.0, 200)
+        super().enterEvent(event)
+        
+    def leaveEvent(self, event):
+        """鼠标离开窗口事件"""
+        self.animate_opacity(0.95, 200)
+        super().leaveEvent(event)
+        
+    def animate_opacity(self, target_opacity, duration):
+        """窗口透明度动画"""
+        if self.opacity_animation and self.opacity_animation.state() == QPropertyAnimation.Running:
+            self.opacity_animation.stop()
+            
+        self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
+        self.opacity_animation.setDuration(duration)
+        self.opacity_animation.setStartValue(self.windowOpacity())
+        self.opacity_animation.setEndValue(target_opacity)
+        self.opacity_animation.setEasingCurve(QEasingCurve.OutCubic)
+        
+        # 保存动画引用防止被垃圾回收
+        self.animations.append(self.opacity_animation)
+        self.opacity_animation.finished.connect(lambda: self._remove_animation(self.opacity_animation))
+        
+        self.opacity_animation.start()
+        
+    def _remove_animation(self, animation):
+        """从动画列表中移除已完成的动画"""
+        if animation in self.animations:
+            self.animations.remove(animation)
             
     def resizeEvent(self, event):
         """窗口大小改变事件"""
@@ -222,6 +267,13 @@ class MainWindow(QMainWindow):
             self.update_timer.stop()
         if hasattr(self, 'screen_timer'):
             self.screen_timer.stop()
+            
+        # 停止所有动画
+        for animation in self.animations[:]:  # 使用切片复制避免修改列表时的问题
+            if animation.state() == QPropertyAnimation.Running:
+                animation.stop()
+        self.animations.clear()
+        
         super().closeEvent(event)
         
     def setVisible(self, visible: bool):
