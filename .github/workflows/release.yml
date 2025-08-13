@@ -4,19 +4,176 @@ on:
   push:
     tags:
       - 'v*'  # 推送标签时触发发布
-    branches: [ main ]  # 推送到main分支时自动创建release
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:  # 手动触发
 
 permissions:
   contents: write
-  packages: write
-  actions: read
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build Windows executable
+      run: |
+        pyinstaller --onefile --windowed --name TimeNest --icon assets/logo.svg main.py
+
+    - name: Create Windows package
+      run: |
+        mkdir TimeNest-windows
+        copy dist/TimeNest.exe TimeNest-windows\
+        copy README.md TimeNest-windows\
+        copy LICENSE TimeNest-windows\ 2>nul || echo "No LICENSE file"
+        copy start.bat TimeNest-windows\
+        copy start.sh TimeNest-windows\
+        
+        # 创建ZIP包
+        Compress-Archive -Path TimeNest-windows\* -DestinationPath TimeNest-windows.zip
+
+    - name: Get version
+      id: get_version
+      run: |
+        $version = "${{ github.ref_name }}"
+        $version = $version -replace '^v', ''
+        echo "VERSION=$version" >> $env:GITHUB_ENV
+
+    - name: Upload Windows release asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: TimeNest-windows.zip
+        tag_name: ${{ github.ref_name }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 包含主要的Linux发行版系列
+        distro: [ubuntu, debian, fedora, centos, arch]
+        arch: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build Linux executable
+      run: |
+        pyinstaller --onefile --windowed --name TimeNest main.py
+
+    - name: Create Linux package based on distro
+      run: |
+        DISTRO=${{ matrix.distro }}
+        VERSION=${GITHUB_REF_NAME#v}
+        
+        mkdir -p TimeNest-linux-${DISTRO}
+        cp dist/TimeNest TimeNest-linux-${DISTRO}/
+        cp README.md TimeNest-linux-${DISTRO}/
+        cp LICENSE TimeNest-linux-${DISTRO}/ 2>/dev/null || echo "No LICENSE file"
+        cp start.sh TimeNest-linux-${DISTRO}/
+        
+        # 根据不同的发行版创建相应的包
+        case $DISTRO in
+          ubuntu|debian)
+            # 创建DEB包结构
+            mkdir -p timenest-debian/DEBIAN
+            mkdir -p timenest-debian/usr/bin
+            mkdir -p timenest-debian/usr/share/doc/timenest
+            
+            cp TimeNest-linux-${DISTRO}/TimeNest timenest-debian/usr/bin/
+            cp TimeNest-linux-${DISTRO}/README.md timenest-debian/usr/share/doc/timenest/
+            
+            # 创建控制文件
+            cat > timenest-debian/DEBIAN/control << EOF
+Package: timenest
+Version: $VERSION
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: python3, python3-pyside6
+Maintainer: TimeNest Team
+Description: 智能课程表桌面应用
+ Complete rewrite of ClassIsland in Python with PySide6
+EOF
+            
+            # 构建DEB包
+            dpkg-deb --build timenest-debian TimeNest-${VERSION}-linux-${DISTRO}.deb
+            zip TimeNest-${VERSION}-linux-${DISTRO}.deb.zip TimeNest-${VERSION}-linux-${DISTRO}.deb
+            ;;
+            
+          fedora|centos)
+            # 创建RPM包结构（简化版）
+            echo "Creating RPM package structure for $DISTRO"
+            mkdir -p timenest-rpm/usr/bin
+            cp TimeNest-linux-${DISTRO}/TimeNest timenest-rpm/usr/bin/
+            tar -czf TimeNest-${VERSION}-linux-${DISTRO}.tar.gz timenest-rpm
+            zip TimeNest-${VERSION}-linux-${DISTRO}.rpm.zip TimeNest-${VERSION}-linux-${DISTRO}.tar.gz
+            ;;
+            
+          arch)
+            # 创建Arch包结构
+            cat > PKGBUILD << EOF
+pkgname=timenest
+pkgver=$VERSION
+pkgrel=1
+pkgdesc="智能课程表桌面应用"
+arch=('x86_64')
+url="https://github.com/ziyi127/TimeNest"
+license=('MIT')
+depends=('python' 'python-pyside6')
+
+package() {
+    mkdir -p "\$pkgdir/usr/bin"
+    cp TimeNest-linux-${DISTRO}/TimeNest "\$pkgdir/usr/bin/"
+    chmod +x "\$pkgdir/usr/bin/TimeNest"
+}
+EOF
+            zip TimeNest-${VERSION}-linux-${DISTRO}.pkg.zip PKGBUILD
+            ;;
+        esac
+        
+        # 同时创建通用的便携式包
+        tar -czf TimeNest-${VERSION}-linux-${DISTRO}-portable.tar.gz TimeNest-linux-${DISTRO}
+
+    - name: Upload Linux release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          TimeNest-*-${{ matrix.distro }}*.zip
+          TimeNest-*-${{ matrix.distro }}*.deb.zip
+          TimeNest-*-${{ matrix.distro }}*.rpm.zip
+          TimeNest-*-${{ matrix.distro }}*.pkg.zip
+          TimeNest-*-${{ matrix.distro }}*.tar.gz
+        tag_name: ${{ github.ref_name }}
+
+  build-macos:
+    runs-on: macos-latest
     strategy:
       matrix:
         arch: [x86_64, arm64]
@@ -35,548 +192,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
-        
-    - name: Convert PNG to ICO (if needed)
-      run: |
-        if (!(Test-Path "resources\icons\tray_icon.ico")) {
-          echo "Converting PNG to ICO format..."
-          # 如果没有ico文件，可以使用在线转换或其他工具
-          # 这里先跳过，使用PNG文件
-        }
-        
-    - name: Set UTF-8 encoding
-      run: |
-        $OutputEncoding = [System.Text.Encoding]::UTF8
-        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        $env:PYTHONIOENCODING = "utf-8"
-      shell: pwsh
-
-    - name: Build executable with spec
-      run: |
-        $OutputEncoding = [System.Text.Encoding]::UTF8
-        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        $env:PYTHONIOENCODING = "utf-8"
-
-        if (Test-Path "TimeNest.spec") {
-          echo "Building with spec file..."
-          pyinstaller TimeNest.spec --clean --noconfirm
-        } elseif (Test-Path "build_simple.py") {
-          echo "Using simple build script..."
-          python build_simple.py
-        } else {
-          echo "Using fallback build script..."
-          python build_fallback.py
-        }
-      shell: pwsh
-        
-    - name: Create portable package
-      run: |
-        mkdir TimeNest-portable
-        copy dist\TimeNest.exe TimeNest-portable\
-        copy README.md TimeNest-portable\
-        copy LICENSE TimeNest-portable\
-        if (Test-Path "config") { xcopy /E /I config TimeNest-portable\config }
-        if (Test-Path "resources") { xcopy /E /I resources TimeNest-portable\resources }
-        if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
-        if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
-        
-    - name: Create Windows installer and package
-      run: |
-        $version = "${{ steps.release_info.outputs.version }}"
-        $arch = "${{ steps.release_info.outputs.architecture }}"
-
-        # 安装NSIS for creating exe installer
-        choco install nsis -y
-        $env:PATH += ";C:\Program Files (x86)\NSIS"
-
-        # 创建NSIS安装脚本
-        $nsisScript = @"
-        !define APP_NAME "TimeNest"
-        !define APP_VERSION "$version"
-        !define APP_ARCH "$arch"
-        !define PUBLISHER "ziyi127"
-        !define WEB_SITE "https://timenest.qzz.io"
-        !define INSTALL_DIR "`$PROGRAMFILES64\TimeNest"
-
-        Name "`${APP_NAME} `${APP_VERSION}"
-        OutFile "TimeNest_`${APP_VERSION}_`${APP_ARCH}.exe"
-        InstallDir "`${INSTALL_DIR}"
-
-        Page directory
-        Page instfiles
-
-        Section "MainSection" SEC01
-            SetOutPath "`$INSTDIR"
-            File /r "TimeNest-portable\*"
-            CreateDirectory "`$SMPROGRAMS\TimeNest"
-            CreateShortCut "`$SMPROGRAMS\TimeNest\TimeNest.lnk" "`$INSTDIR\TimeNest.exe"
-            CreateShortCut "`$DESKTOP\TimeNest.lnk" "`$INSTDIR\TimeNest.exe"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "DisplayName" "TimeNest"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "UninstallString" "`$INSTDIR\uninstall.exe"
-            WriteUninstaller "`$INSTDIR\uninstall.exe"
-        SectionEnd
-
-        Section "Uninstall"
-            Delete "`$INSTDIR\*.*"
-            RMDir /r "`$INSTDIR"
-            Delete "`$SMPROGRAMS\TimeNest\*.*"
-            RMDir "`$SMPROGRAMS\TimeNest"
-            Delete "`$DESKTOP\TimeNest.lnk"
-            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest"
-        SectionEnd
-        "@
-
-        $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
-
-        # 编译安装程序
-        makensis installer.nsi
-
-        # 压缩安装程序
-        $exeFile = "TimeNest_${version}_${arch}.exe"
-        $zipFile = "TimeNest_${version}_${arch}.exe.zip"
-        Compress-Archive -Path $exeFile -DestinationPath $zipFile -CompressionLevel Optimal
-
-        echo "Created Windows installer: $zipFile"
-
-        # 显示文件大小
-        $fileInfo = Get-Item $zipFile
-        $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
-        echo "Package size: $sizeMB MB"
-
-    - name: Get release info and architecture
-      id: release_info
-      run: |
-        # 使用matrix架构
-        $archName = "${{ matrix.arch }}"
-        echo "architecture=$archName" >> $env:GITHUB_OUTPUT
-
-        if ("${{ github.ref_type }}" -eq "tag") {
-          $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v', ''
-        } else {
-          # 从app_info.json读取版本信息
-          $appInfo = Get-Content app_info.json | ConvertFrom-Json
-          $version = $appInfo.version.number
-          $tag = "v$version"
-        }
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-        echo "tag=$tag" >> $env:GITHUB_OUTPUT
-
-    - name: Upload Windows package to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.release_info.outputs.tag }}
-        name: TimeNest ${{ steps.release_info.outputs.version }}
-        body: |
-          ## TimeNest ${{ steps.release_info.outputs.version }}
-
-          ### 📦 Windows 下载
-          - **Windows 安装程序**: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-
-          ### 📋 Windows 安装说明
-          1. 下载 ZIP 文件
-          2. 解压得到 `.exe` 安装程序
-          3. 双击运行安装程序
-          4. 按照向导完成安装
-
-          ### 💡 系统要求
-          - Windows 10 或更高版本
-          - 架构: ${{ matrix.arch }}
-
-          ### 🚀 运行
-          安装完成后，可以从开始菜单或桌面快捷方式启动 TimeNest。
-        draft: false
-        prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
-        files: |
-          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-
-    - name: Upload Build Artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
-      with:
-        name: TimeNest-${{ github.sha }}-windows-${{ matrix.arch }}
-        path: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-        retention-days: 30
-
-  build-linux:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [x86_64]  # 移除arm64，因为GitHub Actions不支持真正的ARM64交叉编译
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          python3-dev \
-          python3-tk \
-          build-essential \
-          fakeroot \
-          devscripts \
-          debhelper \
-          dh-python \
-          rpm \
-          alien \
-          git \
-          desktop-file-utils \
-          qt6-base-dev \
-          qt6-tools-dev \
-          libgl1-mesa-dev \
-          libegl1-mesa-dev
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # 安装基础依赖
-        pip install pyinstaller
-        # 安装项目依赖，忽略可能的错误
-        pip install -r requirements.txt || echo "Some dependencies may have failed, continuing..."
-        # 确保关键依赖已安装
-        pip install PySide6 PyYAML requests pandas numpy openpyxl
-
-    - name: Build Linux executable
-      run: |
-        # 设置环境变量
-        export QT_QPA_PLATFORM=offscreen
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        export DISPLAY=:99
-
-        # 启动虚拟显示（如果需要）
-        sudo apt-get install -y xvfb || true
-        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-
-        # 构建可执行文件
-        pyinstaller --onefile \
-          --name TimeNest \
-          --add-data "qml:qml" \
-          --add-data "resources:resources" \
-          --add-data "themes:themes" \
-          --add-data "config:config" \
-          --add-data "app_info.json:." \
-          --hidden-import PySide6.QtCore \
-          --hidden-import PySide6.QtGui \
-          --hidden-import PySide6.QtWidgets \
-          --hidden-import PySide6.QtQml \
-          --hidden-import PySide6.QtQuick \
-          --hidden-import RinUI \
-          --hidden-import utils.common_imports \
-          --hidden-import utils.shared_utilities \
-          --hidden-import utils.config_constants \
-          --windowed \
-          main.py
-
-
-
-    - name: Get version info and architecture
-      id: version_info
-      run: |
-        # 使用matrix架构
-        ARCH_NAME="${{ matrix.arch }}"
-        echo "architecture=$ARCH_NAME" >> $GITHUB_OUTPUT
-
-        if [ "${{ github.ref_type }}" = "tag" ]; then
-          VERSION="${{ github.ref_name }}"
-          VERSION=${VERSION#v}
-        else
-          VERSION=$(python -c "import json; print(json.load(open('app_info.json'))['version']['number'])")
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Create application directory structure
-      run: |
-        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/bin
-        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/applications
-        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/pixmaps
-        mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest
-
-        # 复制可执行文件
-        cp dist/TimeNest TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
-        chmod +x TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
-
-        # 创建桌面文件
-        cat > TimeNest-${{ steps.version_info.outputs.version }}/usr/share/applications/TimeNest.desktop << EOF
-        [Desktop Entry]
-        Name=TimeNest
-        Comment=智能时间管理助手
-        Exec=TimeNest
-        Icon=TimeNest
-        Terminal=false
-        Type=Application
-        Categories=Office;Utility;
-        StartupNotify=true
-        EOF
-
-        # 复制图标（如果存在）
-        if [ -f "resources/app_icon.png" ]; then
-          cp resources/app_icon.png TimeNest-${{ steps.version_info.outputs.version }}/usr/share/pixmaps/TimeNest.png
-        fi
-
-        # 复制文档
-        cp README.md TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/
-        cp LICENSE TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest/ || echo "LICENSE file not found"
-
-    - name: Install Linux packaging tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y dpkg-dev rpm build-essential fakeroot
-
-    - name: Create Linux native packages
-      run: |
-        chmod +x scripts/build_linux_packages.sh
-        ./scripts/build_linux_packages.sh ${{ steps.version_info.outputs.version }} ${{ steps.version_info.outputs.architecture }}
-
-
-
-
-
-
-    - name: Upload Linux packages to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.version_info.outputs.tag }}
-        name: TimeNest ${{ steps.version_info.outputs.version }}
-        body: |
-          ## TimeNest ${{ steps.version_info.outputs.version }} - Linux 安装包
-
-          ### 📦 Linux 下载
-          - **便携版**: TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
-
-          ### 📋 安装说明
-
-          **便携版使用:**
-          ```bash
-          # 解压文件
-          tar -xzf TimeNest_${{ steps.version_info.outputs.version }}_${{ steps.version_info.outputs.architecture }}.tar.gz
-
-          # 进入目录
-          cd TimeNest-portable-linux
-
-          # 运行程序
-          ./run.sh
-          # 或直接运行
-          ./TimeNest
-          ```
-
-          ### 💡 系统要求
-          - Linux 发行版（Ubuntu 18.04+、CentOS 7+、Debian 10+ 等）
-          - 架构: ${{ matrix.arch }}
-          - Python 3.8+ 运行时环境
-
-          ### 🚀 运行
-          解压后可以通过以下方式启动：
-          - 使用启动脚本: `./run.sh`
-          - 直接运行: `./TimeNest`
-        draft: false
-        prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
-        files: |
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
-
-    - name: Upload Linux artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
-      with:
-        name: TimeNest-${{ github.sha }}-linux-${{ matrix.arch }}
-        path: |
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
-        retention-days: 30
-
-  build-macos:
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        arch: [x86_64, arm64]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # 安装基础依赖
-        pip install pyinstaller
-        # 安装项目依赖，忽略可能的错误
-        pip install -r requirements.txt || echo "Some dependencies may have failed, continuing..."
-        # 确保关键依赖已安装
-        pip install PySide6 PyYAML requests pandas numpy openpyxl
 
     - name: Build macOS executable
       run: |
-        # 设置环境变量
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        pyinstaller --onefile --windowed --name TimeNest --icon assets/logo.svg main.py
 
-        # 构建可执行文件
-        pyinstaller --onefile \
-          --name TimeNest \
-          --add-data "qml:qml" \
-          --add-data "resources:resources" \
-          --add-data "themes:themes" \
-          --add-data "config:config" \
-          --add-data "app_info.json:." \
-          --hidden-import PySide6.QtCore \
-          --hidden-import PySide6.QtGui \
-          --hidden-import PySide6.QtWidgets \
-          --hidden-import PySide6.QtQml \
-          --hidden-import PySide6.QtQuick \
-          --hidden-import RinUI \
-          --hidden-import utils.common_imports \
-          --hidden-import utils.shared_utilities \
-          --hidden-import utils.config_constants \
-          --hidden-import utils.rinui_patch \
-          --hidden-import utils.rinui_init \
-          --windowed \
-          main.py
-
-    - name: Get version info and architecture
-      id: version_info_macos
+    - name: Create macOS package
       run: |
-        # 使用matrix架构
-        ARCH_NAME="${{ matrix.arch }}"
-        echo "architecture=$ARCH_NAME" >> $GITHUB_OUTPUT
+        VERSION=${GITHUB_REF_NAME#v}
+        ARCH=${{ matrix.arch }}
+        
+        mkdir -p TimeNest-macos-${ARCH}
+        cp dist/TimeNest TimeNest-macos-${ARCH}/
+        cp README.md TimeNest-macos-${ARCH}/
+        cp LICENSE TimeNest-macos-${ARCH}/ 2>/dev/null || echo "No LICENSE file"
+        cp start.sh TimeNest-macos-${ARCH}/
+        
+        # 创建ZIP包
+        zip -r TimeNest-${VERSION}-macos-${ARCH}.zip TimeNest-macos-${ARCH}
 
-        if [ "${{ github.ref_type }}" = "tag" ]; then
-          VERSION="${{ github.ref_name }}"
-          VERSION=${VERSION#v}
-        else
-          VERSION=$(python -c "import json; print(json.load(open('app_info.json'))['version']['number'])")
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Create macOS DMG package
-      run: |
-        VERSION=${{ steps.version_info_macos.outputs.version }}
-        ARCH="${{ steps.version_info_macos.outputs.architecture }}"
-
-        # 创建应用程序包结构
-        mkdir -p TimeNest.app/Contents/MacOS
-        mkdir -p TimeNest.app/Contents/Resources
-
-        # 复制可执行文件
-        cp dist/TimeNest TimeNest.app/Contents/MacOS/TimeNest
-        chmod +x TimeNest.app/Contents/MacOS/TimeNest
-
-        # 创建Info.plist文件
-        cat > TimeNest.app/Contents/Info.plist << EOF
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>TimeNest</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.ziyi127.TimeNest</string>
-            <key>CFBundleName</key>
-            <string>TimeNest</string>
-            <key>CFBundleVersion</key>
-            <string>$VERSION</string>
-            <key>CFBundleShortVersionString</key>
-            <string>$VERSION</string>
-            <key>CFBundleInfoDictionaryVersion</key>
-            <string>6.0</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleSignature</key>
-            <string>????</string>
-            <key>LSMinimumSystemVersion</key>
-            <string>10.15</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-            <key>NSHumanReadableCopyright</key>
-            <string>Copyright © 2025 ziyi127. All rights reserved.</string>
-        </dict>
-        </plist>
-        EOF
-
-        # 复制图标（如果存在）
-        if [ -f "resources/app_icon.png" ]; then
-          cp resources/app_icon.png TimeNest.app/Contents/Resources/app_icon.png
-        fi
-
-        # 创建DMG磁盘映像
-        echo "Creating DMG disk image..."
-
-        # 创建临时DMG目录
-        mkdir -p dmg-temp
-        cp -r TimeNest.app dmg-temp/
-
-        # 创建Applications链接
-        ln -s /Applications dmg-temp/Applications
-
-        # 创建DMG文件
-        hdiutil create -volname "TimeNest" -srcfolder dmg-temp -ov -format UDZO TimeNest_${VERSION}_${ARCH}.dmg
-
-        # 压缩DMG文件
-        zip TimeNest_${VERSION}_${ARCH}.dmg.zip TimeNest_${VERSION}_${ARCH}.dmg
-
-        echo "Created macOS DMG package: TimeNest_${VERSION}_${ARCH}.dmg.zip"
-
-        # 显示文件大小
-        ls -lh "TimeNest_${VERSION}_${ARCH}.dmg.zip"
-
-    - name: Upload macOS package to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
+    - name: Upload macOS release assets
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.version_info_macos.outputs.tag }}
-        name: TimeNest ${{ steps.version_info_macos.outputs.version }}
-        body: |
-          ## TimeNest ${{ steps.version_info_macos.outputs.version }} - macOS 版本
-
-          ### 📦 macOS 下载
-          - **macOS 应用程序**: TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.zip
-
-          ### 📋 macOS 安装说明
-          1. 下载 ZIP 文件
-          2. 解压 ZIP 文件
-          3. 将 TimeNest.app 拖拽到 Applications 文件夹
-          4. 在 Applications 中找到 TimeNest 并启动
-
-          ### 💡 系统要求
-          - macOS 10.15 (Catalina) 或更高版本
-          - 架构: ${{ matrix.arch }}
-
-          ### ⚠️ 注意事项
-          首次运行时，可能需要在"系统偏好设置" > "安全性与隐私"中允许运行此应用程序。
-        draft: false
-        prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
-        files: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
-
-    - name: Upload macOS artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
-      with:
-        name: TimeNest-${{ github.sha }}-macos-${{ matrix.arch }}
-        path: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
-        retention-days: 30
+        files: TimeNest-*-${{ matrix.arch }}.zip
+        tag_name: ${{ github.ref_name }}

@@ -16,7 +16,7 @@ from .group_component import GroupComponent
 from .slide_component import SlideComponent
 from .separator_component import SeparatorComponent
 from .floating_window import FloatingWindow
-from .theme_manager import ThemeManager, get_theme_manager
+from .theme_manager import ThemeManager
 from .tray_icon import TrayIcon, create_tray_icon, get_tray_icon
 from .notifier import Notifier, get_notifier
 
@@ -64,7 +64,6 @@ __all__ = [
     'SeparatorComponent',
     'FloatingWindow',
     'ThemeManager',
-    'get_theme_manager',
     'TrayIcon',
     'create_tray_icon',
     'get_tray_icon',

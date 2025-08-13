@@ -17,14 +17,14 @@ class UserPreferences:
         
     def _get_config_path(self) -> Path:
         """获取配置文件路径"""
+        import sys
         # 根据操作系统确定配置文件位置
-        if os.name == 'nt':  # Windows
+        if sys.platform == "win32":  # Windows
             config_dir = Path(os.environ.get('APPDATA', '')) / self.app_name
-        elif os.name == 'posix':  # Unix/Linux/macOS
-            if os.path.exists('/etc'):  # Linux
-                config_dir = Path.home() / '.config' / self.app_name
-            else:  # macOS
-                config_dir = Path.home() / 'Library' / 'Application Support' / self.app_name
+        elif sys.platform == "darwin":  # macOS
+            config_dir = Path.home() / 'Library' / 'Application Support' / self.app_name
+        elif sys.platform.startswith("linux"):  # Linux
+            config_dir = Path.home() / '.config' / self.app_name
         else:
             # 默认使用用户目录
             config_dir = Path.home() / f'.{self.app_name.lower()}'

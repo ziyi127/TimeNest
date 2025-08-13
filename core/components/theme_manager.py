@@ -16,6 +16,9 @@ class ThemeType(Enum):
 class ThemeManager:
     """主题管理器 - 管理应用主题和样式"""
     
+    # 主题变化信号
+    theme_changed_signal = Signal(object)
+    
     _instance = None
     
     def __new__(cls):
@@ -60,9 +63,6 @@ class ThemeManager:
                     'shadow': QColor(0, 0, 0, 30)
                 }
             }
-            
-            # 为所有组件注册主题变化信号
-            self.theme_changed_signal = Signal(object)
     
     @property
     def current_theme(self):

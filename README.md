@@ -54,9 +54,14 @@ TimeNest是一个基于Python 3.12+和PySide6开发的智能课程表桌面应�
 git clone <repository-url>
 cd TimeNest
 
+# Linux/macOS:
 # 运行启动脚本（自动创建虚拟环境并安装依赖）
 chmod +x start.sh
 ./start.sh
+
+# Windows:
+# 运行启动脚本（自动创建虚拟环境并安装依赖）
+start.bat
 ```
 
 ### 方法二：手动安装
@@ -81,8 +86,11 @@ python main.py
 
 ### 启动应用程序
 ```bash
-# 使用启动脚本
+# Linux/macOS:
 ./start.sh
+
+# Windows:
+start.bat
 
 # 或直接运行
 python main.py
@@ -194,6 +202,41 @@ TimeNest/
 - 动画效果增强
 - 用户体验优化
 - 多平台支持
+
+## 🚀 自动构建和发布
+
+### 支持的平台和发行版
+
+TimeNest使用GitHub Actions进行自动构建和发布，支持以下平台和发行版：
+
+#### Windows
+- Windows 10/11 (x64)
+
+#### Linux
+- **Debian系**: Ubuntu, Debian
+- **Red Hat系**: Fedora, CentOS
+- **Arch系**: Arch Linux
+- 通用便携式包 (适用于所有Linux发行版)
+
+#### macOS
+- macOS 10.15+ (x86_64 和 arm64)
+
+### 自动发布流程
+
+1. 当推送新的git标签(格式为`v*`)时，自动触发构建流程
+2. GitHub Actions会为所有支持的平台并行构建可执行文件
+3. 自动生成适用于各平台的安装包:
+   - Windows: ZIP便携包
+   - Linux: DEB包(Debian/Ubuntu)、RPM包(Red Hat/Fedora/CentOS)、PKG包(Arch Linux)和通用TAR.GZ便携包
+   - macOS: ZIP包
+4. 自动创建GitHub Release并上传所有构建产物
+
+### 手动触发构建
+
+项目维护者可以通过GitHub界面手动触发构建流程:
+1. 进入Actions选项卡
+2. 选择"Build and Release"工作流
+3. 点击"Run workflow"按钮
 
 ## 🧪 测试
 

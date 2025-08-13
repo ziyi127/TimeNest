@@ -18,6 +18,10 @@ class ComponentInfo:
 class ComponentRegistryService(QObject):
     """组件注册服务 - 负责组件的注册和管理"""
     
+    # 定义信号
+    component_added = Signal(ComponentInfo)
+    component_removed = Signal(ComponentInfo)
+    
     # 组件注册表
     registered_components: Dict[str, ComponentInfo] = {}
     registered_settings: Dict[str, ComponentInfo] = {}
@@ -140,6 +144,9 @@ class ComponentRegistryService(QObject):
         self.registered_components[component_info.guid] = component_info
         if component_info.settings_type:
             self.registered_settings[component_info.guid] = component_info
+            
+        # 发出组件添加信号
+        self.component_added.emit(component_info)
     
     def get_component_info(self, guid: str) -> Optional[ComponentInfo]:
         """根据GUID获取组件信息"""
@@ -159,6 +166,17 @@ class ComponentRegistryService(QObject):
     def migrate_component(self, source_guid: str, target_guid: str):
         """注册组件迁移映射"""
         self.migration_pairs[source_guid] = target_guid
+    
+    def remove_component(self, guid: str):
+        """移除组件"""
+        if guid in self.registered_components:
+            component_info = self.registered_components[guid]
+            del self.registered_components[guid]
+            if guid in self.registered_settings:
+                del self.registered_settings[guid]
+                
+            # 发出组件移除信号
+            self.component_removed.emit(component_info)
     
     def create_component_instance(self, guid: str, *args, **kwargs) -> Optional[QObject]:
         """根据GUID创建组件实例"""
