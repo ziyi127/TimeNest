@@ -1,10 +1,10 @@
-# TimeNest 2.2.0 Release
+# time between nest 2.2.0 release free
 
 <div align="center">
 
 <img src="https://github.com/ziyi127/TimeNest/blob/main/resources/icons/app_icon.png" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
 
-**一个功能强大的跨平台课程表管理工具 - RinUI版本**
+**one individual merit ability strong big of cross flat platform course cheng table manage work tool - rinui version this**
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![RinUI](https://img.shields.io/badge/RinUI-0.1.5+-blue.svg)](https://github.com/RinLit-233-shiroko/Rin-UI)
@@ -13,428 +13,371 @@
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
 
-[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+[🌐 official net station](https://timenest.qzz.io) | [📖 text files](https://timenest.qzz.io/docs) | [🐛 question topic anti feed](https://github.com/ziyi127/TimeNest/issues) | [💬 discussion theory](https://github.com/ziyi127/TimeNest/discussions)
 
 </div>
 
 ---
 
-## 📖 项目简介
+## 📖 item eye simple introduce
 
-TimeNest 2.2.0 Release 是一个基于 Python、RinUI 和 PySide6 开发的现代化课程表管理工具，专为学生、教师和教育工作者设计。本版本完全采用 RinUI 框架重构，提供了全新的现代化用户界面、强大的功能和跨平台支持，让时间管理变得简单高效。
+timenest 2.2.0 release free is one individual base in python、rinui and pyside6 open hair of present generation change class course table manage work tool tool, special for study life teacher life and education educate work author design count. this version complete all use rinui frame stand again build structure, provide give all new of present generation change user use household face between with strong big of merit ability and cross flat platform support hold, make time between manage reason become simple single high effect rate.
 
-### 🎯 设计理念
+### 🎯 set count idea thought
 
-- **简洁高效**：直观的用户界面，简化复杂操作
-- **功能全面**：涵盖课程管理的各个方面
-- **跨平台**：支持 Windows、macOS、Linux
-- **可扩展**：模块化设计，支持插件扩展
-- **现代化**：采用最新技术栈，持续更新
+- **simple single high effect rate**: direct view of user use household face between、simple change complex close work
+- **merit ability all face**: cover build course cheng manage reason of each individual each individual square face
+- **cross flat platform**: support hold windows、macos、linux
+- **can extend long**: block change design count support hold plugin extend long
+- **present generation change**: use latest new technology art stack pile, continue continue update new
 
+## 🔄 frame stand upgrade grade
 
-## 🔄 架构升级
+timenest 2.2.0 release free complete all base in rinui present generation change frame stand build construct:
 
-TimeNest 2.2.0 Release 完全基于 RinUI 现代化架构构建：
+- **current before frame stand**: rinui + qml declare style ui
+- **old version frame stand**: pyside6 widgets (already complete all remove move)
+- **performance can improve**: more fast render speed degree and more low memory occupy use
+- **face between optimize**: all new present generation change design count language speech
+- **component piece system**: use rinui native born component piece, provide give more good user use experience verify
+- **theme topic support hold**: complete all bright dark theme topic switch change and custom set theme topic support hold
 
-- **当前架构**: RinUI + QML 声明式UI
-- **旧版架构**: PySide6 Widgets (已完全移除)
-- **性能提升**: 更快的渲染速度和更低的内存占用
-- **界面优化**: 全新的现代化设计语言
-- **组件系统**: 使用RinUI原生组件，提供更好的用户体验
-- **主题支持**: 完整的明暗主题切换和自定义主题支持
+### 🆕 v2.2.0 update new content hold
 
-### 🆕 v2.2.0 更新内容
+- **🔧 cloth place system optimize**: repair fix all main want cloth place warning tell, provide give more stable ui experience verify
+- **⚙️ dialog improve**: again build structure new build course cheng and task dialog, use standard cloth place system
+- **🎨 response should design count**: improve auto self adapt cloth place, better good adapt different screen size
+- **📱 code quality mass**: reduce qml warning tell, improve application program stable
+- **🛠️ function merit perfect**: all menu single item and button all have actual real function realize
+- **🚀 performance can improve**: remove move conflict custom set component piece, improve run stable
 
-- **🔧 布局系统优化**: 修复了所有主要布局警告，提供更稳定的UI体验
-- **⚙️ Dialog改进**: 重构了新建课程和任务对话框，使用标准Layout系统
-- **🎨 响应式设计**: 改进的自适应布局，更好地适配不同屏幕尺寸
-- **📱 代码质量**: 减少QML警告，提升应用程序稳定性
-- **🛠️ 功能完善**: 所有菜单项和按钮都有实际功能实现
-- **🚀 性能提升**: 移除了冲突的自定义组件，提升运行稳定性
-
-### 启动方式
+### start begin way method
 
 ```bash
-# 主要启动方式
+# main want start begin way method
 python main.py
 
-# 或使用启动脚本（包含依赖检查）
+# or use start begin script (include contain depend check examine)
 python run_rinui.py
 ```
 
-## 🚀 快速开始
+## 🚀 quick fast start begin
 
-### 系统要求
+### system require want
 
-| 项目 | 最低要求 | 推荐配置 |
+| item single | minimum require want | recommend build discuss |
 |------|----------|----------|
-| **操作系统** | Windows 10 / macOS 10.14 / Linux | Windows 11 / macOS 12+ / Ubuntu 20.04+ |
-| **Python** | 3.8+ | 3.11+ |
-| **内存** | 2GB | 4GB+ |
-| **存储空间** | 500MB | 1GB+ |
-| **显示器** | 1024x768 | 1920x1080+ |
+| **operate work system** | windows 10 / macos 10.14 / linux | windows 11 / macos 12+ / ubuntu 20.04+ |
+| **python** | 3.8+ | 3.11+ |
+| **memory remember** | 2gb | 4gb+ |
+| **storage space** | 500mb | 1gb+ |
+| **display show** | 1024x768 | 1920x1080+ |
 
-### 📦 下载预编译版本
+### 📦 download load pre front compile version this
 
-#### 支持的平台和架构
+#### support hold platform and frame stand
 
-| 平台 | x86_64 | ARM64 | 下载格式 |
+| platform | x86_64 | arm64 | download load format |
 |------|--------|-------|----------|
-| **Windows** | ✅ | ✅ | `.exe` 安装程序 |
-| **macOS** | ✅ | ✅ | `.dmg` 磁盘映像 |
-| **Linux** | ✅ | ❌ | `.deb` `.rpm` `.pkg` |
+| **windows** | ✅ | ✅ | `.exe` install program sequence |
+| **macos** | ✅ | ✅ | `.dmg` disk image shadow |
+| **linux** | ✅ | ❌ | `.deb` `.rpm` `.pkg` |
 
-> **注意**: ARM64 Linux 用户请使用源码安装，详见 [ARM64 Linux 支持说明](docs/ARM64_LINUX_SUPPORT.md)
+> **note record**: arm64 linux user use please use source code install, detail see [arm64 linux support hold explain bright](docs/arm64_linux_support.md)
 
-#### 下载链接
+#### download load link connect
 
-前往 [Releases 页面](https://github.com/ziyi127/TimeNest/releases) 下载最新版本：
+front go [releases page face](https://github.com/ziyi127/timenest/releases) download load latest new version this:
 
 ```
-Windows:
-├── TimeNest_2.2.2_x86_64.exe.zip  (Intel/AMD 64位)
-└── TimeNest_2.2.2_arm64.exe.zip   (ARM64)
+windows:
+├── timenest_2.2.2_x86_64.exe.zip  (intel/amd 64 bit)
+└── timenest_2.2.2_arm64.exe.zip   (arm64)
 
-macOS:
-├── TimeNest_2.2.2_x86_64.dmg.zip  (Intel Mac)
-└── TimeNest_2.2.2_arm64.dmg.zip   (Apple Silicon)
+macos:
+├── timenest_2.2.2_x86_64.dmg.zip  (intel mac)
+└── timenest_2.2.2_arm64.dmg.zip   (apple silicon)
 
-Linux (仅 x86_64):
-├── TimeNest_2.2.2_x86_64.deb.zip  (Debian/Ubuntu)
-├── TimeNest_2.2.2_x86_64.rpm.zip  (RedHat/CentOS)
-└── TimeNest_2.2.2_x86_64.pkg.zip  (Arch Linux)
+linux (only x86_64):
+├── timenest_2.2.2_x86_64.deb.zip  (debian/ubuntu)
+├── timenest_2.2.2_x86_64.rpm.zip  (redhat/centos)
+└── timenest_2.2.2_x86_64.pkg.zip  (arch linux)
 ```
 
-### 🛠️ 源码安装
+### 🛠️ source code install
 
 ```bash
-# 克隆项目
-git clone https://github.com/ziyi127/TimeNest.git
-cd TimeNest
+# clone project item
+git clone https://github.com/ziyi127/timenest.git
+cd timenest
 
-# 自动安装脚本（推荐）
+# auto self install script (recommend build discuss)
 python install.py
 
-# 或手动安装
+# or hand move install
 python -m venv venv
-# Windows
-venv\Scripts\activate
-# macOS/Linux
+# windows
+venv\scripts\activate
+# macos/linux
 source venv/bin/activate
 
 pip install -r requirements.txt
-python main.py  # RinUI版本
-# 或使用启动脚本
+python main.py  # rinui version this
+# or use start begin script
 python run_rinui.py
 ```
 
-### 验证安装
+### verify prove install
 
 ```bash
-# 运行应用
-python main.py  # RinUI版本
-# 或使用启动脚本
+# run application program
+python main.py  # rinui version this
+# or use start begin script
 python run_rinui.py
 ```
 
-## ✨ 核心功能
+## ✨ core heart function merit
 
-### 📅 智能课程表管理
+### 📅 smart bright course cheng table manage reason
 
-<table>
-<tr>
-<td width="50%">
+**📊 dynamic move display show**
+- real time course cheng state status update new
+- current before course cheng high bright display show  
+- course cheng progress degree visual see change
+- smart bright time between axis
 
-**📊 动态显示**
-- 实时课程状态更新
-- 当前课程高亮显示
-- 课程进度可视化
-- 智能时间轴
+**📝 flexible bend edit change**
+- drag pull style course cheng adjust whole
+- batch amount operate work support hold
+- template quick fast create build
+- history story version this manage reason
 
-**📝 灵活编辑**
-- 拖拽式课程调整
-- 批量操作支持
-- 模板快速创建
-- 历史版本管理
+**📁 many format support hold**
+- json/yaml config place file
+- excel table import enter export out
+- csv data exchange
+- classisland compatible
 
-</td>
-<td width="50%">
+**🔄 data number same step**
+- cloud end backup same step
+- many device data number share
+- auto self backup recover
+- increase amount same step machine system
 
-**📁 多格式支持**
-- JSON/YAML 配置文件
-- Excel 表格导入导出
-- CSV 数据交换
-- ClassIsland 兼容
+### ⏰ smart bright remind system
 
-**🔄 数据同步**
-- 云端备份同步
-- 多设备数据共享
-- 自动备份恢复
-- 增量同步机制
+**🔔 many sample change remind**
+- system notify bullet window
+- custom set sound effect play
+- voice speech broadcast function merit
+- email mail remind push send
 
-</td>
-</tr>
-</table>
+**⚙️ smart bright config place**
+- advance front remind time between set place
+- free hit disturb mode style
+- condition trigger rule
+- priority first manage reason
 
-### ⏰ 智能提醒系统
+**🎵 person individual custom set**
+- custom set remind sound effect
+- voice speech combine become set place
+- notify sample style theme topic
+- remind content hold template
 
-<table>
-<tr>
-<td width="50%">
+**📱 cross flat platform notify**
+- windows native born notify
+- macos notify center heart
+- linux desktop notify
+- mobile move end push send (plan picture middle)
 
-**🔔 多样化提醒**
-- 系统通知弹窗
-- 自定义音效播放
-- 语音播报功能
-- 邮件提醒推送
+### 🎨 present generation change face between
 
-**⚙️ 智能配置**
-- 提前提醒时间设置
-- 免打扰模式
-- 条件触发规则
-- 优先级管理
+**🖥️ smart bright float window**
+- imitate apple spirit move island design count
+- real time information display show
+- auto self adapt transparent degree
+- magnetic attract position locate
 
-</td>
-<td width="50%">
+**🎭 theme topic system**
+- bright dark theme topic switch change
+- custom set color scheme plan
+- theme topic market download load
+- real time preview effect fruit
 
-**🎵 个性化定制**
-- 自定义提醒音效
-- 语音合成设置
-- 通知样式主题
-- 提醒内容模板
+**🧩 block change component piece**
+- can drag pull component piece cloth place
+- custom set component piece size
+- component piece display show control system
+- cloth place template save
 
-**📱 跨平台通知**
-- Windows 原生通知
-- macOS 通知中心
-- Linux 桌面通知
-- 移动端推送（规划中）
+**📊 information face board**
+- real time clock display show
+- weather day information integrate together
+- system state status monitor control
+- count down remind
 
-</td>
-</tr>
-</table>
+### ⚙️ high grade function merit
 
-### 🎨 现代化界面
+**🔌 plugin system**
+- plugin hot load
+- api interface open
+- third party extend long support hold
+- plugin market
 
-<table>
-<tr>
-<td width="50%">
+**🛡️ safe special**
+- data number encrypt store
+- config place file protect
+- safe update new machine system
+- private protect mode style
 
-**🖥️ 智能浮窗**
-- 仿苹果灵动岛设计
-- 实时信息显示
-- 自适应透明度
-- 磁性吸附定位
+**📈 performance can optimize**
+- memory remember use monitor control
+- smart bright cache machine system
+- async not same operate work support hold
+- resource auto self clean
 
-**🎭 主题系统**
-- 明暗主题切换
-- 自定义配色方案
-- 主题市场下载
-- 实时预览效果
-
-</td>
-<td width="50%">
-
-**🧩 模块化组件**
-- 可拖拽组件布局
-- 自定义组件大小
-- 组件显示控制
-- 布局模板保存
-
-**📊 信息面板**
-- 实时时钟显示
-- 天气信息集成
-- 系统状态监控
-- 倒计时提醒
-
-</td>
-</tr>
-</table>
-
-### ⚙️ 高级功能
-
-<table>
-<tr>
-<td width="50%">
-
-**🔌 插件系统**
-- 插件热加载
-- API 接口开放
-- 第三方扩展支持
-- 插件市场
-
-**🛡️ 安全特性**
-- 数据加密存储
-- 配置文件保护
-- 安全更新机制
-- 隐私保护模式
-
-</td>
-<td width="50%">
-
-**📈 性能优化**
-- 内存使用监控
-- 智能缓存机制
-- 异步操作支持
-- 资源自动清理
-
-**🌐 国际化支持**
-- 多语言界面
-- 本地化适配
-- 时区自动识别
-- 区域格式设置
-
-</td>
-</tr>
-</table>
-
-## 📸 应用截图
+## 📸 application program cut picture
 
 <div align="center">
 
-### 主界面
-![主界面](https://via.placeholder.com/800x500/4A90E2/FFFFFF?text=主界面截图)
+### main want face between
+![main want face between](https://via.placeholder.com/800x500/4a90e2/ffffff?text=main+want+face+between+cut+picture)
 
-### 智能浮窗
-![智能浮窗](https://via.placeholder.com/400x100/34C759/FFFFFF?text=智能浮窗)
+### smart bright float window
+![smart bright float window](https://via.placeholder.com/400x100/34c759/ffffff?text=smart+bright+float+window)
 
-### 设置界面
-![设置界面](https://via.placeholder.com/600x400/FF9500/FFFFFF?text=设置界面)
+### set place face between
+![set place face between](https://via.placeholder.com/600x400/ff9500/ffffff?text=set+place+face+between)
 
 </div>
 
-## 🚀 快速上手
+## 🚀 quick fast up hand
 
-### 第一次使用
+### first one time use
 
-1. **启动应用**
+1. **start begin application program**
    ```bash
-   python main.py  # RinUI版本
-   # 或使用启动脚本
+   python main.py  # rinui version this
+   # or use start begin script
    python run_rinui.py
    ```
 
-2. **创建课程表**
-   - 点击 "新建课程表" 按钮
-   - 选择模板或从空白开始
-   - 添加课程信息
+2. **create build course cheng table**
+   - click new build course cheng table button
+   - choose template or from empty white start begin
+   - add course cheng information
 
-3. **配置提醒**
-   - 进入设置 → 通知设置
-   - 选择提醒方式和时间
-   - 测试提醒效果
+3. **config place remind**
+   - enter set place → notify set place
+   - choose remind way method and time between
+   - test verify remind effect fruit
 
-4. **个性化定制**
-   - 选择喜欢的主题
-   - 调整界面布局
-   - 配置浮窗显示
+4. **person individual change custom set**
+   - choose like theme topic
+   - adjust whole face between cloth place
+   - config place float window display show
 
-### 导入现有数据
+### import enter exist have data number
 
-<details>
-<summary>📊 从 Excel 导入</summary>
+**📊 from excel import enter**
 
-1. 准备 Excel 文件（支持 .xlsx, .xls 格式）
-2. 文件 → 导入 → 选择 Excel 文件
-3. 映射字段对应关系
-4. 确认导入设置
+1. prepare excel file (support hold .xlsx, .xls format)
+2. file → import enter → choose excel file
+3. map field correspond relation
+4. confirm import enter set place
 
-</details>
+**🔄 from classisland move house**
 
-<details>
-<summary>🔄 从 ClassIsland 迁移</summary>
+1. export out classisland data number file
+2. file → import enter → classisland format
+3. auto self convert data number format
+4. verify prove import enter result fruit
 
-1. 导出 ClassIsland 数据文件
-2. 文件 → 导入 → ClassIsland 格式
-3. 自动转换数据格式
-4. 验证导入结果
+## 🛠️ develop open guide
 
-</details>
-
-## 🛠️ 开发指南
-
-### 开发环境搭建
+### develop open environment circle build construct
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/ziyi127/TimeNest.git
-cd TimeNest
+# 1. clone warehouse store
+git clone https://github.com/ziyi127/timenest.git
+cd timenest
 
-# 2. 创建开发环境
+# 2. create build develop open environment circle
 python -m venv dev-env
-source dev-env/bin/activate  # Linux/macOS
-# dev-env\Scripts\activate   # Windows
+source dev-env/bin/activate  # linux/macos
+# dev-env\scripts\activate   # windows
 
-# 3. 安装依赖
+# 3. install depend
 pip install -r requirements.txt
 
-# 4. 运行应用
-python main.py  # RinUI版本
-# 或使用启动脚本
+# 4. run application program
+python main.py  # rinui version this
+# or use start begin script
 python run_rinui.py
 ```
 
-### 项目架构
+### project item frame stand
 
 ```
-TimeNest/
-├── 📁 core/                    # 🔧 核心业务逻辑
-│   ├── app_manager.py          # 应用管理器
-│   ├── config_manager.py       # 配置管理
-│   ├── notification_manager.py # 通知系统
-│   ├── floating_manager.py     # 浮窗管理
-│   ├── schedule_manager.py     # 课程表管理
-│   ├── theme_manager.py        # 主题管理
-│   ├── plugin_base.py          # 插件基础
-│   ├── plugin_marketplace.py   # 插件市场
-│   └── plugin_system/          # 插件系统
-├── 📁 models/                  # 📊 数据模型
-│   ├── schedule.py             # 课程表模型
-│   ├── notification.py         # 通知模型
-│   └── theme.py                # 主题模型
-├── 📁 ui/                      # 🎨 用户界面
-│   ├── floating_widget/        # 浮窗组件
-│   ├── modules/                # 功能模块
-│   ├── plugin_settings/        # 插件设置
-│   ├── startup/                # 启动界面
-│   └── system_tray.py          # 系统托盘
-├── 📁 components/              # 🧩 UI组件
-│   ├── base_component.py       # 基础组件
-│   ├── schedule_component.py   # 课程表组件
-│   ├── clock_component.py      # 时钟组件
-│   └── weather_component.py    # 天气组件
-├── 📁 utils/                   # 🔧 工具函数
-│   ├── excel_exporter_v2.py    # Excel 导出
-│   ├── performance_utils.py    # 性能工具
-│   └── text_to_speech.py       # 语音合成
-├── 📁 sdk/                     # 🛠️ 开发工具包
-│   ├── powershell_executor.py  # PowerShell 执行器
-│   └── security_validator.py   # 安全验证器
-├── 📁 resources/               # 📦 资源文件
-│   └── icons/                  # 图标文件
-├── 📁 config/                  # ⚙️ 配置文件
-│   ├── config.json             # 主配置文件
-│   └── floating_widget_optimized.json # 浮窗配置
-└── 📁 plugin_template/         # 🔌 插件模板
-    ├── main.py                 # 模板主文件
-    ├── plugin.json             # 插件配置
-    └── README.md               # 模板说明
+timenest/
+├── 📁 core/                    # 🔧 core heart business affairs logic
+│   ├── app_manager.py          # application program manage device
+│   ├── config_manager.py       # config place manage reason
+│   ├── notification_manager.py # notify system
+│   ├── floating_manager.py     # float window manage reason
+│   ├── schedule_manager.py     # course cheng table manage reason
+│   ├── theme_manager.py        # theme topic manage reason
+│   ├── plugin_base.py          # plugin base foundation
+│   ├── plugin_marketplace.py   # plugin market
+│   └── plugin_system/          # plugin system
+├── 📁 models/                  # 📊 data number model
+│   ├── schedule.py             # course cheng table model
+│   ├── notification.py         # notify model
+│   └── theme.py                # theme topic model
+├── 📁 ui/                      # 🎨 user use face between
+│   ├── floating_widget/        # float window component piece
+│   ├── modules/                # function merit block
+│   ├── plugin_settings/        # plugin set place
+│   ├── startup/                # start begin face between
+│   └── system_tray.py          # system support plate
+├── 📁 components/              # 🧩 ui component piece
+│   ├── base_component.py       # base foundation component piece
+│   ├── schedule_component.py   # course cheng table component piece
+│   ├── clock_component.py      # clock component piece
+│   └── weather_component.py    # weather day component piece
+├── 📁 utils/                   # 🔧 tool function
+│   ├── excel_exporter_v2.py    # excel export out
+│   ├── performance_utils.py    # performance can tool
+│   └── text_to_speech.py       # voice speech combine become
+├── 📁 sdk/                     # 🛠️ develop open tool package
+│   ├── powershell_executor.py  # powershell execute device
+│   └── security_validator.py   # safe verify prove device
+├── 📁 resources/               # 📦 resource file
+│   └── icons/                  # icon file
+├── 📁 config/                  # ⚙️ config place file
+│   ├── config.json             # main want config place file
+│   └── floating_widget_optimized.json # float window config place
+└── 📁 plugin_template/         # 🔌 plugin template
+    ├── main.py                 # template main want file
+    ├── plugin.json             # plugin config place
+    └── readme.md               # template explain bright
 ```
 
-### 代码规范
+### code rule standard
 
-项目遵循 PEP 8 Python 代码规范，建议使用以下工具进行代码检查：
+project item follow pep 8 python code rule standard, build discuss use below tool enter go code check examine:
 
 ```bash
-# 代码格式化（可选）
+# code format change (can choose)
 black . --line-length 88
 
-# 代码检查（可选）
+# code check examine (can choose)
 flake8 . --max-line-length 88
 ```
 
-### 提交规范
+### submit hand rule standard
 
-我们使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+we use [conventional commits](https://www.conventionalcommits.org/) rule standard:
 
 ```
 <type>[optional scope]: <description>
@@ -444,91 +387,89 @@ flake8 . --max-line-length 88
 [optional footer(s)]
 ```
 
-**类型说明：**
-- `feat`: 新功能
-- `fix`: 修复 bug
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 代码重构
-- `test`: 测试相关
-- `chore`: 构建过程或辅助工具的变动
+**type explain bright:**
+- `feat`: new function merit
+- `fix`: repair fix bug
+- `docs`: document update new
+- `style`: code format adjust whole
+- `refactor`: code again build structure
+- `test`: test verify relate
+- `chore`: build construct process or assist tool change move
 
-**示例：**
+**example sample:**
 ```
-feat(notification): 添加邮件提醒功能
+feat(notification): add email mail remind function merit
 
-- 支持 SMTP 邮件发送
-- 可配置邮件模板
-- 添加邮件发送状态监控
+- support hold smtp email mail send
+- can config place email mail template
+- add email mail send state status monitor control
 
-Closes #123
+closes #123
 ```
 
-## 🤝 参与贡献
+## 🤝 participate add contribute offer
 
-我们欢迎所有形式的贡献！无论您是开发者、设计师、文档编写者还是用户，都可以为 TimeNest 做出贡献。
+we welcome all form contribute offer! no matter you are develop author、design count teacher、document write author still user use, all can for timenest make contribute offer.
 
-### 🐛 报告问题
+### 🐛 report tell problem
 
-发现 bug 或有功能建议？
+discover bug or have function merit build discuss?
 
-1. 查看 [现有 Issues](https://github.com/ziyi127/TimeNest/issues) 避免重复
-2. 创建新的 Issue 描述问题
-3. 提供详细的复现步骤和环境信息
-4. 添加相关的标签
+1. check examine [exist have issues](https://github.com/ziyi127/timenest/issues) avoid repeat
+2. create build new issues describe problem
+3. provide give detail reproduce step and environment circle information
+4. add relate label
 
-### 💻 代码贡献
+### 💻 code contribute offer
 
-想要贡献代码？
+want contribute offer code?
 
-1. **Fork** 项目到您的 GitHub 账户
-2. **Clone** 您的 fork 到本地
-3. 创建新的功能分支：`git checkout -b feature/amazing-feature`
-4. 进行您的修改
-5. 确保代码符合规范
-6. 提交您的更改：`git commit -m 'feat: add amazing feature'`
-7. 推送到分支：`git push origin feature/amazing-feature`
-8. 创建 **Pull Request**
+1. **fork** project item to you github account
+2. **clone** you fork to local
+3. create build new function merit branch: `git checkout -b feature/amazing-feature`
+4. enter go you modify change
+5. ensure code accord rule standard
+6. submit hand you change: `git commit -m 'feat: add amazing feature'`
+7. push send to branch: `git push origin feature/amazing-feature`
+8. create build **pull request**
 
-### 📝 文档贡献
+### 📝 document contribute offer
 
-帮助改进文档：
+help assist improve document:
 
-- 修正错别字和语法错误
-- 添加使用示例和教程
-- 翻译文档到其他语言
-- 改进 API 文档
+- repair fix wrong word and grammar mistake
+- add use example sample and teach cheng
+- translate document to other language speech
+- improve api document
 
-### 🎨 设计贡献
+### 🎨 design count contribute offer
 
-设计师可以贡献：
+design count teacher can contribute offer:
 
-- UI/UX 设计改进建议
-- 图标和插图设计
-- 主题和配色方案
-- 用户体验优化建议
+- ui/ux design count improve build discuss
+- icon and insert picture design count
+- theme topic and color scheme plan
+- user use experience verify optimize build discuss
 
-### 🌍 本地化贡献
+### 🌍 local change contribute offer
 
-帮助 TimeNest 支持更多语言：
+help assist timenest support hold more many language speech:
 
-- 翻译界面文本
-- 本地化日期时间格式
-- 适配不同地区的使用习惯
-
-## 📊 项目统计
+- translate face between text
+- local change date time format
+## 📊 project item count calculate
 
 <div align="center">
 
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=ziyi127&repo=TimeNest&show_icons=true&theme=default)
+![github stats](https://github-readme-stats.vercel.app/api?username=ziyi127&repo=timenest&show_icons=true&theme=default)
 
-![Language Stats](https://github-readme-stats.vercel.app/api/top-langs/?username=ziyi127&layout=compact&theme=default)
+![language speech stats](https://github-readme-stats.vercel.app/api/top-langs/?username=ziyi127&layout=compact&theme=default)
 
 </div>
 
-## 🏆 致谢
+## 🏆 send thank
 
-### 核心贡献者
+### core heart contribute offer author
 
 <table>
 <tr>
@@ -539,125 +480,125 @@ Closes #123
 <sub><b>ziyi127</b></sub>
 </a>
 <br />
-<span title="Code">💻</span>
-<span title="Documentation">📖</span>
-<span title="Design">🎨</span>
+<span title="code">💻</span>
+<span title="documentation">📖</span>
+<span title="design">🎨</span>
 </td>
-<!-- 更多贡献者 -->
+<!-- more many contribute offer author -->
 </tr>
 </table>
 
-### 特别感谢
+### special thank
 
-- ClassIsland - 提供了灵感和参考
-- [RinUI](https://github.com/RinLit-233-shiroko/Rin-UI) - 现代化的 Qt Quick UI 框架
-- [PySide6](https://www.qt.io/qt-for-python) - 优秀的 GUI 框架
-- 所有提供反馈和建议的用户们
+- classisland - provide give spirit feel and reference examine
+- [rinui](https://github.com/rinlit-233-shiroko/rin-ui) - present generation change qt quick ui frame stand
+- [pyside6](https://www.qt.io/qt-for-python) - excellent gui frame stand
+- all provide give feedback and build discuss user use them
 
-### 开源项目
+### open source project item
 
-TimeNest 使用了以下优秀的开源项目：
+timenest use below excellent open source project item:
 
-- **PyQt6** - GUI 框架
-- **pandas** - 数据处理
-- **requests** - HTTP 请求
-- **PyYAML** - YAML 解析
-- **Pillow** - 图像处理
-- **cryptography** - 加密支持
+- **pyqt6** - gui frame stand
+- **pandas** - data number handle
+- **requests** - http request want
+- **pyyaml** - yaml analyze
+- **pillow** - image shadow handle
+- **cryptography** - encrypt support hold
 
-## 📄 许可证
+## 📄 allow proof book
 
-本项目基于 [Apache License 2.0](LICENSE) 开源。
+this project item base in [apache license 2.0](license) open source.
 
 ```
-Apache License 2.0
+apache license 2.0
 
-Copyright 2024-2025 TimeNest Team
+copyright 2024-2025 timenest team
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+licensed under apache license, version 2.0 (the "license");
+you may not use this file except in compliance with license.
+you may obtain copy of license at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/license-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+unless required by applicable law or agreed to in writing, software
+distributed under license is distributed on "as is" basis,
+without warranties or conditions of any kind, either express or implied.
+see license for specific language governing permissions and
+limitations under license.
 ```
 
-## � 发布管理
+## 📦 release free manage reason
 
-### 创建新版本发布
+### create build new version this release free
 
-TimeNest 使用基于 Git 标签的自动化发布流程。当推送标签到仓库时，GitHub Actions 会自动构建并创建发布。
+timenest use base in git label auto change release free flow cheng. when push send label to warehouse store time, github actions will auto self build construct and create build release free.
 
-#### 方法一：使用 Python 脚本（推荐）
+#### method one: use python script (recommend build discuss)
 
 ```bash
-# 运行发布创建脚本
+# run release free create build script
 python scripts/create_release.py
 ```
 
-#### 方法二：使用 Windows 批处理脚本
+#### method two: use windows batch handle script
 
 ```cmd
-# 在 Windows 中运行
+# in windows middle run
 scripts\create_release.bat
 ```
 
-#### 方法三：手动创建标签
+#### method three: hand move create build label
 
 ```bash
-# 创建标签
-git tag -a v2.2.0 -m "Release 2.2.0"
+# create build label
+git tag -a v2.2.0 -m "release 2.2.0"
 
-# 推送标签到远程仓库
+# push send label to far distance warehouse store
 git push origin v2.2.0
 ```
 
-### 发布流程说明
+### release free flow cheng explain bright
 
-1. **标签格式**: 使用 `v` 前缀，如 `v2.1.0`、`v2.1.0-Preview`
-2. **自动构建**: 推送标签后，GitHub Actions 自动构建 Windows 可执行文件
-3. **自动发布**: 构建完成后自动创建 GitHub Release
-4. **预发布标记**: 包含 `Preview`、`Beta`、`RC` 的版本会标记为预发布
+1. **label format**: use `v` front fix, like `v2.1.0`、`v2.1.0-preview`
+2. **auto self build construct**: push send label after, github actions auto self build construct windows execute file
+3. **auto self release free**: build construct complete after auto self create build github release
+4. **pre front release free mark**: include contain `preview`、`beta`、`rc` version this will mark for pre front release free
 
-### 版本号规范
+### version this number rule standard
 
-- **主版本号**: 重大功能更新或架构变更
-- **次版本号**: 新功能添加或重要改进
-- **修订版本号**: Bug 修复和小幅改进
-- **预发布标识**: Preview、Beta、RC 等
+- **main want version this number**: major function merit update new or frame stand change
+- **next version this number**: new function merit add or important improve
+- **repair change version this number**: bug repair fix and small improve
+- **pre front release free identify**: preview、beta、rc etc
 
-示例：
-- `2.2.0` - 正式版本
-- `2.2.0-Preview` - 预览版本
-- `2.2.1` - 修复版本
+example sample:
+- `2.2.0` - official version this
+- `2.2.0-preview` - preview version this
+- `2.2.1` - repair fix version this
 
-## �📞 联系我们
+## 📞 contact us
 
 <div align="center">
 
-### 🌐 官方渠道
+### 🌐 official channel way
 
-[![官方网站](https://img.shields.io/badge/🌐_官方网站-timenest.qzz.io-blue?style=for-the-badge)](https://timenest.qzz.io)
+[![official website](https://img.shields.io/badge/🌐_official_website-timenest.qzz.io-blue?style=for-the-badge)](https://timenest.qzz.io)
 
-[![GitHub](https://img.shields.io/badge/GitHub-ziyi127/TimeNest-black?style=for-the-badge&logo=github)](https://github.com/ziyi127/TimeNest)
+[![github](https://img.shields.io/badge/github-ziyi127/timenest-black?style=for-the-badge&logo=github)](https://github.com/ziyi127/timenest)
 
-[![Email](https://img.shields.io/badge/📧_邮箱-admin@timenest.qzz.io-red?style=for-the-badge)](mailto:admin@timenest.qzz.io)
+[![email](https://img.shields.io/badge/📧_email-admin@timenest.qzz.io-red?style=for-the-badge)](mailto:admin@timenest.qzz.io)
 
-### 💬 社区交流
+### 💬 community group exchange
 
-- **问题反馈**: [GitHub Issues](https://github.com/ziyi127/TimeNest/issues)
-- **功能建议**: [GitHub Discussions](https://github.com/ziyi127/TimeNest/discussions)
-- **安全问题**: [安全政策](https://github.com/ziyi127/TimeNest/security/policy)
+- **problem question feedback**: [github issues](https://github.com/ziyi127/timenest/issues)
+- **function merit build discuss**: [github discussions](https://github.com/ziyi127/timenest/discussions)
+- **safe problem question**: [safe policy plan](https://github.com/ziyi127/timenest/security/policy)
 
-### 📱 关注我们
+### 📱 follow us
 
-- **GitHub**: [@ziyi127](https://github.com/ziyi127)
-- **邮箱**: [ziyihed@outlook.com](mailto:ziyihed@outlook.com)
+- **github**: [@ziyi127](https://github.com/ziyi127)
+- **email mail**: [ziyihed@outlook.com](mailto:ziyihed@outlook.com)
 
 </div>
 
@@ -665,10 +606,10 @@ git push origin v2.2.0
 
 <div align="center">
 
-**⭐ 如果 TimeNest 对您有帮助，请给我们一个 Star！**
+**⭐ if timenest to you have help assist, please give we one individual star!**
 
-**🚀 TimeNest - 让时间管理更简单，让学习更高效！**
+**🚀 timenest - let time between manage reason more simple single, let study learn more high effect rate!**
 
-*Made with ❤️ by TimeNest Team*
+*made with ❤️ by timenest team*
 
 </div>
