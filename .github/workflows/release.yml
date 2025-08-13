@@ -110,7 +110,7 @@ jobs:
             cp TimeNest-linux-${DISTRO}/README.md timenest-debian/usr/share/doc/timenest/
             
             # 创建控制文件
-            cat > timenest-debian/DEBIAN/control << EOF
+            cat > timenest-debian/DEBIAN/control << 'EOF'
 Package: timenest
 Version: $VERSION
 Section: utils
@@ -138,7 +138,7 @@ EOF
             
           arch)
             # 创建Arch包结构
-            cat > PKGBUILD << EOF
+            cat > PKGBUILD << 'EOF'
 pkgname=timenest
 pkgver=$VERSION
 pkgrel=1
@@ -149,9 +149,9 @@ license=('MIT')
 depends=('python' 'python-pyside6')
 
 package() {
-    mkdir -p "\$pkgdir/usr/bin"
-    cp TimeNest-linux-${DISTRO}/TimeNest "\$pkgdir/usr/bin/"
-    chmod +x "\$pkgdir/usr/bin/TimeNest"
+    mkdir -p "$pkgdir/usr/bin"
+    cp TimeNest-linux-${DISTRO}/TimeNest "$pkgdir/usr/bin/"
+    chmod +x "$pkgdir/usr/bin/TimeNest"
 }
 EOF
             zip TimeNest-${VERSION}-linux-${DISTRO}.pkg.zip PKGBUILD
