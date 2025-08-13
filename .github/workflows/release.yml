@@ -6,8 +6,14 @@ on:
       - 'v*'  # 推送标签时触发发布
   workflow_dispatch:  # 手动触发
 
+env:
+  APP_NAME: TimeNest
+  ICON_PATH: assets/logo.svg
+  REQUIREMENTS: requirements.txt
+  PYTHON_VERSION: '3.11'
+
 permissions:
-  contents: write
+  contents: read  # 最小必要权限
 
 jobs:
   build-windows:
@@ -23,48 +29,51 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r ${{ env.REQUIREMENTS }}
         pip install pyinstaller
 
     - name: Build Windows executable
       run: |
-        pyinstaller --onefile --windowed --name TimeNest --icon assets/logo.svg main.py
+        pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} --icon ${{ env.ICON_PATH }} main.py
 
     - name: Create Windows package
       run: |
-        mkdir TimeNest-windows
-        copy dist/TimeNest.exe TimeNest-windows\
-        copy README.md TimeNest-windows\
-        copy LICENSE TimeNest-windows\ 2>nul || echo "No LICENSE file"
-        copy start.bat TimeNest-windows\
-        copy start.sh TimeNest-windows\
-        
-        # 创建ZIP包
-        Compress-Archive -Path TimeNest-windows\* -DestinationPath TimeNest-windows.zip
+        mkdir %TEMP%\${{ env.APP_NAME }}-windows
+        copy dist\${{ env.APP_NAME }}.exe %TEMP%\${{ env.APP_NAME }}-windows\
+        copy README.md %TEMP%\${{ env.APP_NAME }}-windows\
+        copy LICENSE %TEMP%\${{ env.APP_NAME }}-windows\ || echo "LICENSE not found"
+        copy start.bat %TEMP%\${{ env.APP_NAME }}-windows\
+        copy start.sh %TEMP%\${{ env.APP_NAME }}-windows\
+        Compress-Archive -Path %TEMP%\${{ env.APP_NAME }}-windows\* -DestinationPath %TEMP%\${{ env.APP_NAME }}-windows.zip
 
     - name: Get version
       id: get_version
       run: |
-        $version = "${{ github.ref_name }}"
-        $version = $version -replace '^v', ''
-        echo "VERSION=$version" >> $env:GITHUB_ENV
+        set VERSION=${{ github.ref_name }}
+        set VERSION=%VERSION:~v%
+        echo "VERSION=%VERSION%" >> $GITHUB_ENV
 
     - name: Upload Windows release asset
       uses: softprops/action-gh-release@v1
       with:
-        files: TimeNest-windows.zip
+        files: %TEMP%\${{ env.APP_NAME }}-windows.zip
         tag_name: ${{ github.ref_name }}
 
   build-linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 包含主要的Linux发行版系列
         distro: [ubuntu, debian, fedora, centos, arch]
         arch: [x86_64]
 
@@ -75,101 +84,76 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r ${{ env.REQUIREMENTS }}
         pip install pyinstaller
 
     - name: Build Linux executable
       run: |
-        pyinstaller --onefile --windowed --name TimeNest main.py
+        pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
 
-    - name: Create Linux package based on distro
+    - name: Create Linux package
       run: |
         DISTRO=${{ matrix.distro }}
-        VERSION=${GITHUB_REF_NAME#v}
-        
-        mkdir -p TimeNest-linux-${DISTRO}
-        cp dist/TimeNest TimeNest-linux-${DISTRO}/
-        cp README.md TimeNest-linux-${DISTRO}/
-        cp LICENSE TimeNest-linux-${DISTRO}/ 2>/dev/null || echo "No LICENSE file"
-        cp start.sh TimeNest-linux-${DISTRO}/
-        
-        # 根据不同的发行版创建相应的包
+        VERSION=$(echo $GITHUB_REF_NAME | cut -d'v' -f2)
+        mkdir -p ${APP_NAME}-linux-${DISTRO}
+        cp dist/${APP_NAME} ${APP_NAME}-linux-${DISTRO}/
+        cp README.md ${APP_NAME}-linux-${DISTRO}/
+        cp LICENSE ${APP_NAME}-linux-${DISTRO}/ 2>/dev/null || echo "LICENSE not found"
+        cp start.sh ${APP_NAME}-linux-${DISTRO}/
+
+        # 根据发行版创建包
         case $DISTRO in
           ubuntu|debian)
-            # 创建DEB包结构
-            mkdir -p timenest-debian/DEBIAN
-            mkdir -p timenest-debian/usr/bin
-            mkdir -p timenest-debian/usr/share/doc/timenest
-            
-            cp TimeNest-linux-${DISTRO}/TimeNest timenest-debian/usr/bin/
-            cp TimeNest-linux-${DISTRO}/README.md timenest-debian/usr/share/doc/timenest/
-            
-            # 创建控制文件
-            cat > timenest-debian/DEBIAN/control << 'EOF'
-Package: timenest
-Version: $VERSION
-Section: utils
-Priority: optional
-Architecture: amd64
-Depends: python3, python3-pyside6
-Maintainer: TimeNest Team
-Description: 智能课程表桌面应用
- Complete rewrite of ClassIsland in Python with PySide6
-EOF
-            
-            # 构建DEB包
-            dpkg-deb --build timenest-debian TimeNest-${VERSION}-linux-${DISTRO}.deb
-            zip TimeNest-${VERSION}-linux-${DISTRO}.deb.zip TimeNest-${VERSION}-linux-${DISTRO}.deb
+            dpkg-deb --build ${APP_NAME}-linux-${DISTRO} ${APP_NAME}-${VERSION}-linux-${DISTRO}.deb
+            zip ${APP_NAME}-${VERSION}-linux-${DISTRO}.deb.zip ${APP_NAME}-${VERSION}-linux-${DISTRO}.deb
             ;;
-            
           fedora|centos)
-            # 创建RPM包结构（简化版）
-            echo "Creating RPM package structure for $DISTRO"
-            mkdir -p timenest-rpm/usr/bin
-            cp TimeNest-linux-${DISTRO}/TimeNest timenest-rpm/usr/bin/
-            tar -czf TimeNest-${VERSION}-linux-${DISTRO}.tar.gz timenest-rpm
-            zip TimeNest-${VERSION}-linux-${DISTRO}.rpm.zip TimeNest-${VERSION}-linux-${DISTRO}.tar.gz
+            tar -czf ${APP_NAME}-${VERSION}-linux-${DISTRO}.tar.gz ${APP_NAME}-linux-${DISTRO}
+            zip ${APP_NAME}-${VERSION}-linux-${DISTRO}.rpm.zip ${APP_NAME}-${VERSION}-linux-${DISTRO}.tar.gz
             ;;
-            
           arch)
-            # 创建Arch包结构
-            cat > PKGBUILD << 'EOF'
-pkgname=timenest
+            cat > PKGBUILD <<EOF
+pkgname=${APP_NAME}
 pkgver=$VERSION
 pkgrel=1
 pkgdesc="智能课程表桌面应用"
-arch=('x86_64')
+arch=(x86_64)
 url="https://github.com/ziyi127/TimeNest"
-license=('MIT')
-depends=('python' 'python-pyside6')
-
+license=(MIT)
+depends=(python python-pyside6)
 package() {
-    mkdir -p "$pkgdir/usr/bin"
-    cp TimeNest-linux-${DISTRO}/TimeNest "$pkgdir/usr/bin/"
-    chmod +x "$pkgdir/usr/bin/TimeNest"
+    mkdir -p "\$pkgdir/usr/bin"
+    cp ${APP_NAME}-linux-${DISTRO}/${APP_NAME} "\$pkgdir/usr/bin/"
+    chmod +x "\$pkgdir/usr/bin/${APP_NAME}"
 }
 EOF
-            zip TimeNest-${VERSION}-linux-${DISTRO}.pkg.zip PKGBUILD
+            zip ${APP_NAME}-${VERSION}-linux-${DISTRO}.pkg.zip PKGBUILD
             ;;
         esac
-        
-        # 同时创建通用的便携式包
-        tar -czf TimeNest-${VERSION}-linux-${DISTRO}-portable.tar.gz TimeNest-linux-${DISTRO}
+
+        # 创建便携式包
+        tar -czf ${APP_NAME}-${VERSION}-linux-${DISTRO}-portable.tar.gz ${APP_NAME}-linux-${DISTRO}
 
     - name: Upload Linux release assets
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          TimeNest-*-${{ matrix.distro }}*.zip
-          TimeNest-*-${{ matrix.distro }}*.deb.zip
-          TimeNest-*-${{ matrix.distro }}*.rpm.zip
-          TimeNest-*-${{ matrix.distro }}*.pkg.zip
-          TimeNest-*-${{ matrix.distro }}*.tar.gz
+          ${APP_NAME}-*-${{ matrix.distro }}*.zip
+          ${APP_NAME}-*-${{ matrix.distro }}*.deb.zip
+          ${APP_NAME}-*-${{ matrix.distro }}*.rpm.zip
+          ${APP_NAME}-*-${{ matrix.distro }}*.pkg.zip
+          ${APP_NAME}-*-${{ matrix.distro }}*.tar.gz
         tag_name: ${{ github.ref_name }}
 
   build-macos:
@@ -185,34 +169,37 @@ EOF
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r ${{ env.REQUIREMENTS }}
         pip install pyinstaller
 
     - name: Build macOS executable
       run: |
-        pyinstaller --onefile --windowed --name TimeNest --icon assets/logo.svg main.py
+        pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} --icon ${{ env.ICON_PATH }} main.py
 
     - name: Create macOS package
       run: |
-        VERSION=${GITHUB_REF_NAME#v}
+        VERSION=$(echo $GITHUB_REF_NAME | cut -d'v' -f2)
         ARCH=${{ matrix.arch }}
-        
-        mkdir -p TimeNest-macos-${ARCH}
-        cp dist/TimeNest TimeNest-macos-${ARCH}/
-        cp README.md TimeNest-macos-${ARCH}/
-        cp LICENSE TimeNest-macos-${ARCH}/ 2>/dev/null || echo "No LICENSE file"
-        cp start.sh TimeNest-macos-${ARCH}/
-        
-        # 创建ZIP包
-        zip -r TimeNest-${VERSION}-macos-${ARCH}.zip TimeNest-macos-${ARCH}
+        mkdir -p ${APP_NAME}-macos-${ARCH}
+        cp dist/${APP_NAME} ${APP_NAME}-macos-${ARCH}/
+        cp README.md ${APP_NAME}-macos-${ARCH}/
+        cp LICENSE ${APP_NAME}-macos-${ARCH}/ 2>/dev/null || echo "LICENSE not found"
+        cp start.sh ${APP_NAME}-macos-${ARCH}/
+        zip -r ${APP_NAME}-${VERSION}-macos-${ARCH}.zip ${APP_NAME}-macos-${ARCH}
 
     - name: Upload macOS release assets
       uses: softprops/action-gh-release@v1
       with:
-        files: TimeNest-*-${{ matrix.arch }}.zip
+        files: ${APP_NAME}-*-${{ matrix.arch }}.zip
         tag_name: ${{ github.ref_name }}
