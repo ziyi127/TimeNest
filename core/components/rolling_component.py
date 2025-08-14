@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime
+from typing import List, Optional
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QTimer
 
 from core.models.component_settings.rolling_component_settings import RollingComponentSettings
 
@@ -9,7 +9,7 @@ from core.models.component_settings.rolling_component_settings import RollingCom
 class RollingComponent(QWidget):
     """滚动组件 - 显示滚动文本，基于ClassIsland的RollingComponent实现"""
     
-    def __init__(self, settings: RollingComponentSettings = None):
+    def __init__(self, settings: Optional[RollingComponentSettings] = None) -> None:
         super().__init__()
         self.logger = logging.getLogger(__name__)
         
@@ -17,9 +17,9 @@ class RollingComponent(QWidget):
         self.settings = settings or RollingComponentSettings()
         
         # 滚动相关变量
-        self.current_index = 0
-        self.scroll_texts = []
-        self.is_scrolling = False
+        self.current_index: int = 0
+        self.scroll_texts: List[str] = []
+        self.is_scrolling: bool = False
         
         # 初始化UI
         self.init_ui()
@@ -45,7 +45,7 @@ class RollingComponent(QWidget):
         
         # 滚动文本显示标签
         self.scroll_label = QLabel()
-        self.scroll_label.setAlignment(Qt.AlignCenter)
+        self.scroll_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.scroll_label.setObjectName("scrollLabel")
         self.scroll_label.setMinimumWidth(200)  # 设置最小宽度
         

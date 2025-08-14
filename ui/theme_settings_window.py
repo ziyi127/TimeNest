@@ -1,6 +1,7 @@
 import logging
+from typing import Optional
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
-                             QLabel, QComboBox, QCheckBox, QGroupBox)
+                             QLabel, QComboBox, QCheckBox, QGroupBox, QWidget)
 from PySide6.QtCore import Qt
 from core.components.theme_manager import theme_manager, ThemeType
 
@@ -8,7 +9,7 @@ from core.components.theme_manager import theme_manager, ThemeType
 class ThemeSettingsWindow(QDialog):
     """主题设置窗口 - 用于配置应用程序主题"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
         self.init_ui()
@@ -49,7 +50,7 @@ class ThemeSettingsWindow(QDialog):
         preview_layout = QVBoxLayout(preview_group)
         
         self.preview_label = QLabel("主题预览效果")
-        self.preview_label.setAlignment(Qt.AlignCenter)
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview_label.setStyleSheet("""
             QLabel {
                 background-color: rgba(20, 20, 20, 220);
@@ -137,7 +138,7 @@ class ThemeSettingsWindow(QDialog):
         except Exception as e:
             self.logger.error(f"加载设置时出错: {e}")
             
-    def on_theme_changed(self, theme_text):
+    def on_theme_changed(self, theme_text: str) -> None:
         """主题改变事件"""
         try:
             if theme_text == "深色主题":
@@ -152,10 +153,10 @@ class ThemeSettingsWindow(QDialog):
         except Exception as e:
             self.logger.error(f"主题改变时出错: {e}")
             
-    def on_auto_switch_changed(self, state):
+    def on_auto_switch_changed(self, state: int) -> None:
         """自动切换状态改变事件"""
         try:
-            if state == Qt.Checked:
+            if state == 2:  # Qt.Checked = 2
                 theme_manager.current_theme = ThemeType.AUTO
             else:
                 # 如果禁用自动切换，使用深色主题

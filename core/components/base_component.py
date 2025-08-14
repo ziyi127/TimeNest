@@ -1,3 +1,4 @@
+from typing import Optional
 from PySide6.QtCore import QObject, Signal
 
 
@@ -14,7 +15,7 @@ class ComponentSettings(QObject):
 class BaseComponent(QObject):
     """组件基类"""
     
-    def __init__(self, settings: ComponentSettings = None):
+    def __init__(self, settings: Optional[ComponentSettings] = None):
         super().__init__()
         self.settings = settings or ComponentSettings()
         if hasattr(self.settings, 'changed'):
@@ -24,11 +25,11 @@ class BaseComponent(QObject):
         """当设置发生变化时的回调"""
         pass
     
-    def get_settings(self):
+    def get_settings(self) -> ComponentSettings:
         """获取组件设置"""
         return self.settings
     
-    def set_settings(self, settings):
+    def set_settings(self, settings: ComponentSettings) -> None:
         """设置组件设置"""
         self.settings = settings
         if hasattr(self.settings, 'changed'):
@@ -38,7 +39,7 @@ class BaseComponent(QObject):
 class TimeNestClockComponent(BaseComponent):
     """TimeNest时钟组件"""
     
-    def __init__(self, settings=None):
+    def __init__(self, settings: Optional[ComponentSettings] = None):
         super().__init__(settings)
         self.name = "时钟"
         self.component_id = "9E1AF71D-8F77-4B21-A342-448787104DD9"
@@ -56,7 +57,7 @@ class TimeNestClockComponent(BaseComponent):
 class TimeNestDateComponent(BaseComponent):
     """TimeNest日期组件"""
     
-    def __init__(self, settings=None):
+    def __init__(self, settings: Optional[ComponentSettings] = None):
         super().__init__(settings)
         self.name = "日期"
         self.component_id = "DF3F8295-21F6-482E-BADA-FA0E5F14BB66"
@@ -74,7 +75,7 @@ class TimeNestDateComponent(BaseComponent):
 class TimeNestScheduleComponent(BaseComponent):
     """TimeNest课程表组件"""
     
-    def __init__(self, settings=None):
+    def __init__(self, settings: Optional[ComponentSettings] = None):
         super().__init__(settings)
         self.name = "课程表"
         self.component_id = "1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8"

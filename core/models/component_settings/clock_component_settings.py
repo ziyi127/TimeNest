@@ -14,34 +14,34 @@ class ClockComponentSettings(QObject):
         self._flash_time_separator = True
         
     @property
-    def show_seconds(self):
+    def show_seconds(self) -> bool:
         """是否显示秒数"""
         return self._show_seconds
     
     @show_seconds.setter
-    def show_seconds(self, value):
+    def show_seconds(self, value: bool):
         if value != self._show_seconds:
             self._show_seconds = value
             self.changed.emit()
     
     @property
-    def show_real_time(self):
+    def show_real_time(self) -> bool:
         """是否显示实时时间"""
         return self._show_real_time
     
     @show_real_time.setter
-    def show_real_time(self, value):
+    def show_real_time(self, value: bool):
         if value != self._show_real_time:
             self._show_real_time = value
             self.changed.emit()
     
     @property
-    def flash_time_separator(self):
+    def flash_time_separator(self) -> bool:
         """是否闪烁时间分隔符"""
         return self._flash_time_separator
     
     @flash_time_separator.setter
-    def flash_time_separator(self, value):
+    def flash_time_separator(self, value: bool):
         if value != self._flash_time_separator:
             self._flash_time_separator = value
             self.changed.emit()

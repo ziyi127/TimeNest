@@ -1,11 +1,12 @@
 import sys
 import logging
+from typing import Optional
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                              QLabel, QPushButton, QFrame, QTableWidget, 
+                              QLabel, QPushButton, QTableWidget, 
                               QTableWidgetItem, QComboBox, QDateEdit, 
                               QMessageBox, QGroupBox)
-from PySide6.QtCore import Qt, Signal, QDate
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QDate, QRect, QPoint
+from PySide6.QtGui import QCloseEvent
 
 logger = logging.getLogger(__name__)
 
@@ -13,18 +14,18 @@ logger = logging.getLogger(__name__)
 class TempClassPlanWindow(QMainWindow):
     """临时课表窗口 - 用于加载临时课表功能"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setAttribute(Qt.WA_TranslucentBackground, False)  # 确保配置窗口不透明
-        self.setAttribute(Qt.WA_NoSystemBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)  # 确保配置窗口不透明
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
         self.init_ui()
         self.setup_window_properties()
         
     def setup_window_properties(self):
         """设置窗口属性"""
         self.setWindowTitle("TimeNest 临时课表")
-        self.setMinimumSize(600, 500)
-        self.resize(700, 600)
+        self.setMinimumSize(500, 400)
+        self.resize(600, 500)
         
         # 设置窗口标志 - 确保配置窗口正常显示
         self.setWindowFlags(
@@ -35,9 +36,16 @@ class TempClassPlanWindow(QMainWindow):
         
         # 居中显示
         if self.parent():
-            parent_center = self.parent().geometry().center()
-            self.move(parent_center.x() - self.width() // 2, 
-                     parent_center.y() - self.height() // 2)
+            parent_geometry: QRect = self.parent().geometry()  # type: ignore
+            parent_center: QPoint = parent_geometry.center()   # type: ignore
+            x: int = int(parent_center.x())   # type: ignore
+            y: int = int(parent_center.y())   # type: ignore
+            width: int = self.width()
+            height: int = self.height()
+            self.move(
+                x - width // 2, 
+                y - height // 2
+            )
         
     def init_ui(self):
         """初始化UI"""
@@ -209,7 +217,7 @@ class TempClassPlanWindow(QMainWindow):
         """加载按钮点击事件"""
         QMessageBox.information(self, "加载课表", "请选择课表文件。\n\n此功能将在后续版本中实现。")
         
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """窗口关闭事件"""
         logger.info("临时课表窗口已关闭")
         super().closeEvent(event)

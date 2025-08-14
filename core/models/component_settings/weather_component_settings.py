@@ -1,3 +1,4 @@
+from typing import Optional
 from PySide6.QtCore import QObject, Signal
 
 
@@ -7,65 +8,65 @@ class WeatherComponentSettings(QObject):
     # 设置变更信号
     changed = Signal()
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._show_alerts = True
-        self._alerts_title_show_mode = 1
-        self._show_rain_time = True
-        self._show_main_weather_info = True
-        self._main_weather_info_kind = 0
+        self._show_alerts: bool = True
+        self._alerts_title_show_mode: int = 1
+        self._show_rain_time: bool = True
+        self._show_main_weather_info: bool = True
+        self._main_weather_info_kind: int = 0
         
     @property
-    def show_alerts(self):
+    def show_alerts(self) -> bool:
         """是否显示警报"""
         return self._show_alerts
     
     @show_alerts.setter
-    def show_alerts(self, value):
+    def show_alerts(self, value: bool) -> None:
         if value != self._show_alerts:
             self._show_alerts = value
             self.changed.emit()
     
     @property
-    def alerts_title_show_mode(self):
+    def alerts_title_show_mode(self) -> int:
         """警报标题显示模式"""
         return self._alerts_title_show_mode
     
     @alerts_title_show_mode.setter
-    def alerts_title_show_mode(self, value):
+    def alerts_title_show_mode(self, value: int) -> None:
         if value != self._alerts_title_show_mode:
             self._alerts_title_show_mode = value
             self.changed.emit()
     
     @property
-    def show_rain_time(self):
+    def show_rain_time(self) -> bool:
         """是否显示降雨时间"""
         return self._show_rain_time
     
     @show_rain_time.setter
-    def show_rain_time(self, value):
+    def show_rain_time(self, value: bool) -> None:
         if value != self._show_rain_time:
             self._show_rain_time = value
             self.changed.emit()
     
     @property
-    def show_main_weather_info(self):
+    def show_main_weather_info(self) -> bool:
         """是否显示主要天气信息"""
         return self._show_main_weather_info
     
     @show_main_weather_info.setter
-    def show_main_weather_info(self, value):
+    def show_main_weather_info(self, value: bool) -> None:
         if value != self._show_main_weather_info:
             self._show_main_weather_info = value
             self.changed.emit()
     
     @property
-    def main_weather_info_kind(self):
+    def main_weather_info_kind(self) -> int:
         """主要天气信息类型"""
         return self._main_weather_info_kind
     
     @main_weather_info_kind.setter
-    def main_weather_info_kind(self, value):
+    def main_weather_info_kind(self, value: int) -> None:
         if value != self._main_weather_info_kind:
             self._main_weather_info_kind = value
             self.changed.emit()

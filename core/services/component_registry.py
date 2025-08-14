@@ -1,4 +1,4 @@
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, Any
 from PySide6.QtCore import QObject, Signal
 
 
@@ -10,8 +10,8 @@ class ComponentInfo:
         self.name = name
         self.icon_glyph = icon_glyph
         self.description = description
-        self.settings_type: Optional[Type] = None
-        self.component_type: Optional[Type] = None
+        self.settings_type: Optional[Type[Any]] = None
+        self.component_type: Optional[Type[QObject]] = None
         self.is_component_container = False
 
 
@@ -178,7 +178,7 @@ class ComponentRegistryService(QObject):
             # 发出组件移除信号
             self.component_removed.emit(component_info)
     
-    def create_component_instance(self, guid: str, *args, **kwargs) -> Optional[QObject]:
+    def create_component_instance(self, guid: str, *args: Any, **kwargs: Any) -> Optional[QObject]:
         """根据GUID创建组件实例"""
         component_info = self.get_component_info(guid)
         if not component_info or not component_info.component_type:
@@ -217,7 +217,7 @@ def register_component(component_info: ComponentInfo):
     component_registry.register_component(component_info)
 
 
-def create_component_instance(guid: str, *args, **kwargs) -> Optional[QObject]:
+def create_component_instance(guid: str, *args: Any, **kwargs: Any) -> Optional[QObject]:
     """创建组件实例的便捷函数"""
     return component_registry.create_component_instance(guid, *args, **kwargs)
 

@@ -1,16 +1,10 @@
 import logging
 from datetime import datetime, timedelta, time
 from typing import Optional, Dict, Any, List
-from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtWidgets import QApplication
 
 from core.services.time_service import TimeService
-from core.models.profile import TimeNestProfile
-from models.class_plan import ClassPlan, ClassInfo, TimeRule
-from models.time_layout import TimeLayout, TimeLayoutItem
-from models.subject import Subject
 
 # 时间状态枚举
 class TimeState:
@@ -31,8 +25,8 @@ class LessonsService(QObject):
     on_after_school = Signal()
     current_time_state_changed = Signal()
     
-    def __init__(self, settings_service=None, profile_service=None, 
-                 exact_time_service: TimeService = None, parent=None):
+    def __init__(self, settings_service: Optional[object] = None, profile_service: Optional[object] = None,
+                 exact_time_service: Optional[TimeService] = None, parent: Optional[QObject] = None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
         
@@ -275,7 +269,7 @@ class LessonsService(QObject):
         # 获取课程表
         self.current_class_plan = self.get_class_plan_by_date(current_time.date())
         
-    def get_class_plan_by_date(self, date: datetime.date) -> Optional[Dict[str, Any]]:
+    def get_class_plan_by_date(self, date: datetime) -> Optional[Dict[str, Any]]:
         """根据日期获取课程表"""
         if not self.profile_service:
             return self.get_sample_class_plan()

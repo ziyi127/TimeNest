@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Optional
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel
 from PySide6.QtCore import Qt, QTimer
 
@@ -9,11 +10,11 @@ from core.models.component_settings.countdown_component_settings import CountDow
 class CountDownComponent(QWidget):
     """倒计时组件 - 显示倒计时信息，基于ClassIsland的CountDownComponent实现"""
     
-    def __init__(self, settings: CountDownComponentSettings = None):
+    def __init__(self, settings: Optional[CountDownComponentSettings] = None):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         
-        # 设置组件
+        # 直接创建设置实例
         self.settings = settings or CountDownComponentSettings()
         
         # 倒计时相关变量
@@ -28,7 +29,8 @@ class CountDownComponent(QWidget):
         self.update_content()
         
         # 连接设置变更信号
-        self.settings.changed.connect(self.update_content)
+        if hasattr(self.settings, 'changed'):
+            self.settings.changed.connect(self.update_content)
         
         # 定时器更新倒计时
         self.countdown_timer = QTimer(self)
@@ -40,11 +42,11 @@ class CountDownComponent(QWidget):
         # 设置布局
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # 倒计时显示标签
         self.countdown_label = QLabel()
-        self.countdown_label.setAlignment(Qt.AlignCenter)
+        self.countdown_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.countdown_label.setObjectName("countdownLabel")
         
         layout.addWidget(self.countdown_label)
@@ -53,8 +55,9 @@ class CountDownComponent(QWidget):
     def update_content(self):
         """更新倒计时显示内容"""
         # 根据设置更新显示
-        if self.settings.show_title:
-            title = self.settings.title_text
+        # 使用正确的属性名
+        if self.settings.count_down_name:
+            title = self.settings.count_down_name
             self.countdown_label.setText(title)
         else:
             self.countdown_label.setText("")
@@ -66,8 +69,8 @@ class CountDownComponent(QWidget):
         """更新倒计时显示"""
         if not self.is_countdown_active:
             # 如果没有激活倒计时，显示默认文本
-            if self.settings.show_title and self.settings.title_text:
-                self.countdown_label.setText(self.settings.title_text)
+            if self.settings.count_down_name:
+                self.countdown_label.setText(self.settings.count_down_name)
             else:
                 self.countdown_label.setText("倒计时")
             return
@@ -118,22 +121,3 @@ class CountDownComponent(QWidget):
     def is_active(self):
         """检查倒计时是否激活"""
         return self.is_countdown_active
-
-
-# 测试代码
-if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
-    import sys
-    
-    app = QApplication(sys.argv)
-    
-    # 创建设置对象
-    settings = CountDownComponentSettings()
-    settings.show_title = True
-    settings.title_text = "考试倒计时"
-    
-    # 创建倒计时组件
-    countdown_component = CountDownComponent(settings)
-    countdown_component.show()
-    
-    sys.exit(app.exec())

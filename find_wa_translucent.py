@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
 import inspect
 from PySide6 import QtCore, QtWidgets, QtGui
 

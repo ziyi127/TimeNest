@@ -1,20 +1,19 @@
 import logging
 from datetime import datetime
-from PySide6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLabel
-from PySide6.QtCore import Qt, QTimer, QThread, Signal
+from typing import Optional, Dict, Any, Callable
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
-
-from core.models.component_settings.lesson_control_settings import LessonControlSettings
 
 
 class NotificationDialog(QDialog):
     """通知对话框 - 用于显示通知消息"""
     
-    def __init__(self, title: str, message: str, parent=None):
+    def __init__(self, title: str, message: str, parent: Optional[QDialog] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setModal(False)
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         
         # 设置样式
         self.setStyleSheet("""
@@ -32,12 +31,12 @@ class NotificationDialog(QDialog):
         
         # 创建标题标签
         title_label = QLabel(title)
-        title_label.setFont(QFont("Arial", 12, QFont.Bold))
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # 创建消息标签
         message_label = QLabel(message)
-        message_label.setAlignment(Qt.AlignCenter)
+        message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         message_label.setWordWrap(True)
         
         # 添加到布局
@@ -73,14 +72,14 @@ class Notifier:
         """检查通知是否启用"""
         return self.is_enabled
         
-    def show_notification(self, title: str, message: str, duration: int = 5000, 
-                         notification_type: str = "info", callback=None):
+    def show_notification(self, title: str, message: str, duration: int = 5000,
+                         notification_type: str = "info", callback: Optional[Callable[[], None]] = None) -> None:
         """显示通知"""
         if not self.is_enabled:
             return
             
         # 创建通知
-        notification = {
+        notification: Dict[str, Any] = {
             "title": title,
             "message": message,
             "type": notification_type,
@@ -94,7 +93,7 @@ class Notifier:
         # 在主线程中显示通知
         self._show_notification_dialog(title, message, notification_type, callback)
         
-    def _show_notification_dialog(self, title: str, message: str, notification_type: str, callback):
+    def _show_notification_dialog(self, title: str, message: str, notification_type: str, callback: Optional[Callable[[], None]]) -> None:
         """在主线程中显示通知对话框"""
         # 这里应该使用Qt的主线程机制来显示对话框
         # 简化实现，使用消息框
@@ -131,7 +130,7 @@ class Notifier:
         """获取通知数量"""
         return len(self.notifications)
         
-    def get_latest_notification(self):
+    def get_latest_notification(self) -> Optional[Dict[str, Any]]:
         """获取最新通知"""
         if self.notifications:
             return self.notifications[-1]

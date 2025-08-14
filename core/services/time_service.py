@@ -3,8 +3,10 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from PySide6.QtCore import QObject, Signal, QTimer
-import ntplib
-import threading
+import ntplib  # type: ignore
+from ntplib import NTPClient, NTPStats  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ class TimeService(QObject):
     # 时间同步完成信号
     time_synced = Signal(datetime)
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QObject] = None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
         
@@ -24,7 +26,7 @@ class TimeService(QObject):
         self._sync_status_message = "时间尚未同步。"
         self.prev_datetime = datetime.min
         self.need_waiting = False
-        self.ntp_client: Optional[ntplib.NTPClient] = None
+        self.ntp_client: Optional[NTPClient] = None
         self.last_time = datetime.now()
         self.waiting_for_system_time_changed = False
         self.last_system_time = datetime.now()
@@ -38,7 +40,7 @@ class TimeService(QObject):
         
         # 初始化NTP客户端
         try:
-            self.ntp_client = ntplib.NTPClient()
+            self.ntp_client = NTPClient()
         except Exception as e:
             self.logger.error(f"初始化NTP客户端失败: {e}")
             self._sync_status_message = str(e)
@@ -83,7 +85,7 @@ class TimeService(QObject):
             for server in servers_to_try:
                 try:
                     # 使用NTP获取时间
-                    response = self.ntp_client.request(server)
+                    response: NTPStats = self.ntp_client.request(server)  # type: ignore
                     ntp_time = datetime.fromtimestamp(response.tx_time)
                     
                     # 检查时间差异
@@ -122,7 +124,7 @@ class TimeService(QObject):
                 
             # 使用NTP时间
             try:
-                response = self.ntp_client.request(self.exact_time_server)
+                response: NTPStats = self.ntp_client.request(self.exact_time_server)  # type: ignore
                 ntp_time = datetime.fromtimestamp(response.tx_time)
                 base_time = ntp_time
             except Exception:

@@ -1,12 +1,13 @@
 import sys
 import logging
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                              QTreeWidget, QTreeWidgetItem, QStackedWidget, 
-                              QLabel, QPushButton, QFrame, QSplitter, 
-                              QListWidget, QListWidgetItem, QTextEdit, 
-                              QComboBox, QSpinBox, QCheckBox, QGroupBox,
-                              QTabWidget, QTableWidget, QTableWidgetItem)
-from PySide6.QtCore import Qt, Signal
+from typing import Optional
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+                              QTreeWidget, QTreeWidgetItem, QStackedWidget,
+                              QLabel, QPushButton, QFrame, QSplitter,
+                              QListWidget, QTextEdit,
+                              QComboBox, QCheckBox, QGroupBox,
+                              QTableWidget, QTableWidgetItem)
+from PySide6.QtCore import Qt, QEvent, QRect, QPoint
 from PySide6.QtGui import QIcon
 
 logger = logging.getLogger(__name__)
@@ -15,10 +16,10 @@ logger = logging.getLogger(__name__)
 class ProfileWindow(QMainWindow):
     """档案编辑窗口 - 仿ClassIsland档案编辑窗口"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setAttribute(Qt.WA_TranslucentBackground, False)  # 确保配置窗口不透明
-        self.setAttribute(Qt.WA_NoSystemBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)  # 确保配置窗口不透明
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
         self.init_ui()
         self.setup_window_properties()
         
@@ -37,8 +38,9 @@ class ProfileWindow(QMainWindow):
         
         # 居中显示
         if self.parent():
-            parent_center = self.parent().geometry().center()
-            self.move(parent_center.x() - self.width() // 2, 
+            parent_geometry: QRect = self.parent().geometry()
+            parent_center: QPoint = parent_geometry.center()
+            self.move(parent_center.x() - self.width() // 2,
                      parent_center.y() - self.height() // 2)
         
     def init_ui(self):
@@ -53,7 +55,7 @@ class ProfileWindow(QMainWindow):
         main_layout.setSpacing(0)
         
         # 创建分割器
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         main_layout.addWidget(splitter)
         
         # 左侧导航面板
@@ -65,7 +67,7 @@ class ProfileWindow(QMainWindow):
         # 设置分割器比例
         splitter.setSizes([250, 750])
         
-    def create_navigation_panel(self, parent):
+    def create_navigation_panel(self, parent: QSplitter):
         """创建导航面板"""
         # 导航框架
         nav_frame = QFrame()
@@ -81,7 +83,7 @@ class ProfileWindow(QMainWindow):
         # 标题
         title_label = QLabel("档案编辑")
         title_label.setObjectName("TitleLabel")
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet("""
             QLabel {
                 font-size: 16px;
@@ -149,23 +151,23 @@ class ProfileWindow(QMainWindow):
         """添加导航项"""
         # 课程表管理
         schedule_item = QTreeWidgetItem(["课程表管理"])
-        schedule_item.setData(0, Qt.UserRole, "schedule")
+        schedule_item.setData(0, Qt.ItemDataRole.UserRole, "schedule")
         
         # 时间表
         time_layout_item = QTreeWidgetItem(["时间表"])
-        time_layout_item.setData(0, Qt.UserRole, "time_layout")
+        time_layout_item.setData(0, Qt.ItemDataRole.UserRole, "time_layout")
         
         # 课表
         class_plan_item = QTreeWidgetItem(["课表"])
-        class_plan_item.setData(0, Qt.UserRole, "class_plan")
+        class_plan_item.setData(0, Qt.ItemDataRole.UserRole, "class_plan")
         
         # 科目管理
         subject_item = QTreeWidgetItem(["科目管理"])
-        subject_item.setData(0, Qt.UserRole, "subject")
+        subject_item.setData(0, Qt.ItemDataRole.UserRole, "subject")
         
         # 临时课表
         temp_plan_item = QTreeWidgetItem(["临时课表"])
-        temp_plan_item.setData(0, Qt.UserRole, "temp_plan")
+        temp_plan_item.setData(0, Qt.ItemDataRole.UserRole, "temp_plan")
         
         # 添加子项
         schedule_item.addChild(time_layout_item)
@@ -178,7 +180,7 @@ class ProfileWindow(QMainWindow):
         # 默认选择第一个项
         self.nav_tree.setCurrentItem(schedule_item)
         
-    def create_content_area(self, parent):
+    def create_content_area(self, parent: QSplitter):
         """创建内容区域"""
         # 内容框架
         content_frame = QFrame()
@@ -423,18 +425,18 @@ class ProfileWindow(QMainWindow):
         layout.addStretch()
         return page
         
-    def on_navigation_changed(self, current, previous):
+    def on_navigation_changed(self, current: QTreeWidgetItem, previous: QTreeWidgetItem):
         """导航项改变时的处理"""
         if current:
-            page_key = current.data(0, Qt.UserRole)
+            page_key = current.data(0, Qt.ItemDataRole.UserRole)
             if not page_key:  # 如果是父节点，获取第一个子节点
                 if current.childCount() > 0:
-                    page_key = current.child(0).data(0, Qt.UserRole)
+                    page_key = current.child(0).data(0, Qt.ItemDataRole.UserRole)
             
             if page_key:
                 self.switch_to_page(page_key)
             
-    def switch_to_page(self, page_key):
+    def switch_to_page(self, page_key: str):
         """切换到指定页面"""
         page_map = {
             "schedule": 0,
@@ -458,7 +460,7 @@ class ProfileWindow(QMainWindow):
         
         self.title_bar.setText(titles.get(page_key, "档案编辑"))
         
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent):
         """窗口关闭事件"""
         logger.info("档案编辑窗口已关闭")
         super().closeEvent(event)

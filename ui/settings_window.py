@@ -1,11 +1,12 @@
 import sys
 import logging
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                              QTreeWidget, QTreeWidgetItem, QStackedWidget, 
-                              QLabel, QPushButton, QFrame, QSplitter, QGroupBox,
+from typing import Optional
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+                              QTreeWidget, QTreeWidgetItem, QStackedWidget,
+                              QLabel, QFrame, QSplitter, QGroupBox,
                               QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +14,10 @@ logger = logging.getLogger(__name__)
 class SettingsWindow(QMainWindow):
     """设置窗口 - 仿ClassIsland设置窗口"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setAttribute(Qt.WA_TranslucentBackground, False)  # 确保配置窗口不透明
-        self.setAttribute(Qt.WA_NoSystemBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)  # 确保配置窗口不透明
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
         
         # 从主题管理器获取主题颜色并缓存
         from core.components.theme_manager import theme_manager
@@ -48,9 +49,12 @@ class SettingsWindow(QMainWindow):
             center_y = screen_geometry.height() // 2
             self.move(center_x - self.width() // 2, center_y - self.height() // 2)
         elif self.parent():
-            parent_center = self.parent().geometry().center()
-            self.move(parent_center.x() - self.width() // 2, 
-                     parent_center.y() - self.height() // 2)
+            parent_widget = self.parent()
+            # 确保父窗口部件是QWidget类型
+            if isinstance(parent_widget, QWidget):
+                parent_center = parent_widget.geometry().center()
+                self.move(parent_center.x() - self.width() // 2,
+                         parent_center.y() - self.height() // 2)
         
     def init_ui(self):
         """初始化UI"""
@@ -64,7 +68,7 @@ class SettingsWindow(QMainWindow):
         main_layout.setSpacing(0)
         
         # 创建分割器
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         main_layout.addWidget(splitter)
         
         # 左侧导航面板
@@ -76,7 +80,7 @@ class SettingsWindow(QMainWindow):
         # 设置分割器比例
         splitter.setSizes([200, 700])
         
-    def create_navigation_panel(self, parent):
+    def create_navigation_panel(self, parent: QSplitter):
         """创建导航面板"""
         # 使用缓存的主题颜色
         colors = self.colors
@@ -95,7 +99,7 @@ class SettingsWindow(QMainWindow):
         # 标题
         title_label = QLabel("设置")
         title_label.setObjectName("TitleLabel")
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 16px;
@@ -139,31 +143,31 @@ class SettingsWindow(QMainWindow):
         """添加导航项"""
         # 基本设置
         basic_item = QTreeWidgetItem(["基本"])
-        basic_item.setData(0, Qt.UserRole, "basic")
+        basic_item.setData(0, Qt.ItemDataRole.UserRole, "basic")
         
         # 窗口设置
         window_item = QTreeWidgetItem(["窗口"])
-        window_item.setData(0, Qt.UserRole, "window")
+        window_item.setData(0, Qt.ItemDataRole.UserRole, "window")
         
         # 课程表设置
         schedule_item = QTreeWidgetItem(["课程表"])
-        schedule_item.setData(0, Qt.UserRole, "schedule")
+        schedule_item.setData(0, Qt.ItemDataRole.UserRole, "schedule")
         
         # 通知设置
         notification_item = QTreeWidgetItem(["通知"])
-        notification_item.setData(0, Qt.UserRole, "notification")
+        notification_item.setData(0, Qt.ItemDataRole.UserRole, "notification")
         
         # 外观设置
         appearance_item = QTreeWidgetItem(["外观"])
-        appearance_item.setData(0, Qt.UserRole, "appearance")
+        appearance_item.setData(0, Qt.ItemDataRole.UserRole, "appearance")
         
         # 隐私设置
         privacy_item = QTreeWidgetItem(["隐私"])
-        privacy_item.setData(0, Qt.UserRole, "privacy")
+        privacy_item.setData(0, Qt.ItemDataRole.UserRole, "privacy")
         
         # 关于
         about_item = QTreeWidgetItem(["关于"])
-        about_item.setData(0, Qt.UserRole, "about")
+        about_item.setData(0, Qt.ItemDataRole.UserRole, "about")
         
         # 添加到树
         self.nav_tree.addTopLevelItems([
@@ -175,7 +179,7 @@ class SettingsWindow(QMainWindow):
         # 默认选择第一个项
         self.nav_tree.setCurrentItem(basic_item)
         
-    def create_content_area(self, parent):
+    def create_content_area(self, parent: QSplitter):
         """创建内容区域"""
         # 使用缓存的主题颜色
         colors = self.colors
@@ -476,13 +480,13 @@ class SettingsWindow(QMainWindow):
         layout.addStretch()
         return page
         
-    def on_navigation_changed(self, current, previous):
+    def on_navigation_changed(self, current: Optional[QTreeWidgetItem], previous: Optional[QTreeWidgetItem]):
         """导航项改变时的处理"""
         if current:
-            page_key = current.data(0, Qt.UserRole)
+            page_key = current.data(0, Qt.ItemDataRole.UserRole)
             self.switch_to_page(page_key)
             
-    def switch_to_page(self, page_key):
+    def switch_to_page(self, page_key: str):
         """切换到指定页面"""
         page_map = {
             "basic": 0,
@@ -510,7 +514,7 @@ class SettingsWindow(QMainWindow):
         
         self.title_bar.setText(titles.get(page_key, "设置"))
         
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent):
         """窗口关闭事件"""
         logger.info("设置窗口已关闭")
         super().closeEvent(event)

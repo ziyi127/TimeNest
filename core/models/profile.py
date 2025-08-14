@@ -3,9 +3,8 @@
 
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 from PySide6.QtCore import QObject, Signal
 
 logger = logging.getLogger(__name__)
@@ -25,12 +24,12 @@ class TimeNestProfile(QObject):
         """
         super().__init__()
         
-        self.name = name
-        self.id = "default-profile-id"
-        self.time_layouts = {}
-        self.class_plans = {}
-        self.subjects = {}
-        self.class_plan_groups = {}
+        self.name: str = name
+        self.id: str = "default-profile-id"
+        self.time_layouts: Dict[str, Any] = {}
+        self.class_plans: Dict[str, Any] = {}
+        self.subjects: Dict[str, Any] = {}
+        self.class_plan_groups: Dict[str, Any] = {}
         
         # 初始化默认数据
         self._initialize_default_data()
@@ -40,7 +39,7 @@ class TimeNestProfile(QObject):
     def _initialize_default_data(self):
         """初始化默认数据"""
         # 初始化课表群
-        self.class_plan_groups = {
+        self.class_plan_groups: Dict[str, Any] = {
             "default-group": {
                 "id": "default-group",
                 "name": "默认",
@@ -112,12 +111,12 @@ class TimeNestProfile(QObject):
     
     def _update_from_dict(self, data: Dict[str, Any]):
         """从字典更新数据"""
-        self.name = data.get('name', self.name)
-        self.id = data.get('id', self.id)
-        self.time_layouts = data.get('time_layouts', self.time_layouts)
-        self.class_plans = data.get('class_plans', self.class_plans)
-        self.subjects = data.get('subjects', self.subjects)
-        self.class_plan_groups = data.get('class_plan_groups', self.class_plan_groups)
+        self.name: str = data.get('name', self.name)
+        self.id: str = data.get('id', self.id)
+        self.time_layouts: Dict[str, Any] = data.get('time_layouts', self.time_layouts)
+        self.class_plans: Dict[str, Any] = data.get('class_plans', self.class_plans)
+        self.subjects: Dict[str, Any] = data.get('subjects', self.subjects)
+        self.class_plan_groups: Dict[str, Any] = data.get('class_plan_groups', self.class_plan_groups)
         
         # 发送变更信号
         self.profile_changed.emit()

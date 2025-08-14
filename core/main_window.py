@@ -1,18 +1,17 @@
 # TimeNest 主窗口
 # 完整重构自Classisland的MainWindow类
 
-import sys
 import logging
-from pathlib import Path
 from datetime import datetime
-from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, 
-                             QStatusBar, QMenuBar, QMenu, QToolBar)
-from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QIcon, QKeySequence
+from typing import List, Any
+from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QWidget,
+                             QStatusBar, QToolBar)
+from PySide6.QtGui import QAction, QIcon, QKeySequence
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QShowEvent, QHideEvent
 
 from core.settings import TimeNestSettings
-from core.components.base_component import TimeNestClockComponent, TimeNestDateComponent, TimeNestScheduleComponent
+from core.components.base_component import TimeNestClockComponent, TimeNestDateComponent, TimeNestScheduleComponent, BaseComponent
 from core.services.time_service import get_time_service
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class TimeNestMainWindow(QMainWindow):
         self.time_service = get_time_service()
         
         # 初始化组件列表
-        self.components = []
+        self.components: List[BaseComponent] = []
         
         # 设置窗口属性
         self._setup_window()
@@ -235,19 +234,19 @@ class TimeNestMainWindow(QMainWindow):
         current_time = self.time_service.get_current_time_str()
         logger.debug(f"当前时间显示: {current_time}")
     
-    def show_event(self, event):
+    def show_event(self, event: QShowEvent) -> None:
         """窗口显示事件"""
         logger.debug("主窗口已显示")
         self.window_visibility_changed.emit(True)
         super().showEvent(event)
     
-    def hide_event(self, event):
+    def hide_event(self, event: QHideEvent) -> None:
         """窗口隐藏事件"""
         logger.debug("主窗口已隐藏")
         self.window_visibility_changed.emit(False)
         super().hideEvent(event)
     
-    def closeEvent(self, event):
+    def closeEvent(self, event: Any) -> None:
         """窗口关闭事件"""
         logger.info("主窗口正在关闭")
         
@@ -268,17 +267,17 @@ class TimeNestMainWindow(QMainWindow):
         # 保存窗口位置和大小到设置
         pass
     
-    def get_components(self):
+    def get_components(self) -> List[BaseComponent]:
         """获取所有组件"""
         return self.components.copy()
     
-    def add_component(self, component):
+    def add_component(self, component: BaseComponent) -> None:
         """添加组件"""
         if component not in self.components:
             self.components.append(component)
             logger.debug(f"组件已添加: {component.name}")
     
-    def remove_component(self, component):
+    def remove_component(self, component: BaseComponent) -> None:
         """移除组件"""
         if component in self.components:
             self.components.remove(component)

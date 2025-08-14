@@ -13,23 +13,23 @@ class DateComponentSettings(QObject):
         self._show_real_time = False
         
     @property
-    def show_chinese_format(self):
+    def show_chinese_format(self) -> bool:
         """是否显示中文格式"""
         return self._show_chinese_format
     
     @show_chinese_format.setter
-    def show_chinese_format(self, value):
+    def show_chinese_format(self, value: bool) -> None:
         if value != self._show_chinese_format:
             self._show_chinese_format = value
             self.changed.emit()
     
     @property
-    def show_real_time(self):
+    def show_real_time(self) -> bool:
         """是否显示实时时间"""
         return self._show_real_time
     
     @show_real_time.setter
-    def show_real_time(self, value):
+    def show_real_time(self, value: bool) -> None:
         if value != self._show_real_time:
             self._show_real_time = value
             self.changed.emit()

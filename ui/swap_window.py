@@ -1,10 +1,11 @@
 import sys
 import logging
+from typing import Optional, List
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                              QLabel, QPushButton, QFrame, QListWidget, 
+                              QLabel, QPushButton, QListWidget, 
                               QListWidgetItem, QMessageBox)
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +13,19 @@ logger = logging.getLogger(__name__)
 class SwapWindow(QMainWindow):
     """换课窗口 - 用于换课功能"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setAttribute(Qt.WA_TranslucentBackground, False)  # 确保配置窗口不透明
-        self.setAttribute(Qt.WA_NoSystemBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)  # 确保配置窗口不透明
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        
+        # 初始化成员变量
+        self.swaps: List[str] = []
+        self.course_list: QListWidget = QListWidget()
+        self.swap_list: QListWidget = QListWidget()
+        self.add_button: QPushButton = QPushButton()
+        self.remove_button: QPushButton = QPushButton()
+        self.apply_button: QPushButton = QPushButton()
+        
         self.init_ui()
         self.setup_window_properties()
         
@@ -34,9 +44,16 @@ class SwapWindow(QMainWindow):
         
         # 居中显示
         if self.parent():
-            parent_center = self.parent().geometry().center()
-            self.move(parent_center.x() - self.width() // 2, 
-                     parent_center.y() - self.height() // 2)
+            parent_geometry = self.parent().geometry()  # type: ignore
+            parent_center = parent_geometry.center()    # type: ignore
+            x = int(parent_center.x())   # type: ignore
+            y = int(parent_center.y())   # type: ignore
+            width = self.width()
+            height = self.height()
+            self.move(
+                x - width // 2,
+                y - height // 2
+            )
         
     def init_ui(self):
         """初始化UI"""
@@ -95,48 +112,41 @@ class SwapWindow(QMainWindow):
         
         for course in courses:
             item = QListWidgetItem(course)
-            self.course_list.addItem(item)
+            # 类型检查：确保 course_list 不为 None
+            if self.course_list:
+                self.course_list.addItem(item)
         
         main_layout.addWidget(self.course_list)
         
+        # 换课列表
+        self.swap_list = QListWidget()
+        self.swap_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 5px;
+                min-height: 100px;
+            }
+        """)
+        main_layout.addWidget(QLabel("已选择的课程:"))
+        main_layout.addWidget(self.swap_list)
+        
         # 按钮区域
         button_layout = QHBoxLayout()
+        
+        self.add_button = QPushButton("添加 >>")
+        self.remove_button = QPushButton("<< 移除")
+        self.apply_button = QPushButton("应用换课")
+        
+        # 连接信号
+        self.add_button.clicked.connect(self.add_swap)
+        self.remove_button.clicked.connect(self.remove_swap)
+        self.apply_button.clicked.connect(self.apply_swaps)
+        
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.remove_button)
         button_layout.addStretch()
-        
-        swap_btn = QPushButton("换课")
-        swap_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0078d4;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005a9e;
-            }
-        """)
-        swap_btn.clicked.connect(self.on_swap_clicked)
-        
-        cancel_btn = QPushButton("取消")
-        cancel_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f8f8f8;
-                color: #333;
-                border: 1px solid #ddd;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #e8e8e8;
-            }
-        """)
-        cancel_btn.clicked.connect(self.close)
-        
-        button_layout.addWidget(swap_btn)
-        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(self.apply_button)
         
         main_layout.addLayout(button_layout)
         
@@ -150,11 +160,44 @@ class SwapWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "请选择课程", "请先选择要换课的课程。")
         
-    def closeEvent(self, event):
+    def add_swap(self) -> None:
+        """添加换课记录"""
+        selected_items = self.course_list.selectedItems()
+        if selected_items:
+            course = selected_items[0].text()
+            self.swaps.append(course)
+            self.update_swap_list()
+        else:
+            QMessageBox.warning(self, "请选择课程", "请先选择要换课的课程。")
+        
+    def remove_swap(self) -> None:
+        """移除换课记录"""
+        selected_items = self.swap_list.selectedItems()
+        if selected_items:
+            course = selected_items[0].text()
+            self.swaps.remove(course)
+            self.update_swap_list()
+        else:
+            QMessageBox.warning(self, "请选择换课记录", "请先选择要移除的换课记录。")
+        
+    def update_swap_list(self) -> None:
+        """更新换课列表"""
+        self.swap_list.clear()
+        for course in self.swaps:
+            item = QListWidgetItem(course)
+            self.swap_list.addItem(item)
+        
+    def apply_swaps(self) -> None:
+        """应用换课记录"""
+        if self.swaps:
+            QMessageBox.information(self, "换课成功", f"已选择课程: {', '.join(self.swaps)}\n换课功能将在后续版本中完善。")
+            self.close()
+        else:
+            QMessageBox.warning(self, "请选择课程", "请先选择要换课的课程。")
+            
+    def closeEvent(self, event: QCloseEvent) -> None:
         """窗口关闭事件"""
-        logger.info("换课窗口已关闭")
-        super().closeEvent(event)
-
+        event.accept()
 
 # 测试代码
 if __name__ == "__main__":

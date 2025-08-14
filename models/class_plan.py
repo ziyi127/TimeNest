@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import uuid
 
-from models.subject import Subject
+from models.subject import Subject  # type: ignore
 from models.time_layout import TimeLayout, TimeLayoutItem
 
 
@@ -167,7 +167,7 @@ class ClassPlan:
     id: str = ""
     name: str = "新课表"
     time_layout_id: str = ""
-    classes: List[ClassInfo] = field(default_factory=list)
+    classes: List[ClassInfo] = field(default_factory=list)  # type: ignore
     time_rule: TimeRule = field(default_factory=TimeRule)
     is_activated: bool = False
     is_overlay: bool = False
@@ -184,11 +184,11 @@ class ClassPlan:
             return []
             
         # 获取时间布局中的有效时间点
-        valid_items = time_layout.get_valid_time_layout_items()
+        valid_items: List[TimeLayoutItem] = time_layout.get_valid_time_layout_items()
         
-        # 根据课程启用状态过滤
-        time_layout_map = {class_info.index: class_info for class_info in self.classes}
-        filtered_items = []
+        # 获取课程映射
+        time_layout_map: Dict[int, ClassInfo] = {class_info.index: class_info for class_info in self.classes}
+        filtered_items: List[TimeLayoutItem] = []
         
         # 正向搜索过滤
         is_prev_enabled = True
@@ -202,7 +202,7 @@ class ClassPlan:
                 
         # 反向搜索过滤
         is_prev_enabled = True
-        final_items = []
+        final_items: List[TimeLayoutItem] = []
         for item in reversed(filtered_items):
             if item.time_type == 0:  # 上课时间点
                 class_index = time_layout.get_class_index(item)
@@ -219,7 +219,7 @@ class ClassPlan:
             return
             
         # 获取上课时间点
-        class_time_points = time_layout.get_class_time_points()
+        class_time_points: List[TimeLayoutItem] = time_layout.get_class_time_points()
         target_count = len(class_time_points)
         
         # 调整课程列表长度
@@ -261,7 +261,7 @@ class ClassPlan:
     def remove_time_point_safe(self, time_point: TimeLayoutItem, time_layout: TimeLayout):
         """安全地删除时间点"""
         # 移除对应的课程
-        classes_to_remove = []
+        classes_to_remove: List[ClassInfo] = []
         for class_info in self.classes:
             if class_info.index < len(time_layout.layouts):
                 layout_item = time_layout.layouts[class_info.index]

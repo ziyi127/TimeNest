@@ -1,8 +1,6 @@
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from datetime import datetime, time
-import json
-
+from datetime import datetime
 
 @dataclass
 class TimeLayoutItem:
@@ -102,7 +100,7 @@ class TimeLayout:
     
     id: str = ""
     name: str = "新时间表"
-    layouts: List[TimeLayoutItem] = field(default_factory=list)
+    layouts: List[TimeLayoutItem] = field(default_factory=list)  # type: ignore
     is_activated: bool = False
     is_activated_manually: bool = False
     created_at: datetime = field(default_factory=datetime.now)

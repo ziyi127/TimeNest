@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
 from PySide6.QtWidgets import QWidget
 
 # 检查 QWidget 类的所有属性，寻找与 translucent 相关的属性

@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime
+from typing import Optional, Any
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel
-from PySide6.QtCore import Qt, QPoint, QTimer, QEasingCurve, QPropertyAnimation
-from PySide6.QtGui import QScreen, QPainter, QBrush, QColor, QPen, QFont, QRegion
+from PySide6.QtCore import Qt, QEasingCurve, QPropertyAnimation, QEvent
+from PySide6.QtGui import QPainter, QColor, QPen, QCursor, QEnterEvent, QMouseEvent, QPaintEvent
 
 from core.models.component_settings.lesson_control_settings import LessonControlSettings
 
@@ -10,7 +10,7 @@ from core.models.component_settings.lesson_control_settings import LessonControl
 class FloatingWindow(QMainWindow):
     """浮动窗口组件 - 采用类似Apple Dynamic Island的设计风格，固定在屏幕顶部"""
     
-    def __init__(self, settings: LessonControlSettings = None):
+    def __init__(self, settings: Optional[LessonControlSettings] = None):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         
@@ -49,10 +49,10 @@ class FloatingWindow(QMainWindow):
     def init_window(self):
         """初始化窗口属性"""
         # 设置窗口标志 - 固定在屏幕顶部，无边框
-        self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
         
         # 设置窗口属性
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowOpacity(self.normal_opacity)
         
         # 设置初始大小
@@ -112,7 +112,7 @@ class FloatingWindow(QMainWindow):
         # 透明度动画
         self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
         self.opacity_animation.setDuration(200)  # 200ms的透明度过渡
-        self.opacity_animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.opacity_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
     def center_window_top(self):
         """将窗口居中显示在屏幕顶部"""
@@ -124,32 +124,32 @@ class FloatingWindow(QMainWindow):
                 screen_geometry.top() + 10  # 距离顶部10像素
             )
             
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEnterEvent):
         """鼠标进入窗口事件"""
         if self.settings.enable_floating_window_hover_effect:
             self.set_opacity_with_animation(self.hover_opacity)
         super().enterEvent(event)
         
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: QEvent):
         """鼠标离开窗口事件"""
         if self.settings.enable_floating_window_hover_effect:
             self.set_opacity_with_animation(self.normal_opacity)
         super().leaveEvent(event)
         
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         """鼠标按下事件 - 实现透明度效果"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             # 触控透明效果
             if self.settings.enable_floating_window_touch_effect:
                 self.set_opacity_with_animation(self.touch_opacity)
-        elif event.button() == Qt.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             # 右键按下时也应用触控透明效果
             if self.settings.enable_floating_window_touch_effect:
                 self.set_opacity_with_animation(self.touch_opacity)
             
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent):
         """鼠标释放事件"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             # 恢复正常透明度
             if self.settings.enable_floating_window_touch_effect:
                 # 如果鼠标仍在窗口内，恢复悬停透明度；否则恢复正常透明度
@@ -160,7 +160,7 @@ class FloatingWindow(QMainWindow):
                         self.set_opacity_with_animation(self.normal_opacity)
                 else:
                     self.set_opacity_with_animation(self.normal_opacity)
-        elif event.button() == Qt.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             # 右键释放时恢复透明度
             if self.settings.enable_floating_window_touch_effect:
                 # 如果鼠标仍在窗口内，恢复悬停透明度；否则恢复正常透明度
@@ -176,18 +176,18 @@ class FloatingWindow(QMainWindow):
         """切换固定/取消固定状态"""
         self.is_pinned = not self.is_pinned
         if self.is_pinned:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
         self.show()
         
     def set_pinned(self, pinned: bool):
         """设置固定状态"""
         self.is_pinned = pinned
         if self.is_pinned:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowStaysOnTopHint)
         self.show()
         
     def get_is_pinned(self):
@@ -214,16 +214,16 @@ class FloatingWindow(QMainWindow):
         """获取窗口位置"""
         return self.pos()
         
-    def set_opacity_with_animation(self, target_opacity):
+    def set_opacity_with_animation(self, target_opacity: float):
         """使用动画设置窗口透明度"""
-        if self.opacity_animation.state() == QPropertyAnimation.Running:
+        if self.opacity_animation.state() == QPropertyAnimation.State.Running:
             self.opacity_animation.stop()
             
         self.opacity_animation.setStartValue(self.windowOpacity())
         self.opacity_animation.setEndValue(target_opacity)
         self.opacity_animation.start()
         
-    def on_setting_changed(self, key, value):
+    def on_setting_changed(self, key: str, value: Any):
         """处理设置变更"""
         if key == "floating_window_hover_transparency":
             self.hover_opacity = value
@@ -237,23 +237,23 @@ class FloatingWindow(QMainWindow):
             # 触控效果开关变更，无需特殊处理
             pass
             
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent):
         """绘制窗口背景 - 创建灵动岛样式外观"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         # 绘制圆角矩形背景，模拟Dynamic Island外观
         rect = self.rect()
         radius = 20  # 圆角半径
         
         # 绘制背景
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(30, 30, 30, 200))  # 深灰色半透明背景
         painter.drawRoundedRect(rect, radius, radius)
         
         # 绘制边框
         painter.setPen(QPen(QColor(80, 80, 80), 1))
-        painter.setBrush(Qt.NoBrush)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), radius-1, radius-1)
 
 

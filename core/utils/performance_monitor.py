@@ -1,21 +1,21 @@
 import logging
 import time
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable, Any, Optional, Dict, List
 
 
 class PerformanceMonitor:
     """性能监控器 - 监控应用性能和组件执行时间"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
-        self.performance_data = {}
+        self.performance_data: Dict[str, List[float]] = {}
         
-    def monitor_function(self, func_name: str = None):
+    def monitor_function(self, func_name: Optional[str] = None) -> Callable:
         """装饰器：监控函数执行时间"""
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
-            def wrapper(*args, **kwargs) -> Any:
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
                 start_time = time.perf_counter()
                 try:
                     result = func(*args, **kwargs)
@@ -42,12 +42,12 @@ class PerformanceMonitor:
             return wrapper
         return decorator
     
-    def get_performance_stats(self) -> dict:
+    def get_performance_stats(self) -> Dict[str, Dict[str, float]]:
         """获取性能统计信息"""
-        stats = {}
+        stats: Dict[str, Dict[str, float]] = {}
         for func_name, times in self.performance_data.items():
             stats[func_name] = {
-                'count': len(times),
+                'count': float(len(times)),
                 'total_time': sum(times),
                 'avg_time': sum(times) / len(times) if times else 0,
                 'max_time': max(times) if times else 0,
@@ -55,11 +55,11 @@ class PerformanceMonitor:
             }
         return stats
     
-    def reset_performance_data(self):
+    def reset_performance_data(self) -> None:
         """重置性能数据"""
         self.performance_data.clear()
     
-    def log_performance_summary(self):
+    def log_performance_summary(self) -> None:
         """记录性能摘要"""
         stats = self.get_performance_stats()
         if stats:
@@ -69,7 +69,7 @@ class PerformanceMonitor:
                     f"{func_name}: "
                     f"平均{data['avg_time']:.4f}s, "
                     f"总计{data['total_time']:.4f}s, "
-                    f"次数{data['count']}"
+                    f"次数{int(data['count'])}"
                 )
 
 

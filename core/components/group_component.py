@@ -1,7 +1,6 @@
 import logging
-from datetime import datetime
+from typing import List, Optional
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame
-from PySide6.QtCore import Qt
 
 from core.models.component_settings.group_component_settings import GroupComponentSettings
 
@@ -9,7 +8,7 @@ from core.models.component_settings.group_component_settings import GroupCompone
 class GroupComponent(QWidget):
     """分组组件 - 用于组织和分组其他组件，基于ClassIsland的GroupComponent实现"""
     
-    def __init__(self, settings: GroupComponentSettings = None):
+    def __init__(self, settings: Optional[GroupComponentSettings] = None) -> None:
         super().__init__()
         self.logger = logging.getLogger(__name__)
         
@@ -17,7 +16,7 @@ class GroupComponent(QWidget):
         self.settings = settings or GroupComponentSettings()
         
         # 组件列表
-        self.components = []
+        self.components: List[QWidget] = []
         
         # 初始化UI
         self.init_ui()
@@ -38,8 +37,8 @@ class GroupComponent(QWidget):
         # 创建分组框架
         self.group_frame = QFrame()
         self.group_frame.setObjectName("groupFrame")
-        self.group_frame.setFrameShape(QFrame.Box)
-        self.group_frame.setFrameShadow(QFrame.Raised)
+        self.group_frame.setFrameShape(QFrame.Shape.Box)
+        self.group_frame.setFrameShadow(QFrame.Shadow.Raised)
         
         # 分组内部布局
         self.group_layout = QVBoxLayout(self.group_frame)
@@ -54,10 +53,10 @@ class GroupComponent(QWidget):
         """更新分组显示内容"""
         # 根据设置更新分组样式
         if self.settings.show_border:
-            self.group_frame.setFrameShape(QFrame.Box)
-            self.group_frame.setFrameShadow(QFrame.Raised)
+            self.group_frame.setFrameShape(QFrame.Shape.Box)
+            self.group_frame.setFrameShadow(QFrame.Shadow.Raised)
         else:
-            self.group_frame.setFrameShape(QFrame.NoFrame)
+            self.group_frame.setFrameShape(QFrame.Shape.NoFrame)
             
         # 更新边框颜色和样式
         if self.settings.border_color:
@@ -70,14 +69,14 @@ class GroupComponent(QWidget):
             # 这里可以添加标题显示逻辑
             pass
             
-    def add_component(self, component):
+    def add_component(self, component: QWidget) -> None:
         """添加组件到分组"""
         if component not in self.components:
             self.components.append(component)
             self.group_layout.addWidget(component)
             self.logger.debug(f"组件已添加到分组: {component}")
             
-    def remove_component(self, component):
+    def remove_component(self, component: QWidget) -> None:
         """从分组中移除组件"""
         if component in self.components:
             self.components.remove(component)
@@ -90,7 +89,7 @@ class GroupComponent(QWidget):
         for component in self.components.copy():
             self.remove_component(component)
             
-    def get_components(self):
+    def get_components(self) -> List[QWidget]:
         """获取所有组件"""
         return self.components.copy()
         

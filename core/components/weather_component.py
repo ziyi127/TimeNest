@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
+from typing import Optional
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 
@@ -10,7 +10,7 @@ from core.models.component_settings.weather_component_settings import WeatherCom
 class WeatherComponent(QWidget):
     """天气组件 - 显示天气信息，基于ClassIsland的WeatherComponent实现"""
     
-    def __init__(self, settings: WeatherComponentSettings = None):
+    def __init__(self, settings: Optional[WeatherComponentSettings] = None):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         
@@ -36,22 +36,22 @@ class WeatherComponent(QWidget):
         # 设置布局
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # 天气图标显示
         self.weather_icon = QLabel()
-        self.weather_icon.setAlignment(Qt.AlignCenter)
+        self.weather_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.weather_icon.setObjectName("weatherIcon")
         self.weather_icon.setMinimumSize(64, 64)
         
         # 天气温度显示
         self.temperature_label = QLabel()
-        self.temperature_label.setAlignment(Qt.AlignCenter)
+        self.temperature_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.temperature_label.setObjectName("temperatureLabel")
         
         # 天气描述显示
         self.weather_description = QLabel()
-        self.weather_description.setAlignment(Qt.AlignCenter)
+        self.weather_description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.weather_description.setObjectName("weatherDescription")
         
         # 添加到布局
@@ -88,7 +88,7 @@ class WeatherComponent(QWidget):
             try:
                 pixmap = QPixmap(icon_path)
                 if not pixmap.isNull():
-                    self.weather_icon.setPixmap(pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    self.weather_icon.setPixmap(pixmap.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 else:
                     self.weather_icon.setText("☀️")
             except Exception:
@@ -103,22 +103,3 @@ class WeatherComponent(QWidget):
     def get_current_weather_description(self):
         """获取当前天气描述"""
         return self.weather_description.text()
-
-
-# 测试代码
-if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
-    import sys
-    
-    app = QApplication(sys.argv)
-    
-    # 创建设置对象
-    settings = WeatherComponentSettings()
-    settings.show_temperature = True
-    settings.show_description = True
-    
-    # 创建天气组件
-    weather_component = WeatherComponent(settings)
-    weather_component.show()
-    
-    sys.exit(app.exec())

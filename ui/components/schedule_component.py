@@ -1,15 +1,14 @@
 import logging
-from datetime import datetime, timedelta, time
-from typing import Optional, Dict, Any
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List, Callable
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QGridLayout, QFrame
 from PySide6.QtCore import QTimer, Qt, Signal, QEasingCurve, QPropertyAnimation
-from PySide6.QtGui import QColor, QFont
 
 from models.component_settings.schedule_component_settings import ScheduleComponentSettings
 from core.services.time_service import TimeService
+from core.services.lessons_service import TimeState, LessonsService
 from core.models.profile import TimeNestProfile
-from core.services.lessons_service import TimeState
 
 
 class ScheduleComponent(QWidget):
@@ -21,8 +20,35 @@ class ScheduleComponent(QWidget):
     on_breaking_time = Signal()
     on_after_school = Signal()
     
-    def __init__(self, lessons_service=None, exact_time_service: TimeService = None, 
-                 profile_service=None, settings_service=None, parent=None):
+    # 成员变量类型注释
+    lessons_service: Optional[LessonsService]
+    exact_time_service: Optional[TimeService]
+    profile_service: Optional[TimeNestProfile]
+    settings_service: Optional[ScheduleComponentSettings]
+    settings: ScheduleComponentSettings
+    tomorrow_class_plan: Optional[Dict[str, Any]]
+    is_after_school: bool
+    show_current_lesson_only_on_class: bool
+    lessons_listbox_selected_index: int
+    current_class_plan: Optional[Dict[str, Any]]
+    current_subject: Any
+    current_time_layout_item: Any
+    current_state: TimeState
+    next_class_subject: Any
+    next_breaking_time_layout_item: Any
+    on_class_left_time: timedelta
+    on_breaking_time_left_time: timedelta
+    is_lesson_confirmed: bool
+    is_class_plan_loaded: bool
+    next_class_time_layout_item: Any
+    animations: List[QPropertyAnimation]
+    tomorrow_label: QLabel
+    main_lessons_listbox: QWidget
+    main_lessons_listbox_layout: QVBoxLayout
+    empty_placeholder: QLabel
+    
+    def __init__(self, lessons_service=None, exact_time_service: Optional[TimeService] = None,
+                 profile_service=None, settings_service=None, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
         
@@ -112,7 +138,7 @@ class ScheduleComponent(QWidget):
         # 空课程表占位符
         self.empty_placeholder = QLabel()
         self.empty_placeholder.setObjectName("EmptyPlaceholder")
-        self.empty_placeholder.setAlignment(Qt.AlignCenter)
+        self.empty_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_placeholder.setVisible(False)
         self.empty_placeholder.setStyleSheet("""
             QLabel#EmptyPlaceholder {
@@ -123,7 +149,7 @@ class ScheduleComponent(QWidget):
         """)
         
         # 添加组件到主布局
-        main_layout.addWidget(self.tomorrow_label, 0, 0, Qt.AlignLeft | Qt.AlignVCenter)
+        main_layout.addWidget(self.tomorrow_label, 0, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         main_layout.addWidget(self.main_lessons_listbox, 0, 1)
         
         # 占位符覆盖在课程列表上
@@ -134,7 +160,7 @@ class ScheduleComponent(QWidget):
         # 创建一个容器来容纳占位符
         placeholder_container = QWidget()
         placeholder_container.setLayout(placeholder_layout)
-        placeholder_container.setAttribute(Qt.WA_TransparentForMouseEvents)  # 鼠标事件穿透
+        placeholder_container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # 鼠标事件穿透
         placeholder_container.setObjectName("PlaceholderContainer")
         
         # 将占位符容器添加到布局中，覆盖整个区域
@@ -306,7 +332,7 @@ class ScheduleComponent(QWidget):
         """创建课程项控件"""
         widget = QFrame()
         widget.setObjectName(f"LessonItem_{index}")
-        widget.setFrameStyle(QFrame.NoFrame)
+        widget.setFrameStyle(QFrame.Shape.NoFrame)
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(8, 4, 8, 4)
         layout.setSpacing(12)
@@ -418,7 +444,7 @@ class ScheduleComponent(QWidget):
         """调试触发状态变化事件"""
         self.current_time_state_changed.emit()
         
-    def animate_fade_in(self, widget, delay=0):
+    def animate_fade_in(self, widget: QWidget, delay: int = 0):
         """淡入动画效果"""
         if not widget:
             return
@@ -428,7 +454,7 @@ class ScheduleComponent(QWidget):
         animation.setDuration(300)
         animation.setStartValue(0.0)
         animation.setEndValue(1.0)
-        animation.setEasingCurve(QEasingCurve.OutCubic)
+        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
         # 添加延迟
         if delay > 0:
@@ -443,7 +469,7 @@ class ScheduleComponent(QWidget):
         self.animations.append(animation)
         animation.finished.connect(lambda: self._remove_animation(animation))
         
-    def _remove_animation(self, animation):
+    def _remove_animation(self, animation: QPropertyAnimation):
         """从动画列表中移除已完成的动画"""
         try:
             if animation and animation in self.animations:

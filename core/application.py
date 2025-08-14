@@ -1,7 +1,6 @@
 import sys
 import logging
 from typing import List, Tuple, Type, Optional, Any
-from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 
@@ -16,7 +15,6 @@ from core.services.lessons_service import LessonsService
 from core.models.profile import TimeNestProfile
 from core.components.clock_component import ClockComponent
 from core.components.date_component import DateComponent
-from core.components.schedule_component import ScheduleComponent
 from core.components.text_component import TextComponent
 from core.components.weather_component import WeatherComponent
 from core.components.countdown_component import CountDownComponent
@@ -107,10 +105,9 @@ class TimeNestApplication:
         logger.info("正在注册组件")
         
         # 注册内置组件 - 使用ClassIsland兼容的GUID
-        component_mappings: List[Tuple[str, str, Type]] = [
+        component_mappings: List[Tuple[str, str, Type[Any]]] = [
             ("9E1AF71D-8F77-4B21-A342-448787104DD9", "时钟组件", ClockComponent),
             ("DF3F8295-21F6-482E-BADA-FA0E5F14BB66", "日期组件", DateComponent),
-            ("1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8", "课程表组件", ScheduleComponent),
             ("EE8F66BD-C423-4E7C-AB46-AA9976B00E08", "文本组件", TextComponent),
             ("A1B2C3D4-E5F6-7890-ABCD-EF1234567890", "天气组件", WeatherComponent),
             ("F0E1D2C3-B4A5-6789-0123-456789ABCDEF", "倒计时组件", CountDownComponent),
@@ -125,7 +122,7 @@ class TimeNestApplication:
             # 为循环变量添加类型注解
             guid: str
             name: str
-            component_class: Type
+            component_class: Type[Any]
             try:
                 component_info = self.component_registry.get_component_info(guid)
                 if component_info:

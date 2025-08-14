@@ -1,11 +1,15 @@
 import logging
+from typing import Optional, TYPE_CHECKING, List, Union
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from PySide6.QtCore import Qt, QTimer, Signal, QEasingCurve, QPropertyAnimation, QEvent
-from PySide6.QtGui import QScreen, QResizeEvent, QMoveEvent, QShowEvent, QHideEvent, QCloseEvent
+from PySide6.QtGui import QResizeEvent, QMoveEvent, QShowEvent, QHideEvent, QCloseEvent, QEnterEvent
 
-from ui.components.schedule_component import ScheduleComponent
-from core.components.clock_component import ClockComponent
-from core.components.date_component import DateComponent
+if TYPE_CHECKING:
+    from core.services.lessons_service import LessonsService
+    from core.services.time_service import TimeService
+    from core.components.clock_component import ClockComponent
+    from core.components.date_component import DateComponent
+    from ui.components.schedule_component import ScheduleComponent
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +20,13 @@ class MainWindow(QMainWindow):
     # 窗口状态改变信号
     windowStateChanged = Signal(bool)  # visible
     
-    def __init__(self, lessons_service=None, exact_time_service=None):
-        # 类型注解
-        from core.services.lessons_service import LessonsService
-        from core.services.time_service import TimeService
+    def __init__(self, lessons_service: Optional['LessonsService'] = None, exact_time_service: Optional['TimeService'] = None):
         super().__init__()
-        self.lessons_service: LessonsService | None = lessons_service
-        self.exact_time_service: TimeService | None = exact_time_service
+        self.lessons_service: Optional['LessonsService'] = lessons_service
+        self.exact_time_service: Optional['TimeService'] = exact_time_service
         
         # 组件列表
-        self.components = []
+        self.components: List[Union[ClockComponent, DateComponent, ScheduleComponent]] = []
         
         # 窗口状态
         self.is_visible = True
@@ -37,7 +38,7 @@ class MainWindow(QMainWindow):
         self.geometry_animation = None
         
         # 保存动画引用防止被垃圾回收
-        self.animations = []
+        self.animations: List[Optional[QPropertyAnimation]] = []
         
         self.init_ui()
         self.init_window_properties()
@@ -195,12 +196,20 @@ class MainWindow(QMainWindow):
         
         logger.info("组件更新定时器已启动")
         
-    def update_components(self):
+    def update_components(self) -> None:
         """更新所有组件 - 严格按照ClassIsland的更新逻辑"""
         try:
             for component in self.components:
-                if hasattr(component, 'update_content'):
+                # 根据组件类型调用相应的方法
+                # 使用类型检查来避免Pylance错误
+                from core.components.clock_component import ClockComponent
+                from ui.components.schedule_component import ScheduleComponent
+                from core.components.date_component import DateComponent
+                
+                if isinstance(component, (ClockComponent, ScheduleComponent)) and hasattr(component, 'update_content'):
                     component.update_content()
+                elif isinstance(component, DateComponent) and hasattr(component, 'update_date'):
+                    component.update_date()
         except Exception as e:
             logger.error(f"更新组件时发生错误: {e}")
             
@@ -209,12 +218,12 @@ class MainWindow(QMainWindow):
         # 当屏幕分辨率或配置发生变化时，重新调整窗口位置
         self.move_to_top_center()
         
-    def enterEvent(self, event: QEvent):
+    def enterEvent(self, event: QEnterEvent) -> None:
         """鼠标进入窗口事件"""
         self.animate_opacity(1.0, 200)
         super().enterEvent(event)
         
-    def leaveEvent(self, event: QEvent):
+    def leaveEvent(self, event: QEvent) -> None:
         """鼠标离开窗口事件"""
         self.animate_opacity(0.95, 200)
         super().leaveEvent(event)
@@ -231,12 +240,13 @@ class MainWindow(QMainWindow):
         self.opacity_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
         # 保存动画引用防止被垃圾回收
-        self.animations.append(self.opacity_animation)
-        self.opacity_animation.finished.connect(lambda: self._remove_animation(self.opacity_animation))
+        if self.opacity_animation:
+            self.animations.append(self.opacity_animation)
+            self.opacity_animation.finished.connect(lambda: self._remove_animation(self.opacity_animation))
         
         self.opacity_animation.start()
         
-    def _remove_animation(self, animation: QPropertyAnimation):
+    def _remove_animation(self, animation: Optional[QPropertyAnimation]) -> None:
         """从动画列表中移除已完成的动画"""
         if animation in self.animations:
             self.animations.remove(animation)
@@ -267,7 +277,7 @@ class MainWindow(QMainWindow):
         self.windowStateChanged.emit(False)
         logger.info("主窗口已隐藏")
         
-    def closeEvent(self, event: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """窗口关闭事件"""
         logger.info("主窗口正在关闭")
         # 停止定时器
@@ -278,7 +288,7 @@ class MainWindow(QMainWindow):
             
         # 停止所有动画
         for animation in self.animations[:]:  # 使用切片复制避免修改列表时的问题
-            if animation.state() == QPropertyAnimation.State.Running:
+            if animation and hasattr(animation, 'state') and animation.state() == QPropertyAnimation.State.Running:
                 animation.stop()
         self.animations.clear()
         
