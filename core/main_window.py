@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 from PySide6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, 
-                             QStatusBar, QMenuBar, QMenu, QAction, QToolBar)
+                             QStatusBar, QMenuBar, QMenu, QToolBar)
+from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence
 

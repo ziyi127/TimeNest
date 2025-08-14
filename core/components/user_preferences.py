@@ -1,8 +1,10 @@
 import json
 import logging
 import os
+import sys
+import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 class UserPreferences:
@@ -11,7 +13,7 @@ class UserPreferences:
     def __init__(self, app_name: str = "TimeNest"):
         self.logger = logging.getLogger(__name__)
         self.app_name = app_name
-        self.preferences = {}
+        self.preferences: Dict[str, Any] = {}
         self.config_path = self._get_config_path()
         self._load_preferences()
         
@@ -86,7 +88,7 @@ class UserPreferences:
         except Exception as e:
             self.logger.error(f"保存偏好设置失败: {e}", exc_info=True)
             
-    def get_preference(self, key: str, default: Any = None) -> Any:
+    def get_preference(self, key: str, default: Optional[Any] = None) -> Any:
         """获取偏好设置值"""
         return self.preferences.get(key, default)
         

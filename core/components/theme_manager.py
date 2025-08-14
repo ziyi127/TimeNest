@@ -1,9 +1,9 @@
-import logging
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Optional
+import logging
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt, Property, Signal, QObject
-from PySide6.QtGui import QPalette, QColor, QFont
+from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtGui import QColor
 
 
 class ThemeType(Enum):
@@ -13,11 +13,11 @@ class ThemeType(Enum):
     AUTO = "auto"
 
 
-class ThemeManager:
+class ThemeManager(QObject):
     """主题管理器 - 管理应用主题和样式"""
     
     # 主题变化信号
-    theme_changed_signal = Signal(object)
+    theme_changed_signal = Signal(ThemeType)
     
     _instance = None
     
@@ -32,6 +32,7 @@ class ThemeManager:
         """初始化主题管理器"""
         if self._initialized:
             return
+        super().__init__()
             
         self.logger = logging.getLogger(__name__)
         self._current_theme = ThemeType.DARK
@@ -135,7 +136,7 @@ class ThemeManager:
         """
         return stylesheet
         
-    def apply_theme_to_widget(self, widget):
+    def apply_theme_to_widget(self, widget: 'QWidget'):
         """将当前主题应用到指定窗口部件"""
         try:
             # 应用样式表
@@ -147,12 +148,12 @@ class ThemeManager:
                 
             # 更新窗口背景
             if hasattr(widget, 'setAttribute'):
-                widget.setAttribute(Qt.WA_TranslucentBackground, True)
+                widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
                 
         except Exception as e:
             self.logger.error(f"应用主题到窗口部件时出错: {e}")
     
-    def apply_theme_to_component(self, component):
+    def apply_theme_to_component(self, component: 'QWidget'):
         """将主题应用到指定组件"""
         try:
             # 获取当前主题颜色
