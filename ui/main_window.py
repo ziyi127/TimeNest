@@ -1,8 +1,7 @@
-import sys
 import logging
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QLabel
-from PySide6.QtCore import Qt, QTimer, QPoint, Signal, QEasingCurve, QPropertyAnimation
-from PySide6.QtGui import QScreen, QFont, QPalette
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout
+from PySide6.QtCore import Qt, QTimer, Signal, QEasingCurve, QPropertyAnimation, QEvent
+from PySide6.QtGui import QScreen, QResizeEvent, QMoveEvent, QShowEvent, QHideEvent, QCloseEvent
 
 from ui.components.schedule_component import ScheduleComponent
 from core.components.clock_component import ClockComponent
@@ -17,11 +16,13 @@ class MainWindow(QMainWindow):
     # 窗口状态改变信号
     windowStateChanged = Signal(bool)  # visible
     
-    def __init__(self, lessons_service=None, exact_time_service=None, profile_service=None):
+    def __init__(self, lessons_service=None, exact_time_service=None):
+        # 类型注解
+        from core.services.lessons_service import LessonsService
+        from core.services.time_service import TimeService
         super().__init__()
-        self.lessons_service = lessons_service
-        self.exact_time_service = exact_time_service
-        self.profile_service = profile_service
+        self.lessons_service: LessonsService | None = lessons_service
+        self.exact_time_service: TimeService | None = exact_time_service
         
         # 组件列表
         self.components = []
@@ -61,7 +62,7 @@ class MainWindow(QMainWindow):
         self.left_layout = QHBoxLayout(self.left_container)
         self.left_layout.setContentsMargins(0, 0, 0, 0)
         self.left_layout.setSpacing(12)
-        self.left_layout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
         # 右侧组件区域（课程表）
         self.right_container = QWidget()
@@ -69,7 +70,7 @@ class MainWindow(QMainWindow):
         self.right_layout = QHBoxLayout(self.right_container)
         self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setSpacing(0)
-        self.right_layout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         # 添加容器到主布局
         self.main_layout.addWidget(self.left_container)
@@ -121,7 +122,7 @@ class MainWindow(QMainWindow):
         self.setWindowOpacity(0.95)
         
         # 启用鼠标事件
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
         
         # 连接鼠标事件
         self.setMouseTracking(True)
@@ -154,8 +155,7 @@ class MainWindow(QMainWindow):
             
             schedule_component = ScheduleComponent(
                 lessons_service=self.lessons_service,
-                exact_time_service=self.exact_time_service,
-                profile_service=self.profile_service
+                exact_time_service=self.exact_time_service
             )
             
             # 添加时钟和日期组件到左侧容器
@@ -201,26 +201,26 @@ class MainWindow(QMainWindow):
         # 当屏幕分辨率或配置发生变化时，重新调整窗口位置
         self.move_to_top_center()
         
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEvent):
         """鼠标进入窗口事件"""
         self.animate_opacity(1.0, 200)
         super().enterEvent(event)
         
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: QEvent):
         """鼠标离开窗口事件"""
         self.animate_opacity(0.95, 200)
         super().leaveEvent(event)
         
-    def animate_opacity(self, target_opacity, duration):
+    def animate_opacity(self, target_opacity: float, duration: int):
         """窗口透明度动画"""
-        if self.opacity_animation and self.opacity_animation.state() == QPropertyAnimation.Running:
+        if self.opacity_animation and self.opacity_animation.state() == QPropertyAnimation.State.Running:
             self.opacity_animation.stop()
             
         self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
         self.opacity_animation.setDuration(duration)
         self.opacity_animation.setStartValue(self.windowOpacity())
         self.opacity_animation.setEndValue(target_opacity)
-        self.opacity_animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.opacity_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
         # 保存动画引用防止被垃圾回收
         self.animations.append(self.opacity_animation)
@@ -228,38 +228,38 @@ class MainWindow(QMainWindow):
         
         self.opacity_animation.start()
         
-    def _remove_animation(self, animation):
+    def _remove_animation(self, animation: QPropertyAnimation):
         """从动画列表中移除已完成的动画"""
         if animation in self.animations:
             self.animations.remove(animation)
             
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         """窗口大小改变事件"""
         super().resizeEvent(event)
         # 保持窗口在屏幕中央
         self.move_to_top_center()
         logger.debug(f"窗口大小改变: {self.width()}x{self.height()}")
         
-    def moveEvent(self, event):
+    def moveEvent(self, event: QMoveEvent):
         """窗口移动事件"""
         super().moveEvent(event)
         logger.debug(f"窗口位置改变: ({self.x()}, {self.y()})")
         
-    def showEvent(self, event):
+    def showEvent(self, event: QShowEvent):
         """窗口显示事件"""
         super().showEvent(event)
         self.is_visible = True
         self.windowStateChanged.emit(True)
         logger.info("主窗口已显示")
         
-    def hideEvent(self, event):
+    def hideEvent(self, event: QHideEvent):
         """窗口隐藏事件"""
         super().hideEvent(event)
         self.is_visible = False
         self.windowStateChanged.emit(False)
         logger.info("主窗口已隐藏")
         
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent):
         """窗口关闭事件"""
         logger.info("主窗口正在关闭")
         # 停止定时器
@@ -270,7 +270,7 @@ class MainWindow(QMainWindow):
             
         # 停止所有动画
         for animation in self.animations[:]:  # 使用切片复制避免修改列表时的问题
-            if animation.state() == QPropertyAnimation.Running:
+            if animation.state() == QPropertyAnimation.State.Running:
                 animation.stop()
         self.animations.clear()
         

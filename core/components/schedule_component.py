@@ -1,1 +1,1 @@
-../../ui/components/schedule_component.py
+from ui.components.schedule_component import ScheduleComponent

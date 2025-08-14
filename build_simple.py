@@ -5,7 +5,7 @@
 简单的构建脚本，用于测试PyInstaller是否能正常工作
 """
 
-import os
+
 import sys
 import subprocess
 from pathlib import Path
@@ -14,12 +14,7 @@ def build_executable():
     """构建可执行文件"""
     print("开始构建TimeNest可执行文件...")
     
-    # 检查是否安装了PyInstaller
-    try:
-        import PyInstaller
-    except ImportError:
-        print("PyInstaller未安装，正在安装...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
+
     
     # 获取项目根目录
     project_root = Path(__file__).parent.resolve()
