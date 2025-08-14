@@ -1,5 +1,7 @@
 import sys
 import logging
+from typing import List, Tuple, Type, Optional, Any
+from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 
@@ -8,7 +10,7 @@ from ui.settings_window import SettingsWindow
 from ui.profile_window import ProfileWindow
 from ui.swap_window import SwapWindow
 from ui.temp_class_plan_window import TempClassPlanWindow
-from core.services.component_registry import ComponentRegistryService, component_registry
+from core.services.component_registry import component_registry
 from core.services.time_service import TimeService
 from core.services.lessons_service import LessonsService
 from core.models.profile import TimeNestProfile
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 class TimeNestApplication:
     """TimeNest应用程序主类 - 仿ClassIsland架构"""
     
-    def __init__(self, argv=None):
+    def __init__(self, argv: Optional[List[str]] = None):
         self.app = None
         self.main_window = None
         self.settings_window = None
@@ -46,7 +48,7 @@ class TimeNestApplication:
         # 初始化应用程序
         self.init_application(argv or sys.argv)
         
-    def init_application(self, argv):
+    def init_application(self, argv: List[str]) -> None:
         """初始化应用程序"""
         logger.info("正在初始化TimeNest应用程序")
         
@@ -105,7 +107,7 @@ class TimeNestApplication:
         logger.info("正在注册组件")
         
         # 注册内置组件 - 使用ClassIsland兼容的GUID
-        component_mappings = [
+        component_mappings: List[Tuple[str, str, Type]] = [
             ("9E1AF71D-8F77-4B21-A342-448787104DD9", "时钟组件", ClockComponent),
             ("DF3F8295-21F6-482E-BADA-FA0E5F14BB66", "日期组件", DateComponent),
             ("1DB2017D-E374-4BC6-9D57-0B4ADF03A6B8", "课程表组件", ScheduleComponent),
@@ -120,6 +122,10 @@ class TimeNestApplication:
         
         registered_count = 0
         for guid, name, component_class in component_mappings:
+            # 为循环变量添加类型注解
+            guid: str
+            name: str
+            component_class: Type
             try:
                 component_info = self.component_registry.get_component_info(guid)
                 if component_info:
@@ -133,12 +139,15 @@ class TimeNestApplication:
                 logger.error(f"注册组件 {name} 时发生错误: {e}")
         
         # 确保所有组件类型都已正确设置
-        self.component_registry._register_builtin_components()
+        # 使用公共方法注册组件，如果没有公共方法则保持原样
+        # 使用类型: ignore注释忽略私有方法使用警告
+        self.component_registry._register_builtin_components()  # type: ignore
         logger.info(f"组件注册完成，共注册 {registered_count} 个组件，总组件数: {len(self.component_registry.registered_components)}")
         
         # 为组件注册设置信号连接
-        self.component_registry.component_added.connect(self.on_component_added)
-        self.component_registry.component_removed.connect(self.on_component_removed)
+        # 为信号连接添加类型注解
+        self.component_registry.component_added.connect(self.on_component_added)  # type: ignore
+        self.component_registry.component_removed.connect(self.on_component_removed)  # type: ignore
             
     def init_main_window(self):
         """初始化主窗口"""
@@ -158,7 +167,8 @@ class TimeNestApplication:
         """初始化系统托盘图标"""
         logger.info("正在初始化系统托盘图标")
         try:
-            self.tray_icon = create_tray_icon(self.app)
+            # 传递None作为parent，因为create_tray_icon需要QWidget类型
+            self.tray_icon = create_tray_icon(None)
             
             # 连接托盘图标信号
             if self.tray_icon:
@@ -253,8 +263,8 @@ class TimeNestApplication:
             import sys
             # 使用跨平台方式启动进程
             if sys.platform == "win32":
-                # Windows平台
-                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                # Windows平台 - 使用CREATE_NO_WINDOW标志实现静默运行
+                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NO_WINDOW)
             else:
                 # Unix/Linux/macOS平台
                 subprocess.Popen([sys.executable] + sys.argv)
@@ -369,18 +379,18 @@ class TimeNestApplication:
             
         logger.info("应用程序已关闭")
         
-    def on_component_added(self, component_info):
+    def on_component_added(self, component_info: Any) -> None:
         """处理组件添加事件"""
         logger.info(f"组件已添加: {component_info.name}")
         # 可以在这里添加组件添加后的逻辑，比如更新UI等
         
-    def on_component_removed(self, component_info):
+    def on_component_removed(self, component_info: Any) -> None:
         """处理组件移除事件"""
         logger.info(f"组件已移除: {component_info.name}")
         # 可以在这里添加组件移除后的逻辑
 
 
-def main(argv=None):
+def main(argv: Optional[List[str]] = None):
     """应用程序入口点"""
     # 配置日志
     logging.basicConfig(

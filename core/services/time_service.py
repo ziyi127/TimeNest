@@ -13,6 +13,8 @@ class TimeService(QObject):
     
     # 时间同步状态变化信号
     sync_status_changed = Signal(str)
+    # 时间同步完成信号
+    time_synced = Signal(datetime)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,6 +94,7 @@ class TimeService(QObject):
                     self.logger.info(f"成功地同步了时间，现在是 {ntp_time}")
                     self.sync_status_message = f"成功地在{ntp_time}同步了时间"
                     self.sync_status_changed.emit(self.sync_status_message)
+                    self.time_synced.emit(ntp_time)
                     return  # 成功同步，退出函数
                     
                 except Exception as e:

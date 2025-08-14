@@ -142,6 +142,9 @@ class MainWindow(QMainWindow):
         logger.info("正在初始化主窗口组件")
         
         try:
+            # 导入主题管理器
+            from core.components.theme_manager import theme_manager
+            
             # 创建组件实例 - 严格按照ClassIsland的组件顺序
             clock_component = ClockComponent(
                 lessons_service=self.lessons_service,
@@ -158,6 +161,11 @@ class MainWindow(QMainWindow):
                 exact_time_service=self.exact_time_service
             )
             
+            # 应用主题到组件
+            theme_manager.apply_theme_to_component(clock_component)
+            theme_manager.apply_theme_to_component(date_component)
+            theme_manager.apply_theme_to_component(schedule_component)
+            
             # 添加时钟和日期组件到左侧容器
             self.left_layout.addWidget(clock_component)
             self.left_layout.addWidget(date_component)
@@ -168,7 +176,7 @@ class MainWindow(QMainWindow):
             # 保存组件引用
             self.components = [clock_component, date_component, schedule_component]
             
-            logger.info(f"已初始化 {len(self.components)} 个组件")
+            logger.info(f"已初始化 {len(self.components)} 个组件，并应用主题")
             
         except Exception as e:
             logger.error(f"初始化组件时发生错误: {e}")

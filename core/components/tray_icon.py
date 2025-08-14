@@ -1,12 +1,11 @@
-import logging
 from datetime import datetime
-from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QMessageBox
+from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QMessageBox, QWidget
 from PySide6.QtGui import QAction, QIcon, QPixmap
 from PySide6.QtCore import Qt, Signal
 import sys
 import os
+import logging
 from pathlib import Path
-from core.components.theme_manager import theme_manager
 
 # 全局托盘图标实例
 _tray_icon = None
@@ -27,7 +26,7 @@ class TrayIcon(QSystemTrayIcon):
     load_temp_class_plan = Signal()
     swap_classes = Signal()
     
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
         self.is_main_window_visible = True
@@ -85,7 +84,21 @@ class TrayIcon(QSystemTrayIcon):
     def setup_icon(self):
         """设置托盘图标"""
         try:
-            # 尝试使用应用程序图标
+            # 优先使用logo.svg
+            project_root = Path(__file__).parent.parent.parent
+            assets_dir = project_root / "assets"
+            logo_path = assets_dir / "logo.svg"
+            
+            if logo_path.exists():
+                # 使用QPixmap加载SVG文件
+                pixmap = QPixmap(str(logo_path))
+                if not pixmap.isNull():
+                    self.setIcon(QIcon(pixmap))
+                    return
+                else:
+                    self.logger.warning("无法加载logo.svg作为托盘图标，尝试其他图标格式")
+                    
+            # 如果logo.svg不存在或无法加载，尝试其他图标
             icon_path = self.get_icon_path()
             if icon_path and icon_path.exists():
                 pixmap = QPixmap(str(icon_path))
@@ -94,6 +107,7 @@ class TrayIcon(QSystemTrayIcon):
                     return
                         
             # 使用系统默认图标
+            self.logger.warning("无法找到自定义图标，使用系统默认图标")
             if sys.platform == "win32":
                 # Windows系统默认图标
                 self.setIcon(QIcon.fromTheme("application-x-executable", 
@@ -126,7 +140,7 @@ class TrayIcon(QSystemTrayIcon):
         if icon.isNull():
             # 如果系统图标不可用，创建一个简单的文本图标
             pixmap = QPixmap(32, 32)
-            pixmap.fill(Qt.transparent)
+            pixmap.fill(Qt.GlobalColor.transparent)
             icon = QIcon(pixmap)
         return icon
         
@@ -271,7 +285,7 @@ PySide6版本: 未知
         """更新通知状态"""
         self.clear_notifications_action.setVisible(has_notifications)
         
-    def on_activated(self, reason):
+    def on_activated(self, reason: QSystemTrayIcon.ActivationReason):
         """处理托盘图标激活事件"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             # 单击托盘图标时切换主窗口可见性
@@ -290,7 +304,7 @@ PySide6版本: 未知
         msg_box.setDetailedText("详细错误信息:\n这是一个测试用的模拟错误")
         msg_box.exec()
         
-    def show_message(self, title: str, message: str, icon=QSystemTrayIcon.MessageIcon.Information, timeout=3000):
+    def show_message(self, title: str, message: str, icon: QSystemTrayIcon.MessageIcon = QSystemTrayIcon.MessageIcon.Information, timeout: int = 3000):
         """显示托盘消息"""
         self.showMessage(title, message, icon, timeout)
         
@@ -326,11 +340,11 @@ PySide6版本: 未知
             None, 
             "重启确认", 
             "确定要重启TimeNest吗？", 
-            QMessageBox.Yes | QMessageBox.No, 
-            QMessageBox.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+            QMessageBox.StandardButton.No
         )
         
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             self.restart_application.emit()
         
     def _exit_application(self):
@@ -340,15 +354,15 @@ PySide6版本: 未知
             None, 
             "退出确认", 
             "确定要退出TimeNest吗？", 
-            QMessageBox.Yes | QMessageBox.No, 
-            QMessageBox.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+            QMessageBox.StandardButton.No
         )
         
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             self.exit_application.emit()
 
 
-def create_tray_icon(parent=None):
+def create_tray_icon(parent: QWidget | None = None):
     """创建全局托盘图标实例"""
     global _tray_icon
     if _tray_icon is None:
