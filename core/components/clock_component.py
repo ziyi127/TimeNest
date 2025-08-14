@@ -99,9 +99,9 @@ class ClockComponent(QWidget):
                 
             # 根据设置决定时间格式
             if self.settings.show_seconds:
-                time_format = "{:%H:%M:%S}"
+                time_format = "%H:%M:%S"
             else:
-                time_format = "{:%H:%M}"
+                time_format = "%H:%M"
                 
             # 更新主时间显示
             self.main_time_display.setText(self.current_time.strftime(time_format))

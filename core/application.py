@@ -146,7 +146,6 @@ class TimeNestApplication:
         self.main_window = MainWindow(
             lessons_service=self.lessons_service,
             exact_time_service=self.time_service,
-            profile_service=self.profile_service
         )
         
         # 连接主窗口信号

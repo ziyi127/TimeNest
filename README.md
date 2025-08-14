@@ -1,6 +1,7 @@
 # TimeNest 🕐
 
-智能课程表桌面应用 - 完整重构自ClassIsland的Python实现
+智能课程表桌面应用 - 完整重构，由Python实现
+
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-GUI-red.svg)](https://www.qt.io/qt-for-python)
@@ -8,7 +9,7 @@
 
 ## 📋 项目概述
 
-TimeNest是一个基于Python 3.12+和PySide6开发的智能课程表桌面应用程序，完整重构自ClassIsland的C#实现。它提供了现代化的悬浮窗界面，支持智能课程表管理、可视化课程安排、多样化提醒系统和个性化主题定制。
+TimeNest是一个基于Python 3.12+和PySide6开发的智能课程表桌面应用程序，完整重构，由Python实现。它提供了现代化的悬浮窗界面，支持智能课程表管理、可视化课程安排、多样化提醒系统和个性化主题定制。
 
 ## 🌟 核心功能
 
@@ -51,17 +52,12 @@ TimeNest是一个基于Python 3.12+和PySide6开发的智能课程表桌面应�
 ### 方法一：使用启动脚本（推荐）
 ```bash
 # 克隆项目
-git clone <repository-url>
+git clone https://github.com/ziyi127/TimeNest.git
 cd TimeNest
 
-# Linux/macOS:
 # 运行启动脚本（自动创建虚拟环境并安装依赖）
 chmod +x start.sh
 ./start.sh
-
-# Windows:
-# 运行启动脚本（自动创建虚拟环境并安装依赖）
-start.bat
 ```
 
 ### 方法二：手动安装
@@ -86,11 +82,8 @@ python main.py
 
 ### 启动应用程序
 ```bash
-# Linux/macOS:
+# 使用启动脚本
 ./start.sh
-
-# Windows:
-start.bat
 
 # 或直接运行
 python main.py
@@ -203,41 +196,6 @@ TimeNest/
 - 用户体验优化
 - 多平台支持
 
-## 🚀 自动构建和发布
-
-### 支持的平台和发行版
-
-TimeNest使用GitHub Actions进行自动构建和发布，支持以下平台和发行版：
-
-#### Windows
-- Windows 10/11 (x64)
-
-#### Linux
-- **Debian系**: Ubuntu, Debian
-- **Red Hat系**: Fedora, CentOS
-- **Arch系**: Arch Linux
-- 通用便携式包 (适用于所有Linux发行版)
-
-#### macOS
-- macOS 10.15+ (x86_64 和 arm64)
-
-### 自动发布流程
-
-1. 当推送新的git标签(格式为`v*`)时，自动触发构建流程
-2. GitHub Actions会为所有支持的平台并行构建可执行文件
-3. 自动生成适用于各平台的安装包:
-   - Windows: ZIP便携包
-   - Linux: DEB包(Debian/Ubuntu)、RPM包(Red Hat/Fedora/CentOS)、PKG包(Arch Linux)和通用TAR.GZ便携包
-   - macOS: ZIP包
-4. 自动创建GitHub Release并上传所有构建产物
-
-### 手动触发构建
-
-项目维护者可以通过GitHub界面手动触发构建流程:
-1. 进入Actions选项卡
-2. 选择"Build and Release"工作流
-3. 点击"Run workflow"按钮
-
 ## 🧪 测试
 
 ```bash
@@ -284,11 +242,11 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🙏 致谢
 
-- 原项目ClassIsland提供了优秀的架构设计灵感
+- ClassIsland开发团队向我们给出了很多建议
 - PySide6团队提供了强大的GUI框架支持
 
 ---
 
 <p align="center">
-  <strong>🕐 TimeNest - 让时间更有价值 🕐</strong>
+  <strong>🕐 TimeNest - 让每一堂课更有规划！ 🕐</strong>
 </p>
