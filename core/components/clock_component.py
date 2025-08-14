@@ -61,14 +61,12 @@ class ClockComponent(QWidget):
         font = QFont("Microsoft YaHei", 18, QFont.Weight.Bold)
         self.main_time_display.setFont(font)
         
-        # 应用样式表 - 改进的样式
+        # 初始化时不设置样式表，由主题管理器统一应用
         self.main_time_display.setStyleSheet("""
             QLabel#mainTimeDisplay {
-                color: white;
                 background: transparent;
                 font-family: "Microsoft YaHei";
                 font-weight: bold;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
                 qproperty-alignment: AlignVCenter | AlignLeft;
             }
         """)

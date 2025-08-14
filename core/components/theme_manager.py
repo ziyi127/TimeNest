@@ -107,8 +107,8 @@ class ThemeManager(QObject):
                 font-weight: bold;
             }}
             QLabel#dateDisplay {{
-                color: {colors['text_secondary'].name()};
-                text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+                color: {colors['text_primary'].name()};
+                text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
                 font-size: 15px;
             }}
             QLabel#Tomorrow {{
@@ -178,12 +178,12 @@ class ThemeManager(QObject):
                     elif obj_name == "dateDisplay":
                         component.setStyleSheet(f"""
                             QLabel {{
-                                color: {colors['text_secondary'].name()};
+                                color: {colors['text_primary'].name()};
                                 background: transparent;
                                 font-family: "Microsoft YaHei";
                                 font-weight: normal;
                                 font-size: 15px;
-                                text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+                                text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
                             }}
                         """)
                         

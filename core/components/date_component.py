@@ -60,14 +60,12 @@ class DateComponent(QWidget):
         font = QFont("Microsoft YaHei", 15)
         self.date_display.setFont(font)
         
-        # 应用样式表 - 改进的样式
+        # 初始化时不设置样式表，由主题管理器统一应用
         self.date_display.setStyleSheet("""
             QLabel#dateDisplay {
-                color: #CCCCCC;
                 background: transparent;
                 font-family: "Microsoft YaHei";
                 font-weight: normal;
-                text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
                 qproperty-alignment: AlignVCenter | AlignLeft;
             }
         """)

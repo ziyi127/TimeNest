@@ -17,6 +17,13 @@ class SettingsWindow(QMainWindow):
         super().__init__(parent)
         self.setAttribute(Qt.WA_TranslucentBackground, False)  # 确保配置窗口不透明
         self.setAttribute(Qt.WA_NoSystemBackground, False)
+        
+        # 从主题管理器获取主题颜色并缓存
+        from core.components.theme_manager import theme_manager
+        self.theme_manager = theme_manager
+        self.theme = theme_manager.current_theme
+        self.colors = theme_manager.get_theme_colors(self.theme)
+        
         self.init_ui()
         self.setup_window_properties()
         
@@ -34,7 +41,13 @@ class SettingsWindow(QMainWindow):
         )
         
         # 居中显示
-        if self.parent():
+        screen = self.screen()
+        if screen:
+            screen_geometry = screen.geometry()
+            center_x = screen_geometry.width() // 2
+            center_y = screen_geometry.height() // 2
+            self.move(center_x - self.width() // 2, center_y - self.height() // 2)
+        elif self.parent():
             parent_center = self.parent().geometry().center()
             self.move(parent_center.x() - self.width() // 2, 
                      parent_center.y() - self.height() // 2)
@@ -65,6 +78,9 @@ class SettingsWindow(QMainWindow):
         
     def create_navigation_panel(self, parent):
         """创建导航面板"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+        
         # 导航框架
         nav_frame = QFrame()
         nav_frame.setObjectName("NavigationFrame")
@@ -80,14 +96,14 @@ class SettingsWindow(QMainWindow):
         title_label = QLabel("设置")
         title_label.setObjectName("TitleLabel")
         title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("""
-            QLabel {
+        title_label.setStyleSheet(f"""
+            QLabel {{
                 font-size: 16px;
                 font-weight: bold;
                 padding: 10px;
-                background-color: #2d2d2d;
-                color: white;
-            }
+                background-color: {colors['background'].name()};
+                color: {colors['text_primary'].name()};
+            }}
         """)
         nav_layout.addWidget(title_label)
         
@@ -95,19 +111,20 @@ class SettingsWindow(QMainWindow):
         self.nav_tree = QTreeWidget()
         self.nav_tree.setHeaderHidden(True)
         self.nav_tree.setIndentation(0)
-        self.nav_tree.setStyleSheet("""
-            QTreeWidget {
-                background-color: #f0f0f0;
+        self.nav_tree.setStyleSheet(f"""
+            QTreeWidget {{
+                background-color: {colors['background'].name()};
                 border: none;
-            }
-            QTreeWidget::item {
+                color: {colors['text_primary'].name()};
+            }}
+            QTreeWidget::item {{
                 padding: 8px;
-                border-bottom: 1px solid #ddd;
-            }
-            QTreeWidget::item:selected {
-                background-color: #0078d4;
+                border-bottom: 1px solid {colors['border'].name()};
+            }}
+            QTreeWidget::item:selected {{
+                background-color: {colors['accent'].name()};
                 color: white;
-            }
+            }}
         """)
         
         # 添加导航项
@@ -160,27 +177,31 @@ class SettingsWindow(QMainWindow):
         
     def create_content_area(self, parent):
         """创建内容区域"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         # 内容框架
         content_frame = QFrame()
         content_frame.setObjectName("ContentFrame")
         parent.addWidget(content_frame)
-        
+
         # 内容布局
         content_layout = QVBoxLayout(content_frame)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
-        
+
         # 标题栏
         self.title_bar = QLabel("基本设置")
         self.title_bar.setObjectName("ContentTitle")
-        self.title_bar.setStyleSheet("""
-            QLabel {
+        self.title_bar.setStyleSheet(f"""
+            QLabel {{
                 font-size: 18px;
                 font-weight: bold;
                 padding: 15px;
-                background-color: white;
-                border-bottom: 1px solid #ddd;
-            }
+                background-color: {colors['background'].name()};
+                color: {colors['text_primary'].name()};
+                border-bottom: 1px solid {colors['border'].name()};
+            }}
         """)
         content_layout.addWidget(self.title_bar)
         
@@ -223,15 +244,18 @@ class SettingsWindow(QMainWindow):
         
     def create_basic_settings_page(self):
         """创建基本设置页面"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("基本设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("在这里配置TimeNest的基本设置")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         # 基本设置组
@@ -260,15 +284,18 @@ class SettingsWindow(QMainWindow):
         
     def create_window_settings_page(self):
         """创建窗口设置页面"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("窗口设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("配置主窗口的显示和行为")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         # 窗口设置组
@@ -330,15 +357,18 @@ class SettingsWindow(QMainWindow):
         
     def create_schedule_settings_page(self):
         """创建课程表设置页面"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("课程表设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("配置课程表的显示和行为")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         layout.addStretch()
@@ -346,15 +376,18 @@ class SettingsWindow(QMainWindow):
         
     def create_notification_settings_page(self):
         """创建通知设置页面"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("通知设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("配置通知的显示和行为")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         layout.addStretch()
@@ -362,15 +395,18 @@ class SettingsWindow(QMainWindow):
         
     def create_appearance_settings_page(self):
         """创建外观设置页面"""
+        # 使用缓存的主题颜色
+        colors = self.colors
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("外观设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("配置应用程序的外观和主题")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         # 主题设置组
@@ -393,15 +429,20 @@ class SettingsWindow(QMainWindow):
         
     def create_privacy_settings_page(self):
         """创建隐私设置页面"""
+        # 从主题管理器获取主题颜色
+        from core.components.theme_manager import theme_manager
+        theme = theme_manager.current_theme
+        colors = theme_manager.get_theme_colors(theme)
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("隐私设置")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         description = QLabel("配置隐私相关的设置")
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 10px 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 10px 20px;")
         layout.addWidget(description)
         
         layout.addStretch()
@@ -409,22 +450,27 @@ class SettingsWindow(QMainWindow):
         
     def create_about_page(self):
         """创建关于页面"""
+        # 从主题管理器获取主题颜色
+        from core.components.theme_manager import theme_manager
+        theme = theme_manager.current_theme
+        colors = theme_manager.get_theme_colors(theme)
+
         page = QWidget()
         layout = QVBoxLayout(page)
         
         title = QLabel("关于 TimeNest")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin: 20px;")
+        title.setStyleSheet(f"font-size: 24px; font-weight: bold; margin: 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(title)
         
         version_label = QLabel("版本: 1.0.2")
-        version_label.setStyleSheet("font-size: 16px; margin: 10px 20px;")
+        version_label.setStyleSheet(f"font-size: 16px; margin: 10px 20px; color: {colors['text_primary'].name()};")
         layout.addWidget(version_label)
         
         description = QLabel(
             "TimeNest 是一个智能课程表桌面应用程序，\n"
             "完整重构自ClassIsland的Python实现。"
         )
-        description.setStyleSheet("font-size: 14px; color: #666; margin: 20px;")
+        description.setStyleSheet(f"font-size: 14px; color: {colors['text_secondary'].name()}; margin: 20px;")
         layout.addWidget(description)
         
         layout.addStretch()

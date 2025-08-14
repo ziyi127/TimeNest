@@ -263,8 +263,8 @@ class TimeNestApplication:
             import sys
             # 使用跨平台方式启动进程
             if sys.platform == "win32":
-                # Windows平台
-                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                # Windows平台 - 使用CREATE_NO_WINDOW标志实现静默运行
+                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NO_WINDOW)
             else:
                 # Unix/Linux/macOS平台
                 subprocess.Popen([sys.executable] + sys.argv)
