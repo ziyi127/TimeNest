@@ -4,13 +4,13 @@
 
 import os
 import importlib.util
-import logging
 from typing import Dict, List, Optional, Any
 from pathlib import Path
+import logging
 
 from plugins.plugin_interface import PluginInterface
 from models.plugin_config import PluginConfig
-from utils.logger import get_logger
+from utils.logger import setup_logger
 
 
 class PluginManager:
@@ -26,13 +26,19 @@ class PluginManager:
         self.plugins_dir = Path(plugins_dir)
         self.plugins: Dict[str, PluginInterface] = {}
         self.plugin_configs: Dict[str, PluginConfig] = {}
-        self.logger = get_logger("PluginManager")
+        self.logger = setup_logger("PluginManager")
         self.app_context: Any = None
         
         # 确保插件目录存在
         if not self.plugins_dir.exists():
             self.plugins_dir.mkdir(parents=True, exist_ok=True)
             self.logger.info(f"创建插件目录: {self.plugins_dir}")
+            
+        # 创建插件配置目录
+        configs_dir = self.plugins_dir / "configs"
+        if not configs_dir.exists():
+            configs_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"创建插件配置目录: {configs_dir}")
     
     def set_app_context(self, app_context: Any) -> None:
         """
@@ -42,6 +48,57 @@ class PluginManager:
             app_context: 应用上下文
         """
         self.app_context = app_context
+    
+    def _check_dependencies(self, plugin: PluginInterface) -> bool:
+        """
+        检查插件依赖
+        
+        Args:
+            plugin: 插件实例
+            
+        Returns:
+            bool: 依赖是否满足
+        """
+        # 获取插件配置
+        plugin_config = self.plugin_configs.get(plugin.plugin_id)
+        if not plugin_config or not plugin_config.dependencies:
+            return True
+        
+        # 检查每个依赖是否已加载
+        for dep_id in plugin_config.dependencies:
+            if dep_id not in self.plugins:
+                self.logger.error(f"插件 {plugin.name} 依赖的插件未加载: {dep_id}")
+                return False
+        
+        return True
+    
+    def _get_or_create_plugin_config(self, plugin: PluginInterface) -> PluginConfig:
+        """
+        获取或创建插件配置
+        
+        Args:
+            plugin: 插件实例
+            
+        Returns:
+            PluginConfig: 插件配置
+        """
+        # 检查是否已存在配置
+        if plugin.plugin_id in self.plugin_configs:
+            return self.plugin_configs[plugin.plugin_id]
+        
+        # 创建新的插件配置
+        config = PluginConfig(
+            id=plugin.plugin_id,
+            name=plugin.name,
+            version=plugin.version,
+            enabled=True
+        )
+        
+        # 保存配置到文件
+        config_file = self.plugins_dir / "configs" / f"{plugin.plugin_id}.json"
+        config.save_to_file(str(config_file))
+        
+        return config
     
     def load_plugin_configs(self) -> None:
         """加载所有插件配置"""
@@ -53,9 +110,11 @@ class PluginManager:
         
         for config_file in configs_dir.glob("*.json"):
             try:
-                # 这里需要实现从JSON文件加载配置的逻辑
-                # 暂时跳过具体实现，后续再补充
-                pass
+                # 从文件加载插件配置
+                plugin_config = PluginConfig.load_from_file(str(config_file))
+                if plugin_config:
+                    self.plugin_configs[plugin_config.id] = plugin_config
+                    self.logger.info(f"加载插件配置: {plugin_config.name} ({plugin_config.id})")
             except Exception as e:
                 self.logger.error(f"加载插件配置失败 {config_file}: {e}")
     
@@ -66,7 +125,7 @@ class PluginManager:
         Returns:
             List[str]: 插件模块路径列表
         """
-        plugin_modules = []
+        plugin_modules: List[str] = []
         
         # 遍历插件目录查找插件
         for item in self.plugins_dir.iterdir():
@@ -116,10 +175,21 @@ class PluginManager:
                 self.logger.error(f"插件 {plugin_name} 未正确实现PluginInterface")
                 return None
             
+            # 检查插件依赖
+            if not self._check_dependencies(plugin_instance):
+                self.logger.error(f"插件依赖检查失败: {plugin_instance.name} ({plugin_instance.plugin_id})")
+                return None
+            
             # 初始化插件
             if plugin_instance.initialize(self.app_context):
                 plugin_instance.enabled = True
                 self.plugins[plugin_instance.plugin_id] = plugin_instance
+                
+                # 加载或创建插件配置
+                config = self._get_or_create_plugin_config(plugin_instance)
+                if config:
+                    self.plugin_configs[plugin_instance.plugin_id] = config
+                
                 self.logger.info(f"成功加载插件: {plugin_instance.name} ({plugin_instance.plugin_id})")
                 return plugin_instance
             else:
@@ -210,7 +280,7 @@ class PluginManager:
         Returns:
             List[Dict[str, Any]]: 插件信息列表
         """
-        plugin_list = []
+        plugin_list: List[Dict[str, Any]] = []
         for plugin in self.plugins.values():
             plugin_list.append(plugin.get_metadata())
         return plugin_list
