@@ -1,1 +1,0 @@
-from ui.components.schedule_component import ScheduleComponent
