@@ -1,6 +1,10 @@
 """
+<<<<<<< HEAD
 插件配置数据模型
 定义插件配置相关的核心数据结构
+=======
+插件配置模型类
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 """
 
 from typing import Dict, Any, Optional, List

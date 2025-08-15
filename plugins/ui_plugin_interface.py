@@ -1,6 +1,9 @@
 """
 用户界面相关插件接口
+<<<<<<< HEAD
 定义用户界面相关插件的标准接口
+=======
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 """
 
 from abc import ABC, abstractmethod

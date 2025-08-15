@@ -20,6 +20,7 @@ from services.reminder_service import ReminderService
 from services.sync_service import SyncService
 from services.config_service import ConfigService
 
+<<<<<<< HEAD
 # 新增的功能模块服务导入
 from services.weather_service import WeatherService
 from services.countdown_service import CountdownService
@@ -29,6 +30,8 @@ from services.startup_service import StartupService
 from services.debug_service import DebugService
 from services.time_sync_service import TimeSyncService
 
+=======
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 
 class ServiceFactory:
     """服务工厂类"""
@@ -78,6 +81,7 @@ class ServiceFactory:
             "conflict_detection": ConflictDetectionService,
             "reminder": ReminderService,
             "sync": SyncService,
+<<<<<<< HEAD
             "config": ConfigService,
             # 新增的功能模块服务映射
             "weather": WeatherService,
@@ -87,6 +91,9 @@ class ServiceFactory:
             "startup": StartupService,
             "debug": DebugService,
             "time_sync": TimeSyncService
+=======
+            "config": ConfigService
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
         }
         
         if service_type not in service_map:
@@ -223,6 +230,7 @@ class ServiceFactory:
         Returns:
             配置服务实例
         """
+<<<<<<< HEAD
         return cls.get_service("config")
     
     # 新增的功能模块服务获取方法
@@ -295,3 +303,6 @@ class ServiceFactory:
             时间同步服务实例
         """
         return cls.get_service("time_sync")
+=======
+        return cls.get_service("config")
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214

@@ -1,6 +1,9 @@
 """
 插件管理器模块
+<<<<<<< HEAD
 负责插件的加载、卸载、管理和执行
+=======
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 """
 
 import importlib.util

@@ -1,6 +1,9 @@
 """
 课程提醒插件示例
+<<<<<<< HEAD
 实现课程提醒功能的插件示例
+=======
+>>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 """
 
 from typing import Any, Dict, List, Optional
