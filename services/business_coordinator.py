@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from models.class_item import ClassItem
 from models.class_plan import ClassPlan
 from models.temp_change import TempChange
-from models.cycle_schedule import CycleSchedule, ScheduleItem
+from models.cycle_schedule import CycleSchedule
 from services.service_factory import ServiceFactory
 from utils.logger import get_service_logger
 
@@ -116,7 +116,7 @@ class BusinessCoordinator:
             created_cycle_schedule = cycle_schedule_service.create_cycle_schedule(cycle_schedule)
             
             # 生成课程表项
-            generated_schedules = []
+            generated_schedules: List[ClassPlan] = []
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             
             for i in range(weeks):
@@ -186,7 +186,7 @@ class BusinessCoordinator:
             temp_changes = temp_change_service.get_temp_changes_by_date(date_str)
             
             # 构建课程表
-            weekly_schedule = []
+            weekly_schedule: List[tuple[ClassItem, ClassPlan]] = []
             for schedule in schedules:
                 # 检查是否有临时换课
                 temp_change = None

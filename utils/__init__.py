@@ -33,6 +33,28 @@ from .exceptions import (
     BusinessLogicException
 )
 
+from .exception_handler import (
+    ExceptionHandler,
+    global_exception_handler
+)
+
+from .enhanced_logger import (
+    EnhancedLogger,
+    setup_enhanced_logger,
+    debug,
+    info,
+    warning,
+    error,
+    critical,
+    exception,
+    log_system_info,
+    ErrorRecovery,
+    format_friendly_error_message,
+    get_cross_platform_path,
+    set_cross_platform_permissions,
+    get_cross_platform_encoding
+)
+
 __all__ = [
     "validate_course_data",
     "validate_schedule_data",
@@ -51,5 +73,21 @@ __all__ = [
     "ConflictException",
     "NotFoundException",
     "DataAccessException",
-    "BusinessLogicException"
+    "BusinessLogicException",
+    "ExceptionHandler",
+    "global_exception_handler",
+    "EnhancedLogger",
+    "setup_enhanced_logger",
+    "debug",
+    "info",
+    "warning",
+    "error",
+    "critical",
+    "exception",
+    "log_system_info",
+    "ErrorRecovery",
+    "format_friendly_error_message",
+    "get_cross_platform_path",
+    "set_cross_platform_permissions",
+    "get_cross_platform_encoding"
 ]

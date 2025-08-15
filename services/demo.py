@@ -9,7 +9,7 @@ from models.temp_change import TempChange
 from models.cycle_schedule import CycleSchedule, CycleScheduleItem, ScheduleItem
 from services.service_factory import ServiceFactory
 from services.business_coordinator import BusinessCoordinator
-from utils.exceptions import ValidationException, ConflictException, NotFoundException
+from utils.exceptions import ValidationException, ConflictException
 
 
 def demo_course_service():
@@ -34,12 +34,15 @@ def demo_course_service():
         
         # 查询课程
         retrieved_course = course_service.get_course_by_id("math_001")
-        print(f"查询课程成功: {retrieved_course.name}")
-        
-        # 更新课程
-        retrieved_course.name = "线性代数"
-        updated_course = course_service.update_course("math_001", retrieved_course)
-        print(f"更新课程成功: {updated_course.name}")
+        if retrieved_course:
+            print(f"查询课程成功: {retrieved_course.name}")
+            
+            # 更新课程
+            retrieved_course.name = "线性代数"
+            updated_course = course_service.update_course("math_001", retrieved_course)
+            print(f"更新课程成功: {updated_course.name}")
+        else:
+            print("查询课程失败: 课程不存在")
         
         # 查询所有课程
         all_courses = course_service.get_all_courses()
@@ -76,7 +79,10 @@ def demo_schedule_service():
         
         # 查询课程表项
         retrieved_schedule = schedule_service.get_schedule_by_id("schedule_001")
-        print(f"查询课程表项成功: 星期{retrieved_schedule.day_of_week}")
+        if retrieved_schedule:
+            print(f"查询课程表项成功: 星期{retrieved_schedule.day_of_week}")
+        else:
+            print("查询课程表项失败: 课程表项不存在")
         
         # 根据日期查询课程表项
         schedules_by_date = schedule_service.get_schedules_by_date("2023-10-15")
@@ -111,11 +117,17 @@ def demo_temp_change_service():
         
         # 查询临时换课
         retrieved_temp_change = temp_change_service.get_temp_change_by_id("temp_001")
-        print(f"查询临时换课成功: 换课日期 {retrieved_temp_change.change_date}")
+        if retrieved_temp_change:
+            print(f"查询临时换课成功: 换课日期 {retrieved_temp_change.change_date}")
+        else:
+            print("查询临时换课失败: 临时换课不存在")
         
         # 标记为已使用
         used_temp_change = temp_change_service.mark_temp_change_as_used("temp_001")
-        print(f"标记临时换课为已使用: {used_temp_change.used}")
+        if used_temp_change:
+            print(f"标记临时换课为已使用: {used_temp_change.used}")
+        else:
+            print("标记临时换课为已使用失败: 临时换课不存在")
         
     except ValidationException as e:
         print(f"数据验证失败: {e.message}, 错误: {e.errors}")
@@ -157,7 +169,10 @@ def demo_cycle_schedule_service():
         
         # 查询循环课程表
         retrieved_cycle_schedule = cycle_schedule_service.get_cycle_schedule_by_id("cycle_001")
-        print(f"查询循环课程表成功: 循环长度 {retrieved_cycle_schedule.cycle_length}")
+        if retrieved_cycle_schedule:
+            print(f"查询循环课程表成功: 循环长度 {retrieved_cycle_schedule.cycle_length}")
+        else:
+            print("查询循环课程表失败: 循环课程表不存在")
         
         # 生成指定日期的课程表项
         schedule_items = cycle_schedule_service.generate_schedule_for_date(

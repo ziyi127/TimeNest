@@ -12,11 +12,11 @@ class TimeSlot:
     """时间段模型"""
     start_time: str  # 格式: HH:MM
     end_time: str    # 格式: HH:MM
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return asdict(self)
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TimeSlot':
         """从字典创建TimeSlot实例"""
@@ -34,7 +34,7 @@ class ClassItem:
     teacher: str
     location: str
     duration: TimeSlot
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
@@ -44,7 +44,7 @@ class ClassItem:
             'location': self.location,
             'duration': self.duration.to_dict()
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ClassItem':
         """从字典创建ClassItem实例"""

@@ -9,6 +9,17 @@ from services.schedule_service import ScheduleService
 from services.temp_change_service import TempChangeService
 from services.cycle_schedule_service import CycleScheduleService
 
+# 新增的服务导入
+from services.user_service import UserService
+from services.notification_service import NotificationService
+from services.statistics_service import StatisticsService
+from services.data_service import DataService
+from services.backup_service import BackupService
+from services.conflict_detection_service import ConflictDetectionService
+from services.reminder_service import ReminderService
+from services.sync_service import SyncService
+from services.config_service import ConfigService
+
 
 class ServiceFactory:
     """服务工厂类"""
@@ -48,7 +59,17 @@ class ServiceFactory:
             "course": CourseService,
             "schedule": ScheduleService,
             "temp_change": TempChangeService,
-            "cycle_schedule": CycleScheduleService
+            "cycle_schedule": CycleScheduleService,
+            # 新增的服务映射
+            "user": UserService,
+            "notification": NotificationService,
+            "statistics": StatisticsService,
+            "data": DataService,
+            "backup": BackupService,
+            "conflict_detection": ConflictDetectionService,
+            "reminder": ReminderService,
+            "sync": SyncService,
+            "config": ConfigService
         }
         
         if service_type not in service_map:
@@ -95,3 +116,94 @@ class ServiceFactory:
             循环课程表服务实例
         """
         return cls.get_service("cycle_schedule")
+    
+    # 新增的服务获取方法
+    @classmethod
+    def get_user_service(cls) -> UserService:
+        """
+        获取用户服务实例
+        
+        Returns:
+            用户服务实例
+        """
+        return cls.get_service("user")
+    
+    @classmethod
+    def get_notification_service(cls) -> NotificationService:
+        """
+        获取通知服务实例
+        
+        Returns:
+            通知服务实例
+        """
+        return cls.get_service("notification")
+    
+    @classmethod
+    def get_statistics_service(cls) -> StatisticsService:
+        """
+        获取统计服务实例
+        
+        Returns:
+            统计服务实例
+        """
+        return cls.get_service("statistics")
+    
+    @classmethod
+    def get_data_service(cls) -> DataService:
+        """
+        获取数据服务实例
+        
+        Returns:
+            数据服务实例
+        """
+        return cls.get_service("data")
+    
+    @classmethod
+    def get_backup_service(cls) -> BackupService:
+        """
+        获取备份服务实例
+        
+        Returns:
+            备份服务实例
+        """
+        return cls.get_service("backup")
+    
+    @classmethod
+    def get_conflict_detection_service(cls) -> ConflictDetectionService:
+        """
+        获取冲突检测服务实例
+        
+        Returns:
+            冲突检测服务实例
+        """
+        return cls.get_service("conflict_detection")
+    
+    @classmethod
+    def get_reminder_service(cls) -> ReminderService:
+        """
+        获取提醒服务实例
+        
+        Returns:
+            提醒服务实例
+        """
+        return cls.get_service("reminder")
+    
+    @classmethod
+    def get_sync_service(cls) -> SyncService:
+        """
+        获取同步服务实例
+        
+        Returns:
+            同步服务实例
+        """
+        return cls.get_service("sync")
+    
+    @classmethod
+    def get_config_service(cls) -> ConfigService:
+        """
+        获取配置服务实例
+        
+        Returns:
+            配置服务实例
+        """
+        return cls.get_service("config")

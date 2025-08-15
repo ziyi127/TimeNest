@@ -166,7 +166,7 @@ class CourseService:
                 return i
         return -1
     
-    def _check_course_conflicts(self, course: ClassItem, existing_courses: List[ClassItem] = None):
+    def _check_course_conflicts(self, course: ClassItem, existing_courses: Optional[List[ClassItem]] = None) -> None:
         """
         检查课程冲突
         
@@ -180,7 +180,7 @@ class CourseService:
         if existing_courses is None:
             existing_courses = self.courses
         
-        conflicts = []
+        conflicts: List[str] = []
         
         # 检查教师时间冲突
         teacher_conflicts = self._check_teacher_conflict(course, existing_courses)
@@ -209,7 +209,7 @@ class CourseService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for existing_course in existing_courses:
             # 如果是同一个教师且时间冲突
@@ -231,7 +231,7 @@ class CourseService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for existing_course in existing_courses:
             # 如果是同一个教室且时间冲突
@@ -253,7 +253,7 @@ class CourseService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for course2 in existing_courses:
             # 如果时间冲突

@@ -2,11 +2,9 @@
 插件管理器模块
 """
 
-import os
 import importlib.util
 from typing import Dict, List, Optional, Any
 from pathlib import Path
-import logging
 
 from plugins.plugin_interface import PluginInterface
 from models.plugin_config import PluginConfig
