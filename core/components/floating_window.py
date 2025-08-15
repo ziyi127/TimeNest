@@ -2,7 +2,8 @@ import logging
 from datetime import datetime
 from typing import Any, Optional
 
-from PySide6.QtCore import QEasingCurve, QEvent, QPropertyAnimation, Qt, QTimer
+from PySide6.QtCore import QEasingCurve, QEvent, Qt, QTimer, Signal
+from config import DISABLE_ANIMATIONS
 from PySide6.QtGui import (
     QColor,
     QCursor,
@@ -13,6 +14,7 @@ from PySide6.QtGui import (
     QPen,
 )
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtCore import QPoint
 
 from core.models.component_settings.floating_window_settings import (
     FloatingWindowSettings,
@@ -33,7 +35,7 @@ class FloatingWindow(QMainWindow):
         floating_settings: Optional[FloatingWindowSettings] = None,
     ):
         super().__init__()
-        self.logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = logging.getLogger(__name__)
 
         # 设置组件
         self.lesson_settings = lesson_settings or LessonControlSettings()
@@ -54,13 +56,13 @@ class FloatingWindow(QMainWindow):
         self.current_opacity = self.normal_opacity
 
         # 内容组件
-        self.content_widget = None
-        self.time_label = None
-        self.date_label = None
-        self.lesson_label = None
-        self.countdown_label = None
-        self.schedule_label = None
-        self.plugin_content = {}  # 存储插件内容 {identifier: widget}
+        self.content_widget: Optional[QWidget] = None
+        self.time_label: Optional[QLabel] = None
+        self.date_label: Optional[QLabel] = None
+        self.lesson_label: Optional[QLabel] = None
+        self.countdown_label: Optional[QLabel] = None
+        self.schedule_label: Optional[QLabel] = None
+        self.plugin_content: dict[str, QWidget] = {}  # 存储插件内容 {identifier: widget}
 
         # 初始化窗口
         self.init_window()
@@ -78,7 +80,7 @@ class FloatingWindow(QMainWindow):
         self.lesson_settings.setting_changed.connect(self.on_lesson_setting_changed)
         self.floating_settings.setting_changed.connect(self.on_floating_setting_changed)
 
-    def init_window(self):
+    def init_window(self) -> None:
         """初始化窗口属性"""
         # 设置窗口标志 - 固定在屏幕顶部，无边框
         self.setWindowFlags(
@@ -101,7 +103,7 @@ class FloatingWindow(QMainWindow):
         # 启用鼠标跟踪以支持悬停效果
         self.setMouseTracking(True)
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         """初始化UI"""
         # 创建中央部件
         self.content_widget = QWidget()
@@ -113,8 +115,8 @@ class FloatingWindow(QMainWindow):
         main_layout.setSpacing(0)
 
         # 创建内容区域
-        self.content_area = QWidget()
-        self.content_layout = QHBoxLayout(self.content_area)
+        self.content_area: QWidget = QWidget()
+        self.content_layout: QHBoxLayout = QHBoxLayout(self.content_area)
         self.content_layout.setContentsMargins(20, 10, 20, 10)
         self.content_layout.setSpacing(15)
 
@@ -158,21 +160,20 @@ class FloatingWindow(QMainWindow):
         self.plugin_content_added.connect(self._add_plugin_content)
         self.plugin_content_removed.connect(self._remove_plugin_content)
 
-    def init_animations(self):
-        """初始化动画"""
-        # 透明度动画
-        self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
-        self.opacity_animation.setDuration(200)  # 200ms的透明度过渡
-        self.opacity_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+    def init_animations(self) -> None:
+        """初始化动画 - 暂时禁用动画"""
+        # 不使用QPropertyAnimation，直接设置透明度
+        self.opacity_animation = None
+        self.logger.debug("已禁用floating_window的透明度动画")
 
-    def init_timers(self):
+    def init_timers(self) -> None:
         """初始化定时器"""
         # 每秒更新一次内容
-        self.update_timer = QTimer(self)
+        self.update_timer: QTimer = QTimer(self)
         self.update_timer.timeout.connect(self.update_content)
         self.update_timer.start(1000)
 
-    def center_window_top(self):
+    def center_window_top(self) -> None:
         """将窗口居中显示在屏幕顶部"""
         screen = self.screen()
         if screen:
@@ -182,19 +183,19 @@ class FloatingWindow(QMainWindow):
                 screen_geometry.top() + 10,  # 距离顶部10像素
             )
 
-    def enterEvent(self, event: QEnterEvent):
+    def enterEvent(self, event: QEnterEvent) -> None:
         """鼠标进入窗口事件"""
         if self.lesson_settings.enable_floating_window_hover_effect:
             self.set_opacity_with_animation(self.hover_opacity)
         super().enterEvent(event)
 
-    def leaveEvent(self, event: QEvent):
+    def leaveEvent(self, event: QEvent) -> None:
         """鼠标离开窗口事件"""
         if self.lesson_settings.enable_floating_window_hover_effect:
             self.set_opacity_with_animation(self.normal_opacity)
         super().leaveEvent(event)
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """鼠标按下事件 - 实现透明度效果"""
         if event.button() == Qt.MouseButton.LeftButton:
             # 触控透明效果
@@ -205,7 +206,7 @@ class FloatingWindow(QMainWindow):
             if self.lesson_settings.enable_floating_window_touch_effect:
                 self.set_opacity_with_animation(self.touch_opacity)
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         """鼠标释放事件"""
         if event.button() == Qt.MouseButton.LeftButton:
             # 恢复正常透明度
@@ -230,7 +231,7 @@ class FloatingWindow(QMainWindow):
                 else:
                     self.set_opacity_with_animation(self.normal_opacity)
 
-    def toggle_pin(self):
+    def toggle_pin(self) -> None:
         """切换固定/取消固定状态"""
         self.is_pinned = not self.is_pinned
         if self.is_pinned:
@@ -241,7 +242,7 @@ class FloatingWindow(QMainWindow):
             )
         self.show()
 
-    def set_pinned(self, pinned: bool):
+    def set_pinned(self, pinned: bool) -> None:
         """设置固定状态"""
         self.is_pinned = pinned
         if self.is_pinned:
@@ -252,16 +253,16 @@ class FloatingWindow(QMainWindow):
             )
         self.show()
 
-    def get_is_pinned(self):
+    def get_is_pinned(self) -> bool:
         """获取固定状态"""
         return self.is_pinned
 
-    def set_transparency(self, opacity: float):
+    def set_transparency(self, opacity: float) -> None:
         """设置窗口透明度"""
         self.normal_opacity = max(0.1, min(1.0, opacity))
         self.setWindowOpacity(self.normal_opacity)
 
-    def set_position(self, x: int, y: int):
+    def set_position(self, x: int, y: int) -> None:
         """设置窗口位置"""
         # 重写此方法以保持窗口始终在顶部
         screen = self.screen()
@@ -274,24 +275,27 @@ class FloatingWindow(QMainWindow):
             y = screen_geometry.top() + 10  # 始终距离顶部10像素
             self.move(x, y)
 
-    def get_position(self):
+    def get_position(self) -> QPoint:
         """获取窗口位置"""
         return self.pos()
 
-    def set_opacity_with_animation(self, target_opacity: float):
-        """使用动画设置窗口透明度"""
-        # 如果目标透明度与当前透明度相同，则不执行动画
-        if abs(self.windowOpacity() - target_opacity) < 0.01:
+    def set_opacity_with_animation(self, target_opacity: float) -> None:
+        """使用动画设置窗口透明度 - 根据全局配置决定是否使用动画"""
+        if DISABLE_ANIMATIONS:
+            self.logger.debug(f"全局禁用动画，直接设置悬浮窗透明度: {target_opacity}")
+            self.setWindowOpacity(target_opacity)
+            return
+        
+        # 如果未禁用动画，但动画对象未初始化，则直接设置
+        if self.opacity_animation is None:
+            self.logger.debug(f"动画对象未初始化，直接设置悬浮窗透明度: {target_opacity}")
+            self.setWindowOpacity(target_opacity)
             return
 
-        if self.opacity_animation.state() == QPropertyAnimation.State.Running:
-            self.opacity_animation.stop()
+        # 动画逻辑已禁用，此处留空以避免创建动画对象
+        self.setWindowOpacity(target_opacity)
 
-        self.opacity_animation.setStartValue(self.windowOpacity())
-        self.opacity_animation.setEndValue(target_opacity)
-        self.opacity_animation.start()
-
-    def on_setting_changed(self, key: str, value: Any):
+    def on_setting_changed(self, key: str, value: Any) -> None:
         """处理设置变更"""
         if key == "floating_window_hover_transparency":
             self.hover_opacity = value
@@ -307,23 +311,29 @@ class FloatingWindow(QMainWindow):
             # 触控效果开关变更，无需特殊处理
             pass
 
-    def update_content(self):
+    def update_content(self) -> None:
         """更新显示内容"""
         # 更新倒计时
         if self.floating_settings.show_countdown:
             self.update_countdown()
-            self.countdown_label.show()
+            if self.countdown_label is not None:
+                self.countdown_label.show()
         else:
-            self.countdown_label.hide()
+            if self.countdown_label is not None:
+                self.countdown_label.hide()
 
         # 更新实时时间
         if self.floating_settings.show_real_time:
             self.update_time()
-            self.time_label.show()
-            self.date_label.show()
+            if self.time_label is not None:
+                self.time_label.show()
+            if self.date_label is not None:
+                self.date_label.show()
         else:
-            self.time_label.hide()
-            self.date_label.hide()
+            if self.time_label is not None:
+                self.time_label.hide()
+            if self.date_label is not None:
+                self.date_label.hide()
 
         # 更新课程信息
         if (
@@ -332,19 +342,25 @@ class FloatingWindow(QMainWindow):
         ):
             self.update_lesson()
             if self.floating_settings.show_current_lesson:
-                self.lesson_label.show()
+                if self.lesson_label is not None:
+                    self.lesson_label.show()
             else:
-                self.lesson_label.hide()
+                if self.lesson_label is not None:
+                    self.lesson_label.hide()
 
             if self.floating_settings.show_full_schedule:
-                self.schedule_label.show()
+                if self.schedule_label is not None:
+                    self.schedule_label.show()
             else:
-                self.schedule_label.hide()
+                if self.schedule_label is not None:
+                    self.schedule_label.hide()
         else:
-            self.lesson_label.hide()
-            self.schedule_label.hide()
+            if self.lesson_label is not None:
+                self.lesson_label.hide()
+            if self.schedule_label is not None:
+                self.schedule_label.hide()
 
-    def update_countdown(self):
+    def update_countdown(self) -> None:
         """更新倒计时显示"""
         try:
             # 获取倒计时目标日期
@@ -366,7 +382,7 @@ class FloatingWindow(QMainWindow):
             self.logger.error(f"更新倒计时显示时出错: {e}")
             self.countdown_label.setText("倒计时: 错误")
 
-    def update_time(self):
+    def update_time(self) -> None:
         """更新时间显示"""
         try:
             current_time = datetime.now()
@@ -378,14 +394,18 @@ class FloatingWindow(QMainWindow):
             time_str = current_time.strftime(time_format)
             date_str = current_time.strftime(date_format)
 
-            self.time_label.setText(time_str)
-            self.date_label.setText(date_str)
+            if self.time_label is not None:
+                self.time_label.setText(time_str)
+            if self.date_label is not None:
+                self.date_label.setText(date_str)
         except Exception as e:
             self.logger.error(f"更新时间显示时出错: {e}")
-            self.time_label.setText("时间: 错误")
-            self.date_label.setText("日期: 错误")
+            if self.time_label is not None:
+                self.time_label.setText("时间: 错误")
+            if self.date_label is not None:
+                self.date_label.setText("日期: 错误")
 
-    def update_lesson(self):
+    def update_lesson(self) -> None:
         """更新课程信息显示"""
         # 这里需要根据实际的课程服务来实现
         # 暂时使用示例数据
@@ -403,7 +423,7 @@ class FloatingWindow(QMainWindow):
             self.lesson_label.setText("课程: 错误")
             self.schedule_label.setText("课表: 错误")
 
-    def on_lesson_setting_changed(self, key: str, value: Any):
+    def on_lesson_setting_changed(self, key: str, value: Any) -> None:
         """处理课程设置变更"""
         if key == "floating_window_hover_transparency":
             self.hover_opacity = value
@@ -419,13 +439,13 @@ class FloatingWindow(QMainWindow):
             # 触控效果开关变更，无需特殊处理
             pass
 
-    def on_floating_setting_changed(self, key: str, value: Any):
+    def on_floating_setting_changed(self, key: str, value: Any) -> None:
         """处理浮动窗口设置变更"""
         self.logger.info(f"浮动窗口设置变更: {key} = {value}")
         # 立即更新显示内容
         self.update_content()
 
-    def _add_plugin_content(self, identifier: str, widget):
+    def _add_plugin_content(self, identifier: str, widget: QWidget) -> None:
         """添加插件内容"""
         # 检查是否已存在同名内容
         if identifier in self.plugin_content:
@@ -441,7 +461,7 @@ class FloatingWindow(QMainWindow):
         widget.show()
         self.logger.info(f"已添加插件内容: {identifier}")
 
-    def _remove_plugin_content(self, identifier: str):
+    def _remove_plugin_content(self, identifier: str) -> None:
         """移除插件内容"""
         if identifier in self.plugin_content:
             widget = self.plugin_content[identifier]
@@ -452,7 +472,7 @@ class FloatingWindow(QMainWindow):
         else:
             self.logger.warning(f"插件内容 '{identifier}' 不存在")
 
-    def paintEvent(self, event: QPaintEvent):
+    def paintEvent(self, event: QPaintEvent) -> None:
         """绘制窗口背景 - 创建灵动岛样式外观"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

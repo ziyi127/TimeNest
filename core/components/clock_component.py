@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import Any, Optional
 
+from config import DISABLE_ANIMATIONS
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
@@ -72,17 +73,22 @@ class ClockComponent(QWidget):
         font = QFont("Microsoft YaHei", 18, QFont.Weight.Bold)
         self.main_time_display.setFont(font)
 
-        # 初始化时不设置样式表，由主题管理器统一应用
+        # 直接设置样式表确保颜色生效
         self.main_time_display.setStyleSheet(
             """
             QLabel#mainTimeDisplay {
+                color: white !important;
                 background: transparent;
                 font-family: "Microsoft YaHei";
                 font-weight: bold;
                 qproperty-alignment: AlignVCenter | AlignLeft;
             }
-        """
+            """
         )
+        # 额外直接设置调色板以确保颜色生效
+        palette = self.main_time_display.palette()
+        palette.setColor(self.main_time_display.foregroundRole(), Qt.GlobalColor.white)
+        self.main_time_display.setPalette(palette)
 
         # 添加到布局
         layout.addWidget(self.main_time_display)
@@ -144,38 +150,21 @@ class ClockComponent(QWidget):
             self.animate_separator()
 
     def animate_separator(self):
-        """为时间分隔符添加动画效果"""
-        # 停止正在运行的动画
-        if (
-            self.separator_animation
-            and self.separator_animation.state() == QPropertyAnimation.State.Running
-        ):
-            self.separator_animation.stop()
-
+        """为时间分隔符添加动画效果 - 根据全局配置决定是否使用动画"""
+        if DISABLE_ANIMATIONS:
+            # 直接设置透明度，不使用动画
+            if not self.is_time_separator_showing:
+                self.main_time_display.setWindowOpacity(0.5)
+            else:
+                self.main_time_display.setWindowOpacity(1.0)
+            return
+        
+        # 直接设置透明度，不使用动画
         if not self.is_time_separator_showing:
-            # 淡出效果
-            self.separator_animation = QPropertyAnimation(
-                self.main_time_display, b"windowOpacity"
-            )
-            self.separator_animation.setDuration(500)
-            self.separator_animation.setStartValue(1.0)
-            self.separator_animation.setEndValue(0.5)
-            self.separator_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+            self.main_time_display.setWindowOpacity(0.5)
         else:
-            # 淡入效果
-            self.separator_animation = QPropertyAnimation(
-                self.main_time_display, b"windowOpacity"
-            )
-            self.separator_animation.setDuration(500)
-            self.separator_animation.setStartValue(0.5)
-            self.separator_animation.setEndValue(1.0)
-            self.separator_animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
-
-        # 保存动画引用防止被垃圾回收
-        self.animations.append(self.separator_animation)
-        self.separator_animation.finished.connect(lambda: self._remove_animation(self.separator_animation))  # type: ignore
-
-        self.separator_animation.start()
+            self.main_time_display.setWindowOpacity(1.0)
+        return
 
     def _remove_animation(self, animation: QPropertyAnimation):
         """从动画列表中移除已完成的动画"""

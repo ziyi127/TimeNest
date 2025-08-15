@@ -525,29 +525,39 @@ class ScheduleComponent(QWidget):
         self.current_time_state_changed.emit()
 
     def animate_fade_in(self, widget: QWidget, delay: int = 0):
-        """淡入动画效果"""
+        """淡入动画效果 - 暂时禁用动画"""
         if not widget:
             return
 
-        # 创建动画对象
-        animation = QPropertyAnimation(widget, b"windowOpacity")
-        animation.setDuration(300)
-        animation.setStartValue(0.0)
-        animation.setEndValue(1.0)
-        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        # 保存widget名称（如果可能）
+        widget_name = 'unnamed'
+        try:
+            widget_name = widget.objectName()
+        except RuntimeError:
+            pass
 
-        # 添加延迟
+        # 直接设置透明度为1.0
+        def set_opacity():
+            # 检查widget是否仍然有效
+            try:
+                # 尝试访问widget的属性来检查它是否仍然有效
+                widget.windowOpacity()
+                widget.setWindowOpacity(1.0)
+                widget.show()
+            except RuntimeError:
+                self.logger.debug(f"尝试设置已销毁widget的透明度: {widget_name}")
+
+        # 处理延迟
         if delay > 0:
             timer = QTimer()
-            timer.timeout.connect(lambda: (animation.start(), timer.deleteLater()))
+            timer.timeout.connect(lambda: (set_opacity(), timer.deleteLater()))
             timer.setSingleShot(True)
             timer.start(delay)
         else:
-            animation.start()
+            set_opacity()
 
-        # 保存动画引用防止被垃圾回收
-        self.animations.append(animation)
-        animation.finished.connect(lambda: self._remove_animation(animation))
+        # 添加日志便于调试
+        self.logger.debug(f"直接设置{widget.objectName()}透明度为1.0，延迟{delay}ms")
 
     def _remove_animation(self, animation: QPropertyAnimation):
         """从动画列表中移除已完成的动画"""

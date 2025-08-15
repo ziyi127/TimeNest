@@ -1,6 +1,7 @@
 import logging
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import List, Optional, Union
 
+from config import DISABLE_ANIMATIONS
 from PySide6.QtCore import QEasingCurve, QEvent, QPropertyAnimation, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QCloseEvent,
@@ -12,12 +13,11 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QWidget
 
-if TYPE_CHECKING:
-    from core.components.clock_component import ClockComponent
-    from core.components.date_component import DateComponent
-    from core.services.lessons_service import LessonsService
-    from core.services.time_service import TimeService
-    from ui.components.schedule_component import ScheduleComponent
+from core.components.clock_component import ClockComponent
+from core.components.date_component import DateComponent
+from core.services.lessons_service import LessonsService
+from core.services.time_service import TimeService
+from ui.components.schedule_component import ScheduleComponent
 
 logger = logging.getLogger(__name__)
 
@@ -255,37 +255,24 @@ class MainWindow(QMainWindow):
         super().leaveEvent(event)
 
     def animate_opacity(self, target_opacity: float, duration: int):
-        """窗口透明度动画"""
-        logger.debug(
-            f"开始透明度动画: {self.windowOpacity()} -> {target_opacity}, 持续时间: {duration}ms"
-        )
-        # 如果目标透明度与当前透明度相同，则不执行动画
-        if abs(self.windowOpacity() - target_opacity) < 0.01:
-            logger.debug("目标透明度与当前透明度相同，跳过动画")
+        """窗口透明度动画 - 根据全局配置决定是否使用动画"""
+        if DISABLE_ANIMATIONS:
+            logger.debug(f"全局禁用动画，直接设置透明度: {target_opacity}")
+            self.setWindowOpacity(target_opacity)
             return
+        
+        logger.debug(f"直接设置透明度: {target_opacity}")
+        self.setWindowOpacity(target_opacity)
+        return
 
-        if (
-            self.opacity_animation
-            and self.opacity_animation.state() == QPropertyAnimation.State.Running
-        ):
-            logger.debug("停止正在运行的透明度动画")
-            self.opacity_animation.stop()
-
-        self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
-        self.opacity_animation.setDuration(duration)
-        self.opacity_animation.setStartValue(self.windowOpacity())
-        self.opacity_animation.setEndValue(target_opacity)
-        self.opacity_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-
-        # 保存动画引用防止被垃圾回收
-        if self.opacity_animation:
-            self.animations.append(self.opacity_animation)
-            self.opacity_animation.finished.connect(
-                lambda: self._remove_animation(self.opacity_animation)
-            )
-
-        logger.debug("启动透明度动画")
-        self.opacity_animation.start()
+    def _on_animation_state_changed(self, old_state, new_state, animation):
+        """处理动画状态变更"""
+        # 检查动画是否有有效的目标
+        if new_state == QPropertyAnimation.State.Running and not animation.targetObject():
+            logger.debug("动画没有目标对象，停止动画")
+            animation.stop()
+        elif new_state == QPropertyAnimation.State.Stopped:
+            logger.debug("动画已停止")
 
     def _remove_animation(self, animation: Optional[QPropertyAnimation]) -> None:
         """从动画列表中移除已完成的动画"""
@@ -328,15 +315,39 @@ class MainWindow(QMainWindow):
         if hasattr(self, "screen_timer"):
             self.screen_timer.stop()
 
-        # 停止所有动画
+        # 停止所有动画并添加详细日志
+        logger.debug(f"关闭窗口时清理动画，当前动画数量: {len(self.animations)}")
         for animation in self.animations[:]:  # 使用切片复制避免修改列表时的问题
-            if (
-                animation
-                and hasattr(animation, "state")
-                and animation.state() == QPropertyAnimation.State.Running
-            ):
-                animation.stop()
+            if animation:
+                if hasattr(animation, "state"):
+                    state = animation.state()
+                    logger.debug(f"动画状态: {state}")
+                    if state == QPropertyAnimation.State.Running:
+                        logger.debug("停止运行中的动画")
+                        animation.stop()
+                # 断开所有连接
+                try:
+                    animation.disconnect()
+                except:
+                    pass
         self.animations.clear()
+        logger.debug("动画已清理完毕")
+
+        # 额外添加全局动画清理
+        try:
+            from PySide6.QtCore import QCoreApplication
+            from PySide6.QtWidgets import QApplication
+            app = QApplication.instance()
+            if app:
+                for widget in app.allWidgets():
+                    if hasattr(widget, "animations") and isinstance(widget.animations, list):
+                        logger.debug(f"清理{widget.objectName()}的动画")
+                        for anim in widget.animations[:]:
+                            if anim and hasattr(anim, "stop"):
+                                anim.stop()
+                        widget.animations.clear()
+        except Exception as e:
+            logger.error(f"全局动画清理失败: {e}")
 
         super().closeEvent(event)
 

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
+from config import DISABLE_ANIMATIONS
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
@@ -79,17 +80,22 @@ class DateComponent(QWidget):
         font = QFont("Microsoft YaHei", 15)
         self.date_display.setFont(font)
 
-        # 初始化时不设置样式表，由主题管理器统一应用
+        # 直接设置样式表确保颜色生效
         self.date_display.setStyleSheet(
             """
             QLabel#dateDisplay {
+                color: white !important;
                 background: transparent;
                 font-family: "Microsoft YaHei";
                 font-weight: normal;
                 qproperty-alignment: AlignVCenter | AlignLeft;
             }
-        """
+            """
         )
+        # 额外直接设置调色板以确保颜色生效
+        palette = self.date_display.palette()
+        palette.setColor(self.date_display.foregroundRole(), Qt.GlobalColor.white)
+        self.date_display.setPalette(palette)
 
         layout.addWidget(self.date_display)
         self.setLayout(layout)
@@ -131,29 +137,15 @@ class DateComponent(QWidget):
             self.date_display.setText("日期错误")
 
     def animate_fade_in(self):
-        """淡入动画效果"""
-        # 停止正在运行的动画
-        if (
-            self.fade_animation
-            and self.fade_animation.state() == QPropertyAnimation.State.Running
-        ):
-            self.fade_animation.stop()
-
-        self.fade_animation = QPropertyAnimation(self.date_display, b"windowOpacity")
-        self.fade_animation.setDuration(1000)
-        self.fade_animation.setStartValue(0.3)
-        self.fade_animation.setEndValue(1.0)
-        # 修复QEasingCurve.OutCubic访问问题
-        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-
-        # 保存动画引用防止被垃圾回收
-        if self.fade_animation:
-            self.animations.append(self.fade_animation)
-            self.fade_animation.finished.connect(
-                lambda: self._remove_animation(self.fade_animation)
-            )
-
-        self.fade_animation.start()
+        """淡入动画效果 - 根据全局配置决定是否使用动画"""
+        if DISABLE_ANIMATIONS:
+            self.logger.debug("全局禁用动画，直接设置日期组件透明度为1.0")
+            self.date_display.setWindowOpacity(1.0)
+            return
+        
+        self.logger.debug("直接设置日期组件透明度为1.0")
+        self.date_display.setWindowOpacity(1.0)
+        return
 
     def _remove_animation(self, animation: Optional[QPropertyAnimation]) -> None:
         """从动画列表中移除已完成的动画"""

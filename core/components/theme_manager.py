@@ -103,13 +103,13 @@ class ThemeManager(QObject):
                 color: {colors['text_primary'].name()};
             }}
             QLabel#mainTimeDisplay {{
-                color: {colors['text_primary'].name()};
+                color: white !important;
                 text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
                 font-size: 18px;
                 font-weight: bold;
             }}
             QLabel#dateDisplay {{
-                color: {colors['text_primary'].name()};
+                color: white !important;
                 text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
                 font-size: 15px;
             }}
@@ -158,41 +158,32 @@ class ThemeManager(QObject):
     def apply_theme_to_component(self, component: "QWidget"):
         """将主题应用到指定组件"""
         try:
-            # 获取当前主题颜色
-            theme = self._current_theme
-            colors = self._themes[theme]
-
             # 为不同组件应用不同样式
-            if hasattr(component, "setStyleSheet"):
-                if hasattr(component, "objectName"):
-                    obj_name = component.objectName()
-                    if obj_name == "mainTimeDisplay":
-                        component.setStyleSheet(
-                            f"""
-                            QLabel {{
-                                color: {colors['text_primary'].name()};
-                                background: transparent;
-                                font-family: "Microsoft YaHei";
-                                font-weight: bold;
-                                font-size: 18px;
-                                text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-                            }}
-                        """
-                        )
-                    elif obj_name == "dateDisplay":
-                        component.setStyleSheet(
-                            f"""
-                            QLabel {{
-                                color: {colors['text_primary'].name()};
-                                background: transparent;
-                                font-family: "Microsoft YaHei";
-                                font-weight: normal;
-                                font-size: 15px;
-                                text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
-                            }}
-                        """
-                        )
+            if hasattr(component, "objectName"):
+                obj_name = component.objectName()
+                if obj_name == "mainTimeDisplay" or obj_name == "dateDisplay":
+                    # 直接设置前景色
+                    component.setStyleSheet(
+                        f"""
+                        QLabel#{obj_name} {{
+                            color: white !important;
+                            background: transparent;
+                            font-family: "Microsoft YaHei";
+                            font-weight: {'bold' if obj_name == 'mainTimeDisplay' else 'normal'};
+                            font-size: {18 if obj_name == 'mainTimeDisplay' else 15}px;
+                            text-shadow: 0 0 {10 if obj_name == 'mainTimeDisplay' else 6}px rgba(255, 255, 255, 0.7);
+                        }}
+                    """
+                    )
+                    # 额外直接设置调色板以确保颜色生效
+                    palette = component.palette()
+                    palette.setColor(component.foregroundRole(), Qt.GlobalColor.white)
+                    component.setPalette(palette)
 
+            # 强制刷新组件样式
+            component.style().unpolish(component)
+            component.style().polish(component)
+            component.update()
         except Exception as e:
             self.logger.error(f"应用主题到组件时出错: {e}")
 

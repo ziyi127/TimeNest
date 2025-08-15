@@ -2,13 +2,13 @@ import logging
 import sys
 from typing import Any, List, Optional, Tuple, Type
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtWidgets import QApplication
 
 from core.components.clock_component import ClockComponent
 from core.components.countdown_component import CountDownComponent
 from core.components.date_component import DateComponent
-from core.components.floating_window_component import FloatingWindowComponent
+from core.components.floating_window import FloatingWindow
 from core.components.group_component import GroupComponent
 from core.components.rolling_component import RollingComponent
 from core.components.separator_component import SeparatorComponent
@@ -32,7 +32,7 @@ from ui.temp_class_plan_window import TempClassPlanWindow
 logger = logging.getLogger(__name__)
 
 
-class TimeNestApplication:
+class TimeNestApplication(QObject):
     """TimeNest应用程序主类 - 仿ClassIsland架构"""
 
     # 插件接口信号
@@ -40,6 +40,7 @@ class TimeNestApplication:
     plugin_unregistered = Signal(str)  # 插件名称
 
     def __init__(self, argv: Optional[List[str]] = None):
+        super().__init__()
         self.app = None
         self.main_window = None
         self.settings_window = None
@@ -52,7 +53,7 @@ class TimeNestApplication:
         self.profile_service = None
         self.lessons_service = None
         self.floating_window_settings = None
-        self.floating_window_component = None
+        self.floating_window = None
         self.plugins = {}  # 存储已注册的插件 {name: plugin_object}
 
         # 初始化应用程序
@@ -119,8 +120,6 @@ class TimeNestApplication:
         logger.info("正在初始化悬浮窗组件")
         try:
             if self.floating_window_settings:
-                from core.components.floating_window import FloatingWindow
-
                 self.floating_window = FloatingWindow(
                     lesson_settings=(
                         self.lesson_control_settings
@@ -129,8 +128,8 @@ class TimeNestApplication:
                     ),
                     floating_settings=self.floating_window_settings,
                 )
-                self.floating_window.show()
-                logger.info("悬浮窗组件初始化完成")
+                # 不直接显示悬浮窗，由主窗口或其他逻辑控制显示
+                logger.info("悬浮窗组件初始化完成，但不直接显示")
             else:
                 self.floating_window = None
                 logger.warning("悬浮窗设置未初始化，跳过悬浮窗组件初始化")
