@@ -48,14 +48,21 @@ class TempClassPlanWindow(QMainWindow):
         )
 
         # 居中显示
-        if self.parent():
-            parent_geometry: QRect = self.parent().geometry()  # type: ignore
-            parent_center: QPoint = parent_geometry.center()  # type: ignore
-            x: int = int(parent_center.x())  # type: ignore
-            y: int = int(parent_center.y())  # type: ignore
-            width: int = self.width()
-            height: int = self.height()
-            self.move(x - width // 2, y - height // 2)
+        screen = self.screen()
+        if screen:
+            screen_geometry = screen.geometry()
+            center_x = screen_geometry.width() // 2
+            center_y = screen_geometry.height() // 2
+            self.move(center_x - self.width() // 2, center_y - self.height() // 2)
+        elif self.parent():
+            parent_widget = self.parent()
+            # 确保父窗口部件是QWidget类型
+            if isinstance(parent_widget, QWidget):
+                parent_center = parent_widget.geometry().center()
+                self.move(
+                    parent_center.x() - self.width() // 2,
+                    parent_center.y() - self.height() // 2,
+                )
 
     def init_ui(self):
         """初始化UI"""

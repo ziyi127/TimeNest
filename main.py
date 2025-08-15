@@ -8,7 +8,7 @@ TimeNest - 智能课程表桌面应用
 
 # 导入必要的模块
 import logging
-from config import DISABLE_ANIMATIONS
+
 import os
 import sys
 from pathlib import Path

@@ -37,14 +37,21 @@ class ProfileWindow(QMainWindow):
         )
         
         # 居中显示
-        parent = self.parent()
-        if parent and isinstance(parent, QWidget):
-            parent_geometry: QRect = parent.geometry()
-            parent_center: QPoint = parent_geometry.center()
-            # 显式转换为int以解决类型检查问题
-            x: int = int(parent_center.x()) - self.width() // 2
-            y: int = int(parent_center.y()) - self.height() // 2
-            self.move(x, y)
+        screen = self.screen()
+        if screen:
+            screen_geometry = screen.geometry()
+            center_x = screen_geometry.width() // 2
+            center_y = screen_geometry.height() // 2
+            self.move(center_x - self.width() // 2, center_y - self.height() // 2)
+        elif self.parent():
+            parent_widget = self.parent()
+            # 确保父窗口部件是QWidget类型
+            if isinstance(parent_widget, QWidget):
+                parent_center = parent_widget.geometry().center()
+                self.move(
+                    parent_center.x() - self.width() // 2,
+                    parent_center.y() - self.height() // 2,
+                )
         
     def init_ui(self) -> None:
         """初始化UI"""
