@@ -3,10 +3,10 @@ from PySide6.QtCore import QObject, Signal
 
 class LessonControlSettings(QObject):
     """课程表控制设置，基于ClassIsland的LessonControlSettings实现"""
-    
+
     # 定义设置更改时发出的信号
     setting_changed = Signal(str, object)
-    
+
     def __init__(self):
         super().__init__()
         self._show_extra_info_on_time_point: bool = True
@@ -25,10 +25,10 @@ class LessonControlSettings(QObject):
         self._is_non_exact_countdown_enabled: bool = False
         self._class_change_highlight_color: str = "#FFD700"  # 金色高亮
         self._class_change_highlight_duration: int = 3000  # 高亮持续时间，单位毫秒
-        
+
         # 浮动窗口透明度设置
         self._floating_window_hover_transparency: float = 0.3  # 鼠标悬停时的透明度
-        self._floating_window_touch_transparency: float = 0.2   # 触控点击时的透明度
+        self._floating_window_touch_transparency: float = 0.2  # 触控点击时的透明度
         self._enable_floating_window_hover_effect: bool = True  # 是否启用悬停透明效果
         self._enable_floating_window_touch_effect: bool = True  # 是否启用触控透明效果
 
@@ -207,9 +207,9 @@ class LessonControlSettings(QObject):
         if self._class_change_highlight_duration != value:
             self._class_change_highlight_duration = value
             self.setting_changed.emit("class_change_highlight_duration", value)
-            
+
     # 浮动窗口透明度相关设置
-    
+
     @property
     def floating_window_hover_transparency(self) -> float:
         """浮动窗口鼠标悬停时的透明度 (0.0-1.0)"""
@@ -222,7 +222,7 @@ class LessonControlSettings(QObject):
         if self._floating_window_hover_transparency != value:
             self._floating_window_hover_transparency = value
             self.setting_changed.emit("floating_window_hover_transparency", value)
-            
+
     @property
     def floating_window_touch_transparency(self) -> float:
         """浮动窗口触控点击时的透明度 (0.0-1.0)"""
@@ -235,7 +235,7 @@ class LessonControlSettings(QObject):
         if self._floating_window_touch_transparency != value:
             self._floating_window_touch_transparency = value
             self.setting_changed.emit("floating_window_touch_transparency", value)
-            
+
     @property
     def enable_floating_window_hover_effect(self) -> bool:
         """是否启用浮动窗口鼠标悬停透明效果"""
@@ -246,7 +246,7 @@ class LessonControlSettings(QObject):
         if self._enable_floating_window_hover_effect != value:
             self._enable_floating_window_hover_effect = value
             self.setting_changed.emit("enable_floating_window_hover_effect", value)
-            
+
     @property
     def enable_floating_window_touch_effect(self) -> bool:
         """是否启用浮动窗口触控透明效果"""

@@ -1,35 +1,44 @@
-import sys
 import logging
-from typing import List, Tuple, Type, Optional, Any
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
+import sys
+from typing import Any, List, Optional, Tuple, Type
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
+
+from core.components.clock_component import ClockComponent
+from core.components.countdown_component import CountDownComponent
+from core.components.date_component import DateComponent
+from core.components.floating_window_component import FloatingWindowComponent
+from core.components.group_component import GroupComponent
+from core.components.rolling_component import RollingComponent
+from core.components.separator_component import SeparatorComponent
+from core.components.slide_component import SlideComponent
+from core.components.text_component import TextComponent
+from core.components.tray_icon import create_tray_icon
+from core.components.weather_component import WeatherComponent
+from core.models.component_settings.floating_window_settings import (
+    FloatingWindowSettings,
+)
+from core.models.profile import TimeNestProfile
+from core.services.component_registry import component_registry
+from core.services.lessons_service import LessonsService
+from core.services.time_service import TimeService
 from ui.main_window import MainWindow
-from ui.settings_window import SettingsWindow
 from ui.profile_window import ProfileWindow
+from ui.settings_window import SettingsWindow
 from ui.swap_window import SwapWindow
 from ui.temp_class_plan_window import TempClassPlanWindow
-from core.services.component_registry import component_registry
-from core.services.time_service import TimeService
-from core.services.lessons_service import LessonsService
-from core.models.profile import TimeNestProfile
-from core.components.clock_component import ClockComponent
-from core.components.date_component import DateComponent
-from core.components.text_component import TextComponent
-from core.components.weather_component import WeatherComponent
-from core.components.countdown_component import CountDownComponent
-from core.components.rolling_component import RollingComponent
-from core.components.group_component import GroupComponent
-from core.components.slide_component import SlideComponent
-from core.components.separator_component import SeparatorComponent
-from core.components.tray_icon import create_tray_icon
 
 logger = logging.getLogger(__name__)
 
 
 class TimeNestApplication:
     """TimeNest应用程序主类 - 仿ClassIsland架构"""
-    
+
+    # 插件接口信号
+    plugin_registered = Signal(str, object)  # 插件名称, 插件对象
+    plugin_unregistered = Signal(str)  # 插件名称
+
     def __init__(self, argv: Optional[List[str]] = None):
         self.app = None
         self.main_window = None
@@ -42,14 +51,21 @@ class TimeNestApplication:
         self.time_service = TimeService()
         self.profile_service = None
         self.lessons_service = None
-        
+        self.floating_window_settings = None
+        self.floating_window_component = None
+        self.plugins = {}  # 存储已注册的插件 {name: plugin_object}
+
         # 初始化应用程序
         self.init_application(argv or sys.argv)
-        
+
+        # 连接插件接口信号
+        self.plugin_registered.connect(self._register_plugin)
+        self.plugin_unregistered.connect(self._unregister_plugin)
+
     def init_application(self, argv: List[str]) -> None:
         """初始化应用程序"""
         logger.info("正在初始化TimeNest应用程序")
-        
+
         # 检查是否已有QApplication实例
         self.app = QApplication.instance()
         if self.app is None:
@@ -59,51 +75,94 @@ class TimeNestApplication:
             self.app.setApplicationVersion("1.0.0")
             self.app.setOrganizationName("TimeNest")
             self.app.setOrganizationDomain("ziyi127.github.io")
-            
+
             # 设置应用程序属性
             self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
         else:
             logger.info("使用现有的QApplication实例")
-        
+
         # 初始化服务
         self.init_services()
-        
+
         # 初始化组件注册服务
         self.init_component_registry()
-        
+
+        # 初始化悬浮窗设置
+        self.init_floating_window_settings()
+
+        # 初始化悬浮窗组件
+        self.init_floating_window()
+
         # 初始化主窗口
         self.init_main_window()
-        
+
+        # 初始化悬浮窗设置
+        self.init_floating_window_settings()
+
         # 初始化托盘图标
         self.init_tray_icon()
-        
+
         logger.info("TimeNest应用程序初始化完成")
-        
+
+    def init_floating_window_settings(self):
+        """初始化悬浮窗设置"""
+        logger.info("正在初始化悬浮窗设置")
+        try:
+            self.floating_window_settings = FloatingWindowSettings()
+            logger.info("悬浮窗设置初始化完成")
+        except Exception as e:
+            logger.error("初始化悬浮窗设置时出错: %s", e)
+            self.floating_window_settings = None
+
+    def init_floating_window(self):
+        """初始化悬浮窗组件"""
+        logger.info("正在初始化悬浮窗组件")
+        try:
+            if self.floating_window_settings:
+                from core.components.floating_window import FloatingWindow
+
+                self.floating_window = FloatingWindow(
+                    lesson_settings=(
+                        self.lesson_control_settings
+                        if hasattr(self, "lesson_control_settings")
+                        else None
+                    ),
+                    floating_settings=self.floating_window_settings,
+                )
+                self.floating_window.show()
+                logger.info("悬浮窗组件初始化完成")
+            else:
+                self.floating_window = None
+                logger.warning("悬浮窗设置未初始化，跳过悬浮窗组件初始化")
+        except Exception as e:
+            logger.error("初始化悬浮窗组件时出错: %s", e)
+            self.floating_window = None
+
     def init_services(self):
         """初始化核心服务"""
         logger.info("正在初始化核心服务")
-        
+
         try:
             # 初始化档案服务
             self.profile_service = TimeNestProfile("默认档案")
-            
+
             # 初始化课程服务
             self.lessons_service = LessonsService(
                 exact_time_service=self.time_service,
-                profile_service=self.profile_service
+                profile_service=self.profile_service,
             )
-            
+
             logger.info("核心服务初始化完成")
         except Exception as e:
-            logger.error(f"初始化核心服务时发生错误: {e}")
+            logger.error("初始化核心服务时发生错误: %s", e)
             # 启用基本服务作为后备
             self.profile_service = None
             self.lessons_service = None
-            
+
     def init_component_registry(self):
         """初始化组件注册服务 - 仿ClassIsland组件注册机制"""
         logger.info("正在注册组件")
-        
+
         # 注册内置组件 - 使用ClassIsland兼容的GUID
         component_mappings: List[Tuple[str, str, Type[Any]]] = [
             ("9E1AF71D-8F77-4B21-A342-448787104DD9", "时钟组件", ClockComponent),
@@ -116,7 +175,7 @@ class TimeNestApplication:
             ("SLIDE123-4567-8901-2345-678901234567", "幻灯片组件", SlideComponent),
             ("SEP12345-6789-0123-4567-890123456789", "分割线组件", SeparatorComponent),
         ]
-        
+
         registered_count = 0
         for guid, name, component_class in component_mappings:
             # 为循环变量添加类型注解
@@ -133,19 +192,23 @@ class TimeNestApplication:
                 else:
                     logger.warning(f"无法获取组件信息: {name} ({guid})")
             except Exception as e:
-                logger.error(f"注册组件 {name} 时发生错误: {e}")
-        
+                logger.error("注册组件 %s 时发生错误: %s", name, e)
+
         # 确保所有组件类型都已正确设置
         # 使用公共方法注册组件，如果没有公共方法则保持原样
         # 使用类型: ignore注释忽略私有方法使用警告
         self.component_registry._register_builtin_components()  # type: ignore
-        logger.info(f"组件注册完成，共注册 {registered_count} 个组件，总组件数: {len(self.component_registry.registered_components)}")
-        
+        logger.info(
+            "组件注册完成，共注册 %d 个组件，总组件数: %d",
+            registered_count,
+            len(self.component_registry.registered_components)
+        )
+
         # 为组件注册设置信号连接
         # 为信号连接添加类型注解
         self.component_registry.component_added.connect(self.on_component_added)  # type: ignore
         self.component_registry.component_removed.connect(self.on_component_removed)  # type: ignore
-            
+
     def init_main_window(self):
         """初始化主窗口"""
         logger.info("正在初始化主窗口")
@@ -153,20 +216,22 @@ class TimeNestApplication:
             lessons_service=self.lessons_service,
             exact_time_service=self.time_service,
         )
-        
+
         # 连接主窗口信号
         if self.main_window:
-            self.main_window.windowStateChanged.connect(self.on_main_window_state_changed)
-            
+            self.main_window.windowStateChanged.connect(
+                self.on_main_window_state_changed
+            )
+
         logger.info("主窗口初始化完成")
-        
+
     def init_tray_icon(self):
         """初始化系统托盘图标"""
         logger.info("正在初始化系统托盘图标")
         try:
             # 传递None作为parent，因为create_tray_icon需要QWidget类型
             self.tray_icon = create_tray_icon(None)
-            
+
             # 连接托盘图标信号
             if self.tray_icon:
                 self.tray_icon.show_main_window.connect(self.show_main_window)
@@ -179,17 +244,17 @@ class TimeNestApplication:
                 self.tray_icon.load_temp_class_plan.connect(self.load_temp_class_plan)
                 self.tray_icon.swap_classes.connect(self.swap_classes)
                 self.tray_icon.clear_notifications.connect(self.clear_notifications)
-                
+
             logger.info("系统托盘图标初始化完成")
         except Exception as e:
-            logger.error(f"初始化系统托盘图标时出错: {e}")
-            
+            logger.error("初始化系统托盘图标时出错: %s", e)
+
     def on_main_window_state_changed(self, visible: bool):
         """主窗口状态改变回调"""
         if self.tray_icon:
             self.tray_icon.is_main_window_visible = visible
             self.tray_icon.update_menu_visibility()
-        
+
     def show_main_window(self):
         """显示主窗口"""
         if self.main_window:
@@ -197,55 +262,79 @@ class TimeNestApplication:
             self.main_window.raise_()
             # 不再激活窗口，避免干扰用户当前操作
             # self.main_window.activateWindow()
-            
+
     def hide_main_window(self):
         """隐藏主窗口"""
         if self.main_window:
             self.main_window.hide()
-            
+
     def exit_application(self):
         """退出应用程序"""
         logger.info("用户请求退出应用程序")
         self.shutdown()
         if self.app:
             self.app.quit()
-            
+
     def open_settings(self):
         """打开设置窗口"""
         logger.info("打开应用设置")
         # 创建或显示设置窗口
         if self.tray_icon:
             self.tray_icon.show_message("应用设置", "正在打开设置窗口...")
-            
+
         try:
+            logger.info(
+                f"设置窗口状态: {'已创建' if self.settings_window is not None else '未创建'}"
+            )
             if self.settings_window is None:
+                logger.info("正在创建设置窗口实例")
                 self.settings_window = SettingsWindow(self.main_window)
-                
-            self.settings_window.show()
+                logger.info("设置窗口实例创建完成")
+            else:
+                logger.info("使用已存在的设置窗口实例")
+
+            logger.info("显示设置窗口")
+            # 只有在窗口未显示时才调用show()
+            if not self.settings_window.isVisible():
+                self.settings_window.show()
             self.settings_window.raise_()
+            logger.info("设置窗口显示完成")
             # 不再激活窗口，避免干扰用户当前操作
             # self.settings_window.activateWindow()
         except Exception as e:
-            logger.error(f"打开设置窗口时出错: {e}")
-            
+            logger.error("打开设置窗口时出错: %s", e)
+            logger.exception(e)
+
     def open_profiles(self):
         """打开档案编辑窗口"""
         logger.info("打开档案编辑")
         # 创建或显示档案编辑窗口
         if self.tray_icon:
             self.tray_icon.show_message("编辑档案", "正在打开档案编辑窗口...")
-            
+
         try:
+            logger.info(
+                f"档案编辑窗口状态: {'已创建' if self.profile_window is not None else '未创建'}"
+            )
             if self.profile_window is None:
+                logger.info("正在创建档案编辑窗口实例")
                 self.profile_window = ProfileWindow(self.main_window)
-                
-            self.profile_window.show()
+                logger.info("档案编辑窗口实例创建完成")
+            else:
+                logger.info("使用已存在的档案编辑窗口实例")
+
+            logger.info("显示档案编辑窗口")
+            # 只有在窗口未显示时才调用show()
+            if not self.profile_window.isVisible():
+                self.profile_window.show()
             self.profile_window.raise_()
+            logger.info("档案编辑窗口显示完成")
             # 不再激活窗口，避免干扰用户当前操作
             # self.profile_window.activateWindow()
         except Exception as e:
-            logger.error(f"打开档案编辑窗口时出错: {e}")
-            
+            logger.error("打开档案编辑窗口时出错: %s", e)
+            logger.exception(e)
+
     def restart_application(self):
         """重启应用程序"""
         logger.info("用户请求重启应用程序")
@@ -258,68 +347,98 @@ class TimeNestApplication:
             # 重新启动应用程序
             import subprocess
             import sys
+
             # 使用跨平台方式启动进程
             if sys.platform == "win32":
                 # Windows平台 - 使用CREATE_NO_WINDOW标志实现静默运行
-                subprocess.Popen([sys.executable] + sys.argv, creationflags=subprocess.CREATE_NO_WINDOW)
+                subprocess.Popen(
+                    [sys.executable] + sys.argv,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                    close_fds=True,
+                )
             else:
                 # Unix/Linux/macOS平台
-                subprocess.Popen([sys.executable] + sys.argv)
+                subprocess.Popen([sys.executable] + sys.argv, close_fds=True)
             if self.app:
                 self.app.quit()
         except Exception as e:
-            logger.error(f"重启应用程序时出错: {e}")
-            
+            logger.error("重启应用程序时出错: %s", e)
+
     def show_help(self):
         """显示帮助"""
         logger.info("显示帮助")
         # 仿ClassIsland方式显示帮助
         import webbrowser
+
         try:
             webbrowser.open("https://ziyi127.github.io/TimeNest-Website")
             if self.tray_icon:
                 self.tray_icon.show_message("帮助文档", "正在打开在线帮助文档...")
         except Exception as e:
-            logger.error(f"打开帮助文档失败: {e}")
+            logger.error("打开帮助文档失败: %s", e)
             if self.tray_icon:
                 self.tray_icon.show_message("帮助文档", "无法打开帮助文档")
-            
+
     def load_temp_class_plan(self):
         """加载临时课表"""
         logger.info("加载临时课表")
         # 创建或显示临时课表窗口
         if self.tray_icon:
             self.tray_icon.show_message("临时课表", "正在打开临时课表窗口...")
-            
+
         try:
+            logger.info(
+                f"临时课表窗口状态: {'已创建' if self.temp_class_plan_window is not None else '未创建'}"
+            )
             if self.temp_class_plan_window is None:
+                logger.info("正在创建临时课表窗口实例")
                 self.temp_class_plan_window = TempClassPlanWindow(self.main_window)
-                
-            self.temp_class_plan_window.show()
+                logger.info("临时课表窗口实例创建完成")
+            else:
+                logger.info("使用已存在的临时课表窗口实例")
+
+            logger.info("显示临时课表窗口")
+            # 只有在窗口未显示时才调用show()
+            if not self.temp_class_plan_window.isVisible():
+                self.temp_class_plan_window.show()
             self.temp_class_plan_window.raise_()
+            logger.info("临时课表窗口显示完成")
             # 不再激活窗口，避免干扰用户当前操作
             # self.temp_class_plan_window.activateWindow()
         except Exception as e:
-            logger.error(f"打开临时课表窗口时出错: {e}")
-            
+            logger.error("打开临时课表窗口时出错: %s", e)
+            logger.exception(e)
+
     def swap_classes(self):
         """换课功能"""
         logger.info("换课功能")
         # 创建或显示换课窗口
         if self.tray_icon:
             self.tray_icon.show_message("换课", "正在打开换课窗口...")
-            
+
         try:
+            logger.info(
+                f"换课窗口状态: {'已创建' if self.swap_window is not None else '未创建'}"
+            )
             if self.swap_window is None:
+                logger.info("正在创建换课窗口实例")
                 self.swap_window = SwapWindow(self.main_window)
-                
-            self.swap_window.show()
+                logger.info("换课窗口实例创建完成")
+            else:
+                logger.info("使用已存在的换课窗口实例")
+
+            logger.info("显示换课窗口")
+            # 只有在窗口未显示时才调用show()
+            if not self.swap_window.isVisible():
+                self.swap_window.show()
             self.swap_window.raise_()
+            logger.info("换课窗口显示完成")
             # 不再激活窗口，避免干扰用户当前操作
             # self.swap_window.activateWindow()
         except Exception as e:
-            logger.error(f"打开换课窗口时出错: {e}")
-            
+            logger.error("打开换课窗口时出错: %s", e)
+            logger.exception(e)
+
     def clear_notifications(self):
         """清除通知"""
         logger.info("清除通知")
@@ -330,61 +449,152 @@ class TimeNestApplication:
             # 这里应该调用通知服务清除所有通知
             # 暂时显示主窗口作为替代
             self.show_main_window()
-        
+
     def run(self):
         """运行应用程序"""
         if self.main_window:
             logger.info("显示主窗口")
             self.main_window.show()
-            
+
         # 运行应用程序事件循环
         if self.app:
             logger.info("启动应用程序事件循环")
             return self.app.exec()
-            
+
+    def _register_plugin(self, name: str, plugin):
+        """注册插件"""
+        # 检查是否已存在同名插件
+        if name in self.plugins:
+            logger.warning(f"插件 '{name}' 已存在，将被替换")
+
+        # 存储插件
+        self.plugins[name] = plugin
+        logger.info(f"已注册插件: {name}")
+
+        # 如果插件有初始化方法，则调用它
+        if hasattr(plugin, "initialize"):
+            try:
+                plugin.initialize(self)
+                logger.info(f"插件 '{name}' 初始化完成")
+            except Exception as e:
+                logger.error("初始化插件 '%s' 时出错: %s", name, e)
+
+    def _unregister_plugin(self, name: str):
+        """注销插件"""
+        if name in self.plugins:
+            plugin = self.plugins[name]
+            # 如果插件有清理方法，则调用它
+            if hasattr(plugin, "cleanup"):
+                try:
+                    plugin.cleanup()
+                    logger.info(f"插件 '{name}' 清理完成")
+                except Exception as e:
+                    logger.error("清理插件 '%s' 时出错: %s", name, e)
+
+            del self.plugins[name]
+            logger.info(f"已注销插件: {name}")
+        else:
+            logger.warning(f"插件 '{name}' 不存在")
+
     def shutdown(self):
         """关闭应用程序"""
         logger.info("正在关闭应用程序")
         try:
+            # 清理所有插件
+            for name in list(self.plugins.keys()):
+                self._unregister_plugin(name)
+
             # 清理所有窗口
             if self.settings_window:
+                logger.info("关闭设置窗口")
                 self.settings_window.close()
                 self.settings_window = None
-                
+
             if self.profile_window:
+                logger.info("关闭档案编辑窗口")
                 self.profile_window.close()
                 self.profile_window = None
-                
+
             if self.swap_window:
+                logger.info("关闭换课窗口")
                 self.swap_window.close()
                 self.swap_window = None
-                
+
             if self.temp_class_plan_window:
+                logger.info("关闭临时课表窗口")
                 self.temp_class_plan_window.close()
                 self.temp_class_plan_window = None
-                
+
+            # 关闭悬浮窗
+            if self.floating_window:
+                logger.info("关闭悬浮窗")
+                self.floating_window.close()
+                self.floating_window = None
+
             # 隐藏主窗口
             if self.main_window:
+                logger.info("隐藏主窗口")
                 self.main_window.hide()
-                
+
             # 隐藏托盘图标
             if self.tray_icon:
+                logger.info("隐藏托盘图标")
                 self.tray_icon.hide()
-                
+
         except Exception as e:
-            logger.error(f"关闭应用程序时出错: {e}")
-            
+            logger.error("关闭应用程序时出错: %s", e)
+            logger.exception(e)
+
         logger.info("应用程序已关闭")
-        
+
     def on_component_added(self, component_info: Any) -> None:
         """处理组件添加事件"""
         logger.info(f"组件已添加: {component_info.name}")
         # 可以在这里添加组件添加后的逻辑，比如更新UI等
-        
+
     def on_component_removed(self, component_info: Any) -> None:
         """处理组件移除事件"""
         logger.info(f"组件已移除: {component_info.name}")
         # 可以在这里添加组件移除后的逻辑
+
+    # 插件接口方法
+    def get_tray_icon(self):
+        """获取托盘图标实例"""
+        return self.tray_icon
+
+    def get_floating_window(self):
+        """获取悬浮窗实例"""
+        return self.floating_window
+
+    def get_settings_window(self):
+        """获取设置窗口实例"""
+        return self.settings_window
+
+    def get_main_window(self):
+        """获取主窗口实例"""
+        return self.main_window
+
+    def get_lessons_service(self):
+        """获取课程服务实例"""
+        return self.lessons_service
+
+    def get_time_service(self):
+        """获取时间服务实例"""
+        return self.time_service
+
+    def get_theme_manager(self):
+        """获取主题管理器实例"""
+        from core.components.theme_manager import theme_manager
+
+        return theme_manager
+
+    def register_plugin(self, name: str, plugin):
+        """注册插件"""
+        self.plugin_registered.emit(name, plugin)
+
+    def unregister_plugin(self, name: str):
+        """注销插件"""
+        self.plugin_unregistered.emit(name)
 
 
 def main(argv: Optional[List[str]] = None):
@@ -392,9 +602,9 @@ def main(argv: Optional[List[str]] = None):
     # 配置日志
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     try:
         # 创建并运行应用程序
         app = TimeNestApplication(argv)
@@ -402,7 +612,7 @@ def main(argv: Optional[List[str]] = None):
         app.shutdown()
         return exit_code
     except Exception as e:
-        logger.error(f"运行应用程序时出错: {e}")
+        logger.error("运行应用程序时出错: %s", e)
         return 1
 
 
@@ -411,5 +621,5 @@ if __name__ == "__main__":
         exit_code = main(sys.argv)
         sys.exit(exit_code)
     except Exception as e:
-        logger.error(f"应用程序启动时出错: {e}")
+        logger.error("应用程序启动时出错: %s", e)
         sys.exit(1)

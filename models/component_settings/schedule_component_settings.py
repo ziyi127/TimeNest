@@ -1,13 +1,12 @@
-from typing import Optional
 from PySide6.QtCore import QObject, Signal
 
 
 class ScheduleComponentSettings(QObject):
     """课程表组件设置，基于ClassIsland的LessonControlSettings实现"""
-    
+
     # 定义设置更改时发出的信号
     setting_changed = Signal(str, object)
-    
+
     def __init__(self) -> None:
         super().__init__()
         self._show_extra_info_on_time_point: bool = True

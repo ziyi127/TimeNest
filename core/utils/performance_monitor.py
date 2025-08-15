@@ -1,18 +1,19 @@
 import logging
 import time
 from functools import wraps
-from typing import Callable, Any, Optional, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 
 class PerformanceMonitor:
     """性能监控器 - 监控应用性能和组件执行时间"""
-    
+
     def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
         self.performance_data: Dict[str, List[float]] = {}
-        
+
     def monitor_function(self, func_name: Optional[str] = None) -> Callable:
         """装饰器：监控函数执行时间"""
+
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -24,12 +25,12 @@ class PerformanceMonitor:
                     end_time = time.perf_counter()
                     execution_time = end_time - start_time
                     func_name_used = func_name or func.__name__
-                    
+
                     # 记录性能数据
                     if func_name_used not in self.performance_data:
                         self.performance_data[func_name_used] = []
                     self.performance_data[func_name_used].append(execution_time)
-                    
+
                     # 如果执行时间过长，记录警告
                     if execution_time > 0.1:  # 超过100ms记录警告
                         self.logger.warning(
@@ -39,26 +40,28 @@ class PerformanceMonitor:
                         self.logger.info(
                             f"函数 {func_name_used} 执行时间: {execution_time:.4f}s"
                         )
+
             return wrapper
+
         return decorator
-    
+
     def get_performance_stats(self) -> Dict[str, Dict[str, float]]:
         """获取性能统计信息"""
         stats: Dict[str, Dict[str, float]] = {}
         for func_name, times in self.performance_data.items():
             stats[func_name] = {
-                'count': float(len(times)),
-                'total_time': sum(times),
-                'avg_time': sum(times) / len(times) if times else 0,
-                'max_time': max(times) if times else 0,
-                'min_time': min(times) if times else 0
+                "count": float(len(times)),
+                "total_time": sum(times),
+                "avg_time": sum(times) / len(times) if times else 0,
+                "max_time": max(times) if times else 0,
+                "min_time": min(times) if times else 0,
             }
         return stats
-    
+
     def reset_performance_data(self) -> None:
         """重置性能数据"""
         self.performance_data.clear()
-    
+
     def log_performance_summary(self) -> None:
         """记录性能摘要"""
         stats = self.get_performance_stats()

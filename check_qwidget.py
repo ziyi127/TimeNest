@@ -12,13 +12,13 @@ widget_attrs = dir(QWidget)
 # 搜索与 translucent 相关的属性
 print("\n与 translucent 相关的属性:")
 for attr in widget_attrs:
-    if 'translucent' in attr.lower():
+    if "translucent" in attr.lower():
         print(f"找到: {attr}")
 
 # 搜索以 WA_ 开头的属性（窗口属性）
 print("\n以 WA_ 开头的属性 (窗口属性):")
 for attr in widget_attrs:
-    if attr.startswith('WA_'):
+    if attr.startswith("WA_"):
         print(f"找到: {attr}")
 
 print("\n检查完成。")
