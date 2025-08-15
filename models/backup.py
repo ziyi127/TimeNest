@@ -10,16 +10,16 @@ from dataclasses import dataclass
 @dataclass
 class BackupInfo:
     """备份信息模型"""
-    id: str                           # 备份ID
-    name: str                         # 备份名称
-    created_at: str                   # 创建时间，日期格式: YYYY-MM-DD HH:MM:SS
-    file_path: str                    # 备份文件路径
-    file_size: int = 0                # 文件大小（字节）
-    description: str = ""             # 备份描述
-    version: str = "1.0"              # 备份版本
-    include_courses: bool = True      # 是否包含课程数据
-    include_schedules: bool = True    # 是否包含课程表数据
-    include_temp_changes: bool = True # 是否包含临时换课数据
+    id: str                             # 备份ID
+    name: str                           # 备份名称
+    created_at: str                     # 创建时间，日期格式: YYYY-MM-DD HH:MM:SS
+    file_path: str                      # 备份文件路径
+    file_size: int = 0                  # 文件大小（字节）
+    description: str = ""               # 备份描述
+    version: str = "1.0"                # 备份版本
+    include_courses: bool = True        # 是否包含课程数据
+    include_schedules: bool = True      # 是否包含课程表数据
+    include_temp_changes: bool = True   # 是否包含临时换课数据
     include_cycle_schedules: bool = True # 是否包含循环课程表数据
     
     def to_dict(self) -> Dict[str, Any]:

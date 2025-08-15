@@ -23,7 +23,7 @@ class ReminderService:
         self.reminder_thread: Optional[threading.Thread] = None
         self.reminder_callbacks: List[Callable] = []
         logger.info("ReminderService initialized")
-
+    
     def start_reminder_service(self):
         """
         启动提醒服务
