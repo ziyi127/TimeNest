@@ -3,13 +3,17 @@
 提供课程时间、教师、地点冲突检测功能
 """
 
-from typing import List, Dict
+from typing import List, TYPE_CHECKING
 from models.class_item import ClassItem
 from models.class_plan import ClassPlan
 from utils.logger import get_service_logger
 
 # 初始化日志记录器
 logger = get_service_logger("conflict_detection_service")
+
+# 延迟导入以避免循环导入
+if TYPE_CHECKING:
+    from services.course_service import CourseService
 
 
 class ConflictDetectionService:
@@ -45,7 +49,7 @@ class ConflictDetectionService:
             ]
             
             # 检测冲突
-            conflicts = []
+            conflicts: List[str] = []
             
             # 检测教师时间冲突
             teacher_conflicts = self._detect_teacher_conflict(course, existing_courses)
@@ -103,7 +107,7 @@ class ConflictDetectionService:
             ]
             
             # 检测冲突
-            conflicts = []
+            conflicts: List[str] = []
             
             # 检测时间冲突
             time_conflicts = self._detect_schedule_time_conflict(
@@ -133,7 +137,7 @@ class ConflictDetectionService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for existing_course in existing_courses:
             # 如果是同一个教师且时间冲突
@@ -154,7 +158,7 @@ class ConflictDetectionService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for existing_course in existing_courses:
             # 如果是同一个地点且时间冲突
@@ -175,7 +179,7 @@ class ConflictDetectionService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for course2 in existing_courses:
             # 如果时间冲突
@@ -186,7 +190,7 @@ class ConflictDetectionService:
     
     def _detect_schedule_time_conflict(self, schedule: ClassPlan, course: ClassItem, 
                                      existing_schedules: List[ClassPlan], 
-                                     course_service) -> List[str]:
+                                     course_service: 'CourseService') -> List[str]:
         """
         检测课程表时间冲突
         
@@ -199,7 +203,7 @@ class ConflictDetectionService:
         Returns:
             冲突信息列表
         """
-        conflicts = []
+        conflicts: List[str] = []
         
         for existing_schedule in existing_schedules:
             # 检查星期几是否相同

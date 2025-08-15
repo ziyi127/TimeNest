@@ -7,14 +7,9 @@ import os
 import json
 import hashlib
 import shutil
-from typing import Dict, Any, List
+from typing import Dict, Any
 from datetime import datetime
-from models.class_item import ClassItem
-from models.class_plan import ClassPlan
-from models.temp_change import TempChange
-from models.cycle_schedule import CycleSchedule
 from utils.logger import get_service_logger
-from utils.exceptions import ValidationException
 
 # 初始化日志记录器
 logger = get_service_logger("sync_service")
@@ -146,7 +141,7 @@ class SyncService:
             temp_change_service = ServiceFactory.get_temp_change_service()
             cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()
             
-            status = {
+            status: Dict[str, Any] = {
                 "local_data": {
                     "courses_count": len(course_service.get_all_courses()),
                     "schedules_count": len(schedule_service.get_all_schedules()),
@@ -223,7 +218,7 @@ class SyncService:
         # 获取数据大小
         data_size = len(data_str.encode('utf-8'))
         
-        metadata = {
+        metadata: Dict[str, Any] = {
             "version": "1.0",
             "created_at": datetime.now().isoformat(),
             "data_hash": data_hash,

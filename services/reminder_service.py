@@ -28,7 +28,7 @@ class ReminderService:
         """初始化提醒服务"""
         self.is_running = False
         self.reminder_thread: Optional[threading.Thread] = None
-        self.reminder_callbacks: List[Callable] = []
+        self.reminder_callbacks: List[Callable[[Dict[str, str]], None]] = []
         logger.info("ReminderService initialized")
     
     def start_reminder_service(self):

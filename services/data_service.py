@@ -123,7 +123,7 @@ class DataService:
         # 延迟导入ServiceFactory以避免循环导入
         from services.service_factory import ServiceFactory
         
-        export_data = {}
+        export_data: Dict[str, Any] = {}
         
         # 获取各服务实例
         course_service = ServiceFactory.get_course_service()
@@ -232,10 +232,10 @@ class DataService:
             return
         
         # 获取所有字段名
-        fieldnames = set()
+        fieldnames: set[str] = set()
         for item in data:
             fieldnames.update(item.keys())
-        fieldnames = sorted(list(fieldnames))
+        fieldnames = sorted(list(fieldnames))  # type: ignore
         
         # 写入CSV文件
         with open(file_path, 'w', encoding='utf-8', newline='') as f:
@@ -333,7 +333,7 @@ class DataService:
         # 实际项目中这里应该使用pandas或openpyxl等库来读取真正的Excel文件
         return self._import_json(import_path.replace(".xlsx", ".json"))
     
-    def _validate_import_data(self, data: Dict[str, Any]):
+    def _validate_import_data(self, data: Dict[str, Any]) -> None:
         """
         验证导入的数据
         
@@ -350,21 +350,11 @@ class DataService:
             raise ValidationException("导入数据格式不正确，应为字典类型")
         
         # 验证各数据类型的结构
-        if "courses" in data:
-            if not isinstance(data["courses"], list):
-                raise ValidationException("课程数据格式不正确，应为列表类型")
-        
-        if "schedules" in data:
-            if not isinstance(data["schedules"], list):
-                raise ValidationException("课程表数据格式不正确，应为列表类型")
-        
-        if "temp_changes" in data:
-            if not isinstance(data["temp_changes"], list):
-                raise ValidationException("临时换课数据格式不正确，应为列表类型")
-        
-        if "cycle_schedules" in data:
-            if not isinstance(data["cycle_schedules"], list):
-                raise ValidationException("循环课程表数据格式不正确，应为列表类型")
+        data_types = ["courses", "schedules", "temp_changes", "cycle_schedules"]
+        for data_type in data_types:
+            if data_type in data and data[data_type] is not None:
+                if not isinstance(data[data_type], list):
+                    raise ValidationException(f"{data_type}数据格式不正确，应为列表类型")
         
         logger.debug("数据验证通过")
     

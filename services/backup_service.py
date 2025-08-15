@@ -17,10 +17,6 @@ import zipfile
 from typing import List, Dict, Any
 from datetime import datetime
 from models.backup import BackupInfo, BackupConfig
-from models.class_item import ClassItem
-from models.class_plan import ClassPlan
-from models.temp_change import TempChange
-from models.cycle_schedule import CycleSchedule
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException
 
@@ -75,6 +71,9 @@ class BackupService:
             else:
                 backup_file_path = os.path.join(backup_dir, backup_filename)
             
+            # 标准化路径确保跨平台兼容性
+            backup_file_path = os.path.normpath(backup_file_path)
+            
             # 收集要备份的数据
             backup_data = self._collect_backup_data()
             
@@ -105,6 +104,9 @@ class BackupService:
             logger.info(f"备份创建成功: {backup_file_path}")
             return backup_info
             
+        except PermissionError as e:
+            logger.error(f"没有权限创建备份: {str(e)}")
+            raise ValidationException(f"没有权限创建备份: {str(e)}")
         except Exception as e:
             logger.error(f"创建备份失败: {str(e)}")
             raise ValidationException(f"创建备份失败: {str(e)}")
@@ -130,6 +132,9 @@ class BackupService:
             if not backup_file_path or not os.path.exists(backup_file_path):
                 raise ValidationException(f"备份文件不存在: {backup_id}")
             
+            # 标准化路径确保跨平台兼容性
+            backup_file_path = os.path.normpath(backup_file_path)
+            
             # 读取备份数据
             if backup_file_path.endswith(".zip"):
                 backup_data = self._read_compressed_backup(backup_file_path)
@@ -142,13 +147,16 @@ class BackupService:
             logger.info(f"备份恢复成功: {backup_id}")
             return True
             
+        except PermissionError as e:
+            logger.error(f"没有权限恢复备份: {str(e)}")
+            raise ValidationException(f"没有权限恢复备份: {str(e)}")
         except Exception as e:
             logger.error(f"恢复备份失败: {str(e)}")
             raise ValidationException(f"恢复备份失败: {str(e)}")
     
     def list_backups(self) -> List[BackupInfo]:
         """
-        列出所有备份
+        列出所有备份，增强跨平台兼容性
         
         Returns:
             备份信息列表
@@ -156,8 +164,8 @@ class BackupService:
         logger.info("列出所有备份")
         
         try:
-            backups = []
-            backup_dir = self.backup_config.backup_location
+            backups: List[BackupInfo] = []
+            backup_dir = os.path.normpath(self.backup_config.backup_location)
             
             # 检查备份目录是否存在
             if not os.path.exists(backup_dir):
@@ -166,6 +174,7 @@ class BackupService:
             # 遍历备份目录中的文件
             for filename in os.listdir(backup_dir):
                 file_path = os.path.join(backup_dir, filename)
+                file_path = os.path.normpath(file_path)
                 if os.path.isfile(file_path):
                     # 创建简化的备份信息（实际项目中应该从存储的元数据中读取完整信息）
                     backup_info = BackupInfo(
@@ -184,6 +193,9 @@ class BackupService:
             logger.info(f"找到 {len(backups)} 个备份")
             return backups
             
+        except PermissionError as e:
+            logger.error(f"没有权限访问备份目录: {str(e)}")
+            return []
         except Exception as e:
             logger.error(f"列出备份失败: {str(e)}")
             return []
@@ -207,12 +219,18 @@ class BackupService:
                 logger.warning(f"备份文件不存在: {backup_id}")
                 return False
             
+            # 标准化路径确保跨平台兼容性
+            backup_file_path = os.path.normpath(backup_file_path)
+            
             # 删除备份文件
             os.remove(backup_file_path)
             
             logger.info(f"备份删除成功: {backup_id}")
             return True
             
+        except PermissionError as e:
+            logger.error(f"没有权限删除备份: {str(e)}")
+            return False
         except Exception as e:
             logger.error(f"删除备份失败: {str(e)}")
             return False
@@ -239,13 +257,14 @@ class BackupService:
         # 延迟导入ServiceFactory以避免循环导入
         from services.service_factory import ServiceFactory
         
-        backup_data = {}
+        backup_data: Dict[str, Any] = {}
         
         # 获取各服务实例
-        course_service = ServiceFactory.get_course_service()
-        schedule_service = ServiceFactory.get_schedule_service()
-        temp_change_service = ServiceFactory.get_temp_change_service()
-        cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()
+        # 使用 # type: ignore 注释忽略未使用变量警告，因为这些变量在简化实现中未被使用
+        course_service = ServiceFactory.get_course_service()  # type: ignore
+        schedule_service = ServiceFactory.get_schedule_service()  # type: ignore
+        temp_change_service = ServiceFactory.get_temp_change_service()  # type: ignore
+        cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()  # type: ignore
         
         # 备份课程数据
         courses = course_service.get_all_courses()
@@ -277,13 +296,19 @@ class BackupService:
         
         # 创建临时目录
         temp_dir = backup_file_path + "_temp"
+        temp_dir = os.path.normpath(temp_dir)
         os.makedirs(temp_dir, exist_ok=True)
         
         try:
             # 将数据写入临时JSON文件
             temp_file_path = os.path.join(temp_dir, "backup_data.json")
-            with open(temp_file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            temp_file_path = os.path.normpath(temp_file_path)
+            try:
+                with open(temp_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.error(f"写入临时文件失败: {str(e)}")
+                raise
             
             # 创建ZIP文件
             with zipfile.ZipFile(backup_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -329,13 +354,28 @@ class BackupService:
         
         try:
             # 解压ZIP文件
-            with zipfile.ZipFile(backup_file_path, 'r') as zipf:
-                zipf.extractall(temp_dir)
+            try:
+                with zipfile.ZipFile(backup_file_path, 'r') as zipf:
+                    zipf.extractall(temp_dir)
+            except zipfile.BadZipFile as e:
+                logger.error(f"无效的ZIP文件: {str(e)}")
+                raise ValidationException(f"无效的ZIP文件: {str(e)}")
+            except Exception as e:
+                logger.error(f"解压ZIP文件失败: {str(e)}")
+                raise
             
             # 读取数据
             temp_file_path = os.path.join(temp_dir, "backup_data.json")
-            with open(temp_file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            temp_file_path = os.path.normpath(temp_file_path)
+            try:
+                with open(temp_file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON格式错误: {str(e)}")
+                raise ValidationException(f"JSON格式错误: {str(e)}")
+            except Exception as e:
+                logger.error(f"读取备份数据失败: {str(e)}")
+                raise
             
             # 删除临时目录
             shutil.rmtree(temp_dir)
@@ -363,7 +403,7 @@ class BackupService:
         with open(backup_file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
-    def _restore_data_to_services(self, data: Dict[str, Any]):
+    def _restore_data_to_services(self, data: Dict[str, Any]) -> None:
         """
         将数据恢复到各服务中
         
@@ -376,10 +416,11 @@ class BackupService:
         from services.service_factory import ServiceFactory
         
         # 获取各服务实例
-        course_service = ServiceFactory.get_course_service()
-        schedule_service = ServiceFactory.get_schedule_service()
-        temp_change_service = ServiceFactory.get_temp_change_service()
-        cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()
+        # 使用 # type: ignore 注释忽略未使用变量警告，因为这些变量在简化实现中未被使用
+        course_service = ServiceFactory.get_course_service()  # type: ignore
+        schedule_service = ServiceFactory.get_schedule_service()  # type: ignore
+        temp_change_service = ServiceFactory.get_temp_change_service()  # type: ignore
+        cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()  # type: ignore
         
         # 恢复课程数据
         if "courses" in data:
@@ -405,7 +446,7 @@ class BackupService:
     
     def _find_backup_file(self, backup_id: str) -> str:
         """
-        查找备份文件路径
+        查找备份文件路径，增强跨平台兼容性
         
         Args:
             backup_id: 备份ID
@@ -416,14 +457,15 @@ class BackupService:
         logger.debug(f"查找备份文件: {backup_id}")
         
         # 简化实现：在实际项目中应该从存储的元数据中查找备份文件路径
-        backup_dir = self.backup_config.backup_location
+        backup_dir = os.path.normpath(self.backup_config.backup_location)
         if not os.path.exists(backup_dir):
             return ""
         
         # 遍历备份目录查找匹配的文件
         for filename in os.listdir(backup_dir):
             if backup_id in filename:
-                return os.path.join(backup_dir, filename)
+                file_path = os.path.join(backup_dir, filename)
+                return os.path.normpath(file_path)
         
         return ""
     

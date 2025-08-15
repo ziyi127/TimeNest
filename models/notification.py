@@ -9,7 +9,7 @@
 """
 
 from typing import Dict, Any, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Optional
 
 

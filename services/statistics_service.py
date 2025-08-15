@@ -3,7 +3,7 @@
 提供课程统计、时间统计、教师统计等业务逻辑处理
 """
 
-from typing import Dict
+from typing import Dict, List
 from models.statistics import CourseStatistics, TimeStatistics, TeacherStatistics
 from utils.logger import get_service_logger
 
@@ -47,13 +47,28 @@ class StatisticsService:
             for course in courses:
                 teacher = course.teacher
                 courses_by_teacher[teacher] = courses_by_teacher.get(teacher, 0) + 1
+            # 按教师统计
+            courses_by_teacher: Dict[str, int] = {}
+            for course in courses:
+                teacher = course.teacher
+                courses_by_teacher[teacher] = courses_by_teacher.get(teacher, 0) + 1
             
             # 按地点统计
             courses_by_location: Dict[str, int] = {}
             for course in courses:
                 location = course.location
                 courses_by_location[location] = courses_by_location.get(location, 0) + 1
+            # 按地点统计
+            courses_by_location: Dict[str, int] = {}
+            for course in courses:
+                location = course.location
+                courses_by_location[location] = courses_by_location.get(location, 0) + 1
             
+            # 按星期统计
+            courses_by_day: Dict[int, int] = {}
+            for schedule in schedules:
+                day = schedule.day_of_week
+                courses_by_day[day] = courses_by_day.get(day, 0) + 1
             # 按星期统计
             courses_by_day: Dict[int, int] = {}
             for schedule in schedules:
@@ -255,7 +270,7 @@ class StatisticsService:
         """
         logger.info("获取所有统计信息")
         
-        stats = {
+        stats: Dict[str, object] = {
             "course_statistics": self.get_course_statistics(),
             "time_statistics": self.get_time_statistics(),
             "teacher_statistics": self.get_teacher_statistics()

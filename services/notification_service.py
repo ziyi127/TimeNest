@@ -83,11 +83,11 @@ class NotificationService:
         logger.info(f"创建通知: {title}")
         
         # 验证数据
-        if not title or not isinstance(title, str) or len(title.strip()) == 0:
+        if not title or len(title.strip()) == 0:
             logger.warning("通知标题不能为空")
             raise ValidationException("通知标题不能为空")
         
-        if not content or not isinstance(content, str) or len(content.strip()) == 0:
+        if not content or len(content.strip()) == 0:
             logger.warning("通知内容不能为空")
             raise ValidationException("通知内容不能为空")
         
@@ -147,13 +147,13 @@ class NotificationService:
         
         # 更新字段
         if title is not None:
-            if not isinstance(title, str) or len(title.strip()) == 0:
+            if len(title.strip()) == 0:
                 logger.warning("通知标题不能为空")
                 raise ValidationException("通知标题不能为空")
             notification.title = title.strip()
         
         if content is not None:
-            if not isinstance(content, str) or len(content.strip()) == 0:
+            if len(content.strip()) == 0:
                 logger.warning("通知内容不能为空")
                 raise ValidationException("通知内容不能为空")
             notification.content = content.strip()

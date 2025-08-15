@@ -3,8 +3,9 @@
 提供临时换课相关的业务逻辑处理
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from models.temp_change import TempChange
+from models.class_plan import ClassPlan
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException, NotFoundException, ConflictException
 
@@ -154,7 +155,7 @@ class TempChangeService:
         """
         logger.debug(f"Getting temp changes by date: {date_str}")
         
-        result: List[TempChange] = []
+        result = []
         for temp_change in self.temp_changes:
             if temp_change.change_date == date_str:
                 result.append(temp_change)
@@ -174,7 +175,7 @@ class TempChangeService:
         """
         logger.debug(f"Getting temp changes by schedule: {schedule_id}")
         
-        result: List[TempChange] = []
+        result = []
         for temp_change in self.temp_changes:
             if temp_change.original_schedule_id == schedule_id:
                 result.append(temp_change)
@@ -223,7 +224,7 @@ class TempChangeService:
                 return i
         return -1
     
-    def _validate_temp_change(self, temp_change: TempChange) -> Tuple[bool, List[str]]:
+    def _validate_temp_change(self, temp_change: TempChange) -> tuple[bool, List[str]]:
         """
         验证临时换课数据
         
@@ -233,18 +234,18 @@ class TempChangeService:
         Returns:
             (is_valid, errors): 是否有效和错误信息列表
         """
-        errors: List[str] = []
+        errors = []
         
         # 验证ID
-        if not temp_change.id or len(temp_change.id.strip()) == 0:
+        if not temp_change.id or not isinstance(temp_change.id, str) or len(temp_change.id.strip()) == 0:
             errors.append("临时换课ID不能为空")
         
         # 验证原课程表ID
-        if not temp_change.original_schedule_id or len(temp_change.original_schedule_id.strip()) == 0:
+        if not temp_change.original_schedule_id or not isinstance(temp_change.original_schedule_id, str) or len(temp_change.original_schedule_id.strip()) == 0:
             errors.append("原课程表ID不能为空")
         
         # 验证新课程ID
-        if not temp_change.new_course_id or len(temp_change.new_course_id.strip()) == 0:
+        if not temp_change.new_course_id or not isinstance(temp_change.new_course_id, str) or len(temp_change.new_course_id.strip()) == 0:
             errors.append("新课程ID不能为空")
         
         # 验证换课日期格式

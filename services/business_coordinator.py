@@ -11,6 +11,7 @@ from models.temp_change import TempChange
 from models.cycle_schedule import CycleSchedule
 from services.service_factory import ServiceFactory
 from utils.logger import get_service_logger
+from utils.enhanced_exception_handler import EnhancedExceptionHandler
 
 # 初始化日志记录器
 logger = get_service_logger("business_coordinator")
