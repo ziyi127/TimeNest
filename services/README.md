@@ -79,6 +79,14 @@ schedule = ClassPlan(...)
 created_course, created_schedule = coordinator.create_course_with_schedule(course, schedule)
 ```
 
+### 运行演示
+
+项目包含一个演示文件 `demo.py`，展示了如何使用各种服务：
+
+```bash
+python services/demo.py
+```
+
 ## 错误处理
 
 所有服务方法都会抛出以下异常：
