@@ -83,11 +83,6 @@ class FloatingWindow(QWidget):
         main_layout.setSpacing(5)
 
         # 创建背景框架
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(5)
-
-        # 创建背景框架
         self.background_frame = QFrame(self)
         self.background_frame.setStyleSheet("QFrame {background-color: rgba(255, 255, 255, 0.8); border-radius: 10px;}")
         self.background_frame.setMinimumSize(280, 100)

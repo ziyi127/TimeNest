@@ -64,8 +64,9 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout,
                             QLineEdit, QComboBox, QDateEdit, QTimeEdit,
                             QListWidget, QListWidgetItem, QTabWidget,
                             QTableWidget, QTableWidgetItem, QHeaderView,
-                            QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation, QGuiApplication
+                            QFrame, QCheckBox, QStyle)
+from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent
 
 # 设置中文字体支持
@@ -123,9 +124,6 @@ class FloatingWindow(QWidget):
         main_layout.setSpacing(5)
 
         # 创建背景框架
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(5)
 
         # 创建背景框架
         self.background_frame = QFrame(self)
@@ -285,8 +283,11 @@ class FloatingWindow(QWidget):
         menu.addAction(exit_action)
         menu.exec_(QCursor.pos())
 
-# 系统托盘图标类
+# 导入GUI组件
+from frontend.gui.management_window import ManagementWindow
+from frontend.gui.temp_change_window import TempChangeWindow
 
+# 系统托盘图标类
 
 class SystemTrayIcon(QSystemTrayIcon):
     # 重写show方法以更新菜单文本
@@ -298,12 +299,12 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.app = app
 
         # 设置图标
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "res", "logo.ico")
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "res", "logo.ico")
         if os.path.exists(icon_path):
             self.setIcon(QIcon(icon_path))
         else:
             # 使用默认图标
-            self.setIcon(self.style().standardIcon(QApplication.style().SP_ComputerIcon))
+            self.setIcon(QApplication.style().standardIcon(QStyle.SP_ComputerIcon))
 
         # 设置提示文本
         self.setToolTip("TimeNest 课表软件")
@@ -400,6 +401,13 @@ class TimeNestApp(QApplication):
         
         # 初始化数据
         self.load_data()
+        
+        # 创建悬浮窗
+        self.floating_window = FloatingWindow(self)
+        
+        # 创建系统托盘图标
+        self.tray_icon = SystemTrayIcon(self)
+        self.tray_icon.show()
         
     def load_data(self):
         """加载课程、课程表和临时换课数据"""
@@ -596,18 +604,15 @@ def main():
         app_data_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"应用数据目录: {app_data_path}")
         
-        # 创建并运行后端服务
-        logger.info("启动TimeNest后端服务")
-        backend_service = TimeNestBackendService()
+        # 创建主应用实例
+        logger.info("启动TimeNest应用程序")
+        time_nest_app = TimeNestApp(sys.argv)
         
-        # 这里可以添加后端服务的逻辑，例如启动HTTP服务器等
-        # 为了简化，我们只是初始化数据并保存
+        # 显示悬浮窗
+        time_nest_app.floating_window.show()
         
-        # 保存数据
-        backend_service.save_data()
-        
-        logger.info("TimeNest后端服务初始化完成")
-        return 0
+        logger.info("TimeNest应用程序初始化完成")
+        return time_nest_app.exec()
         
     except KeyboardInterrupt:
         logger.info("用户中断应用程序")

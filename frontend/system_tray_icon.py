@@ -3,52 +3,37 @@
 
 """
 TimeNest - 智能课程表桌面应用
-系统托盘组件
+系统托盘图标类（前端专用）
 """
 
-import sys
 import os
-from datetime import datetime
 from pathlib import Path
 
-# 添加项目根目录到Python路径
-project_root = Path(__file__).parent.parent.parent.resolve()
-sys.path.insert(0, str(project_root))
-
-# 导入PySide6模块
-from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout,
-                               QHBoxLayout, QPushButton, QMenu,
-                               QSystemTrayIcon, QMessageBox, QDialog, QFormLayout,
-                               QLineEdit, QComboBox, QDateEdit, QTimeEdit,
-                               QListWidget, QListWidgetItem, QTabWidget,
-                               QTableWidget, QTableWidgetItem, QHeaderView,
-                               QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
-from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent, QGuiApplication
+from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication, QStyle
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtCore import Qt
 
 # 导入GUI组件
 from frontend.gui.management_window import ManagementWindow
 from frontend.gui.temp_change_window import TempChangeWindow
 
 
-# 系统托盘图标类
-class SystemTrayIcon(QSystemTrayIcon):
-    # 重写show方法以更新菜单文本
-    def show(self):
-        super().show()
-        self.update_show_action_text()
-        
+class FrontendSystemTrayIcon(QSystemTrayIcon):
+    """前端应用系统托盘图标类"""
+    
     def __init__(self, app: 'TimeNestFrontendApp'):
         super().__init__(app)
         self.app = app
 
         # 设置图标
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "res", "logo.ico")
+        # 获取项目根目录
+        project_root = Path(__file__).parent.parent.resolve()
+        icon_path = os.path.join(project_root, "res", "logo.ico")
         if os.path.exists(icon_path):
             self.setIcon(QIcon(icon_path))
         else:
             # 使用默认图标
-            self.setIcon(self.style().standardIcon(QApplication.style().SP_ComputerIcon))
+            self.setIcon(QApplication.style().standardIcon(QStyle.SP_ComputerIcon))
 
         # 设置提示文本
         self.setToolTip("TimeNest 课表软件")

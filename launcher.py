@@ -82,7 +82,7 @@ def install_dependencies() -> bool:
         if not in_venv:
             # 如果没有在虚拟环境中，使用虚拟环境的 pip
             if platform.system() == "Windows":
-                pip_path = Path("venv/Scripts/pip")
+                pip_path = Path("venv/Scripts/pip.exe")
             else:
                 pip_path = Path("venv/bin/pip")
             
@@ -131,7 +131,7 @@ def start_application() -> bool:
     print_status("启动 TimeNest 应用程序...")
     
     try:
-        # 使用虚拟环境中的 Python 运行 main.py
+        # 使用虚拟环境中的 Python 运行 frontend/main.py
         if platform.system() == "Windows":
             python_path = Path("venv/Scripts/python.exe")
         else:
@@ -142,8 +142,8 @@ def start_application() -> bool:
             print_status("错误: 虚拟环境中的 Python 解释器不存在")
             return False
         
-        # 使用虚拟环境中的 Python 运行 main.py
-        subprocess.run([str(python_path), "main.py"], check=True)
+        # 使用虚拟环境中的 Python 运行 frontend/main.py，并设置工作目录
+        subprocess.run([str(python_path), "frontend/main.py"], cwd=".", check=True)
         print_status("TimeNest 应用程序已启动")
         return True
     except subprocess.CalledProcessError as e:
