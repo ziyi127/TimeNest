@@ -37,6 +37,8 @@ class FloatingWindow(QWidget):
     def __init__(self, app: 'TimeNestFrontendApp'):
         super().__init__()
         self.app = app
+        # 添加编辑模式标志
+        self.edit_mode = False
         self.initUI()
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
@@ -48,6 +50,8 @@ class FloatingWindow(QWidget):
         # 设置窗口样式
         self.setWindowFlags(Qt.WindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool))
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # 设置触控穿透属性
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
         # 窗口大小和位置 - 调整为屏幕中上部
         screen_geometry = QGuiApplication.primaryScreen().availableGeometry()
@@ -184,7 +188,7 @@ class FloatingWindow(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         """鼠标按下事件，开始拖动"""
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
             self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
             self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
             self.stop_fade_out()
@@ -199,13 +203,13 @@ class FloatingWindow(QWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         """鼠标移动事件，处理拖动"""
-        if event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.LeftButton and self.edit_mode:
             self.move(event.globalPos() - self.drag_position)
             event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         """鼠标释放事件，结束拖动"""
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
             # 保存窗口位置
             self.app.settings["window_position"] = {
@@ -233,9 +237,20 @@ class FloatingWindow(QWidget):
         manage_action.triggered.connect(self.app.tray_icon.show_management_window)
         temp_change_action = QAction("临时调课", self)
         temp_change_action.triggered.connect(self.app.tray_icon.show_temp_change_window)
+        edit_mode_action = QAction("编辑模式", self)
+        edit_mode_action.setCheckable(True)
+        edit_mode_action.setChecked(self.app.tray_icon.edit_mode)
+        edit_mode_action.triggered.connect(self.app.tray_icon.toggle_edit_mode)
         exit_action = QAction("退出", self)
         exit_action.triggered.connect(self.app.quit)
         menu.addAction(manage_action)
         menu.addAction(temp_change_action)
+        menu.addAction(edit_mode_action)
         menu.addAction(exit_action)
         menu.exec_(QCursor.pos())
+
+    def set_edit_mode(self, enabled: bool):
+        """设置编辑模式"""
+        self.edit_mode = enabled
+        # 根据编辑模式设置鼠标事件穿透
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, not enabled)

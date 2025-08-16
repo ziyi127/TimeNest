@@ -24,6 +24,8 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
     def __init__(self, app: 'TimeNestFrontendApp'):
         super().__init__(app)
         self.app = app
+        # 添加编辑模式标志
+        self.edit_mode = False
 
         # 设置图标
         # 获取项目根目录
@@ -54,6 +56,10 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         # 更新动作文本
         self.update_show_action_text()
 
+        # 编辑模式切换动作
+        self.edit_mode_action = QAction("启用编辑模式", self)
+        self.edit_mode_action.triggered.connect(self.toggle_edit_mode)
+
         # 课表管理动作
         manage_action = QAction("课表管理", self)
         manage_action.triggered.connect(self.show_management_window)
@@ -68,6 +74,7 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
 
         # 添加动作到菜单
         menu.addAction(self.show_action)
+        menu.addAction(self.edit_mode_action)
         menu.addAction(manage_action)
         menu.addAction(temp_change_action)
         menu.addSeparator()
@@ -115,3 +122,15 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
             self.temp_change_window.setParent(None)
         self.temp_change_window.show()
         self.temp_change_window.raise_()
+
+    def toggle_edit_mode(self):
+        """切换编辑模式"""
+        self.edit_mode = not self.edit_mode
+        if self.edit_mode:
+            self.edit_mode_action.setText("禁用编辑模式")
+            # 启用悬浮窗的拖动功能
+            self.app.floating_window.set_edit_mode(True)
+        else:
+            self.edit_mode_action.setText("启用编辑模式")
+            # 禁用悬浮窗的拖动功能
+            self.app.floating_window.set_edit_mode(False)
