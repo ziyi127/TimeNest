@@ -6,8 +6,10 @@
 import hashlib
 import secrets
 import datetime
+import os
 from typing import Optional
 from models.password_config import PasswordConfig
+from models.user_settings import UserSettings
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException
 from data_access.json_data_access import JSONDataAccess
@@ -23,7 +25,9 @@ class UserService:
         """初始化用户服务"""
         self.data_access = JSONDataAccess()
         self.password_config: Optional[PasswordConfig] = None
+        self.user_settings: Optional[UserSettings] = None
         self._load_password_config()
+        self._load_user_settings()
         logger.info("UserService initialized")
     
     def _load_password_config(self):
@@ -40,6 +44,20 @@ class UserService:
             logger.error(f"加载密码配置失败: {str(e)}")
             self.password_config = PasswordConfig()
     
+    def _load_user_settings(self):
+        """加载用户设置"""
+        try:
+            data = self.data_access.read_json("user_settings.json")
+            if data:
+                self.user_settings = UserSettings.from_dict(data)
+            else:
+                # 如果配置文件不存在，创建默认配置
+                self.user_settings = UserSettings()
+                self._save_user_settings()
+        except Exception as e:
+            logger.error(f"加载用户设置失败: {str(e)}")
+            self.user_settings = UserSettings()
+    
     def _save_password_config(self):
         """保存密码配置"""
         try:
@@ -50,6 +68,17 @@ class UserService:
         except Exception as e:
             logger.error(f"保存密码配置失败: {str(e)}")
             raise ValidationException("保存密码配置失败")
+    
+    def _save_user_settings(self):
+        """保存用户设置"""
+        try:
+            if self.user_settings:
+                data = self.user_settings.to_dict()
+                self.data_access.write_json("user_settings.json", data)
+                logger.info("用户设置已保存")
+        except Exception as e:
+            logger.error(f"保存用户设置失败: {str(e)}")
+            raise ValidationException("保存用户设置失败")
     
     def _hash_password(self, password: str, salt: Optional[str] = None) -> tuple[str, str]:
         """
@@ -183,3 +212,37 @@ class UserService:
         if self.password_config is None:
             self.password_config = PasswordConfig()
         return self.password_config
+    
+    def get_user_settings(self) -> UserSettings:
+        """
+        获取用户设置
+        
+        Returns:
+            用户设置对象
+        """
+        if self.user_settings is None:
+            self.user_settings = UserSettings()
+        return self.user_settings
+    
+    def update_user_settings(self, user_settings: UserSettings) -> UserSettings:
+        """
+        更新用户设置
+        
+        Args:
+            user_settings: 新的用户设置对象
+            
+        Returns:
+            更新后的用户设置对象
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
+        logger.info("更新用户设置")
+        
+        # 更新用户设置
+        self.user_settings = user_settings
+        
+        # 保存配置
+        self._save_user_settings()
+        logger.info("用户设置更新成功")
+        return self.user_settings

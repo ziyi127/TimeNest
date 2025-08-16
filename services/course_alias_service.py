@@ -9,7 +9,6 @@ import re
 from typing import List, Optional, Dict, Any
 from models.course_alias import CourseAlias, CourseAliasSettings
 from models.class_item import ClassItem
-from services.service_factory import ServiceFactory
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException
 
@@ -304,6 +303,9 @@ class CourseAliasService:
             Optional[Dict[str, Any]]: 课程信息字典
         """
         try:
+            # 延迟导入ServiceFactory以避免循环导入
+            from services.service_factory import ServiceFactory
+            
             # 获取课程服务
             course_service = ServiceFactory.get_course_service()
             course = course_service.get_course_by_id(course_id)
@@ -339,6 +341,9 @@ class CourseAliasService:
             List[Dict[str, Any]]: 课程信息列表
         """
         try:
+            # 延迟导入ServiceFactory以避免循环导入
+            from services.service_factory import ServiceFactory
+            
             # 获取课程服务
             course_service = ServiceFactory.get_course_service()
             courses = course_service.get_all_courses()

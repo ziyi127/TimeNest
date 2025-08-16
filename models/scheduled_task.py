@@ -17,7 +17,7 @@ class OSType(Enum):
 
 
 class TaskType(Enum):
-    """任务类型枚举""
+    """任务类型枚举"""
     APPLICATION = "application"
     FILE_OPERATION = "file_operation"
     SYSTEM_COMMAND = "system_command"

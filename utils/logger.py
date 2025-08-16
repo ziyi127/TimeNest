@@ -78,6 +78,39 @@ def get_service_logger(service_name: str) -> logging.Logger:
     return setup_logger(f"TimeNest.{service_name}", log_file)
 
 
+# 全局调试模式标志
+_DEBUG_MODE = False
+
+
+def set_debug_mode(enabled: bool):
+    """
+    设置调试模式
+    
+    Args:
+        enabled: 是否启用调试模式
+    """
+    global _DEBUG_MODE
+    _DEBUG_MODE = enabled
+    
+    # 设置根日志记录器的级别
+    root_logger = logging.getLogger()
+    if enabled:
+        root_logger.setLevel(logging.DEBUG)
+    else:
+        root_logger.setLevel(logging.INFO)
+
+
+def is_debug_mode() -> bool:
+    """
+    检查是否启用了调试模式
+    
+    Returns:
+        bool: 是否启用了调试模式
+    """
+    global _DEBUG_MODE
+    return _DEBUG_MODE
+
+
 def log_exception(logger: logging.Logger, exception: Exception, context: str = ""):
     """
     记录异常信息
