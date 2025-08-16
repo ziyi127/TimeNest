@@ -61,7 +61,7 @@ TimeNest 使用 JSON 文件作为配置文件，配置文件位于 `data/` 目�
 ### 4.1 启动应用
 在项目根目录下执行以下命令启动应用：
 ```bash
-python main.py
+python launcher.py
 ```
 
 如果是 Web 应用，可能需要启动 Flask 服务器：
