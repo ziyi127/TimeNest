@@ -120,13 +120,18 @@ class FloatingWindow(QWidget):
         self.opacity_animation.setDuration(1000)
         # 动画起始值将在启动时动态设置
         self.opacity_animation.setEndValue(0.0)
+        
+        # 设置初始透明度
+        transparency = self.app.settings.get("floating_window", {}).get("transparency", 80)
+        self.setWindowOpacity(transparency / 100.0)
 
-        # 自动隐藏计时器 - 设置为10秒
+        # 自动隐藏计时器
         self.hide_timer = QTimer(self)
         self.hide_timer.setSingleShot(True)
         self.hide_timer.timeout.connect(self.start_fade_out)
-        # 设置自动隐藏时间为10秒
-        self.auto_hide_timeout = 10000  # 10秒后自动隐藏
+        # 设置自动隐藏时间
+        auto_hide_threshold = self.app.settings.get("floating_window", {}).get("auto_hide_threshold", 50)
+        self.auto_hide_timeout = auto_hide_threshold * 100  # 转换为毫秒
 
         # 数据更新计时器
         self.update_timer = QTimer(self)
@@ -165,7 +170,17 @@ class FloatingWindow(QWidget):
         elif schedule["type"] == "temp":
             course = schedule["course"]
             self.status_label.setText(f"【临时】{course['name']} ({course['teacher']}) {course['location']}")
-            self.status_label.setStyleSheet("color: #FF5722;")
+            
+            # 根据设置决定临时课程样式
+            temp_course_style = self.app.settings.get("floating_window", {}).get("temp_course_style", "临时调课标红边框")
+            if temp_course_style == "临时调课标红边框":
+                self.status_label.setStyleSheet("color: #FF5722;")
+            elif temp_course_style == "临时调课闪烁提醒":
+                # TODO: 实现闪烁提醒效果
+                self.status_label.setStyleSheet("color: #FF5722;")
+            elif temp_course_style == "临时调课标红边框+闪烁提醒":
+                # TODO: 实现闪烁提醒效果
+                self.status_label.setStyleSheet("color: #FF5722;")
 
     def update_data(self):
         """更新数据"""
@@ -174,10 +189,17 @@ class FloatingWindow(QWidget):
         # 获取真实天气数据
         weather_data = self.app.get_weather_data()
         if weather_data:
-            # 使用真实的天气数据
+            # 根据设置决定天气显示方式
+            weather_display = self.app.settings.get("floating_window", {}).get("weather_display", "温度 + 天气描述")
             weather_condition = weather_data.get("weather_condition", "未知")
             temperature = weather_data.get("temperature", "--")
-            self.weather_label.setText(f"{weather_condition} {temperature}℃")
+            
+            if weather_display == "仅显示温度":
+                self.weather_label.setText(f"{temperature}℃")
+            elif weather_display == "温度 + 天气描述":
+                self.weather_label.setText(f"{weather_condition} {temperature}℃")
+            elif weather_display == "隐藏天气":
+                self.weather_label.setText("")
         else:
             # 如果无法获取天气数据，显示默认值
             self.weather_label.setText("无法获取天气数据")
@@ -230,6 +252,12 @@ class FloatingWindow(QWidget):
         """鼠标释放事件，结束拖动"""
         if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
+            
+            # 根据设置决定是否吸附到边缘
+            snap_to_edge = self.app.settings.get("floating_window", {}).get("snap_to_edge", False)
+            if snap_to_edge:
+                self.snap_to_edge()
+            
             # 保存窗口位置
             self.app.settings["window_position"] = {
                 "x": self.x(),
@@ -287,3 +315,49 @@ class FloatingWindow(QWidget):
         else:
             # 非编辑模式下，启用触控穿透
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+    
+    def snap_to_edge(self):
+        """吸附到屏幕边缘"""
+        # 获取屏幕尺寸
+        screen = self.screen()
+        if screen:
+            screen_geometry = screen.availableGeometry()
+            screen_width = screen_geometry.width()
+            screen_height = screen_geometry.height()
+            
+            # 获取窗口当前位置
+            x = self.x()
+            y = self.y()
+            window_width = self.width()
+            window_height = self.height()
+            
+            # 计算到各边缘的距离
+            distance_to_left = x
+            distance_to_right = screen_width - (x + window_width)
+            distance_to_top = y
+            distance_to_bottom = screen_height - (y + window_height)
+            
+            # 根据设置的优先级决定吸附到哪条边
+            snap_priority = self.app.settings.get("floating_window", {}).get("snap_priority", "右侧 > 顶部 > 左侧")
+            
+            if snap_priority == "右侧 > 顶部 > 左侧":
+                if distance_to_right <= min(distance_to_top, distance_to_left):
+                    self.move(screen_width - window_width, y)
+                elif distance_to_top <= distance_to_left:
+                    self.move(x, 0)
+                else:
+                    self.move(0, y)
+            elif snap_priority == "顶部 > 右侧 > 左侧":
+                if distance_to_top <= min(distance_to_right, distance_to_left):
+                    self.move(x, 0)
+                elif distance_to_right <= distance_to_left:
+                    self.move(screen_width - window_width, y)
+                else:
+                    self.move(0, y)
+            elif snap_priority == "左侧 > 顶部 > 右侧":
+                if distance_to_left <= min(distance_to_top, distance_to_right):
+                    self.move(0, y)
+                elif distance_to_top <= distance_to_right:
+                    self.move(x, 0)
+                else:
+                    self.move(screen_width - window_width, y)

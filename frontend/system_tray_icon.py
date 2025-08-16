@@ -16,6 +16,7 @@ from PySide6.QtCore import Qt
 # 导入GUI组件
 from frontend.gui.management_window import ManagementWindow
 from frontend.gui.temp_change_window import TempChangeWindow
+from frontend.gui.settings_window import SettingsWindow
 
 
 class FrontendSystemTrayIcon(QSystemTrayIcon):
@@ -64,6 +65,10 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         manage_action = QAction("课表管理", self)
         manage_action.triggered.connect(self.show_management_window)
 
+        # 设置动作
+        settings_action = QAction("设置", self)
+        settings_action.triggered.connect(self.show_settings_window)
+
         # 临时调课动作
         temp_change_action = QAction("临时调课", self)
         temp_change_action.triggered.connect(self.show_temp_change_window)
@@ -76,6 +81,7 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         menu.addAction(self.show_action)
         menu.addAction(self.edit_mode_action)
         menu.addAction(manage_action)
+        menu.addAction(settings_action)
         menu.addAction(temp_change_action)
         menu.addSeparator()
         menu.addAction(exit_action)
@@ -123,14 +129,51 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         self.temp_change_window.show()
         self.temp_change_window.raise_()
 
+    def show_settings_window(self):
+        """显示设置窗口"""
+        if not hasattr(self, 'settings_window') or self.settings_window.isHidden():
+            self.settings_window = SettingsWindow(self.app)
+            self.settings_window.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
+            self.settings_window.setParent(None)
+            # 连接设置保存信号以更新悬浮窗设置
+            self.settings_window.settings_saved.connect(self.update_floating_window_settings)
+        self.settings_window.show()
+        self.settings_window.raise_()
+
     def toggle_edit_mode(self):
         """切换编辑模式"""
         self.edit_mode = not self.edit_mode
         if self.edit_mode:
-            self.edit_mode_action.setText("禁用编辑模式")
+            self.edit_mode_action.setText("启用编辑模式")
             # 启用悬浮窗的拖动功能
             self.app.floating_window.set_edit_mode(True)
         else:
-            self.edit_mode_action.setText("启用编辑模式")
+            self.edit_mode_action.setText("禁用编辑模式")
             # 禁用悬浮窗的拖动功能
             self.app.floating_window.set_edit_mode(False)
+    
+    def update_floating_window_settings(self, settings_data):
+        """更新悬浮窗设置"""
+        # 获取悬浮窗设置
+        if "floating_window" in settings_data:
+            fw_settings = settings_data["floating_window"]
+            
+            # 更新透明度
+            transparency = fw_settings.get("transparency", 80)
+            self.app.floating_window.setWindowOpacity(transparency / 100.0)
+            
+            # 更新自动隐藏阈值
+            auto_hide_threshold = fw_settings.get("auto_hide_threshold", 50)
+            self.app.floating_window.auto_hide_timeout = auto_hide_threshold * 100  # 转换为毫秒
+            
+            # 更新吸附边缘设置
+            snap_to_edge = fw_settings.get("snap_to_edge", False)
+            # 这个设置将在拖动时使用
+            
+            # 更新天气显示规则
+            weather_display = fw_settings.get("weather_display", "温度 + 天气描述")
+            # 这个设置将在更新天气数据时使用
+            
+            # 更新临时课程样式
+            temp_course_style = fw_settings.get("temp_course_style", "临时调课标红边框")
+            # 这个设置将在更新课程状态时使用

@@ -25,6 +25,8 @@ from PySide6.QtGui import QFont
 from frontend.gui.floating_window import FloatingWindow
 # 导入系统托盘图标
 from frontend.system_tray_icon import FrontendSystemTrayIcon
+# 导入设置窗口
+from frontend.gui.settings_window import SettingsWindow
 
 # 设置中文字体支持
 font = QFont()
@@ -57,6 +59,10 @@ class TimeNestFrontendApp(QApplication):
         # 创建系统托盘图标
         self.tray_icon = FrontendSystemTrayIcon(self)
         self.tray_icon.show()
+        
+        # 连接设置保存信号
+        # 注意：需要在创建设置窗口后连接信号
+        # 实际连接将在创建设置窗口时完成
     
     def load_data(self):
         """加载数据"""
@@ -96,7 +102,17 @@ class TimeNestFrontendApp(QApplication):
                     "y": 100
                 },
                 "auto_hide_timeout": 5000,
-                "update_interval": 1000  # 1秒更新间隔
+                "update_interval": 1000,  # 1秒更新间隔
+                "floating_window": {
+                    "hide_tray_menu": False,
+                    "remember_position": True,
+                    "auto_hide_threshold": 50,
+                    "transparency": 80,
+                    "snap_to_edge": False,
+                    "snap_priority": "右侧 > 顶部 > 左侧",
+                    "weather_display": "温度 + 天气描述",
+                    "temp_course_style": "临时调课标红边框"
+                }
             }
     
     def save_data(self):
