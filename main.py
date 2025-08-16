@@ -65,8 +65,8 @@ from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout,
                             QListWidget, QListWidgetItem, QTabWidget,
                             QTableWidget, QTableWidgetItem, QHeaderView,
                             QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation, QGuiApplication
-from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent
+from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
+from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent, QGuiApplication
 
 # 设置中文字体支持
 font = QFont()
