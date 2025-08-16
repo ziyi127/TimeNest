@@ -105,6 +105,9 @@ class ManagementWindow(QWidget):
         if dialog.exec_() == QDialog.Accepted:
             self.app.load_data()
             self.update_course_list()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def edit_course(self):
         """编辑课程"""
@@ -123,6 +126,9 @@ class ManagementWindow(QWidget):
         if dialog.exec_() == QDialog.Accepted:
             self.app.load_data()
             self.update_course_list()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def delete_course(self):
         """删除课程"""
@@ -145,6 +151,9 @@ class ManagementWindow(QWidget):
             self.update_course_list()
             self.update_schedule_table()
             self.update_temp_change_table()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def init_schedule_tab(self):
         """初始化课程表管理标签页"""
@@ -215,6 +224,12 @@ class ManagementWindow(QWidget):
         if dialog.exec_() == QDialog.Accepted:
             self.app.load_data()
             self.update_schedule_table()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def edit_schedule(self):
         """编辑课程表项"""
@@ -258,6 +273,9 @@ class ManagementWindow(QWidget):
             self.app.save_data()
             self.update_schedule_table()
             self.update_temp_change_table()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def init_temp_change_tab(self):
         """初始化临时换课记录标签页"""
@@ -338,6 +356,9 @@ class ManagementWindow(QWidget):
             self.app.temp_changes = [t for t in self.app.temp_changes if t['id'] != temp_change_id]
             self.app.save_data()
             self.update_temp_change_table()
+            # 触发悬浮窗更新
+            if hasattr(self.app, 'floating_window'):
+                self.app.floating_window.update_status()
 
     def save_data(self):
         """保存数据"""

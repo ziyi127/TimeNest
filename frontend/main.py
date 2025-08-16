@@ -92,11 +92,27 @@ class TimeNestFrontendApp(QApplication):
                     "y": 100
                 },
                 "auto_hide_timeout": 5000,
-                "update_interval": 60000
+                "update_interval": 1000  # 1秒更新间隔
             }
     
     def save_data(self):
-        """保存设置数据"""
+        """保存所有数据"""
+        # 保存课程数据
+        courses_file = os.path.join(self.data_dir, "courses.json")
+        with open(courses_file, 'w', encoding='utf-8') as f:
+            json.dump(self.courses, f, ensure_ascii=False, indent=2)
+        
+        # 保存课程表数据
+        schedules_file = os.path.join(self.data_dir, "schedules.json")
+        with open(schedules_file, 'w', encoding='utf-8') as f:
+            json.dump(self.schedules, f, ensure_ascii=False, indent=2)
+        
+        # 保存临时换课数据
+        temp_changes_file = os.path.join(self.data_dir, "temp_changes.json")
+        with open(temp_changes_file, 'w', encoding='utf-8') as f:
+            json.dump(self.temp_changes, f, ensure_ascii=False, indent=2)
+        
+        # 保存设置数据
         settings_file = os.path.join(self.data_dir, "settings.json")
         with open(settings_file, 'w', encoding='utf-8') as f:
             json.dump(self.settings, f, ensure_ascii=False, indent=2)
