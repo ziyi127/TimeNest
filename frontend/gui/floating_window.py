@@ -118,15 +118,15 @@ class FloatingWindow(QWidget):
         # 设置透明度动画
         self.opacity_animation = QPropertyAnimation(self, b"windowOpacity")
         self.opacity_animation.setDuration(1000)
-        self.opacity_animation.setStartValue(0.8)
+        # 动画起始值将在启动时动态设置
         self.opacity_animation.setEndValue(0.0)
 
-        # 自动隐藏计时器 - 增加时间到10秒，避免误操作
+        # 自动隐藏计时器 - 设置为10秒
         self.hide_timer = QTimer(self)
         self.hide_timer.setSingleShot(True)
         self.hide_timer.timeout.connect(self.start_fade_out)
-        # 延长自动隐藏时间到10秒
-        self.auto_hide_timeout = 10000  # 10秒
+        # 设置自动隐藏时间为10秒
+        self.auto_hide_timeout = 10000  # 10秒后自动隐藏
 
         # 数据更新计时器
         self.update_timer = QTimer(self)
@@ -178,7 +178,20 @@ class FloatingWindow(QWidget):
 
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""
+        # 动态设置动画起始值为当前透明度
+        self.opacity_animation.setStartValue(self.windowOpacity())
         self.opacity_animation.finished.connect(self.hide)
+        self.opacity_animation.start()
+
+    def fade_to_transparent(self):
+        """淡出到透明但不隐藏"""
+        self.opacity_animation.setStartValue(self.windowOpacity())
+        self.opacity_animation.setEndValue(0.0)
+        # 断开可能的隐藏连接
+        try:
+            self.opacity_animation.finished.disconnect(self.hide)
+        except TypeError:
+            pass  # 如果没有连接则忽略
         self.opacity_animation.start()
 
     def stop_fade_out(self):
@@ -220,14 +233,23 @@ class FloatingWindow(QWidget):
             event.accept()
 
     def enterEvent(self, event: QEvent):
-        """鼠标进入事件，停止自动隐藏"""
-        self.stop_fade_out()
-        self.hide_timer.stop()
+        """鼠标进入事件"""
+        if not self.edit_mode:
+            # 在非编辑模式下，降低透明度但不消失
+            self.setWindowOpacity(0.4)
+        else:
+            # 在编辑模式下，重置透明度并停止淡出动画
+            self.stop_fade_out()
         event.accept()
 
     def leaveEvent(self, event: QEvent):
-        """鼠标离开事件，启动自动隐藏计时器"""
-        self.hide_timer.start(self.auto_hide_timeout)
+        """鼠标离开事件"""
+        if not self.edit_mode:
+            # 在非编辑模式下，恢复透明度
+            self.setWindowOpacity(0.8)
+        else:
+            # 在编辑模式下，启动自动隐藏计时器
+            self.hide_timer.start(self.auto_hide_timeout)
         event.accept()
 
     def show_menu(self):
@@ -252,5 +274,10 @@ class FloatingWindow(QWidget):
     def set_edit_mode(self, enabled: bool):
         """设置编辑模式"""
         self.edit_mode = enabled
-        # 根据编辑模式设置鼠标事件穿透
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, not enabled)
+        if enabled:
+            # 编辑模式下，禁用触控穿透，恢复透明度
+            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+            self.setWindowOpacity(0.8)
+        else:
+            # 非编辑模式下，启用触控穿透
+            self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
