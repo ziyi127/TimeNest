@@ -40,11 +40,97 @@ class ManagementWindow(QWidget):
         self.initUI()
 
     def initUI(self):
+        # 设置窗口样式
+        self.setStyleSheet("""
+            QWidget {
+                font-family: "Microsoft YaHei";
+                font-size: 12px;
+            }
+            QPushButton {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                margin: 4px 2px;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #3d8b40;
+            }
+            QTabWidget::pane {
+                border: 1px solid #cccccc;
+                border-radius: 4px;
+                padding: 2px;
+            }
+            QTabBar::tab {
+                background: #f0f0f0;
+                border: 1px solid #cccccc;
+                border-bottom-color: #cccccc;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                min-width: 8ex;
+                padding: 4px;
+            }
+            QTabBar::tab:selected {
+                background: #ffffff;
+                border-bottom-color: #ffffff;
+            }
+            QTableWidget {
+                gridline-color: #e0e0e0;
+                alternate-background-color: #f9f9f9;
+            }
+            QTableWidget::item {
+                padding: 4px;
+            }
+            QHeaderView::section {
+                background-color: #f5f5f5;
+                color: #333333;
+                padding: 6px;
+                border: 1px solid #e0e0e0;
+                font-weight: bold;
+            }
+            QListWidget {
+                border: 1px solid #cccccc;
+                border-radius: 4px;
+            }
+        """)
+
         # 创建主布局
         main_layout = QVBoxLayout(self)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)
 
         # 创建标签页
         self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 2px;
+                background-color: #ffffff;
+            }
+            QTabBar::tab {
+                background: #f0f0f0;
+                border: 1px solid #cccccc;
+                border-bottom-color: #cccccc;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                min-width: 80px;
+                padding: 8px 12px;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                background: #ffffff;
+                border-bottom-color: #ffffff;
+                color: #4CAF50;
+            }
+        """)
         main_layout.addWidget(self.tab_widget)
 
         # 课程管理标签页
@@ -65,27 +151,120 @@ class ManagementWindow(QWidget):
         # 保存按钮
         save_button = QPushButton("保存数据")
         save_button.clicked.connect(self.save_data)
+        save_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 14px;
+                margin: 4px 2px;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+            QPushButton:pressed {
+                background-color: #0D47A1;
+            }
+        """)
         main_layout.addWidget(save_button)
 
     def init_course_tab(self):
         """初始化课程管理标签页"""
         layout = QVBoxLayout(self.course_tab)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # 创建课程列表
         self.course_list = QListWidget()
+        self.course_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 5px;
+                background-color: #ffffff;
+                alternate-background-color: #f9f9f9;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            QListWidget::item:selected {
+                background-color: #e3f2fd;
+                color: #000000;
+            }
+        """)
         layout.addWidget(self.course_list)
 
         # 添加按钮
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+        
         add_button = QPushButton("添加课程")
         add_button.clicked.connect(self.add_course)
+        add_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        
         edit_button = QPushButton("编辑课程")
         edit_button.clicked.connect(self.edit_course)
+        edit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+        """)
+        
         delete_button = QPushButton("删除课程")
         delete_button.clicked.connect(self.delete_course)
+        delete_button.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #d32f2f;
+            }
+        """)
+        
         button_layout.addWidget(add_button)
         button_layout.addWidget(edit_button)
         button_layout.addWidget(delete_button)
+        button_layout.addStretch()  # 添加弹性空间
         layout.addLayout(button_layout)
 
         # 更新列表数据
@@ -158,25 +337,105 @@ class ManagementWindow(QWidget):
     def init_schedule_tab(self):
         """初始化课程表管理标签页"""
         layout = QVBoxLayout(self.schedule_tab)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # 创建课程表表格
         self.schedule_table = QTableWidget()
         self.schedule_table.setColumnCount(6)
         self.schedule_table.setHorizontalHeaderLabels(["ID", "星期", "周次", "课程", "有效期从", "有效期至"])
         self.schedule_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.schedule_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                gridline-color: #e0e0e0;
+                background-color: #ffffff;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            QTableWidget::item:selected {
+                background-color: #e3f2fd;
+                color: #000000;
+            }
+            QHeaderView::section {
+                background-color: #f5f5f5;
+                color: #333333;
+                padding: 8px;
+                border: 1px solid #e0e0e0;
+                font-weight: bold;
+                font-size: 12px;
+            }
+        """)
         layout.addWidget(self.schedule_table)
 
         # 添加按钮
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+        
         add_button = QPushButton("添加课程表项")
         add_button.clicked.connect(self.add_schedule)
+        add_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        
         edit_button = QPushButton("编辑课程表项")
         edit_button.clicked.connect(self.edit_schedule)
+        edit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2196F3;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #1976D2;
+            }
+        """)
+        
         delete_button = QPushButton("删除课程表项")
         delete_button.clicked.connect(self.delete_schedule)
+        delete_button.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #d32f2f;
+            }
+        """)
+        
         button_layout.addWidget(add_button)
         button_layout.addWidget(edit_button)
         button_layout.addWidget(delete_button)
+        button_layout.addStretch()  # 添加弹性空间
         layout.addLayout(button_layout)
 
         # 更新表格数据
@@ -280,19 +539,65 @@ class ManagementWindow(QWidget):
     def init_temp_change_tab(self):
         """初始化临时换课记录标签页"""
         layout = QVBoxLayout(self.temp_change_tab)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         # 创建临时换课表格
         self.temp_change_table = QTableWidget()
         self.temp_change_table.setColumnCount(5)
         self.temp_change_table.setHorizontalHeaderLabels(["ID", "日期", "原课程", "新课程", "状态"])
         self.temp_change_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.temp_change_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                gridline-color: #e0e0e0;
+                background-color: #ffffff;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            QTableWidget::item:selected {
+                background-color: #e3f2fd;
+                color: #000000;
+            }
+            QHeaderView::section {
+                background-color: #f5f5f5;
+                color: #333333;
+                padding: 8px;
+                border: 1px solid #e0e0e0;
+                font-weight: bold;
+                font-size: 12px;
+            }
+        """)
         layout.addWidget(self.temp_change_table)
 
         # 添加按钮
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+        
         delete_button = QPushButton("删除记录")
         delete_button.clicked.connect(self.delete_temp_change)
+        delete_button.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                text-align: center;
+                text-decoration: none;
+                font-size: 12px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #d32f2f;
+            }
+        """)
+        
         button_layout.addWidget(delete_button)
+        button_layout.addStretch()  # 添加弹性空间
         layout.addLayout(button_layout)
 
         # 更新表格数据

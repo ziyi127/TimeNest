@@ -16,6 +16,7 @@ from backend.api.settings import settings_bp
 from backend.api.today_schedule import today_schedule_bp
 from backend.api.weather import weather_bp
 
+
 def create_app():
     """创建Flask应用"""
     app = Flask(__name__)
@@ -29,6 +30,7 @@ def create_app():
     app.register_blueprint(weather_bp, url_prefix='/api')
     
     return app
+
 
 if __name__ == '__main__':
     app = create_app()

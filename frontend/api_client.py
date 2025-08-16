@@ -7,11 +7,9 @@ API客户端，用于与后端服务通信
 """
 
 import sys
-import os
-import json
-import requests
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
+import requests
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.resolve()
@@ -87,7 +85,25 @@ class APIClient:
             return response.json()
         except requests.RequestException as e:
             print(f"获取设置失败: {e}")
-            return {}
+            # 返回默认设置
+            return {
+                "window_position": {
+                    "x": 100,
+                    "y": 100
+                },
+                "auto_hide_timeout": 5000,
+                "update_interval": 1000,
+                "floating_window": {
+                    "hide_tray_menu": False,
+                    "remember_position": True,
+                    "auto_hide_threshold": 50,
+                    "transparency": 80,
+                    "snap_to_edge": False,
+                    "snap_priority": "右侧 > 顶部 > 左侧",
+                    "weather_display": "温度 + 天气描述",
+                    "temp_course_style": "临时调课标红边框"
+                }
+            }
             
     def save_courses(self, courses: List[Dict[str, Any]]) -> bool:
         """

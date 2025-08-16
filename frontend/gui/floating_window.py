@@ -88,29 +88,39 @@ class FloatingWindow(QWidget):
 
         # 创建背景框架
         self.background_frame = QFrame(self)
-        self.background_frame.setStyleSheet("QFrame {background-color: rgba(255, 255, 255, 0.8); border-radius: 10px;}")
+        self.background_frame.setStyleSheet("""
+            QFrame {
+                background-color: rgba(255, 255, 255, 0.9);
+                border-radius: 15px;
+                border: 1px solid rgba(200, 200, 200, 0.5);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+        """)
         self.background_frame.setMinimumSize(280, 100)
         background_layout = QVBoxLayout(self.background_frame)
         background_layout.setContentsMargins(15, 15, 15, 15)
-        background_layout.setSpacing(5)
+        background_layout.setSpacing(8)
 
         # 时间标签
         self.time_label = QLabel("", self)
-        self.time_label.setFont(QFont("SimHei", 16, QFont.Weight.Bold))
+        self.time_label.setFont(QFont("Microsoft YaHei", 18, QFont.Weight.Bold))
         self.time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.time_label.setStyleSheet("QLabel { color: #333333; }")
         background_layout.addWidget(self.time_label)
 
         # 课程状态标签
         # 先创建标签对象
         self.status_label = QLabel("今日无课程", self)
-        self.status_label.setFont(QFont("SimHei", 12))
+        self.status_label.setFont(QFont("Microsoft YaHei", 13))
         self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("QLabel { color: #666666; }")
         background_layout.addWidget(self.status_label)
 
         # 天气标签
         self.weather_label = QLabel("小雨 25℃", self)
-        self.weather_label.setFont(QFont("SimHei", 12))
+        self.weather_label.setFont(QFont("Microsoft YaHei", 12))
         self.weather_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.weather_label.setStyleSheet("QLabel { color: #555555; }")
         background_layout.addWidget(self.weather_label)
 
         main_layout.addWidget(self.background_frame)
@@ -229,9 +239,9 @@ class FloatingWindow(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         """鼠标按下事件，开始拖动"""
-        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
-            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
-            self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+        if event.button() == Qt.LeftButton and self.edit_mode:
+            self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self.setCursor(QCursor(Qt.ClosedHandCursor))
             self.stop_fade_out()
             # 用户交互后，重置自动隐藏计时器
             self.hide_timer.stop()
@@ -245,13 +255,13 @@ class FloatingWindow(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent):
         """鼠标移动事件，处理拖动"""
         if event.buttons() == Qt.LeftButton and self.edit_mode:
-            self.move(event.globalPos() - self.drag_position)
+            self.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         """鼠标释放事件，结束拖动"""
-        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
-            self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
+        if event.button() == Qt.LeftButton and self.edit_mode:
+            self.setCursor(QCursor(Qt.ArrowCursor))
             
             # 根据设置决定是否吸附到边缘
             snap_to_edge = self.app.settings.get("floating_window", {}).get("snap_to_edge", False)
