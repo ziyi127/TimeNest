@@ -6,10 +6,11 @@
 import traceback
 import sys
 import os
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Type, Optional
 from datetime import datetime
 from utils.logger import get_service_logger
 from utils.exceptions import TimeNestException, ValidationException, ConflictException, NotFoundException
+import types
 
 # 初始化日志记录器
 logger = get_service_logger("enhanced_exception_handler")
@@ -219,7 +220,8 @@ class EnhancedExceptionHandler:
             return False
 
 
-def global_exception_handler(exc_type, exc_value, exc_traceback) -> None:
+def global_exception_handler(exc_type: Type[BaseException], exc_value: BaseException, 
+                           exc_traceback: Optional[types.TracebackType]) -> None:
     """
     全局异常处理器，增强跨平台兼容性
     可以通过 sys.excepthook = global_exception_handler 设置
