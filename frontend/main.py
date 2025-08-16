@@ -9,6 +9,7 @@ TimeNest - 智能课程表桌面应用
 import sys
 import os
 import json
+import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -45,6 +46,9 @@ class TimeNestFrontendApp(QApplication):
         
         # 初始化数据
         self.load_data()
+        
+        # 初始化天气数据
+        self.weather_data = None
 
         # 创建悬浮窗
         self.floating_window = FloatingWindow(self)
@@ -159,6 +163,21 @@ class TimeNestFrontendApp(QApplication):
         return {
             "type": "none"
         }
+    
+    def get_weather_data(self):
+        """获取天气数据"""
+        try:
+            # 从后端API获取天气数据
+            response = requests.get("http://localhost:5000/api/weather/current", timeout=5)
+            if response.status_code == 200:
+                self.weather_data = response.json()
+                return self.weather_data
+            else:
+                print(f"获取天气数据失败，状态码: {response.status_code}")
+                return None
+        except Exception as e:
+            print(f"获取天气数据时发生错误: {str(e)}")
+            return None
 
 
 def main():

@@ -171,10 +171,16 @@ class FloatingWindow(QWidget):
         """更新数据"""
         self.app.load_data()
         self.update_status()
-        # 随机更新天气（实际应用中应从API获取）
-        weathers = ["晴", "多云", "小雨", "大雨", "雷暴"]
-        temp = random.randint(20, 35)
-        self.weather_label.setText(f"{random.choice(weathers)} {temp}℃")
+        # 获取真实天气数据
+        weather_data = self.app.get_weather_data()
+        if weather_data:
+            # 使用真实的天气数据
+            weather_condition = weather_data.get("weather_condition", "未知")
+            temperature = weather_data.get("temperature", "--")
+            self.weather_label.setText(f"{weather_condition} {temperature}℃")
+        else:
+            # 如果无法获取天气数据，显示默认值
+            self.weather_label.setText("无法获取天气数据")
 
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""

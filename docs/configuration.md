@@ -6,6 +6,8 @@ TimeNest 使用 JSON 文件作为配置文件，所有配置文件都存储在 `
 - `user_settings.json`：用户设置配置
 - `class_plans.json`：课程表数据
 - `plugins.json`：插件配置
+- `settings.json`：前端界面配置（更新间隔等）
+- `weather_config.json`：天气服务配置（API密钥、位置、更新间隔等）
 
 ## 2. 用户设置配置说明 (user_settings.json)
 
@@ -183,4 +185,54 @@ TimeNest 支持自动备份配置文件，备份文件存储在 `data/backups/` 
 ```
 
 ### 5.3 配置文件验证
+
 TimeNest 在加载配置文件时会进行数据验证，如果配置文件格式不正确或缺少必需字段，会在日志中记录错误信息。
+
+## 6. 前端界面配置说明 (settings.json)
+
+### 6.1 文件结构
+```json
+{
+  "window_position": {
+    "x": 1327,
+    "y": 0
+  },
+  "auto_hide_timeout": 5000,
+  "update_interval": 5000
+}
+```
+
+### 6.2 配置项详细说明
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|-------|------|--------|------|
+| window_position | object | {"x": 0, "y": 0} | 窗口位置 |
+| window_position.x | integer | 0 | 窗口X坐标 |
+| window_position.y | integer | 0 | 窗口Y坐标 |
+| auto_hide_timeout | integer | 5000 | 自动隐藏超时时间（毫秒） |
+| update_interval | integer | 5000 | 前端界面更新间隔（毫秒） |
+
+## 7. 天气服务配置说明 (weather_config.json)
+
+### 7.1 文件结构
+```json
+{
+  "api_id": "",
+  "api_key": "",
+  "location": "天津",
+  "update_interval": 3600,
+  "unit": "metric",
+  "enabled": true
+}
+```
+
+### 7.2 配置项详细说明
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|-------|------|--------|------|
+| api_id | string | "" | 天气API ID |
+| api_key | string | "" | 天气API密钥 |
+| location | string | "北京" | 天气查询位置 |
+| update_interval | integer | 3600 | 天气数据更新间隔（秒） |
+| unit | string | "metric" | 温度单位（metric表示摄氏度） |
+| enabled | boolean | true | 是否启用天气服务 |
