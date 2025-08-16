@@ -7,29 +7,24 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
-import os
-import random
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from frontend.main import TimeNestFrontendApp
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
 # 导入PySide6模块
-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout,
-                               QHBoxLayout, QPushButton, QMenu,
-                               QMessageBox, QDialog, QFormLayout,
-                               QLineEdit, QComboBox, QDateEdit, QTimeEdit,
-                               QListWidget, QListWidgetItem, QTabWidget,
-                               QTableWidget, QTableWidgetItem, QHeaderView,
-                               QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
-from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent, QGuiApplication
-
-# 导入对话框
-from frontend.gui.dialogs.course_edit_dialog import CourseEditDialog
-from frontend.gui.dialogs.schedule_edit_dialog import ScheduleEditDialog
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout,
+    QMenu, QFrame
+)
+from PySide6.QtCore import QEvent, Qt, QTimer, QPropertyAnimation
+from PySide6.QtGui import QFont, QCursor, QAction, QMouseEvent, QGuiApplication
 
 
 # 悬浮窗类
@@ -48,7 +43,7 @@ class FloatingWindow(QWidget):
 
     def initUI(self):
         # 设置窗口样式
-        self.setWindowFlags(Qt.WindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool))
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # 设置触控穿透属性
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -112,7 +107,7 @@ class FloatingWindow(QWidget):
         # 先创建标签对象
         self.status_label = QLabel("今日无课程", self)
         self.status_label.setFont(QFont("Microsoft YaHei", 13))
-        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setStyleSheet("QLabel { color: #666666; }")
         background_layout.addWidget(self.status_label)
 
@@ -239,14 +234,14 @@ class FloatingWindow(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         """鼠标按下事件，开始拖动"""
-        if event.button() == Qt.LeftButton and self.edit_mode:
+        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
             self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            self.setCursor(QCursor(Qt.ClosedHandCursor))
+            self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
             self.stop_fade_out()
             # 用户交互后，重置自动隐藏计时器
             self.hide_timer.stop()
             event.accept()
-        elif event.button() == Qt.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton:
             self.show_menu()
             # 用户交互后，重置自动隐藏计时器
             self.hide_timer.stop()
@@ -254,14 +249,14 @@ class FloatingWindow(QWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         """鼠标移动事件，处理拖动"""
-        if event.buttons() == Qt.LeftButton and self.edit_mode:
+        if event.buttons() == Qt.MouseButton.LeftButton and self.edit_mode:
             self.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         """鼠标释放事件，结束拖动"""
-        if event.button() == Qt.LeftButton and self.edit_mode:
-            self.setCursor(QCursor(Qt.ArrowCursor))
+        if event.button() == Qt.MouseButton.LeftButton and self.edit_mode:
+            self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
             
             # 根据设置决定是否吸附到边缘
             snap_to_edge = self.app.settings.get("floating_window", {}).get("snap_to_edge", False)
@@ -313,7 +308,7 @@ class FloatingWindow(QWidget):
         menu.addAction(temp_change_action)
         menu.addAction(edit_mode_action)
         menu.addAction(exit_action)
-        menu.exec_(QCursor.pos())
+        menu.exec(QCursor.pos())
 
     def set_edit_mode(self, enabled: bool):
         """设置编辑模式"""
@@ -333,19 +328,16 @@ class FloatingWindow(QWidget):
         if screen:
             screen_geometry = screen.availableGeometry()
             screen_width = screen_geometry.width()
-            screen_height = screen_geometry.height()
             
             # 获取窗口当前位置
             x = self.x()
             y = self.y()
             window_width = self.width()
-            window_height = self.height()
             
             # 计算到各边缘的距离
             distance_to_left = x
             distance_to_right = screen_width - (x + window_width)
             distance_to_top = y
-            distance_to_bottom = screen_height - (y + window_height)
             
             # 根据设置的优先级决定吸附到哪条边
             snap_priority = self.app.settings.get("floating_window", {}).get("snap_priority", "右侧 > 顶部 > 左侧")

@@ -3,7 +3,7 @@
 提供课程统计、时间统计、教师统计等业务逻辑处理
 """
 
-from typing import Dict, List
+from typing import Dict, List, Any
 from models.statistics import CourseStatistics, TimeStatistics, TeacherStatistics
 from utils.logger import get_service_logger
 
@@ -28,68 +28,130 @@ class StatisticsService:
         logger.info("获取课程统计信息")
         
         try:
-            # 延迟导入ServiceFactory以避免循环导入
-            from services.service_factory import ServiceFactory
-            
-            # 获取课程服务
-            course_service = ServiceFactory.get_course_service()
-            schedule_service = ServiceFactory.get_schedule_service()
+            # 获取服务实例
+            services = self._get_statistics_services()
             
             # 获取所有课程和课程表项
-            courses = course_service.get_all_courses()
-            schedules = schedule_service.get_all_schedules()
+            courses, schedules = self._get_courses_and_schedules(services)
             
-            # 统计总数
-            total_courses = len(courses)
+            # 构建课程统计信息
+            stats = self._build_course_statistics(courses, schedules)
             
-            # 按教师统计
-            courses_by_teacher: Dict[str, int] = {}
-            for course in courses:
-                teacher = course.teacher
-                courses_by_teacher[teacher] = courses_by_teacher.get(teacher, 0) + 1
-            # 按教师统计
-            courses_by_teacher: Dict[str, int] = {}
-            for course in courses:
-                teacher = course.teacher
-                courses_by_teacher[teacher] = courses_by_teacher.get(teacher, 0) + 1
-            
-            # 按地点统计
-            courses_by_location: Dict[str, int] = {}
-            for course in courses:
-                location = course.location
-                courses_by_location[location] = courses_by_location.get(location, 0) + 1
-            # 按地点统计
-            courses_by_location: Dict[str, int] = {}
-            for course in courses:
-                location = course.location
-                courses_by_location[location] = courses_by_location.get(location, 0) + 1
-            
-            # 按星期统计
-            courses_by_day: Dict[int, int] = {}
-            for schedule in schedules:
-                day = schedule.day_of_week
-                courses_by_day[day] = courses_by_day.get(day, 0) + 1
-            # 按星期统计
-            courses_by_day: Dict[int, int] = {}
-            for schedule in schedules:
-                day = schedule.day_of_week
-                courses_by_day[day] = courses_by_day.get(day, 0) + 1
-            
-            # 创建统计对象
-            stats = CourseStatistics(
-                total_courses=total_courses,
-                courses_by_teacher=courses_by_teacher,
-                courses_by_location=courses_by_location,
-                courses_by_day=courses_by_day
-            )
-            
-            logger.info(f"课程统计完成: 共{total_courses}门课程")
+            logger.info(f"课程统计完成: 共{stats.total_courses}门课程")
             return stats
             
         except Exception as e:
             logger.error(f"获取课程统计信息失败: {str(e)}")
             # 返回空的统计对象
             return CourseStatistics()
+    
+    def _get_statistics_services(self) -> Dict[str, Any]:
+        """
+        获取统计服务所需的服务实例
+        
+        Returns:
+            包含所需服务实例的字典
+        """
+        # 延迟导入ServiceFactory以避免循环导入
+        from services.service_factory import ServiceFactory
+        
+        return {
+            "course_service": ServiceFactory.get_course_service(),
+            "schedule_service": ServiceFactory.get_schedule_service()
+        }
+    
+    def _get_courses_and_schedules(self, services: Dict[str, Any]) -> tuple[List[Any], List[Any]]:
+        """
+        获取所有课程和课程表项
+        
+        Args:
+            services: 服务实例字典
+            
+        Returns:
+            (课程列表, 课程表项列表) 的元组
+        """
+        courses = services["course_service"].get_all_courses()
+        schedules = services["schedule_service"].get_all_schedules()
+        return courses, schedules
+    
+    def _build_course_statistics(self, courses: List[Any], schedules: List[Any]) -> CourseStatistics:
+        """
+        构建课程统计信息
+        
+        Args:
+            courses: 课程列表
+            schedules: 课程表项列表
+            
+        Returns:
+            课程统计对象
+        """
+        # 统计总数
+        total_courses = len(courses)
+        
+        # 按教师统计
+        courses_by_teacher = self._count_courses_by_teacher(courses)
+        
+        # 按地点统计
+        courses_by_location = self._count_courses_by_location(courses)
+        
+        # 按星期统计
+        courses_by_day = self._count_courses_by_day(schedules)
+        
+        # 创建统计对象
+        return CourseStatistics(
+            total_courses=total_courses,
+            courses_by_teacher=courses_by_teacher,
+            courses_by_location=courses_by_location,
+            courses_by_day=courses_by_day
+        )
+    
+    def _count_courses_by_teacher(self, courses: List[Any]) -> Dict[str, int]:
+        """
+        按教师统计课程数量
+        
+        Args:
+            courses: 课程列表
+            
+        Returns:
+            按教师统计的课程数量字典
+        """
+        courses_by_teacher: Dict[str, int] = {}
+        for course in courses:
+            teacher = course.teacher
+            courses_by_teacher[teacher] = courses_by_teacher.get(teacher, 0) + 1
+        return courses_by_teacher
+    
+    def _count_courses_by_location(self, courses: List[Any]) -> Dict[str, int]:
+        """
+        按地点统计课程数量
+        
+        Args:
+            courses: 课程列表
+            
+        Returns:
+            按地点统计的课程数量字典
+        """
+        courses_by_location: Dict[str, int] = {}
+        for course in courses:
+            location = course.location
+            courses_by_location[location] = courses_by_location.get(location, 0) + 1
+        return courses_by_location
+    
+    def _count_courses_by_day(self, schedules: List[Any]) -> Dict[int, int]:
+        """
+        按星期统计课程数量
+        
+        Args:
+            schedules: 课程表项列表
+            
+        Returns:
+            按星期统计的课程数量字典
+        """
+        courses_by_day: Dict[int, int] = {}
+        for schedule in schedules:
+            day = schedule.day_of_week
+            courses_by_day[day] = courses_by_day.get(day, 0) + 1
+        return courses_by_day
     
     def get_time_statistics(self) -> TimeStatistics:
         """
@@ -101,82 +163,138 @@ class StatisticsService:
         logger.info("获取时间统计信息")
         
         try:
-            # 延迟导入ServiceFactory以避免循环导入
-            from services.service_factory import ServiceFactory
-            
-            # 获取课程服务
-            course_service = ServiceFactory.get_course_service()
-            schedule_service = ServiceFactory.get_schedule_service()
+            # 获取服务实例
+            services = self._get_statistics_services()
             
             # 获取所有课程和课程表项
-            courses = course_service.get_all_courses()
-            schedules = schedule_service.get_all_schedules()
+            courses, schedules = self._get_courses_and_schedules(services)
             
-            # 计算总课时
-            total_class_hours = 0.0
-            class_hours_by_day: Dict[int, float] = {}
-            class_hours_by_teacher: Dict[str, float] = {}
-            time_slots: Dict[str, float] = {}  # 用于统计高峰时段
+            # 构建时间统计信息
+            stats = self._build_time_statistics(services, courses, schedules)
             
-            # 遍历课程表项和课程
-            for schedule in schedules:
-                # 查找对应的课程
-                course = course_service.get_course_by_id(schedule.course_id)
-                if not course:
-                    continue
-                
-                # 简化计算课程时长（小时）
-                try:
-                    # 解析开始时间
-                    start_parts = course.duration.start_time.split(':')
-                    start_hour = int(start_parts[0])
-                    start_minute = int(start_parts[1])
-                    
-                    # 解析结束时间
-                    end_parts = course.duration.end_time.split(':')
-                    end_hour = int(end_parts[0])
-                    end_minute = int(end_parts[1])
-                    
-                    # 计算时长（小时）
-                    duration = (end_hour * 60 + end_minute - start_hour * 60 - start_minute) / 60.0
-                except Exception as e:
-                    logger.warning(f"计算课程 {course.id} 时长失败: {str(e)}")
-                    continue
-                
-                # 累加总课时
-                total_class_hours += duration
-                
-                # 按星期统计
-                day = schedule.day_of_week
-                class_hours_by_day[day] = class_hours_by_day.get(day, 0.0) + duration
-                
-                # 按教师统计
-                teacher = course.teacher
-                class_hours_by_teacher[teacher] = class_hours_by_teacher.get(teacher, 0.0) + duration
-                
-                # 统计时间段（用于高峰时段分析）
-                time_key = f"{course.duration.start_time}-{course.duration.end_time}"
-                time_slots[time_key] = time_slots.get(time_key, 0.0) + 1
-            
-            # 找出高峰时段（前3个最繁忙的时间段）
-            sorted_time_slots = sorted(time_slots.items(), key=lambda x: x[1], reverse=True)
-            peak_hours = [slot[0] for slot in sorted_time_slots[:3]]
-            
-            # 创建统计对象
-            stats = TimeStatistics(
-                total_class_hours=total_class_hours,
-                class_hours_by_day=class_hours_by_day,
-                class_hours_by_teacher=class_hours_by_teacher,
-                peak_hours=peak_hours
-            )
-            
-            logger.info(f"时间统计完成: 总课时{total_class_hours:.2f}小时")
+            logger.info(f"时间统计完成: 总课时{stats.total_class_hours:.2f}小时")
             return stats
             
         except Exception as e:
             logger.error(f"获取时间统计信息失败: {str(e)}")
             # 返回空的统计对象
             return TimeStatistics()
+    
+    def _build_time_statistics(self, services: Dict[str, Any], courses: List[Any], schedules: List[Any]) -> TimeStatistics:
+        """
+        构建时间统计信息
+        
+        Args:
+            services: 服务实例字典
+            courses: 课程列表
+            schedules: 课程表项列表
+            
+        Returns:
+            时间统计对象
+        """
+        # 计算总课时
+        total_class_hours = 0.0
+        class_hours_by_day: Dict[int, float] = {}
+        class_hours_by_teacher: Dict[str, float] = {}
+        time_slots: Dict[str, float] = {}  # 用于统计高峰时段
+        
+        # 遍历课程表项和课程
+        for schedule in schedules:
+            # 查找对应的课程
+            course = services["course_service"].get_course_by_id(schedule.course_id)
+            if not course:
+                continue
+            
+            # 计算课程时长
+            duration = self._calculate_course_duration(course)
+            if duration is None:
+                continue
+            
+            # 累加统计信息
+            self._accumulate_time_statistics(
+                schedule, course, duration, 
+                class_hours_by_day, class_hours_by_teacher, time_slots)
+            
+            # 累加总课时
+            total_class_hours += duration
+        
+        # 找出高峰时段（前3个最繁忙的时间段）
+        peak_hours = self._find_peak_hours(time_slots)
+        
+        # 创建统计对象
+        return TimeStatistics(
+            total_class_hours=total_class_hours,
+            class_hours_by_day=class_hours_by_day,
+            class_hours_by_teacher=class_hours_by_teacher,
+            peak_hours=peak_hours
+        )
+    
+    def _calculate_course_duration(self, course: Any) -> float | None:
+        """
+        计算课程时长（小时）
+        
+        Args:
+            course: 课程对象
+            
+        Returns:
+            课程时长（小时），如果计算失败则返回None
+        """
+        try:
+            # 解析开始时间
+            start_parts = course.duration.start_time.split(':')
+            start_hour = int(start_parts[0])
+            start_minute = int(start_parts[1])
+            
+            # 解析结束时间
+            end_parts = course.duration.end_time.split(':')
+            end_hour = int(end_parts[0])
+            end_minute = int(end_parts[1])
+            
+            # 计算时长（小时）
+            return (end_hour * 60 + end_minute - start_hour * 60 - start_minute) / 60.0
+        except Exception as e:
+            logger.warning(f"计算课程 {course.id} 时长失败: {str(e)}")
+            return None
+    
+    def _accumulate_time_statistics(self, schedule: Any, course: Any, duration: float,
+                                   class_hours_by_day: Dict[int, float],
+                                   class_hours_by_teacher: Dict[str, float],
+                                   time_slots: Dict[str, float]) -> None:
+        """
+        累加时间统计信息
+        
+        Args:
+            schedule: 课程表项
+            course: 课程
+            duration: 课程时长
+            class_hours_by_day: 按星期统计的课时字典
+            class_hours_by_teacher: 按教师统计的课时字典
+            time_slots: 时间段统计字典
+        """
+        # 按星期统计
+        day = schedule.day_of_week
+        class_hours_by_day[day] = class_hours_by_day.get(day, 0.0) + duration
+        
+        # 按教师统计
+        teacher = course.teacher
+        class_hours_by_teacher[teacher] = class_hours_by_teacher.get(teacher, 0.0) + duration
+        
+        # 统计时间段（用于高峰时段分析）
+        time_key = f"{course.duration.start_time}-{course.duration.end_time}"
+        time_slots[time_key] = time_slots.get(time_key, 0.0) + 1
+    
+    def _find_peak_hours(self, time_slots: Dict[str, float]) -> List[str]:
+        """
+        找出高峰时段（前3个最繁忙的时间段）
+        
+        Args:
+            time_slots: 时间段统计字典
+            
+        Returns:
+            高峰时段列表
+        """
+        sorted_time_slots = sorted(time_slots.items(), key=lambda x: x[1], reverse=True)
+        return [slot[0] for slot in sorted_time_slots[:3]]
     
     def get_teacher_statistics(self) -> TeacherStatistics:
         """
@@ -188,78 +306,115 @@ class StatisticsService:
         logger.info("获取教师统计信息")
         
         try:
-            # 延迟导入ServiceFactory以避免循环导入
-            from services.service_factory import ServiceFactory
-            
-            # 获取课程服务
-            course_service = ServiceFactory.get_course_service()
-            schedule_service = ServiceFactory.get_schedule_service()
+            # 获取服务实例
+            services = self._get_statistics_services()
             
             # 获取所有课程和课程表项
-            courses = course_service.get_all_courses()
-            schedules = schedule_service.get_all_schedules()
+            courses, schedules = self._get_courses_and_schedules(services)
             
-            # 统计教师总数
-            teachers = set(course.teacher for course in courses)
-            total_teachers = len(teachers)
+            # 构建教师统计信息
+            stats = self._build_teacher_statistics(services, courses, schedules)
             
-            # 按教师统计课程数
-            courses_per_teacher: Dict[str, int] = {}
-            for course in courses:
-                teacher = course.teacher
-                courses_per_teacher[teacher] = courses_per_teacher.get(teacher, 0) + 1
-            
-            # 按教师统计课时
-            hours_per_teacher: Dict[str, float] = {}
-            
-            # 遍历课程表项和课程
-            for schedule in schedules:
-                # 查找对应的课程
-                course = course_service.get_course_by_id(schedule.course_id)
-                if not course:
-                    continue
-                
-                # 简化计算课程时长（小时）
-                try:
-                    # 解析开始时间
-                    start_parts = course.duration.start_time.split(':')
-                    start_hour = int(start_parts[0])
-                    start_minute = int(start_parts[1])
-                    
-                    # 解析结束时间
-                    end_parts = course.duration.end_time.split(':')
-                    end_hour = int(end_parts[0])
-                    end_minute = int(end_parts[1])
-                    
-                    # 计算时长（小时）
-                    duration = (end_hour * 60 + end_minute - start_hour * 60 - start_minute) / 60.0
-                except Exception as e:
-                    logger.warning(f"计算课程 {course.id} 时长失败: {str(e)}")
-                    continue
-                
-                # 按教师统计课时
-                teacher = course.teacher
-                hours_per_teacher[teacher] = hours_per_teacher.get(teacher, 0.0) + duration
-            
-            # 找出最繁忙的教师（按课时排序，前3名）
-            sorted_teachers = sorted(hours_per_teacher.items(), key=lambda x: x[1], reverse=True)
-            most_busy_teachers = [teacher[0] for teacher in sorted_teachers[:3]]
-            
-            # 创建统计对象
-            stats = TeacherStatistics(
-                total_teachers=total_teachers,
-                courses_per_teacher=courses_per_teacher,
-                hours_per_teacher=hours_per_teacher,
-                most_busy_teachers=most_busy_teachers
-            )
-            
-            logger.info(f"教师统计完成: 共{total_teachers}名教师")
+            logger.info(f"教师统计完成: 共{stats.total_teachers}名教师")
             return stats
             
         except Exception as e:
             logger.error(f"获取教师统计信息失败: {str(e)}")
             # 返回空的统计对象
             return TeacherStatistics()
+    
+    def _build_teacher_statistics(self, services: Dict[str, Any], courses: List[Any], schedules: List[Any]) -> TeacherStatistics:
+        """
+        构建教师统计信息
+        
+        Args:
+            services: 服务实例字典
+            courses: 课程列表
+            schedules: 课程表项列表
+            
+        Returns:
+            教师统计对象
+        """
+        # 统计教师总数
+        teachers = set(course.teacher for course in courses)
+        total_teachers = len(teachers)
+        
+        # 按教师统计课程数
+        courses_per_teacher = self._count_courses_per_teacher(courses)
+        
+        # 按教师统计课时
+        hours_per_teacher = self._calculate_hours_per_teacher(services, schedules)
+        
+        # 找出最繁忙的教师（按课时排序，前3名）
+        most_busy_teachers = self._find_most_busy_teachers(hours_per_teacher)
+        
+        # 创建统计对象
+        return TeacherStatistics(
+            total_teachers=total_teachers,
+            courses_per_teacher=courses_per_teacher,
+            hours_per_teacher=hours_per_teacher,
+            most_busy_teachers=most_busy_teachers
+        )
+    
+    def _count_courses_per_teacher(self, courses: List[Any]) -> Dict[str, int]:
+        """
+        按教师统计课程数
+        
+        Args:
+            courses: 课程列表
+            
+        Returns:
+            按教师统计的课程数字典
+        """
+        courses_per_teacher: Dict[str, int] = {}
+        for course in courses:
+            teacher = course.teacher
+            courses_per_teacher[teacher] = courses_per_teacher.get(teacher, 0) + 1
+        return courses_per_teacher
+    
+    def _calculate_hours_per_teacher(self, services: Dict[str, Any], schedules: List[Any]) -> Dict[str, float]:
+        """
+        按教师统计课时
+        
+        Args:
+            services: 服务实例字典
+            schedules: 课程表项列表
+            
+        Returns:
+            按教师统计的课时字典
+        """
+        hours_per_teacher: Dict[str, float] = {}
+        
+        # 遍历课程表项和课程
+        for schedule in schedules:
+            # 查找对应的课程
+            course = services["course_service"].get_course_by_id(schedule.course_id)
+            if not course:
+                continue
+            
+            # 计算课程时长
+            duration = self._calculate_course_duration(course)
+            if duration is None:
+                continue
+            
+            # 按教师统计课时
+            teacher = course.teacher
+            hours_per_teacher[teacher] = hours_per_teacher.get(teacher, 0.0) + duration
+            
+        return hours_per_teacher
+    
+    def _find_most_busy_teachers(self, hours_per_teacher: Dict[str, float]) -> List[str]:
+        """
+        找出最繁忙的教师（按课时排序，前3名）
+        
+        Args:
+            hours_per_teacher: 按教师统计的课时字典
+            
+        Returns:
+            最繁忙的教师列表
+        """
+        sorted_teachers = sorted(hours_per_teacher.items(), key=lambda x: x[1], reverse=True)
+        return [teacher[0] for teacher in sorted_teachers[:3]]
     
     def get_all_statistics(self) -> Dict[str, object]:
         """

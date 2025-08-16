@@ -3,7 +3,7 @@
 用于统一管理所有服务的创建和访问
 """
 
-from typing import Dict, Type
+from typing import Dict, Type, Any
 from services.course_service import CourseService
 from services.schedule_service import ScheduleService
 from services.temp_change_service import TempChangeService
@@ -33,10 +33,10 @@ from services.time_sync_service import TimeSyncService
 class ServiceFactory:
     """服务工厂类"""
     
-    _services: Dict[str, object] = {}
+    _services: Dict[str, Any] = {}
     
     @classmethod
-    def get_service(cls, service_type: str):
+    def get_service(cls, service_type: str) -> Any:
         """
         获取指定类型的服务实例
         
@@ -51,7 +51,7 @@ class ServiceFactory:
         return cls._services[service_type]
     
     @classmethod
-    def _create_service(cls, service_type: str):
+    def _create_service(cls, service_type: str) -> Any:
         """
         创建指定类型的服务实例
         
@@ -64,7 +64,22 @@ class ServiceFactory:
         Raises:
             ValueError: 不支持的服务类型
         """
-        service_map: Dict[str, Type] = {
+        service_map = cls._get_service_map()
+        
+        if service_type not in service_map:
+            raise ValueError(f"不支持的服务类型: {service_type}")
+        
+        return service_map[service_type]()
+    
+    @classmethod
+    def _get_service_map(cls) -> Dict[str, Type[Any]]:
+        """
+        获取服务映射表
+        
+        Returns:
+            Dict[str, Type]: 服务类型到服务类的映射字典
+        """
+        return {
             "course": CourseService,
             "schedule": ScheduleService,
             "temp_change": TempChangeService,
@@ -88,11 +103,6 @@ class ServiceFactory:
             "debug": DebugService,
             "time_sync": TimeSyncService
         }
-        
-        if service_type not in service_map:
-            raise ValueError(f"不支持的服务类型: {service_type}")
-        
-        return service_map[service_type]()
     
     @classmethod
     def get_course_service(cls) -> CourseService:

@@ -131,10 +131,30 @@ def validate_time_conflict(course1: ClassItem, course2: ClassItem) -> bool:
         return False
     
     # 检查时间是否冲突
-    start1_h, start1_m = map(int, course1.duration.start_time.split(':'))
-    end1_h, end1_m = map(int, course1.duration.end_time.split(':'))
-    start2_h, start2_m = map(int, course2.duration.start_time.split(':'))
-    end2_h, end2_m = map(int, course2.duration.end_time.split(':'))
+    return _has_time_overlap(
+        course1.duration.start_time,
+        course1.duration.end_time,
+        course2.duration.start_time,
+        course2.duration.end_time
+    )
+
+def _has_time_overlap(start1: str, end1: str, start2: str, end2: str) -> bool:
+    """
+    检查两个时间段是否有重叠
+    
+    Args:
+        start1: 第一个时间段的开始时间(HH:MM)
+        end1: 第一个时间段的结束时间(HH:MM)
+        start2: 第二个时间段的开始时间(HH:MM)
+        end2: 第二个时间段的结束时间(HH:MM)
+        
+    Returns:
+        是否有时间重叠
+    """
+    start1_h, start1_m = map(int, start1.split(':'))
+    end1_h, end1_m = map(int, end1.split(':'))
+    start2_h, start2_m = map(int, start2.split(':'))
+    end2_h, end2_m = map(int, end2.split(':'))
     
     # 转换为分钟进行比较
     start1_minutes = start1_h * 60 + start1_m

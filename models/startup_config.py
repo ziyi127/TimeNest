@@ -3,7 +3,7 @@
 定义开机启动配置相关的核心数据结构
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
 from dataclasses import dataclass, asdict
 
 
@@ -41,6 +41,7 @@ class StartupSettings:
     """开机启动设置模型类"""
     enabled: bool = True
     allow_user_config: bool = True
+    auto_configure: bool = True
     max_startup_items: int = 10
     
     def to_dict(self) -> Dict[str, Any]:
@@ -53,5 +54,6 @@ class StartupSettings:
         return cls(
             enabled=data.get('enabled', True),
             allow_user_config=data.get('allow_user_config', True),
+            auto_configure=data.get('auto_configure', True),
             max_startup_items=data.get('max_startup_items', 10)
         )

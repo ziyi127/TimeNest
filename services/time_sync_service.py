@@ -97,29 +97,52 @@ class TimeSyncService:
         logger.info("更新时间同步设置")
         
         try:
-            if not self.settings:
-                self.settings = TimeSyncSettings()
+            # 确保设置对象存在
+            self._ensure_settings_exists()
             
             # 更新设置字段
-            for key, value in settings_data.items():
-                if hasattr(self.settings, key):
-                    setattr(self.settings, key, value)
+            self._update_settings_fields(settings_data)
             
             # 保存设置
             self._save_settings()
             
-            # 如果启用了自动同步，启动同步线程
-            if self.settings.enabled:
-                self._start_auto_sync_if_enabled()
-            else:
-                # 如果禁用了自动同步，停止同步线程
-                self._stop_auto_sync()
+            # 管理自动同步线程
+            self._manage_auto_sync_thread()
             
             logger.info("时间同步设置更新成功")
             return True
         except Exception as e:
             logger.error(f"更新时间同步设置失败: {str(e)}")
             return False
+    
+    def _ensure_settings_exists(self) -> None:
+        """
+        确保设置对象存在
+        """
+        if not self.settings:
+            self.settings = TimeSyncSettings()
+    
+    def _update_settings_fields(self, settings_data: Dict[str, Any]) -> None:
+        """
+        更新设置字段
+        
+        Args:
+            settings_data: 设置数据字典
+        """
+        for key, value in settings_data.items():
+            if hasattr(self.settings, key):
+                setattr(self.settings, key, value)
+    
+    def _manage_auto_sync_thread(self) -> None:
+        """
+        管理自动同步线程
+        """
+        # 如果启用了自动同步，启动同步线程
+        if self.settings.enabled:
+            self._start_auto_sync_if_enabled()
+        else:
+            # 如果禁用了自动同步，停止同步线程
+            self._stop_auto_sync()
     
     def _start_auto_sync_if_enabled(self):
         """如果启用了自动同步，则启动同步线程"""
@@ -171,43 +194,78 @@ class TimeSyncService:
         try:
             logger.info("开始同步系统时间")
             
-            # 记录同步前的时间
-            before_sync = datetime.now()
-            
-            # 根据操作系统执行不同的时间同步命令
-            system = platform.system().lower()
-            ntp_server = self.settings.ntp_server if self.settings else "pool.ntp.org"
-            
-            if system == "windows":
-                result = self._sync_time_windows(ntp_server)
-            elif system == "darwin":  # macOS
-                result = self._sync_time_macos(ntp_server)
-            elif system == "linux":
-                result = self._sync_time_linux(ntp_server)
-            else:
-                logger.warning(f"不支持的操作系统: {system}")
-                return {
-                    "success": False,
-                    "message": f"不支持的操作系统: {system}",
-                    "before_sync": before_sync.isoformat()
-                }
-            
-            # 记录同步后的时间
-            after_sync = datetime.now()
-            
-            # 添加时间信息到结果中
-            result["before_sync"] = before_sync.isoformat()
-            result["after_sync"] = after_sync.isoformat()
+            # 执行时间同步并获取结果
+            result = self._perform_time_sync()
             
             logger.info(f"系统时间同步完成: {result['message']}")
             return result
         except Exception as e:
             logger.error(f"同步系统时间失败: {str(e)}")
-            return {
-                "success": False,
-                "message": f"同步系统时间失败: {str(e)}",
-                "before_sync": datetime.now().isoformat()
-            }
+            return self._get_sync_failure_result()
+    
+    def _perform_time_sync(self) -> Dict[str, Any]:
+        """
+        执行时间同步操作
+        
+        Returns:
+            Dict[str, Any]: 同步结果
+        """
+        # 记录同步前的时间
+        before_sync = datetime.now()
+        
+        # 根据操作系统执行不同的时间同步命令
+        system = platform.system().lower()
+        ntp_server = self.settings.ntp_server if self.settings else "pool.ntp.org"
+        
+        if system == "windows":
+            result = self._sync_time_windows(ntp_server)
+        elif system == "darwin":  # macOS
+            result = self._sync_time_macos(ntp_server)
+        elif system == "linux":
+            result = self._sync_time_linux(ntp_server)
+        else:
+            logger.warning(f"不支持的操作系统: {system}")
+            result = self._get_unsupported_os_result(system)
+        
+        # 记录同步后的时间
+        after_sync = datetime.now()
+        
+        # 添加时间信息到结果中
+        result["before_sync"] = before_sync.isoformat()
+        result["after_sync"] = after_sync.isoformat()
+        
+        # 更新最后同步时间
+        self._last_sync = after_sync.isoformat()
+        
+        return result
+    
+    def _get_unsupported_os_result(self, system: str) -> Dict[str, Any]:
+        """
+        获取不支持的操作系统结果
+        
+        Args:
+            system: 操作系统名称
+            
+        Returns:
+            Dict[str, Any]: 同步结果
+        """
+        return {
+            "success": False,
+            "message": f"不支持的操作系统: {system}",
+        }
+    
+    def _get_sync_failure_result(self) -> Dict[str, Any]:
+        """
+        获取同步失败结果
+        
+        Returns:
+            Dict[str, Any]: 同步失败结果
+        """
+        return {
+            "success": False,
+            "message": "同步系统时间失败",
+            "before_sync": datetime.now().isoformat()
+        }
     
     def _sync_time_windows(self, ntp_server: str) -> Dict[str, Any]:
         """
@@ -359,22 +417,40 @@ class TimeSyncService:
             Dict[str, Any]: 同步状态信息
         """
         try:
-            return {
-                "enabled": self.settings.enabled if self.settings else False,
-                "ntp_server": self.settings.ntp_server if self.settings else "pool.ntp.org",
-                "sync_interval": self.settings.sync_interval if self.settings else 3600,
-                "is_running": self.is_running,
-                "last_sync": getattr(self, '_last_sync', None)
-            }
+            return self._build_sync_status()
         except Exception as e:
             logger.error(f"获取时间同步状态失败: {str(e)}")
-            return {
-                "enabled": False,
-                "ntp_server": "pool.ntp.org",
-                "sync_interval": 3600,
-                "is_running": False,
-                "last_sync": None
-            }
+            return self._get_default_sync_status()
+    
+    def _build_sync_status(self) -> Dict[str, Any]:
+        """
+        构建同步状态信息
+        
+        Returns:
+            Dict[str, Any]: 同步状态信息
+        """
+        return {
+            "enabled": self.settings.enabled if self.settings else False,
+            "ntp_server": self.settings.ntp_server if self.settings else "pool.ntp.org",
+            "sync_interval": self.settings.sync_interval if self.settings else 3600,
+            "is_running": self.is_running,
+            "last_sync": getattr(self, '_last_sync', None)
+        }
+    
+    def _get_default_sync_status(self) -> Dict[str, Any]:
+        """
+        获取默认同步状态
+        
+        Returns:
+            Dict[str, Any]: 默认同步状态
+        """
+        return {
+            "enabled": False,
+            "ntp_server": "pool.ntp.org",
+            "sync_interval": 3600,
+            "is_running": False,
+            "last_sync": None
+        }
     
     def is_service_enabled(self) -> bool:
         """

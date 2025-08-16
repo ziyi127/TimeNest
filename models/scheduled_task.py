@@ -3,7 +3,7 @@
 定义计划任务相关的核心数据结构
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from enum import Enum
 
@@ -36,6 +36,9 @@ class ScheduledTask:
     enabled: bool = True
     description: str = ""
     working_directory: str = ""
+    windows_command: str = ""
+    mac_command: str = ""
+    linux_command: str = ""
     custom_config: Optional[Dict[str, Any]] = None
     
     def __post_init__(self):

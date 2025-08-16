@@ -111,56 +111,123 @@ class ReminderService:
             即将到来的课程信息列表
         """
         try:
-            # 延迟导入ServiceFactory以避免循环导入
-            from services.service_factory import ServiceFactory
-
-            # 获取课程服务和课程表服务
-            course_service = ServiceFactory.get_course_service()
-            schedule_service = ServiceFactory.get_schedule_service()
-
+            # 获取服务实例
+            services = self._get_reminder_services()
+            
             # 获取今天和明天的日期
             today = datetime.date.today()
             tomorrow = today + datetime.timedelta(days=1)
 
-            upcoming_courses = []
-
             # 检查今天的课程
-            today_schedules = schedule_service.get_schedules_by_date(today.strftime("%Y-%m-%d"))
-            for schedule in today_schedules:
-                course = course_service.get_course_by_id(schedule.course_id)
-                if course:
-                    # 检查是否在接下来30分钟内开始
-                    if self._is_course_starting_soon(course, today):
-                        upcoming_courses.append({
-                            "type": "course_start",
-                            "course_name": course.name,
-                            "teacher": course.teacher,
-                            "location": course.location,
-                            "start_time": course.duration.start_time,
-                            "time_until_start": self._get_time_until_start(course, today)
-                        })
+            today_courses = self._check_today_courses(services, today)
 
             # 检查明天的课程
-            tomorrow_schedules = schedule_service.get_schedules_by_date(tomorrow.strftime("%Y-%m-%d"))
-            for schedule in tomorrow_schedules:
-                course = course_service.get_course_by_id(schedule.course_id)
-                if course:
-                    # 检查是否在接下来24小时内开始
-                    if self._is_course_starting_tomorrow(course, tomorrow):
-                        upcoming_courses.append({
-                            "type": "course_tomorrow",
-                            "course_name": course.name,
-                            "teacher": course.teacher,
-                            "location": course.location,
-                            "start_time": course.duration.start_time,
-                            "date": tomorrow.strftime("%Y-%m-%d")
-                        })
+            tomorrow_courses = self._check_tomorrow_courses(services, tomorrow)
 
-            return upcoming_courses
+            return today_courses + tomorrow_courses
 
         except Exception as e:
             logger.error("检查即将到来的课程失败: %s", str(e))
             return []
+
+    def _get_reminder_services(self) -> dict:
+        """
+        获取提醒服务所需的服务实例
+        
+        Returns:
+            包含所需服务实例的字典
+        """
+        # 延迟导入ServiceFactory以避免循环导入
+        from services.service_factory import ServiceFactory
+
+        return {
+            "course_service": ServiceFactory.get_course_service(),
+            "schedule_service": ServiceFactory.get_schedule_service()
+        }
+    
+    def _check_today_courses(self, services: dict, today: datetime.date) -> List[Dict[str, str]]:
+        """
+        检查今天的课程
+        
+        Args:
+            services: 服务实例字典
+            today: 今天的日期
+            
+        Returns:
+            今天的课程信息列表
+        """
+        today_schedules = services["schedule_service"].get_schedules_by_date(today.strftime("%Y-%m-%d"))
+        today_courses = []
+        
+        for schedule in today_schedules:
+            course = services["course_service"].get_course_by_id(schedule.course_id)
+            if course and self._is_course_starting_soon(course, today):
+                course_info = self._build_course_start_info(course, today)
+                today_courses.append(course_info)
+                
+        return today_courses
+    
+    def _check_tomorrow_courses(self, services: dict, tomorrow: datetime.date) -> List[Dict[str, str]]:
+        """
+        检查明天的课程
+        
+        Args:
+            services: 服务实例字典
+            tomorrow: 明天的日期
+            
+        Returns:
+            明天的课程信息列表
+        """
+        tomorrow_schedules = services["schedule_service"].get_schedules_by_date(tomorrow.strftime("%Y-%m-%d"))
+        tomorrow_courses = []
+        
+        for schedule in tomorrow_schedules:
+            course = services["course_service"].get_course_by_id(schedule.course_id)
+            if course and self._is_course_starting_tomorrow(course, tomorrow):
+                course_info = self._build_course_tomorrow_info(course, tomorrow)
+                tomorrow_courses.append(course_info)
+                
+        return tomorrow_courses
+    
+    def _build_course_start_info(self, course: ClassItem, date: datetime.date) -> Dict[str, str]:
+        """
+        构建课程开始信息
+        
+        Args:
+            course: 课程对象
+            date: 日期
+            
+        Returns:
+            课程开始信息字典
+        """
+        return {
+            "type": "course_start",
+            "course_name": course.name,
+            "teacher": course.teacher,
+            "location": course.location,
+            "start_time": course.duration.start_time,
+            "time_until_start": self._get_time_until_start(course, date)
+        }
+    
+    def _build_course_tomorrow_info(self, course: ClassItem, date: datetime.date) -> Dict[str, str]:
+        """
+        构建明天课程信息
+        
+        Args:
+            course: 课程对象
+            date: 日期
+            
+        Returns:
+            明天课程信息字典
+        """
+        return {
+            "type": "course_tomorrow",
+            "course_name": course.name,
+            "teacher": course.teacher,
+            "location": course.location,
+            "start_time": course.duration.start_time,
+            "date": date.strftime("%Y-%m-%d")
+        }
 
     def _is_course_starting_soon(self, course: ClassItem, date: datetime.date) -> bool:
         """
@@ -174,32 +241,55 @@ class ReminderService:
             是否在接下来30分钟内开始
         """
         try:
-            # 获取当前时间
-            now = datetime.datetime.now()
-
-            # 解析课程开始时间
-            start_parts = course.duration.start_time.split(':')
-            start_hour = int(start_parts[0])
-            start_minute = int(start_parts[1])
-
-            # 构造课程开始时间
-            course_start = datetime.datetime(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=start_hour,
-                minute=start_minute
-            )
-
-            # 计算时间差
-            time_diff = course_start - now
-
+            # 计算课程开始时间和时间差
+            course_start = self._get_course_start_time(course, date)
+            time_diff = self._calculate_time_difference(course_start)
+            
             # 检查是否在接下来30分钟内开始（且未开始）
             return datetime.timedelta(minutes=0) <= time_diff <= datetime.timedelta(minutes=30)
 
         except Exception as e:
             logger.warning("检查课程开始时间失败: %s", str(e))
             return False
+    
+    def _get_course_start_time(self, course: ClassItem, date: datetime.date) -> datetime.datetime:
+        """
+        获取课程开始时间
+
+        Args:
+            course: 课程对象
+            date: 日期
+
+        Returns:
+            课程开始时间
+        """
+        # 解析课程开始时间
+        start_parts = course.duration.start_time.split(':')
+        start_hour = int(start_parts[0])
+        start_minute = int(start_parts[1])
+
+        # 构造课程开始时间
+        return datetime.datetime(
+            year=date.year,
+            month=date.month,
+            day=date.day,
+            hour=start_hour,
+            minute=start_minute
+        )
+    
+    def _calculate_time_difference(self, course_start: datetime.datetime) -> datetime.timedelta:
+        """
+        计算距离课程开始的时间差
+
+        Args:
+            course_start: 课程开始时间
+
+        Returns:
+            时间差
+        """
+        # 获取当前时间
+        now = datetime.datetime.now()
+        return course_start - now
 
     def _is_course_starting_tomorrow(self, course: ClassItem, date: datetime.date) -> bool:
         """
@@ -213,26 +303,10 @@ class ReminderService:
             是否在明天开始
         """
         try:
-            # 获取当前时间
-            now = datetime.datetime.now()
-
-            # 解析课程开始时间
-            start_parts = course.duration.start_time.split(':')
-            start_hour = int(start_parts[0])
-            start_minute = int(start_parts[1])
-
-            # 构造课程开始时间
-            course_start = datetime.datetime(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=start_hour,
-                minute=start_minute
-            )
-
-            # 计算时间差
-            time_diff = course_start - now
-
+            # 计算课程开始时间和时间差
+            course_start = self._get_course_start_time(course, date)
+            time_diff = self._calculate_time_difference(course_start)
+            
             # 检查是否在接下来24小时内开始
             return datetime.timedelta(hours=0) <= time_diff <= datetime.timedelta(hours=24)
 
@@ -252,42 +326,37 @@ class ReminderService:
             距离开始的时间描述
         """
         try:
-            # 获取当前时间
-            now = datetime.datetime.now()
-
-            # 解析课程开始时间
-            start_parts = course.duration.start_time.split(':')
-            start_hour = int(start_parts[0])
-            start_minute = int(start_parts[1])
-
-            # 构造课程开始时间
-            course_start = datetime.datetime(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=start_hour,
-                minute=start_minute
-            )
-
-            # 计算时间差
-            time_diff = course_start - now
-
-            # 转换为分钟
+            # 计算课程开始时间和时间差
+            course_start = self._get_course_start_time(course, date)
+            time_diff = self._calculate_time_difference(course_start)
+            
+            # 转换为分钟并格式化时间描述
             minutes_until_start = int(time_diff.total_seconds() / 60)
-
-            if minutes_until_start < 60:
-                return f"{minutes_until_start}分钟后"
-            else:
-                hours = minutes_until_start // 60
-                minutes = minutes_until_start % 60
-                if minutes == 0:
-                    return f"{hours}小时后"
-                else:
-                    return f"{hours}小时{minutes}分钟后"
+            return self._format_time_until_start(minutes_until_start)
 
         except Exception as e:
             logger.warning("计算课程开始时间失败: %s", str(e))
             return "即将开始"
+    
+    def _format_time_until_start(self, minutes_until_start: int) -> str:
+        """
+        格式化距离开始的时间描述
+
+        Args:
+            minutes_until_start: 距离开始的分钟数
+
+        Returns:
+            格式化的时间描述
+        """
+        if minutes_until_start < 60:
+            return f"{minutes_until_start}分钟后"
+        else:
+            hours = minutes_until_start // 60
+            minutes = minutes_until_start % 60
+            if minutes == 0:
+                return f"{hours}小时后"
+            else:
+                return f"{hours}小时{minutes}分钟后"
 
     def _trigger_reminder(self, reminder_info: Dict[str, str]):
         """
@@ -299,13 +368,31 @@ class ReminderService:
         logger.info("触发提醒: %s", reminder_info)
 
         # 调用所有回调函数
+        self._execute_reminder_callbacks(reminder_info)
+
+        # 记录提醒日志
+        self._log_reminder(reminder_info)
+    
+    def _execute_reminder_callbacks(self, reminder_info: Dict[str, str]) -> None:
+        """
+        执行提醒回调函数
+
+        Args:
+            reminder_info: 提醒信息
+        """
         for callback in self.reminder_callbacks:
             try:
                 callback(reminder_info)
             except Exception as e:
                 logger.error("提醒回调函数执行失败: %s", str(e))
+    
+    def _log_reminder(self, reminder_info: Dict[str, str]) -> None:
+        """
+        记录提醒日志
 
-        # 记录提醒日志
+        Args:
+            reminder_info: 提醒信息
+        """
         if reminder_info["type"] == "course_start":
             logger.info("课程即将开始提醒: %s %s开始", reminder_info["course_name"], reminder_info["time_until_start"])
         elif reminder_info["type"] == "course_tomorrow":

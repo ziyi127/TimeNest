@@ -7,24 +7,24 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
-import os
-from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from frontend.main import TimeNestFrontendApp
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
 # 导入PySide6模块
-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout,
-                               QHBoxLayout, QPushButton, QMenu,
-                               QSystemTrayIcon, QMessageBox, QDialog, QFormLayout,
-                               QLineEdit, QComboBox, QDateEdit, QTimeEdit,
-                               QListWidget, QListWidgetItem, QTabWidget,
-                               QTableWidget, QTableWidgetItem, QHeaderView,
-                               QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
-from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent, QGuiApplication
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+    QTabWidget, QListWidget, QTableWidget, QTableWidgetItem,
+    QHeaderView, QMessageBox, QDialog, QListWidgetItem
+)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 
 # 导入对话框
 from frontend.gui.dialogs.course_edit_dialog import CourseEditDialog
@@ -274,14 +274,23 @@ class ManagementWindow(QWidget):
         """更新课程列表"""
         self.course_list.clear()
         for course in self.app.courses:
-            item = QListWidgetItem(f"{course['name']} - {course['teacher']} - {course['location']}")
-            item.setData(Qt.UserRole, course['id'])
-            self.course_list.addItem(item)
+            self._add_course_to_list(course)
+
+    def _add_course_to_list(self, course: dict[str, Any]):
+        """
+        添加课程到列表
+        
+        Args:
+            course: 课程数据
+        """
+        item = QListWidgetItem(f"{course['name']} - {course['teacher']} - {course['location']}")
+        item.setData(Qt.UserRole, course['id'])  # type: ignore
+        self.course_list.addItem(item)
 
     def add_course(self):
         """添加课程"""
         dialog = CourseEditDialog(self.app, None)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:  # type: ignore
             self.app.load_data()
             self.update_course_list()
             # 触发悬浮窗更新
@@ -295,14 +304,14 @@ class ManagementWindow(QWidget):
             QMessageBox.warning(self, "警告", "请选择要编辑的课程")
             return
 
-        course_id = current_item.data(Qt.UserRole)
+        course_id = current_item.data(Qt.UserRole)  # type: ignore
         course = self.app.get_course_by_id(course_id)
         if not course:
             QMessageBox.warning(self, "警告", "找不到选中的课程")
             return
 
         dialog = CourseEditDialog(self.app, course)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:  # type: ignore
             self.app.load_data()
             self.update_course_list()
             # 触发悬浮窗更新
@@ -316,23 +325,33 @@ class ManagementWindow(QWidget):
             QMessageBox.warning(self, "警告", "请选择要删除的课程")
             return
 
-        course_id = current_item.data(Qt.UserRole)
+        course_id = current_item.data(Qt.UserRole)  # type: ignore
         reply = QMessageBox.question(self, "确认", "确定要删除选中的课程吗？",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            # 删除课程
-            self.app.courses = [c for c in self.app.courses if c['id'] != course_id]
-            # 删除相关的课程表项
-            self.app.schedules = [s for s in self.app.schedules if s['course_id'] != course_id]
-            # 删除相关的临时换课
-            self.app.temp_changes = [t for t in self.app.temp_changes if t['new_course_id'] != course_id]
-            self.app.save_data()
-            self.update_course_list()
-            self.update_schedule_table()
-            self.update_temp_change_table()
-            # 触发悬浮窗更新
-            if hasattr(self.app, 'floating_window'):
-                self.app.floating_window.update_status()
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # type: ignore
+        if reply == QMessageBox.Yes:  # type: ignore
+            # 执行删除课程的步骤
+            self._execute_delete_course_steps(course_id)
+
+    def _execute_delete_course_steps(self, course_id: str):
+        """
+        执行删除课程的步骤
+        
+        Args:
+            course_id: 课程ID
+        """
+        # 删除课程
+        self.app.courses = [c for c in self.app.courses if c['id'] != course_id]
+        # 删除相关的课程表项
+        self.app.schedules = [s for s in self.app.schedules if s['course_id'] != course_id]
+        # 删除相关的临时换课
+        self.app.temp_changes = [t for t in self.app.temp_changes if t['new_course_id'] != course_id]
+        self.app.save_data()
+        self.update_course_list()
+        self.update_schedule_table()
+        self.update_temp_change_table()
+        # 触发悬浮窗更新
+        if hasattr(self.app, 'floating_window'):
+            self.app.floating_window.update_status()
 
     def init_schedule_tab(self):
         """初始化课程表管理标签页"""
@@ -344,7 +363,7 @@ class ManagementWindow(QWidget):
         self.schedule_table = QTableWidget()
         self.schedule_table.setColumnCount(6)
         self.schedule_table.setHorizontalHeaderLabels(["ID", "星期", "周次", "课程", "有效期从", "有效期至"])
-        self.schedule_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.schedule_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # type: ignore
         self.schedule_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #cccccc;
@@ -454,38 +473,48 @@ class ManagementWindow(QWidget):
         for schedule in self.app.schedules:
             row = self.schedule_table.rowCount()
             self.schedule_table.insertRow(row)
+            
+            # 填充行数据
+            self._fill_schedule_row(row, schedule, weekdays, week_parity_map)
 
-            # ID
-            self.schedule_table.setItem(row, 0, QTableWidgetItem(schedule['id']))
+    def _fill_schedule_row(self, row: int, schedule: dict[str, Any], weekdays: list[str], week_parity_map: dict[str, str]):
+        """
+        填充课程表行数据
+        
+        Args:
+            row: 行索引
+            schedule: 课程表数据
+            weekdays: 星期名称列表
+            week_parity_map: 周次映射
+        """
+        # ID
+        self.schedule_table.setItem(row, 0, QTableWidgetItem(schedule['id']))
 
-            # 星期
-            weekday = weekdays[schedule['day_of_week']]
-            self.schedule_table.setItem(row, 1, QTableWidgetItem(weekday))
+        # 星期
+        weekday = weekdays[schedule['day_of_week']]
+        self.schedule_table.setItem(row, 1, QTableWidgetItem(str(weekday)))  # type: ignore
 
-            # 周次
-            week_parity = week_parity_map.get(schedule['week_parity'], schedule['week_parity'])
-            self.schedule_table.setItem(row, 2, QTableWidgetItem(week_parity))
+        # 周次
+        week_parity = week_parity_map.get(schedule['week_parity'], schedule.get('week_parity', ''))
+        self.schedule_table.setItem(row, 2, QTableWidgetItem(str(week_parity)))
 
-            # 课程
-            course = self.app.get_course_by_id(schedule['course_id'])
-            course_name = course['name'] if course else "未知课程"
-            self.schedule_table.setItem(row, 3, QTableWidgetItem(course_name))
+        # 课程
+        course = self.app.get_course_by_id(schedule['course_id'])
+        course_name = course['name'] if course else "未知课程"
+        self.schedule_table.setItem(row, 3, QTableWidgetItem(course_name))
 
-            # 有效期从
-            self.schedule_table.setItem(row, 4, QTableWidgetItem(schedule['valid_from']))
+        # 有效期从
+        self.schedule_table.setItem(row, 4, QTableWidgetItem(schedule['valid_from']))
 
-            # 有效期至
-            self.schedule_table.setItem(row, 5, QTableWidgetItem(schedule['valid_to']))
+        # 有效期至
+        self.schedule_table.setItem(row, 5, QTableWidgetItem(schedule['valid_to']))
 
     def add_schedule(self):
         """添加课程表项"""
         dialog = ScheduleEditDialog(self.app, None)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:  # type: ignore
             self.app.load_data()
             self.update_schedule_table()
-            # 触发悬浮窗更新
-            if hasattr(self.app, 'floating_window'):
-                self.app.floating_window.update_status()
             # 触发悬浮窗更新
             if hasattr(self.app, 'floating_window'):
                 self.app.floating_window.update_status()
@@ -497,7 +526,7 @@ class ManagementWindow(QWidget):
             QMessageBox.warning(self, "警告", "请选择要编辑的课程表项")
             return
 
-        schedule_id = self.schedule_table.item(current_row, 0).text()
+        schedule_id = self.schedule_table.item(current_row, 0).text() if self.schedule_table.item(current_row, 0) else ""  # type: ignore
         # 查找课程表项
         schedule = None
         for s in self.app.schedules:
@@ -510,7 +539,7 @@ class ManagementWindow(QWidget):
             return
 
         dialog = ScheduleEditDialog(self.app, schedule)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:  # type: ignore
             self.app.load_data()
             self.update_schedule_table()
 
@@ -521,20 +550,30 @@ class ManagementWindow(QWidget):
             QMessageBox.warning(self, "警告", "请选择要删除的课程表项")
             return
 
-        schedule_id = self.schedule_table.item(current_row, 0).text()
+        schedule_id = self.schedule_table.item(current_row, 0).text() if self.schedule_table.item(current_row, 0) else ""  # type: ignore
         reply = QMessageBox.question(self, "确认", "确定要删除选中的课程表项吗？",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            # 删除课程表项
-            self.app.schedules = [s for s in self.app.schedules if s['id'] != schedule_id]
-            # 删除相关的临时换课
-            self.app.temp_changes = [t for t in self.app.temp_changes if t['original_schedule_id'] != schedule_id]
-            self.app.save_data()
-            self.update_schedule_table()
-            self.update_temp_change_table()
-            # 触发悬浮窗更新
-            if hasattr(self.app, 'floating_window'):
-                self.app.floating_window.update_status()
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # type: ignore
+        if reply == QMessageBox.Yes:  # type: ignore
+            # 执行删除课程表项的步骤
+            self._execute_delete_schedule_steps(schedule_id)
+
+    def _execute_delete_schedule_steps(self, schedule_id: str):
+        """
+        执行删除课程表项的步骤
+        
+        Args:
+            schedule_id: 课程表项ID
+        """
+        # 删除课程表项
+        self.app.schedules = [s for s in self.app.schedules if s['id'] != schedule_id]
+        # 删除相关的临时换课
+        self.app.temp_changes = [t for t in self.app.temp_changes if t['original_schedule_id'] != schedule_id]
+        self.app.save_data()
+        self.update_schedule_table()
+        self.update_temp_change_table()
+        # 触发悬浮窗更新
+        if hasattr(self.app, 'floating_window'):
+            self.app.floating_window.update_status()
 
     def init_temp_change_tab(self):
         """初始化临时换课记录标签页"""
@@ -546,7 +585,7 @@ class ManagementWindow(QWidget):
         self.temp_change_table = QTableWidget()
         self.temp_change_table.setColumnCount(5)
         self.temp_change_table.setHorizontalHeaderLabels(["ID", "日期", "原课程", "新课程", "状态"])
-        self.temp_change_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.temp_change_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # type: ignore
         self.temp_change_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #cccccc;
@@ -610,41 +649,87 @@ class ManagementWindow(QWidget):
         for temp_change in self.app.temp_changes:
             row = self.temp_change_table.rowCount()
             self.temp_change_table.insertRow(row)
+            
+            # 填充行数据
+            self._fill_temp_change_row(row, temp_change)
 
-            # ID
-            self.temp_change_table.setItem(row, 0, QTableWidgetItem(temp_change['id']))
+    def _fill_temp_change_row(self, row: int, temp_change: dict[str, Any]):
+        """
+        填充临时换课行数据
+        
+        Args:
+            row: 行索引
+            temp_change: 临时换课数据
+        """
+        # ID
+        self.temp_change_table.setItem(row, 0, QTableWidgetItem(temp_change['id']))
 
-            # 日期
-            self.temp_change_table.setItem(row, 1, QTableWidgetItem(temp_change['change_date']))
+        # 日期
+        self.temp_change_table.setItem(row, 1, QTableWidgetItem(temp_change['change_date']))
 
-            # 原课程（通过original_schedule_id查找）
-            original_schedule = None
-            for s in self.app.schedules:
-                if s['id'] == temp_change['original_schedule_id']:
-                    original_schedule = s
-                    break
+        # 原课程（通过original_schedule_id查找）
+        original_course_name = self._get_original_course_name(temp_change)
+        self.temp_change_table.setItem(row, 2, QTableWidgetItem(original_course_name))
 
-            original_course_name = "未知课程"
-            if original_schedule:
-                original_course = self.app.get_course_by_id(original_schedule['course_id'])
-                if original_course:
-                    original_course_name = original_course['name']
+        # 新课程
+        new_course_name = self._get_new_course_name(temp_change)
+        self.temp_change_table.setItem(row, 3, QTableWidgetItem(new_course_name))
 
-            self.temp_change_table.setItem(row, 2, QTableWidgetItem(original_course_name))
+        # 状态
+        self._set_temp_change_status(row, temp_change)
+    
+    def _get_original_course_name(self, temp_change: dict[str, Any]) -> str:
+        """
+        获取原课程名称
+        
+        Args:
+            temp_change: 临时换课数据
+            
+        Returns:
+            原课程名称
+        """
+        original_schedule = None
+        for s in self.app.schedules:
+            if s['id'] == temp_change['original_schedule_id']:
+                original_schedule = s
+                break
 
-            # 新课程
-            new_course = self.app.get_course_by_id(temp_change['new_course_id'])
-            new_course_name = new_course['name'] if new_course else "未知课程"
-            self.temp_change_table.setItem(row, 3, QTableWidgetItem(new_course_name))
-
-            # 状态
-            status = "已使用" if temp_change['used'] else "未使用"
-            status_item = QTableWidgetItem(status)
-            if temp_change['used']:
-                status_item.setForeground(QColor(128, 128, 128))
-            else:
-                status_item.setForeground(QColor(255, 99, 71))  # 红色
-            self.temp_change_table.setItem(row, 4, status_item)
+        original_course_name = "未知课程"
+        if original_schedule:
+            original_course = self.app.get_course_by_id(original_schedule['course_id'])
+            if original_course:
+                original_course_name = original_course['name']
+        
+        return original_course_name
+    
+    def _get_new_course_name(self, temp_change: dict[str, Any]) -> str:
+        """
+        获取新课程名称
+        
+        Args:
+            temp_change: 临时换课数据
+            
+        Returns:
+            新课程名称
+        """
+        new_course = self.app.get_course_by_id(temp_change['new_course_id'])
+        return new_course['name'] if new_course else "未知课程"
+    
+    def _set_temp_change_status(self, row: int, temp_change: dict[str, Any]):
+        """
+        设置临时换课状态
+        
+        Args:
+            row: 行索引
+            temp_change: 临时换课数据
+        """
+        status = "已使用" if temp_change['used'] else "未使用"
+        status_item = QTableWidgetItem(status)
+        if temp_change['used']:
+            status_item.setForeground(QColor(128, 128, 128))
+        else:
+            status_item.setForeground(QColor(255, 99, 71))  # 红色
+        self.temp_change_table.setItem(row, 4, status_item)
 
     def delete_temp_change(self):
         """删除临时换课记录"""
@@ -653,17 +738,27 @@ class ManagementWindow(QWidget):
             QMessageBox.warning(self, "警告", "请选择要删除的临时换课记录")
             return
 
-        temp_change_id = self.temp_change_table.item(current_row, 0).text()
+        temp_change_id = self.temp_change_table.item(current_row, 0).text() if self.temp_change_table.item(current_row, 0) else ""  # type: ignore
         reply = QMessageBox.question(self, "确认", "确定要删除选中的临时换课记录吗？",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            # 删除临时换课记录
-            self.app.temp_changes = [t for t in self.app.temp_changes if t['id'] != temp_change_id]
-            self.app.save_data()
-            self.update_temp_change_table()
-            # 触发悬浮窗更新
-            if hasattr(self.app, 'floating_window'):
-                self.app.floating_window.update_status()
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)  # type: ignore
+        if reply == QMessageBox.Yes:  # type: ignore
+            # 执行删除临时换课记录的步骤
+            self._execute_delete_temp_change_steps(temp_change_id)
+
+    def _execute_delete_temp_change_steps(self, temp_change_id: str):
+        """
+        执行删除临时换课记录的步骤
+        
+        Args:
+            temp_change_id: 临时换课记录ID
+        """
+        # 删除临时换课记录
+        self.app.temp_changes = [t for t in self.app.temp_changes if t['id'] != temp_change_id]
+        self.app.save_data()
+        self.update_temp_change_table()
+        # 触发悬浮窗更新
+        if hasattr(self.app, 'floating_window'):
+            self.app.floating_window.update_status()
 
     def save_data(self):
         """保存数据"""

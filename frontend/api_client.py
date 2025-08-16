@@ -9,11 +9,17 @@ API客户端，用于与后端服务通信
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
-import requests
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
+
+# 导入服务工厂
+from services.service_factory import ServiceFactory
+from models.class_item import ClassItem, TimeSlot
+from models.class_plan import ClassPlan
+from models.temp_change import TempChange
+from models.user_settings import UserSettings
 
 
 class APIClient:
@@ -22,10 +28,13 @@ class APIClient:
         初始化API客户端
         
         Args:
-            base_url: 后端服务的基础URL
+            base_url: 后端服务的基础URL（此参数在新实现中不再使用）
         """
-        self.base_url = base_url
-        self.session = requests.Session()
+        # 获取服务实例
+        self.course_service = ServiceFactory.get_course_service()
+        self.schedule_service = ServiceFactory.get_schedule_service()
+        self.temp_change_service = ServiceFactory.get_temp_change_service()
+        self.user_service = ServiceFactory.get_user_service()
         
     def get_courses(self) -> List[Dict[str, Any]]:
         """
@@ -35,10 +44,9 @@ class APIClient:
             课程列表
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/courses")
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            courses = self.course_service.get_all_courses()
+            return [course.to_dict() for course in courses]
+        except Exception as e:
             print(f"获取课程失败: {e}")
             return []
             
@@ -50,10 +58,9 @@ class APIClient:
             课程表项列表
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/schedules")
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            schedules = self.schedule_service.get_all_schedules()
+            return [schedule.to_dict() for schedule in schedules]
+        except Exception as e:
             print(f"获取课程表项失败: {e}")
             return []
             
@@ -65,10 +72,9 @@ class APIClient:
             临时换课记录列表
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/temp_changes")
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            temp_changes = self.temp_change_service.get_all_temp_changes()
+            return [temp_change.to_dict() for temp_change in temp_changes]
+        except Exception as e:
             print(f"获取临时换课记录失败: {e}")
             return []
             
@@ -80,10 +86,9 @@ class APIClient:
             应用设置字典
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/settings")
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            settings = self.user_service.get_user_settings()
+            return settings.to_dict()
+        except Exception as e:
             print(f"获取设置失败: {e}")
             # 返回默认设置
             return {
@@ -116,10 +121,31 @@ class APIClient:
             保存是否成功
         """
         try:
-            response = self.session.post(f"{self.base_url}/api/courses", json=courses)
-            response.raise_for_status()
+            # 先删除所有现有课程
+            existing_courses = self.course_service.get_all_courses()
+            for course in existing_courses:
+                self.course_service.delete_course(course.id)
+            
+            # 创建新课程
+            for course_data in courses:
+                duration_data = course_data.get('duration', {})
+                duration = TimeSlot(
+                    start_time=duration_data.get('start_time'),
+                    end_time=duration_data.get('end_time')
+                )
+                
+                course = ClassItem(
+                    id=course_data.get('id'),
+                    name=course_data.get('name'),
+                    teacher=course_data.get('teacher'),
+                    location=course_data.get('location'),
+                    duration=duration
+                )
+                
+                self.course_service.create_course(course)
+            
             return True
-        except requests.RequestException as e:
+        except Exception as e:
             print(f"保存课程失败: {e}")
             return False
             
@@ -134,10 +160,26 @@ class APIClient:
             保存是否成功
         """
         try:
-            response = self.session.post(f"{self.base_url}/api/schedules", json=schedules)
-            response.raise_for_status()
+            # 先删除所有现有课程表项
+            existing_schedules = self.schedule_service.get_all_schedules()
+            for schedule in existing_schedules:
+                self.schedule_service.delete_schedule(schedule.id)
+            
+            # 创建新课程表项
+            for schedule_data in schedules:
+                schedule = ClassPlan(
+                    id=schedule_data.get('id'),
+                    day_of_week=schedule_data.get('day_of_week'),
+                    week_parity=schedule_data.get('week_parity'),
+                    course_id=schedule_data.get('course_id'),
+                    valid_from=schedule_data.get('valid_from'),
+                    valid_to=schedule_data.get('valid_to')
+                )
+                
+                self.schedule_service.create_schedule(schedule)
+            
             return True
-        except requests.RequestException as e:
+        except Exception as e:
             print(f"保存课程表项失败: {e}")
             return False
             
@@ -152,10 +194,26 @@ class APIClient:
             保存是否成功
         """
         try:
-            response = self.session.post(f"{self.base_url}/api/temp_changes", json=temp_changes)
-            response.raise_for_status()
+            # 先删除所有现有临时换课记录
+            existing_temp_changes = self.temp_change_service.get_all_temp_changes()
+            for temp_change in existing_temp_changes:
+                self.temp_change_service.delete_temp_change(temp_change.id)
+            
+            # 创建新临时换课记录
+            for temp_change_data in temp_changes:
+                temp_change = TempChange(
+                    id=temp_change_data.get('id'),
+                    original_schedule_id=temp_change_data.get('original_schedule_id'),
+                    new_course_id=temp_change_data.get('new_course_id'),
+                    change_date=temp_change_data.get('change_date'),
+                    is_permanent=temp_change_data.get('is_permanent', False),
+                    used=temp_change_data.get('used', False)
+                )
+                
+                self.temp_change_service.create_temp_change(temp_change)
+            
             return True
-        except requests.RequestException as e:
+        except Exception as e:
             print(f"保存临时换课记录失败: {e}")
             return False
             
@@ -170,10 +228,20 @@ class APIClient:
             保存是否成功
         """
         try:
-            response = self.session.post(f"{self.base_url}/api/settings", json=settings)
-            response.raise_for_status()
+            # 创建用户设置对象
+            user_settings = UserSettings(
+                theme=settings.get('theme', 'light'),
+                language=settings.get('language', 'zh-CN'),
+                auto_backup=settings.get('auto_backup', True),
+                backup_interval=settings.get('backup_interval', 24),
+                data_dir=settings.get('data_dir', './data')
+            )
+            
+            # 更新用户设置
+            self.user_service.update_user_settings(user_settings)
+            
             return True
-        except requests.RequestException as e:
+        except Exception as e:
             print(f"保存设置失败: {e}")
             return False
             
@@ -185,9 +253,83 @@ class APIClient:
             今天的课程安排信息
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/today_schedule")
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            # 导入需要的服务
+            from datetime import datetime
+            from services.service_factory import ServiceFactory
+            
+            # 获取服务实例
+            course_service = ServiceFactory.get_course_service()
+            schedule_service = ServiceFactory.get_schedule_service()
+            temp_change_service = ServiceFactory.get_temp_change_service()
+            
+            # 获取今天的日期
+            today = datetime.now().date()
+            today_str = today.strftime("%Y-%m-%d")
+            
+            # 获取今天的临时换课
+            temp_changes = temp_change_service.get_temp_changes_by_date(today_str)
+            
+            # 检查是否有未使用的临时换课
+            for temp_change in temp_changes:
+                if not temp_change.used:
+                    # 获取新课程
+                    course = course_service.get_course_by_id(temp_change.new_course_id)
+                    if course:
+                        return {
+                            "type": "temp",
+                            "course": course.to_dict()
+                        }
+            
+            # 获取今天的课程表项
+            schedules = schedule_service.get_schedules_by_date(today_str)
+            
+            # 如果有课程表项，返回第一个
+            if schedules:
+                schedule = schedules[0]
+                course = course_service.get_course_by_id(schedule.course_id)
+                if course:
+                    return {
+                        "type": "regular",
+                        "course": course.to_dict()
+                    }
+            
+            # 没有课程
+            return {"type": "none"}
+        except Exception as e:
             print(f"获取今日课程安排失败: {e}")
             return {"type": "none"}
+            
+    def get_weather_data(self) -> Dict[str, Any] | None:
+        """
+        获取天气数据
+        
+        Returns:
+            天气数据字典或None
+        """
+        try:
+            # 获取天气服务实例
+            from services.service_factory import ServiceFactory
+            weather_service = ServiceFactory.get_weather_service()
+            
+            # 获取当前天气数据
+            weather_data = weather_service.get_current_weather()
+            
+            if weather_data:
+                # 转换为字典格式
+                weather_dict = {
+                    "location": weather_data.location,
+                    "temperature": weather_data.temperature,
+                    "humidity": weather_data.humidity,
+                    "pressure": weather_data.pressure,
+                    "wind_speed": weather_data.wind_speed,
+                    "weather_condition": weather_data.weather_condition,
+                    "forecast": weather_data.forecast,
+                    "last_updated": weather_data.last_updated.isoformat() if weather_data.last_updated else None
+                }
+                
+                return weather_dict
+            else:
+                return None
+        except Exception as e:
+            print(f"获取天气数据时发生错误: {str(e)}")
+            return None

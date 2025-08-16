@@ -119,13 +119,11 @@ class StartupService:
         logger.info("更新开机启动设置")
         
         try:
-            if not self.settings:
-                self.settings = StartupSettings()
+            # 确保设置对象存在
+            self._ensure_settings_exists()
             
             # 更新设置字段
-            for key, value in settings_data.items():
-                if hasattr(self.settings, key):
-                    setattr(self.settings, key, value)
+            self._update_settings_fields(settings_data)
             
             # 保存设置
             self._save_settings()
@@ -135,6 +133,24 @@ class StartupService:
         except Exception as e:
             logger.error(f"更新开机启动设置失败: {str(e)}")
             return False
+    
+    def _ensure_settings_exists(self) -> None:
+        """
+        确保设置对象存在
+        """
+        if not self.settings:
+            self.settings = StartupSettings()
+    
+    def _update_settings_fields(self, settings_data: Dict[str, Any]) -> None:
+        """
+        更新设置字段
+        
+        Args:
+            settings_data: 设置数据字典
+        """
+        for key, value in settings_data.items():
+            if hasattr(self.settings, key):
+                setattr(self.settings, key, value)
     
     def get_startup_items(self) -> List[StartupItem]:
         """
@@ -172,22 +188,53 @@ class StartupService:
         """
         try:
             # 检查启动项ID是否已存在
-            if self.get_startup_item(item.id):
+            if self._is_startup_item_exists(item.id):
                 logger.warning(f"开机启动项已存在: {item.id}")
                 return False
             
-            self.startup_items.append(item)
-            self._save_startup_data()
-            logger.info(f"添加开机启动项: {item.id} -> {item.name}")
+            # 添加并保存启动项
+            self._add_and_save_startup_item(item)
             
             # 如果启用自动配置，则应用到系统
-            if self.settings and self.settings.auto_configure:
-                self._apply_startup_item(item)
+            self._apply_item_to_system_if_needed(item)
             
             return True
         except Exception as e:
             logger.error(f"添加开机启动项失败: {str(e)}")
             return False
+    
+    def _is_startup_item_exists(self, item_id: str) -> bool:
+        """
+        检查启动项是否存在
+        
+        Args:
+            item_id: 启动项ID
+            
+        Returns:
+            bool: 启动项是否存在
+        """
+        return self.get_startup_item(item_id) is not None
+    
+    def _add_and_save_startup_item(self, item: StartupItem) -> None:
+        """
+        添加并保存启动项
+        
+        Args:
+            item: 开机启动项
+        """
+        self.startup_items.append(item)
+        self._save_startup_data()
+        logger.info(f"添加开机启动项: {item.id} -> {item.name}")
+    
+    def _apply_item_to_system_if_needed(self, item: StartupItem) -> None:
+        """
+        如果需要，将启动项应用到系统
+        
+        Args:
+            item: 开机启动项
+        """
+        if self.settings and self.settings.auto_configure:
+            self._apply_startup_item(item)
     
     def update_startup_item(self, item_id: str, item_data: Dict[str, Any]) -> bool:
         """
@@ -201,27 +248,55 @@ class StartupService:
             bool: 是否更新成功
         """
         try:
-            item = self.get_startup_item(item_id)
+            # 获取并验证启动项
+            item = self._get_and_validate_startup_item(item_id)
             if not item:
-                logger.warning(f"开机启动项未找到: {item_id}")
                 return False
             
             # 更新启动项字段
-            for key, value in item_data.items():
-                if hasattr(item, key):
-                    setattr(item, key, value)
+            self._update_item_fields(item, item_data)
             
+            # 保存启动项
             self._save_startup_data()
+            
             logger.info(f"更新开机启动项: {item.id} -> {item.name}")
             
             # 如果启用自动配置，则应用到系统
-            if self.settings and self.settings.auto_configure:
-                self._apply_startup_item(item)
+            self._apply_item_to_system_if_needed(item)
             
             return True
         except Exception as e:
             logger.error(f"更新开机启动项失败: {str(e)}")
             return False
+    
+    def _get_and_validate_startup_item(self, item_id: str) -> Optional[StartupItem]:
+        """
+        获取并验证启动项是否存在
+        
+        Args:
+            item_id: 启动项ID
+            
+        Returns:
+            启动项对象或None
+        """
+        item = self.get_startup_item(item_id)
+        if not item:
+            logger.warning(f"开机启动项未找到: {item_id}")
+            return None
+        return item
+    
+    def _update_item_fields(self, item: StartupItem, item_data: Dict[str, Any]) -> None:
+        """
+        更新启动项字段
+        
+        Args:
+            item: 启动项对象
+            item_data: 启动项数据字典
+        """
+        # 更新启动项字段
+        for key, value in item_data.items():
+            if hasattr(item, key):
+                setattr(item, key, value)
     
     def remove_startup_item(self, item_id: str) -> bool:
         """
@@ -234,22 +309,42 @@ class StartupService:
             bool: 是否删除成功
         """
         try:
-            item = self.get_startup_item(item_id)
+            # 获取并验证启动项
+            item = self._get_and_validate_startup_item(item_id)
             if not item:
-                logger.warning(f"开机启动项未找到: {item_id}")
                 return False
             
             # 如果启用自动配置，则从系统中移除
-            if self.settings and self.settings.auto_configure:
-                self._remove_startup_item_from_system(item)
+            self._remove_item_from_system_if_needed(item)
             
-            self.startup_items.remove(item)
-            self._save_startup_data()
-            logger.info(f"删除开机启动项: {item.id} -> {item.name}")
+            # 删除并保存启动项
+            self._remove_and_save_startup_item(item)
+            
             return True
         except Exception as e:
             logger.error(f"删除开机启动项失败: {str(e)}")
             return False
+    
+    def _remove_item_from_system_if_needed(self, item: StartupItem) -> None:
+        """
+        如果需要，从系统中移除启动项
+        
+        Args:
+            item: 开机启动项
+        """
+        if self.settings and self.settings.auto_configure:
+            self._remove_startup_item_from_system(item)
+    
+    def _remove_and_save_startup_item(self, item: StartupItem) -> None:
+        """
+        删除并保存启动项
+        
+        Args:
+            item: 开机启动项
+        """
+        self.startup_items.remove(item)
+        self._save_startup_data()
+        logger.info(f"删除开机启动项: {item.id} -> {item.name}")
     
     def _apply_startup_item(self, item: StartupItem) -> bool:
         """
@@ -289,19 +384,19 @@ class StartupService:
         """
         try:
             # 使用注册表方式添加启动项
-            import winreg
+            import winreg  # type: ignore
             
             # 打开启动项注册表键
-            key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
+            key = winreg.OpenKey(  # type: ignore
+                winreg.HKEY_CURRENT_USER,  # type: ignore
                 r"Software\Microsoft\Windows\CurrentVersion\Run",
                 0,
-                winreg.KEY_SET_VALUE
+                winreg.KEY_SET_VALUE  # type: ignore
             )
             
             # 设置启动项
-            winreg.SetValueEx(key, item.name, 0, winreg.REG_SZ, item.executable_path)
-            winreg.CloseKey(key)
+            winreg.SetValueEx(key, item.name, 0, winreg.REG_SZ, item.executable_path)  # type: ignore
+            winreg.CloseKey(key)  # type: ignore
             
             logger.info(f"Windows启动项已应用: {item.name}")
             return True
@@ -447,19 +542,19 @@ X-GNOME-Autostart-enabled=true"""
         """
         try:
             # 使用注册表方式移除启动项
-            import winreg
+            import winreg  # type: ignore
             
             # 打开启动项注册表键
-            key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
+            key = winreg.OpenKey(  # type: ignore
+                winreg.HKEY_CURRENT_USER,  # type: ignore
                 r"Software\Microsoft\Windows\CurrentVersion\Run",
                 0,
-                winreg.KEY_SET_VALUE
+                winreg.KEY_SET_VALUE  # type: ignore
             )
             
             # 删除启动项
-            winreg.DeleteValue(key, item.name)
-            winreg.CloseKey(key)
+            winreg.DeleteValue(key, item.name)  # type: ignore
+            winreg.CloseKey(key)  # type: ignore
             
             logger.info(f"Windows启动项已移除: {item.name}")
             return True
@@ -542,31 +637,65 @@ X-GNOME-Autostart-enabled=true"""
             Dict[str, Any]: 应用结果
         """
         try:
-            success_count = 0
-            failed_items = []
+            # 应用所有启动项
+            result = self._apply_all_startup_items_internal()
             
-            for item in self.startup_items:
-                if self._apply_startup_item(item):
-                    success_count += 1
-                else:
-                    failed_items.append(item.id)
-            
-            return {
-                "success": True,
-                "message": f"已应用 {success_count} 个启动项，失败 {len(failed_items)} 个",
-                "success_count": success_count,
-                "failed_count": len(failed_items),
-                "failed_items": failed_items
-            }
+            return result
         except Exception as e:
             logger.error(f"应用所有启动项失败: {str(e)}")
-            return {
-                "success": False,
-                "message": f"应用所有启动项失败: {str(e)}",
-                "success_count": 0,
-                "failed_count": len(self.startup_items),
-                "failed_items": [item.id for item in self.startup_items]
-            }
+            return self._get_apply_all_failure_result()
+    
+    def _apply_all_startup_items_internal(self) -> Dict[str, Any]:
+        """
+        内部应用所有启动项的方法
+        
+        Returns:
+            Dict[str, Any]: 应用结果
+        """
+        success_count = 0
+        failed_items: List[str] = []
+        
+        for item in self.startup_items:
+            if self._apply_startup_item(item):
+                success_count += 1
+            else:
+                failed_items.append(item.id)
+        
+        return self._build_apply_result(success_count, failed_items)
+    
+    def _build_apply_result(self, success_count: int, failed_items: List[str]) -> Dict[str, Any]:
+        """
+        构建应用结果
+        
+        Args:
+            success_count: 成功数量
+            failed_items: 失败项列表
+            
+        Returns:
+            Dict[str, Any]: 应用结果
+        """
+        return {
+            "success": True,
+            "message": f"已应用 {success_count} 个启动项，失败 {len(failed_items)} 个",
+            "success_count": success_count,
+            "failed_count": len(failed_items),
+            "failed_items": failed_items
+        }
+    
+    def _get_apply_all_failure_result(self) -> Dict[str, Any]:
+        """
+        获取应用所有启动项失败的结果
+        
+        Returns:
+            Dict[str, Any]: 失败结果
+        """
+        return {
+            "success": False,
+            "message": f"应用所有启动项失败",
+            "success_count": 0,
+            "failed_count": len(self.startup_items),
+            "failed_items": [item.id for item in self.startup_items]
+        }
     
     def remove_all_startup_items(self) -> Dict[str, Any]:
         """
@@ -576,31 +705,65 @@ X-GNOME-Autostart-enabled=true"""
             Dict[str, Any]: 移除结果
         """
         try:
-            success_count = 0
-            failed_items = []
+            # 移除所有启动项
+            result = self._remove_all_startup_items_internal()
             
-            for item in self.startup_items:
-                if self._remove_startup_item_from_system(item):
-                    success_count += 1
-                else:
-                    failed_items.append(item.id)
-            
-            return {
-                "success": True,
-                "message": f"已移除 {success_count} 个启动项，失败 {len(failed_items)} 个",
-                "success_count": success_count,
-                "failed_count": len(failed_items),
-                "failed_items": failed_items
-            }
+            return result
         except Exception as e:
             logger.error(f"移除所有启动项失败: {str(e)}")
-            return {
-                "success": False,
-                "message": f"移除所有启动项失败: {str(e)}",
-                "success_count": 0,
-                "failed_count": len(self.startup_items),
-                "failed_items": [item.id for item in self.startup_items]
-            }
+            return self._get_remove_all_failure_result()
+    
+    def _remove_all_startup_items_internal(self) -> Dict[str, Any]:
+        """
+        内部移除所有启动项的方法
+        
+        Returns:
+            Dict[str, Any]: 移除结果
+        """
+        success_count = 0
+        failed_items: List[str] = []
+        
+        for item in self.startup_items:
+            if self._remove_startup_item_from_system(item):
+                success_count += 1
+            else:
+                failed_items.append(item.id)
+        
+        return self._build_remove_result(success_count, failed_items)
+    
+    def _build_remove_result(self, success_count: int, failed_items: List[str]) -> Dict[str, Any]:
+        """
+        构建移除结果
+        
+        Args:
+            success_count: 成功数量
+            failed_items: 失败项列表
+            
+        Returns:
+            Dict[str, Any]: 移除结果
+        """
+        return {
+            "success": True,
+            "message": f"已移除 {success_count} 个启动项，失败 {len(failed_items)} 个",
+            "success_count": success_count,
+            "failed_count": len(failed_items),
+            "failed_items": failed_items
+        }
+    
+    def _get_remove_all_failure_result(self) -> Dict[str, Any]:
+        """
+        获取移除所有启动项失败的结果
+        
+        Returns:
+            Dict[str, Any]: 失败结果
+        """
+        return {
+            "success": False,
+            "message": f"移除所有启动项失败",
+            "success_count": 0,
+            "failed_count": len(self.startup_items),
+            "failed_items": [item.id for item in self.startup_items]
+        }
     
     def is_service_enabled(self) -> bool:
         """

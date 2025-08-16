@@ -2,21 +2,21 @@
 课程管理 API 接口
 """
 
-from typing import List, Tuple, Any
-from flask import Blueprint, request, jsonify, Response
+from typing import List, Tuple, Any, Dict
+from flask import Blueprint, request, jsonify
+
 from services.service_factory import ServiceFactory
 from models.class_item import ClassItem, TimeSlot
 from utils.exceptions import ValidationException, ConflictException
 
 # 创建课程管理蓝图
-courses_bp: Blueprint = Blueprint('courses', __name__)
+courses_bp = Blueprint('courses', __name__)
 
 # 获取课程服务实例
 course_service = ServiceFactory.get_course_service()
 
-
 @courses_bp.route('/courses', methods=['GET'])
-def get_all_courses() -> Tuple[Response, int]:
+def get_all_courses() -> Tuple[Any, int]:
     """
     获取所有课程
     """
@@ -26,9 +26,8 @@ def get_all_courses() -> Tuple[Response, int]:
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @courses_bp.route('/courses', methods=['POST'])
-def create_course() -> Tuple[Response, int]:
+def create_course() -> Tuple[Any, int]:
     """
     创建课程
     """

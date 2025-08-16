@@ -231,31 +231,11 @@ class ConflictDetectionService:
             是否冲突
         """
         try:
-            # 解析开始时间
-            start1_parts = course1.duration.start_time.split(':')
-            start1_hour = int(start1_parts[0])
-            start1_minute = int(start1_parts[1])
-            
-            # 解析结束时间
-            end1_parts = course1.duration.end_time.split(':')
-            end1_hour = int(end1_parts[0])
-            end1_minute = int(end1_parts[1])
-            
-            # 解析开始时间
-            start2_parts = course2.duration.start_time.split(':')
-            start2_hour = int(start2_parts[0])
-            start2_minute = int(start2_parts[1])
-            
-            # 解析结束时间
-            end2_parts = course2.duration.end_time.split(':')
-            end2_hour = int(end2_parts[0])
-            end2_minute = int(end2_parts[1])
-            
-            # 转换为分钟进行比较
-            start1_minutes = start1_hour * 60 + start1_minute
-            end1_minutes = end1_hour * 60 + end1_minute
-            start2_minutes = start2_hour * 60 + start2_minute
-            end2_minutes = end2_hour * 60 + end2_minute
+            # 解析两个课程的时间
+            start1_minutes = self._time_to_minutes(course1.duration.start_time)
+            end1_minutes = self._time_to_minutes(course1.duration.end_time)
+            start2_minutes = self._time_to_minutes(course2.duration.start_time)
+            end2_minutes = self._time_to_minutes(course2.duration.end_time)
             
             # 检查是否有时间重叠
             return not (end1_minutes <= start2_minutes or end2_minutes <= start1_minutes)
@@ -263,3 +243,29 @@ class ConflictDetectionService:
         except Exception as e:
             logger.warning(f"时间冲突检测失败: {str(e)}")
             return False  # 如果解析失败，默认不冲突
+    
+    def _time_to_minutes(self, time_str: str) -> int:
+        """
+        将时间字符串转换为分钟数
+        
+        Args:
+            time_str: 时间字符串，格式为 "HH:MM"
+            
+        Returns:
+            int: 总分钟数
+            
+        Raises:
+            ValueError: 时间格式不正确时抛出异常
+        """
+        parts = time_str.split(':')
+        if len(parts) != 2:
+            raise ValueError(f"无效的时间格式: {time_str}")
+        
+        hour = int(parts[0])
+        minute = int(parts[1])
+        
+        # 验证时间范围
+        if not (0 <= hour <= 23) or not (0 <= minute <= 59):
+            raise ValueError(f"时间超出有效范围: {time_str}")
+        
+        return hour * 60 + minute

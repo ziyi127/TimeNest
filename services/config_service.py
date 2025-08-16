@@ -77,19 +77,27 @@ class ConfigService:
         logger.debug("获取系统配置")
         
         try:
-            if self.user_settings:
-                config = self.user_settings.to_dict()
-                # 添加一些系统级配置
-                config["system_info"] = {
-                    "config_file": self.config_file,
-                    "last_updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-                return config
-            else:
-                return {}
-                
+            return self._build_system_config()
         except Exception as e:
             logger.error(f"获取系统配置失败: {str(e)}")
+            return {}
+    
+    def _build_system_config(self) -> Dict[str, Any]:
+        """
+        构建系统配置字典
+        
+        Returns:
+            系统配置字典
+        """
+        if self.user_settings:
+            config = self.user_settings.to_dict()
+            # 添加一些系统级配置
+            config["system_info"] = {
+                "config_file": self.config_file,
+                "last_updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            return config
+        else:
             return {}
     
     def update_system_config(self, config_data: Dict[str, Any]) -> bool:
@@ -108,24 +116,11 @@ class ConfigService:
         logger.info("更新系统配置")
         
         try:
-            if not self.user_settings:
-                self.user_settings = UserSettings()
+            # 确保用户设置存在
+            self._ensure_user_settings_exists()
             
             # 更新用户设置字段
-            if "theme" in config_data:
-                self.user_settings.theme = config_data["theme"]
-            
-            if "language" in config_data:
-                self.user_settings.language = config_data["language"]
-            
-            if "auto_backup" in config_data:
-                self.user_settings.auto_backup = config_data["auto_backup"]
-            
-            if "backup_interval" in config_data:
-                self.user_settings.backup_interval = config_data["backup_interval"]
-            
-            if "data_dir" in config_data:
-                self.user_settings.data_dir = config_data["data_dir"]
+            self._update_user_settings_fields(config_data)
             
             # 保存设置
             self._save_user_settings()
@@ -136,6 +131,32 @@ class ConfigService:
         except Exception as e:
             logger.error(f"更新系统配置失败: {str(e)}")
             raise ValidationException(f"更新系统配置失败: {str(e)}")
+
+    def _ensure_user_settings_exists(self) -> None:
+        """
+        确保用户设置对象存在
+        """
+        if not self.user_settings:
+            self.user_settings = UserSettings()
+
+    def _update_user_settings_fields(self, config_data: Dict[str, Any]) -> None:
+        """
+        更新用户设置字段
+        
+        Args:
+            config_data: 配置数据字典
+        """
+        field_mapping = {
+            "theme": "theme",
+            "language": "language",
+            "auto_backup": "auto_backup",
+            "backup_interval": "backup_interval",
+            "data_dir": "data_dir"
+        }
+        
+        for field_key, setting_attr in field_mapping.items():
+            if field_key in config_data:
+                setattr(self.user_settings, setting_attr, config_data[field_key])
     
     def reset_to_default(self) -> bool:
         """
@@ -147,8 +168,8 @@ class ConfigService:
         logger.info("重置为默认配置")
         
         try:
-            self.user_settings = UserSettings()
-            self._save_user_settings()
+            # 重置并保存配置
+            self._reset_and_save_default_config()
             
             logger.info("重置为默认配置成功")
             return True
@@ -156,6 +177,13 @@ class ConfigService:
         except Exception as e:
             logger.error(f"重置为默认配置失败: {str(e)}")
             return False
+    
+    def _reset_and_save_default_config(self) -> None:
+        """
+        重置并保存默认配置
+        """
+        self.user_settings = UserSettings()
+        self._save_user_settings()
     
     def get_config_value(self, key: str, default_value: Any = None) -> Any:
         """

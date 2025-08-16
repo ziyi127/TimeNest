@@ -83,6 +83,26 @@ class NotificationService:
         logger.info(f"创建通知: {title}")
         
         # 验证数据
+        self._validate_notification_data(title, content, priority)
+        
+        # 创建并保存通知
+        notification = self._create_and_save_notification(title, content, priority, category, target_users or [])
+        
+        logger.info(f"通知 {notification.id} 创建成功")
+        return notification
+    
+    def _validate_notification_data(self, title: str, content: str, priority: str) -> None:
+        """
+        验证通知数据
+        
+        Args:
+            title: 通知标题
+            content: 通知内容
+            priority: 通知优先级
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
         if not title or len(title.strip()) == 0:
             logger.warning("通知标题不能为空")
             raise ValidationException("通知标题不能为空")
@@ -94,8 +114,22 @@ class NotificationService:
         if priority not in ["low", "normal", "high"]:
             logger.warning(f"无效的通知优先级: {priority}")
             raise ValidationException("通知优先级必须是 'low', 'normal' 或 'high'")
+    
+    def _create_and_save_notification(self, title: str, content: str, priority: str, 
+                                    category: str, target_users: List[str]) -> Notification:
+        """
+        创建并保存通知
         
-        # 创建通知对象
+        Args:
+            title: 通知标题
+            content: 通知内容
+            priority: 通知优先级
+            category: 通知分类
+            target_users: 目标用户列表
+            
+        Returns:
+            创建的通知对象
+        """
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         notification = Notification(
@@ -105,16 +139,13 @@ class NotificationService:
             created_at=current_time,
             priority=priority,
             category=category,
-            target_users=target_users or []
+            target_users=target_users
         )
         
-        # 添加到通知列表
+        # 添加到通知列表并保存
         self.notifications.append(notification)
-        
-        # 保存数据
         self._save_notifications()
         
-        logger.info(f"通知 {notification.id} 创建成功")
         return notification
     
     def update_notification(self, notification_id: str, title: Optional[str] = None, content: Optional[str] = None,
@@ -145,7 +176,32 @@ class NotificationService:
             logger.warning(f"通知 {notification_id} 未找到")
             raise NotFoundException(f"通知 {notification_id} 未找到")
         
-        # 更新字段
+        # 验证和更新字段
+        self._validate_and_update_fields(notification, title, content, priority)
+        
+        # 更新其他字段
+        self._update_optional_fields(notification, category, is_read)
+        
+        # 保存数据
+        self._save_notifications()
+        
+        logger.info(f"通知 {notification_id} 更新成功")
+        return notification
+    
+    def _validate_and_update_fields(self, notification: Notification, title: Optional[str], 
+                                  content: Optional[str], priority: Optional[str]) -> None:
+        """
+        验证和更新通知字段
+        
+        Args:
+            notification: 通知对象
+            title: 通知标题（可选）
+            content: 通知内容（可选）
+            priority: 通知优先级（可选）
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
         if title is not None:
             if len(title.strip()) == 0:
                 logger.warning("通知标题不能为空")
@@ -163,18 +219,22 @@ class NotificationService:
                 logger.warning(f"无效的通知优先级: {priority}")
                 raise ValidationException("通知优先级必须是 'low', 'normal' 或 'high'")
             notification.priority = priority
+    
+    def _update_optional_fields(self, notification: Notification, category: Optional[str], 
+                              is_read: Optional[bool]) -> None:
+        """
+        更新可选字段
         
+        Args:
+            notification: 通知对象
+            category: 通知分类（可选）
+            is_read: 是否已读（可选）
+        """
         if category is not None:
             notification.category = category
         
         if is_read is not None:
             notification.is_read = is_read
-        
-        # 保存数据
-        self._save_notifications()
-        
-        logger.info(f"通知 {notification_id} 更新成功")
-        return notification
     
     def delete_notification(self, notification_id: str) -> bool:
         """
@@ -191,6 +251,25 @@ class NotificationService:
         """
         logger.info(f"删除通知: {notification_id}")
         
+        # 查找并删除通知
+        self._find_and_remove_notification(notification_id)
+        
+        # 保存数据
+        self._save_notifications()
+        
+        logger.info(f"通知 {notification_id} 删除成功")
+        return True
+    
+    def _find_and_remove_notification(self, notification_id: str) -> None:
+        """
+        查找并删除通知
+        
+        Args:
+            notification_id: 通知ID
+            
+        Raises:
+            NotFoundException: 通知未找到
+        """
         # 查找通知索引
         notification_index = self._find_notification_index(notification_id)
         if notification_index == -1:
@@ -199,12 +278,6 @@ class NotificationService:
         
         # 删除通知
         del self.notifications[notification_index]
-        
-        # 保存数据
-        self._save_notifications()
-        
-        logger.info(f"通知 {notification_id} 删除成功")
-        return True
     
     def get_notification_by_id(self, notification_id: str) -> Optional[Notification]:
         """
@@ -284,16 +357,28 @@ class NotificationService:
         """
         logger.info("标记所有通知为已读")
         
-        count = 0
-        for notification in self.notifications:
-            if not notification.is_read:
-                notification.is_read = True
-                count += 1
+        # 标记未读通知为已读
+        count = self._mark_unread_notifications_as_read()
         
         if count > 0:
             # 保存数据
             self._save_notifications()
             logger.info(f"标记了 {count} 条通知为已读")
+        
+        return count
+    
+    def _mark_unread_notifications_as_read(self) -> int:
+        """
+        标记未读通知为已读
+        
+        Returns:
+            更新的通知数量
+        """
+        count = 0
+        for notification in self.notifications:
+            if not notification.is_read:
+                notification.is_read = True
+                count += 1
         
         return count
     

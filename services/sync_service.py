@@ -45,25 +45,8 @@ class SyncService:
         logger.info(f"同步数据到目录: {target_directory}")
         
         try:
-            # 确保目标目录存在
-            os.makedirs(target_directory, exist_ok=True)
-            
-            # 获取要同步的数据
-            sync_data = self._collect_sync_data()
-            
-            # 生成数据文件
-            data_file_path = os.path.join(target_directory, "sync_data.json")
-            with open(data_file_path, 'w', encoding='utf-8') as f:
-                json.dump(sync_data, f, ensure_ascii=False, indent=2)
-            
-            # 生成元数据文件
-            metadata = self._generate_metadata(sync_data)
-            metadata_file_path = os.path.join(target_directory, "sync_metadata.json")
-            with open(metadata_file_path, 'w', encoding='utf-8') as f:
-                json.dump(metadata, f, ensure_ascii=False, indent=2)
-            
-            # 复制其他必要文件
-            self._copy_additional_files(target_directory)
+            # 执行同步操作
+            self._perform_sync_to_directory(target_directory)
             
             logger.info(f"数据同步到目录成功: {target_directory}")
             return True
@@ -71,6 +54,53 @@ class SyncService:
         except Exception as e:
             logger.error(f"同步数据到目录失败: {str(e)}")
             return False
+    
+    def _perform_sync_to_directory(self, target_directory: str) -> None:
+        """
+        执行同步数据到指定目录的操作
+        
+        Args:
+            target_directory: 目标目录路径
+        """
+        # 确保目标目录存在
+        os.makedirs(target_directory, exist_ok=True)
+        
+        # 获取要同步的数据
+        sync_data = self._collect_sync_data()
+        
+        # 生成并保存数据文件
+        self._save_sync_data_file(target_directory, sync_data)
+        
+        # 生成并保存元数据文件
+        self._save_sync_metadata_file(target_directory, sync_data)
+        
+        # 复制其他必要文件
+        self._copy_additional_files(target_directory)
+    
+    def _save_sync_data_file(self, target_directory: str, sync_data: Dict[str, Any]) -> None:
+        """
+        保存同步数据文件
+        
+        Args:
+            target_directory: 目标目录路径
+            sync_data: 要保存的同步数据
+        """
+        data_file_path = os.path.join(target_directory, "sync_data.json")
+        with open(data_file_path, 'w', encoding='utf-8') as f:
+            json.dump(sync_data, f, ensure_ascii=False, indent=2)
+    
+    def _save_sync_metadata_file(self, target_directory: str, sync_data: Dict[str, Any]) -> None:
+        """
+        生成并保存同步元数据文件
+        
+        Args:
+            target_directory: 目标目录路径
+            sync_data: 同步数据
+        """
+        metadata = self._generate_metadata(sync_data)
+        metadata_file_path = os.path.join(target_directory, "sync_metadata.json")
+        with open(metadata_file_path, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2)
     
     def sync_from_directory(self, source_directory: str) -> bool:
         """
@@ -85,42 +115,114 @@ class SyncService:
         logger.info(f"从目录同步数据: {source_directory}")
         
         try:
-            # 检查源目录是否存在
-            if not os.path.exists(source_directory):
-                logger.warning(f"源目录不存在: {source_directory}")
-                return False
+            # 执行从目录同步数据的操作
+            success = self._perform_sync_from_directory(source_directory)
             
-            # 检查必要的文件是否存在
-            data_file_path = os.path.join(source_directory, "sync_data.json")
-            if not os.path.exists(data_file_path):
-                logger.warning(f"同步数据文件不存在: {data_file_path}")
-                return False
-            
-            # 读取同步数据
-            with open(data_file_path, 'r', encoding='utf-8') as f:
-                sync_data = json.load(f)
-            
-            # 验证数据完整性
-            metadata_file_path = os.path.join(source_directory, "sync_metadata.json")
-            if os.path.exists(metadata_file_path):
-                with open(metadata_file_path, 'r', encoding='utf-8') as f:
-                    metadata = json.load(f)
-                if not self._verify_data_integrity(sync_data, metadata):
-                    logger.warning("同步数据完整性验证失败")
-                    return False
-            
-            # 导入数据到各服务
-            self._import_sync_data(sync_data)
-            
-            # 复制其他必要文件
-            self._copy_additional_files_from_source(source_directory)
-            
-            logger.info(f"从目录同步数据成功: {source_directory}")
-            return True
+            if success:
+                logger.info(f"从目录同步数据成功: {source_directory}")
+            return success
             
         except Exception as e:
             logger.error(f"从目录同步数据失败: {str(e)}")
             return False
+    
+    def _perform_sync_from_directory(self, source_directory: str) -> bool:
+        """
+        执行从指定目录同步数据的操作
+        
+        Args:
+            source_directory: 源目录路径
+            
+        Returns:
+            是否同步成功
+        """
+        # 检查源目录是否存在
+        if not self._is_source_directory_valid(source_directory):
+            return False
+        
+        # 检查必要的文件是否存在
+        if not self._are_required_files_present(source_directory):
+            return False
+        
+        # 读取同步数据
+        sync_data = self._load_sync_data(source_directory)
+        
+        # 验证数据完整性
+        if not self._is_data_integrity_valid(source_directory, sync_data):
+            return False
+        
+        # 导入数据到各服务
+        self._import_sync_data(sync_data)
+        
+        # 复制其他必要文件
+        self._copy_additional_files_from_source(source_directory)
+        
+        return True
+    
+    def _is_source_directory_valid(self, source_directory: str) -> bool:
+        """
+        检查源目录是否有效
+        
+        Args:
+            source_directory: 源目录路径
+            
+        Returns:
+            源目录是否有效
+        """
+        if not os.path.exists(source_directory):
+            logger.warning(f"源目录不存在: {source_directory}")
+            return False
+        return True
+    
+    def _are_required_files_present(self, source_directory: str) -> bool:
+        """
+        检查必要的文件是否存在
+        
+        Args:
+            source_directory: 源目录路径
+            
+        Returns:
+            必要的文件是否存在
+        """
+        data_file_path = os.path.join(source_directory, "sync_data.json")
+        if not os.path.exists(data_file_path):
+            logger.warning(f"同步数据文件不存在: {data_file_path}")
+            return False
+        return True
+    
+    def _load_sync_data(self, source_directory: str) -> Dict[str, Any]:
+        """
+        从源目录加载同步数据
+        
+        Args:
+            source_directory: 源目录路径
+            
+        Returns:
+            同步数据字典
+        """
+        data_file_path = os.path.join(source_directory, "sync_data.json")
+        with open(data_file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    def _is_data_integrity_valid(self, source_directory: str, sync_data: Dict[str, Any]) -> bool:
+        """
+        验证数据完整性是否有效
+        
+        Args:
+            source_directory: 源目录路径
+            sync_data: 同步数据
+            
+        Returns:
+            数据完整性是否有效
+        """
+        metadata_file_path = os.path.join(source_directory, "sync_metadata.json")
+        if os.path.exists(metadata_file_path):
+            with open(metadata_file_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            if not self._verify_data_integrity(sync_data, metadata):
+                logger.warning("同步数据完整性验证失败")
+                return False
+        return True
     
     def get_sync_status(self) -> Dict[str, Any]:
         """
@@ -132,34 +234,54 @@ class SyncService:
         logger.debug("获取同步状态")
         
         try:
-            # 延迟导入ServiceFactory以避免循环导入
-            from services.service_factory import ServiceFactory
-            
-            # 获取本地数据信息
-            course_service = ServiceFactory.get_course_service()
-            schedule_service = ServiceFactory.get_schedule_service()
-            temp_change_service = ServiceFactory.get_temp_change_service()
-            cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()
-            
-            status: Dict[str, Any] = {
-                "local_data": {
-                    "courses_count": len(course_service.get_all_courses()),
-                    "schedules_count": len(schedule_service.get_all_schedules()),
-                    "temp_changes_count": len(temp_change_service.get_all_temp_changes()),
-                    "cycle_schedules_count": len(cycle_schedule_service.get_all_cycle_schedules())
-                },
-                "sync_directory": self.sync_directory,
-                "last_sync_time": self._get_last_sync_time(),
-                "sync_enabled": True
-            }
-            
-            return status
-            
+            return self._build_sync_status()
         except Exception as e:
             logger.error(f"获取同步状态失败: {str(e)}")
             return {
                 "error": str(e)
             }
+    
+    def _build_sync_status(self) -> Dict[str, Any]:
+        """
+        构建同步状态信息
+        
+        Returns:
+            同步状态信息
+        """
+        # 获取本地数据信息
+        local_data = self._get_local_data_info()
+        
+        status: Dict[str, Any] = {
+            "local_data": local_data,
+            "sync_directory": self.sync_directory,
+            "last_sync_time": self._get_last_sync_time(),
+            "sync_enabled": True
+        }
+        
+        return status
+    
+    def _get_local_data_info(self) -> Dict[str, int]:
+        """
+        获取本地数据信息
+        
+        Returns:
+            本地数据信息字典
+        """
+        # 延迟导入ServiceFactory以避免循环导入
+        from services.service_factory import ServiceFactory
+        
+        # 获取各服务实例
+        course_service = ServiceFactory.get_course_service()
+        schedule_service = ServiceFactory.get_schedule_service()
+        temp_change_service = ServiceFactory.get_temp_change_service()
+        cycle_schedule_service = ServiceFactory.get_cycle_schedule_service()
+        
+        return {
+            "courses_count": len(course_service.get_all_courses()),
+            "schedules_count": len(schedule_service.get_all_schedules()),
+            "temp_changes_count": len(temp_change_service.get_all_temp_changes()),
+            "cycle_schedules_count": len(cycle_schedule_service.get_all_cycle_schedules())
+        }
     
     def _collect_sync_data(self) -> Dict[str, Any]:
         """

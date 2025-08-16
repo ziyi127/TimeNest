@@ -8,7 +8,7 @@ import os
 import platform
 import subprocess
 import threading
-import time
+# import time  # 未使用的导入，需要移除
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from models.scheduled_task import ScheduledTask, TaskSettings, OSType, TaskType
@@ -28,7 +28,7 @@ class TaskSchedulerService:
         self.data_file = "./data/task_scheduler_data.json"
         self.settings: Optional[TaskSettings] = None
         self.scheduled_tasks: List[ScheduledTask] = []
-        self.running_tasks: Dict[str, subprocess.Popen] = {}
+        self.running_tasks: Dict[str, subprocess.Popen[str]] = {}
         self._ensure_data_directory()
         self._load_settings()
         self._load_scheduled_tasks()
@@ -269,14 +269,29 @@ class TaskSchedulerService:
             str: 操作系统特定的命令
         """
         current_os = self.get_current_os()
+        return self._select_command_by_os(task, current_os)
+    
+    def _select_command_by_os(self, task: ScheduledTask, current_os: OSType) -> str:
+        """
+        根据操作系统选择命令
+        
+        Args:
+            task: 计划任务
+            current_os: 当前操作系统
+            
+        Returns:
+            str: 选定的命令
+        """
+        os_specific_commands = {
+            OSType.WINDOWS: task.windows_command,
+            OSType.MACOS: task.mac_command,
+            OSType.LINUX: task.linux_command,
+        }
         
         # 如果任务定义了特定操作系统的命令，则使用该命令
-        if current_os == OSType.WINDOWS and task.windows_command:
-            return task.windows_command
-        elif current_os == OSType.MACOS and task.mac_command:
-            return task.mac_command
-        elif current_os == OSType.LINUX and task.linux_command:
-            return task.linux_command
+        specific_command = os_specific_commands.get(current_os)
+        if specific_command:
+            return specific_command
         
         # 否则使用通用命令
         return task.command
@@ -323,87 +338,13 @@ class TaskSchedulerService:
             # 执行命令
             logger.info(f"执行任务: {task_id} -> {command}")
             
-            # 根据任务类型执行不同的命令
-            if task.task_type == TaskType.PROGRAM:
-                # 程序执行
-                process = subprocess.Popen(
-                    command,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True
-                )
-            elif task.task_type == TaskType.FILE:
-                # 文件打开
-                if self.get_current_os() == OSType.WINDOWS:
-                    process = subprocess.Popen(
-                        f'start "" "{command}"',
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True
-                    )
-                elif self.get_current_os() == OSType.MACOS:
-                    process = subprocess.Popen(
-                        f'open "{command}"',
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True
-                    )
-                elif self.get_current_os() == OSType.LINUX:
-                    process = subprocess.Popen(
-                        f'xdg-open "{command}"',
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True
-                    )
-                else:
-                    process = subprocess.Popen(
-                        command,
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True
-                    )
-            else:
-                # 默认执行方式
-                process = subprocess.Popen(
-                    command,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True
-                )
+            process = self._create_process_for_task(task, command)
             
             # 记录正在运行的任务
             self.running_tasks[task_id] = process
             
             # 异步等待任务完成
-            def wait_for_completion():
-                try:
-                    stdout, stderr = process.communicate()
-                    exit_code = process.returncode
-                    
-                    # 从运行中的任务中移除
-                    if task_id in self.running_tasks:
-                        del self.running_tasks[task_id]
-                    
-                    logger.info(f"任务执行完成: {task_id}, 退出码: {exit_code}")
-                    
-                    # 记录执行日志
-                    self._log_task_execution(task_id, exit_code, stdout, stderr)
-                except Exception as e:
-                    logger.error(f"等待任务完成时出错: {str(e)}")
-                    # 从运行中的任务中移除
-                    if task_id in self.running_tasks:
-                        del self.running_tasks[task_id]
-            
-            # 启动异步线程等待任务完成
-            thread = threading.Thread(target=wait_for_completion)
-            thread.daemon = True
-            thread.start()
+            self._start_async_task_completion_thread(task_id)
             
             return {
                 "success": True,
@@ -418,6 +359,139 @@ class TaskSchedulerService:
                 "task_id": task_id
             }
     
+    def _create_process_for_task(self, task: ScheduledTask, command: str) -> subprocess.Popen[str]:
+        """
+        根据任务类型创建相应的进程
+        
+        Args:
+            task: 计划任务
+            command: 要执行的命令
+            
+        Returns:
+            subprocess.Popen: 创建的进程对象
+        """
+        task_type_handlers: Dict[TaskType, Any] = {
+            TaskType.APPLICATION: self._create_program_process,
+            TaskType.FILE_OPERATION: self._create_file_open_process,
+        }
+        
+        # 获取处理函数，默认使用默认处理函数
+        handler = task_type_handlers.get(task.task_type, self._create_default_process)
+        return handler(command)
+    
+    def _create_program_process(self, command: str) -> subprocess.Popen[str]:
+        """
+        创建程序执行进程
+        
+        Args:
+            command: 要执行的命令
+            
+        Returns:
+            subprocess.Popen: 创建的进程对象
+        """
+        return subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+    
+    def _create_file_open_process(self, command: str) -> subprocess.Popen[str]:
+        """
+        创建文件打开进程
+        
+        Args:
+            command: 要打开的文件路径
+            
+        Returns:
+            subprocess.Popen: 创建的进程对象
+        """
+        current_os = self.get_current_os()
+        if current_os == OSType.WINDOWS:
+            return subprocess.Popen(
+                f'start "" "{command}"',
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        elif current_os == OSType.MACOS:
+            return subprocess.Popen(
+                f'open "{command}"',
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        elif current_os == OSType.LINUX:
+            return subprocess.Popen(
+                f'xdg-open "{command}"',
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        else:
+            return subprocess.Popen(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+    
+    def _create_default_process(self, command: str) -> subprocess.Popen[str]:
+        """
+        创建默认进程
+        
+        Args:
+            command: 要执行的命令
+            
+        Returns:
+            subprocess.Popen: 创建的进程对象
+        """
+        return subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+    
+    def _start_async_task_completion_thread(self, task_id: str):
+        """
+        启动异步任务完成线程
+        
+        Args:
+            task_id: 任务ID
+        """
+        def wait_for_completion():
+            try:
+                process = self.running_tasks.get(task_id)
+                if process:
+                    stdout, stderr = process.communicate()
+                    exit_code = process.returncode
+                    
+                    # 从运行中的任务中移除
+                    if task_id in self.running_tasks:
+                        del self.running_tasks[task_id]
+                    
+                    logger.info(f"任务执行完成: {task_id}, 退出码: {exit_code}")
+                    
+                    # 记录执行日志
+                    self._log_task_execution(task_id, exit_code, stdout, stderr)
+            except Exception as e:
+                logger.error(f"等待任务完成时出错: {str(e)}")
+                # 从运行中的任务中移除
+                if task_id in self.running_tasks:
+                    del self.running_tasks[task_id]
+        
+        # 启动异步线程等待任务完成
+        thread = threading.Thread(target=wait_for_completion)
+        thread.daemon = True
+        thread.start()
+    
     def _log_task_execution(self, task_id: str, exit_code: int, stdout: str, stderr: str):
         """
         记录任务执行日志
@@ -429,7 +503,7 @@ class TaskSchedulerService:
             stderr: 错误输出
         """
         try:
-            log_entry = {
+            log_entry: Dict[str, Any] = {
                 "task_id": task_id,
                 "timestamp": datetime.now().isoformat(),
                 "exit_code": exit_code,
@@ -500,41 +574,74 @@ class TaskSchedulerService:
         """
         try:
             if task_id not in self.running_tasks:
-                return {
-                    "success": False,
-                    "message": "任务未在运行",
-                    "task_id": task_id
-                }
+                return self._create_stop_result(False, "任务未在运行", task_id)
             
             process = self.running_tasks[task_id]
-            process.terminate()  # 尝试优雅终止
-            
-            # 等待一段时间看是否终止
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                # 如果优雅终止失败，强制杀死进程
-                process.kill()
-                process.wait()
+            self._terminate_process_gracefully(process)
             
             # 从运行中的任务中移除
-            if task_id in self.running_tasks:
-                del self.running_tasks[task_id]
+            self._remove_running_task(task_id)
             
             logger.info(f"任务已停止: {task_id}")
             
-            return {
-                "success": True,
-                "message": "任务已停止",
-                "task_id": task_id
-            }
+            return self._create_stop_result(True, "任务已停止", task_id)
         except Exception as e:
             logger.error(f"停止任务失败: {str(e)}")
-            return {
-                "success": False,
-                "message": f"停止任务失败: {str(e)}",
-                "task_id": task_id
-            }
+            return self._create_stop_result(False, f"停止任务失败: {str(e)}", task_id)
+    
+    def _create_stop_result(self, success: bool, message: str, task_id: str) -> Dict[str, Any]:
+        """
+        创建停止任务结果
+        
+        Args:
+            success: 是否成功
+            message: 结果消息
+            task_id: 任务ID
+            
+        Returns:
+            Dict[str, Any]: 停止结果
+        """
+        return {
+            "success": success,
+            "message": message,
+            "task_id": task_id
+        }
+    
+    def _terminate_process_gracefully(self, process: subprocess.Popen[str]):
+        """
+        优雅地终止进程
+        
+        Args:
+            process: 要终止的进程
+        """
+        process.terminate()  # 尝试优雅终止
+        
+        # 等待一段时间看是否终止
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            # 如果优雅终止失败，强制杀死进程
+            self._force_kill_process(process)
+    
+    def _force_kill_process(self, process: subprocess.Popen[str]):
+        """
+        强制杀死进程
+        
+        Args:
+            process: 要杀死的进程
+        """
+        process.kill()
+        process.wait()
+    
+    def _remove_running_task(self, task_id: str):
+        """
+        从运行中的任务中移除任务
+        
+        Args:
+            task_id: 任务ID
+        """
+        if task_id in self.running_tasks:
+            del self.running_tasks[task_id]
     
     def get_running_tasks(self) -> List[str]:
         """

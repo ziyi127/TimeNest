@@ -114,14 +114,39 @@ class UserService:
         logger.info("设置系统密码")
         
         # 验证密码强度
-        if not password or len(password) < 4:
-            logger.warning("密码长度不足")
-            raise ValidationException("密码长度至少为4位")
+        self._validate_password_strength(password)
         
         # 生成哈希密码和盐值
         password_hash, salt = self._hash_password(password)
         
-        # 更新密码配置
+        # 更新并保存密码配置
+        self._update_and_save_password_config(password_hash, salt)
+        
+        logger.info("系统密码设置成功")
+        return True
+    
+    def _validate_password_strength(self, password: str) -> None:
+        """
+        验证密码强度
+        
+        Args:
+            password: 要验证的密码
+            
+        Raises:
+            ValidationException: 密码验证失败
+        """
+        if not password or len(password) < 4:
+            logger.warning("密码长度不足")
+            raise ValidationException("密码长度至少为4位")
+    
+    def _update_and_save_password_config(self, password_hash: str, salt: str) -> None:
+        """
+        更新并保存密码配置
+        
+        Args:
+            password_hash: 哈希密码
+            salt: 盐值
+        """
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         if self.password_config is None:
@@ -137,8 +162,6 @@ class UserService:
         
         # 保存配置
         self._save_password_config()
-        logger.info("系统密码设置成功")
-        return True
     
     def disable_password(self) -> bool:
         """
@@ -149,6 +172,16 @@ class UserService:
         """
         logger.info("禁用密码保护")
         
+        # 禁用并保存密码配置
+        self._disable_and_save_password_config()
+        
+        logger.info("密码保护已禁用")
+        return True
+    
+    def _disable_and_save_password_config(self) -> None:
+        """
+        禁用并保存密码配置
+        """
         if self.password_config is None:
             self.password_config = PasswordConfig()
             
@@ -158,8 +191,6 @@ class UserService:
         
         # 保存配置
         self._save_password_config()
-        logger.info("密码保护已禁用")
-        return True
     
     def verify_password(self, password: str) -> bool:
         """
@@ -173,25 +204,62 @@ class UserService:
         """
         logger.debug("验证系统密码")
         
-        # 如果未启用密码保护，直接返回True
+        # 检查是否需要验证密码
+        if not self._is_password_verification_needed():
+            return True
+        
+        # 验证密码
+        is_valid = self._validate_password(password)
+        
+        # 记录验证结果
+        self._log_password_verification_result(is_valid)
+        
+        return is_valid
+    
+    def _is_password_verification_needed(self) -> bool:
+        """
+        检查是否需要验证密码
+        
+        Returns:
+            是否需要验证密码
+        """
+        # 如果未启用密码保护，直接返回False
         if self.password_config is None or not self.password_config.is_enabled:
-            return True
+            return False
         
-        # 如果没有设置密码，直接返回True
+        # 如果没有设置密码，直接返回False
         if not self.password_config.password_hash:
-            return True
+            return False
         
+        return True
+    
+    def _validate_password(self, password: str) -> bool:
+        """
+        验证密码
+        
+        Args:
+            password: 要验证的密码
+            
+        Returns:
+            密码是否正确
+        """
         # 哈希输入的密码
         input_hash, _ = self._hash_password(password, self.password_config.salt)
         
         # 比较哈希值
-        is_valid = input_hash == self.password_config.password_hash
+        return input_hash == self.password_config.password_hash
+    
+    def _log_password_verification_result(self, is_valid: bool) -> None:
+        """
+        记录密码验证结果
+        
+        Args:
+            is_valid: 密码是否有效
+        """
         if is_valid:
             logger.info("密码验证成功")
         else:
             logger.warning("密码验证失败")
-        
-        return is_valid
     
     def is_password_enabled(self) -> bool:
         """
@@ -209,6 +277,15 @@ class UserService:
         Returns:
             密码配置对象
         """
+        return self._ensure_password_config_exists()
+    
+    def _ensure_password_config_exists(self) -> PasswordConfig:
+        """
+        确保密码配置对象存在
+        
+        Returns:
+            密码配置对象
+        """
         if self.password_config is None:
             self.password_config = PasswordConfig()
         return self.password_config
@@ -216,6 +293,15 @@ class UserService:
     def get_user_settings(self) -> UserSettings:
         """
         获取用户设置
+        
+        Returns:
+            用户设置对象
+        """
+        return self._ensure_user_settings_exists()
+    
+    def _ensure_user_settings_exists(self) -> UserSettings:
+        """
+        确保用户设置对象存在
         
         Returns:
             用户设置对象

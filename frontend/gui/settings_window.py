@@ -7,321 +7,233 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
-import os
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from frontend.main import TimeNestFrontendApp
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
 # 导入PySide6模块
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
-                               QTabWidget, QWidget, QCheckBox, QSlider, QLabel,
-                               QComboBox, QGroupBox, QFormLayout, QLineEdit,
-                               QSpinBox, QFileDialog, QMessageBox)
+from PySide6.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
+    QTabWidget, QWidget, QCheckBox, QSlider, QLabel,
+    QComboBox, QGroupBox, QFormLayout, QMessageBox
+)
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
 
 
 class SettingsWindow(QDialog):
     """设置窗口类"""
     
     # 设置保存信号
-    settings_saved = Signal(dict)
+    settings_saved = Signal()
     
     def __init__(self, app: 'TimeNestFrontendApp'):
         super().__init__()
         self.app = app
+        self.setWindowTitle("TimeNest 设置")
+        self.setGeometry(100, 100, 500, 400)
         self.initUI()
-        self.load_settings()
-    
+
     def initUI(self):
-        """初始化UI"""
-        self.setWindowTitle("设置")
-        self.setFixedSize(600, 500)
-        
         # 创建主布局
-        main_layout = QVBoxLayout(self)
-        
-        # 创建选项卡
+        layout = QVBoxLayout(self)
+
+        # 创建标签页
         self.tab_widget = QTabWidget()
-        main_layout.addWidget(self.tab_widget)
-        
-        # 创建选项卡
-        self.create_floating_window_tab()
-        self.create_school_server_tab()
-        
-        # 创建按钮布局
+        layout.addWidget(self.tab_widget)
+
+        # 悬浮窗设置标签页
+        self.floating_window_tab = QWidget()
+        self.tab_widget.addTab(self.floating_window_tab, "悬浮窗设置")
+        self.init_floating_window_tab()
+
+        # 系统设置标签页
+        self.system_tab = QWidget()
+        self.tab_widget.addTab(self.system_tab, "系统设置")
+        self.init_system_tab()
+
+        # 按钮
         button_layout = QHBoxLayout()
-        main_layout.addLayout(button_layout)
-        
-        # 确定按钮
-        self.ok_button = QPushButton("确定")
-        self.ok_button.clicked.connect(self.save_settings)
-        button_layout.addWidget(self.ok_button)
-        
-        # 取消按钮
-        self.cancel_button = QPushButton("取消")
-        self.cancel_button.clicked.connect(self.reject)
-        button_layout.addWidget(self.cancel_button)
-        
-        # 应用按钮
-        self.apply_button = QPushButton("应用")
-        self.apply_button.clicked.connect(self.apply_settings)
-        button_layout.addWidget(self.apply_button)
-    
-    def create_floating_window_tab(self):
-        """创建悬浮窗管理选项卡"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # 隐藏主界面托盘菜单开关
-        self.hide_tray_menu_checkbox = QCheckBox("隐藏\"隐藏主界面\"托盘菜单开关，防止学生误触")
-        layout.addWidget(self.hide_tray_menu_checkbox)
-        
-        # 记住位置开关
-        self.remember_position_checkbox = QCheckBox("记住位置：关闭后重启软件恢复默认位置（大屏场景防止误拖动后难找回）")
-        layout.addWidget(self.remember_position_checkbox)
-        
-        # 自动隐藏阈值设置
-        auto_hide_group = QGroupBox("自动隐藏阈值")
-        auto_hide_layout = QFormLayout(auto_hide_group)
-        
-        self.auto_hide_slider = QSlider(Qt.Horizontal)
-        self.auto_hide_slider.setRange(0, 200)
-        self.auto_hide_slider.setValue(50)
-        self.auto_hide_value_label = QLabel("50px")
-        
-        auto_hide_slider_layout = QHBoxLayout()
-        auto_hide_slider_layout.addWidget(self.auto_hide_slider)
-        auto_hide_slider_layout.addWidget(self.auto_hide_value_label)
-        
-        auto_hide_layout.addRow("鼠标距离悬浮窗多远时触发隐藏：", auto_hide_slider_layout)
-        
-        # 连接信号
-        self.auto_hide_slider.valueChanged.connect(
-            lambda value: self.auto_hide_value_label.setText(f"{value}px"))
-        
-        layout.addWidget(auto_hide_group)
-        
-        # 透明度调节
-        transparency_group = QGroupBox("透明度调节")
+        save_button = QPushButton("保存")
+        save_button.clicked.connect(self.save_settings)
+        cancel_button = QPushButton("取消")
+        cancel_button.clicked.connect(self.reject)
+        button_layout.addStretch()
+        button_layout.addWidget(save_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+
+    def init_floating_window_tab(self):
+        """初始化悬浮窗设置标签页"""
+        layout = QVBoxLayout(self.floating_window_tab)
+
+        # 透明度设置
+        transparency_group = QGroupBox("透明度设置")
         transparency_layout = QFormLayout(transparency_group)
         
         self.transparency_slider = QSlider(Qt.Horizontal)
-        self.transparency_slider.setRange(50, 100)
-        self.transparency_slider.setValue(80)
-        self.transparency_value_label = QLabel("80%")
+        self.transparency_slider.setMinimum(10)
+        self.transparency_slider.setMaximum(100)
+        self.transparency_slider.setValue(self.app.settings.get("floating_window", {}).get("transparency", 80))
+        self.transparency_slider.valueChanged.connect(self.update_transparency_label)
         
-        transparency_slider_layout = QHBoxLayout()
-        transparency_slider_layout.addWidget(self.transparency_slider)
-        transparency_slider_layout.addWidget(self.transparency_value_label)
+        self.transparency_label = QLabel(f"{self.transparency_slider.value()}%")
         
-        transparency_layout.addRow("悬浮窗透明度：", transparency_slider_layout)
-        
-        # 连接信号
-        self.transparency_slider.valueChanged.connect(
-            lambda value: self.transparency_value_label.setText(f"{value}%"))
+        transparency_layout.addRow("透明度:", self.transparency_slider)
+        transparency_layout.addRow("", self.transparency_label)
         
         layout.addWidget(transparency_group)
+
+        # 自动隐藏设置
+        auto_hide_group = QGroupBox("自动隐藏设置")
+        auto_hide_layout = QFormLayout(auto_hide_group)
         
-        # 吸附边缘规则
-        snap_group = QGroupBox("吸附边缘规则")
-        snap_layout = QVBoxLayout(snap_group)
+        self.auto_hide_checkbox = QCheckBox("启用自动隐藏")
+        self.auto_hide_checkbox.setChecked(not self.app.settings.get("floating_window", {}).get("hide_tray_menu", False))
         
-        self.snap_edge_checkbox = QCheckBox("拖动时自动吸附屏幕边缘")
-        snap_layout.addWidget(self.snap_edge_checkbox)
+        self.auto_hide_threshold_slider = QSlider(Qt.Horizontal)
+        self.auto_hide_threshold_slider.setMinimum(1)
+        self.auto_hide_threshold_slider.setMaximum(100)
+        self.auto_hide_threshold_slider.setValue(self.app.settings.get("floating_window", {}).get("auto_hide_threshold", 50))
+        self.auto_hide_threshold_slider.valueChanged.connect(self.update_auto_hide_threshold_label)
         
-        # 吸附优先级
-        self.snap_priority_label = QLabel("吸附优先级：")
-        snap_layout.addWidget(self.snap_priority_label)
+        self.auto_hide_threshold_label = QLabel(f"{self.auto_hide_threshold_slider.value()} 秒")
+        
+        auto_hide_layout.addRow(self.auto_hide_checkbox)
+        auto_hide_layout.addRow("自动隐藏延迟:", self.auto_hide_threshold_slider)
+        auto_hide_layout.addRow("", self.auto_hide_threshold_label)
+        
+        layout.addWidget(auto_hide_group)
+
+        # 位置设置
+        position_group = QGroupBox("位置设置")
+        position_layout = QFormLayout(position_group)
+        
+        self.remember_position_checkbox = QCheckBox("记住窗口位置")
+        self.remember_position_checkbox.setChecked(self.app.settings.get("floating_window", {}).get("remember_position", True))
+        
+        self.snap_to_edge_checkbox = QCheckBox("边缘吸附")
+        self.snap_to_edge_checkbox.setChecked(self.app.settings.get("floating_window", {}).get("snap_to_edge", False))
         
         self.snap_priority_combo = QComboBox()
         self.snap_priority_combo.addItems(["右侧 > 顶部 > 左侧", "顶部 > 右侧 > 左侧", "左侧 > 顶部 > 右侧"])
-        snap_layout.addWidget(self.snap_priority_combo)
+        snap_priority = self.app.settings.get("floating_window", {}).get("snap_priority", "右侧 > 顶部 > 左侧")
+        index = self.snap_priority_combo.findText(snap_priority)
+        if index >= 0:
+            self.snap_priority_combo.setCurrentIndex(index)
         
-        layout.addWidget(snap_group)
+        position_layout.addRow(self.remember_position_checkbox)
+        position_layout.addRow(self.snap_to_edge_checkbox)
+        position_layout.addRow("吸附优先级:", self.snap_priority_combo)
         
-        # 天气显示规则
-        weather_group = QGroupBox("天气显示规则")
-        weather_layout = QVBoxLayout(weather_group)
+        layout.addWidget(position_group)
+
+        # 天气显示设置
+        weather_group = QGroupBox("天气显示设置")
+        weather_layout = QFormLayout(weather_group)
         
         self.weather_display_combo = QComboBox()
         self.weather_display_combo.addItems(["仅显示温度", "温度 + 天气描述", "隐藏天气"])
-        weather_layout.addWidget(self.weather_display_combo)
+        weather_display = self.app.settings.get("floating_window", {}).get("weather_display", "温度 + 天气描述")
+        index = self.weather_display_combo.findText(weather_display)
+        if index >= 0:
+            self.weather_display_combo.setCurrentIndex(index)
+        
+        weather_layout.addRow("天气显示方式:", self.weather_display_combo)
         
         layout.addWidget(weather_group)
-        
-        # 课程状态标记
-        course_status_group = QGroupBox("课程状态标记")
-        course_status_layout = QVBoxLayout(course_status_group)
+
+        # 临时课程样式设置
+        temp_course_group = QGroupBox("临时课程样式设置")
+        temp_course_layout = QFormLayout(temp_course_group)
         
         self.temp_course_style_combo = QComboBox()
         self.temp_course_style_combo.addItems(["临时调课标红边框", "临时调课闪烁提醒", "临时调课标红边框+闪烁提醒"])
-        course_status_layout.addWidget(self.temp_course_style_combo)
+        temp_course_style = self.app.settings.get("floating_window", {}).get("temp_course_style", "临时调课标红边框")
+        index = self.temp_course_style_combo.findText(temp_course_style)
+        if index >= 0:
+            self.temp_course_style_combo.setCurrentIndex(index)
         
-        layout.addWidget(course_status_group)
+        temp_course_layout.addRow("临时课程样式:", self.temp_course_style_combo)
         
-        # 添加到选项卡
-        self.tab_widget.addTab(tab, "悬浮窗管理")
-    
-    def create_school_server_tab(self):
-        """创建学校服务器功能选项卡"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        layout.addWidget(temp_course_group)
+
+        layout.addStretch()
+
+    def init_system_tab(self):
+        """初始化系统设置标签页"""
+        layout = QVBoxLayout(self.system_tab)
+
+        # 数据设置
+        data_group = QGroupBox("数据设置")
+        data_layout = QFormLayout(data_group)
         
-        # 配置导出/导入
-        export_import_group = QGroupBox("配置导出/导入")
-        export_import_layout = QVBoxLayout(export_import_group)
+        self.data_dir_label = QLabel(self.app.data_dir)
+        data_layout.addRow("数据目录:", self.data_dir_label)
         
-        # 导出按钮
-        self.export_button = QPushButton("导出当前设置为JSON文件")
-        self.export_button.clicked.connect(self.export_settings)
-        export_import_layout.addWidget(self.export_button)
+        layout.addWidget(data_group)
+
+        # 更新间隔设置
+        update_group = QGroupBox("更新设置")
+        update_layout = QFormLayout(update_group)
         
-        # 导入按钮
-        self.import_button = QPushButton("从JSON文件导入设置")
-        self.import_button.clicked.connect(self.import_settings)
-        export_import_layout.addWidget(self.import_button)
+        self.update_interval_slider = QSlider(Qt.Horizontal)
+        self.update_interval_slider.setMinimum(100)
+        self.update_interval_slider.setMaximum(10000)
+        self.update_interval_slider.setValue(self.app.settings.get("update_interval", 1000))
+        self.update_interval_slider.valueChanged.connect(self.update_update_interval_label)
         
-        layout.addWidget(export_import_group)
+        self.update_interval_label = QLabel(f"{self.update_interval_slider.value()} 毫秒")
         
-        # 添加到选项卡
-        self.tab_widget.addTab(tab, "学校服务器功能")
+        update_layout.addRow("数据更新间隔:", self.update_interval_slider)
+        update_layout.addRow("", self.update_interval_label)
         
-        # 添加说明标签
-        info_label = QLabel("与学校服务器做对接，未来会开发校内课表云同步功能")
-        info_label.setWordWrap(True)
-        layout.addWidget(info_label)
-    
-    def load_settings(self):
-        """加载设置"""
-        # 从应用设置中加载配置
-        settings = self.app.settings
-        
-        # 加载悬浮窗设置
-        if "floating_window" in settings:
-            fw_settings = settings["floating_window"]
-            self.hide_tray_menu_checkbox.setChecked(fw_settings.get("hide_tray_menu", False))
-            self.remember_position_checkbox.setChecked(fw_settings.get("remember_position", True))
-            
-            # 自动隐藏阈值
-            threshold = fw_settings.get("auto_hide_threshold", 50)
-            self.auto_hide_slider.setValue(threshold)
-            self.auto_hide_value_label.setText(f"{threshold}px")
-            
-            # 透明度
-            transparency = fw_settings.get("transparency", 80)
-            self.transparency_slider.setValue(transparency)
-            self.transparency_value_label.setText(f"{transparency}%")
-            
-            # 吸附边缘
-            self.snap_edge_checkbox.setChecked(fw_settings.get("snap_to_edge", False))
-            
-            # 吸附优先级
-            priority = fw_settings.get("snap_priority", "右侧 > 顶部 > 左侧")
-            index = self.snap_priority_combo.findText(priority)
-            if index >= 0:
-                self.snap_priority_combo.setCurrentIndex(index)
-            
-            # 天气显示规则
-            weather_display = fw_settings.get("weather_display", "温度 + 天气描述")
-            index = self.weather_display_combo.findText(weather_display)
-            if index >= 0:
-                self.weather_display_combo.setCurrentIndex(index)
-            
-            # 课程状态标记
-            temp_course_style = fw_settings.get("temp_course_style", "临时调课标红边框")
-            index = self.temp_course_style_combo.findText(temp_course_style)
-            if index >= 0:
-                self.temp_course_style_combo.setCurrentIndex(index)
-        
-        # 加载天气设置
-        # TODO: 实现具体的天气设置加载逻辑
-        
+        layout.addWidget(update_group)
+
+        layout.addStretch()
+
+    def update_transparency_label(self, value):
+        """更新透明度标签"""
+        self.transparency_label.setText(f"{value}%")
+
+    def update_auto_hide_threshold_label(self, value):
+        """更新自动隐藏阈值标签"""
+        self.auto_hide_threshold_label.setText(f"{value} 秒")
+
+    def update_update_interval_label(self, value):
+        """更新更新间隔标签"""
+        self.update_interval_label.setText(f"{value} 毫秒")
+
     def save_settings(self):
         """保存设置"""
-        # 收集设置数据
-        settings_data = {
-            "floating_window": {
-                "hide_tray_menu": self.hide_tray_menu_checkbox.isChecked(),
-                "remember_position": self.remember_position_checkbox.isChecked(),
-                "auto_hide_threshold": self.auto_hide_slider.value(),
-                "transparency": self.transparency_slider.value(),
-                "snap_to_edge": self.snap_edge_checkbox.isChecked(),
-                "snap_priority": self.snap_priority_combo.currentText(),
-                "weather_display": self.weather_display_combo.currentText(),
-                "temp_course_style": self.temp_course_style_combo.currentText()
-            },
-            "school_server": {
-                # 学校服务器设置将在导入/导出功能中处理
-            }
+        # 更新设置数据
+        self.app.settings["floating_window"] = {
+            "transparency": self.transparency_slider.value(),
+            "hide_tray_menu": not self.auto_hide_checkbox.isChecked(),
+            "auto_hide_threshold": self.auto_hide_threshold_slider.value(),
+            "remember_position": self.remember_position_checkbox.isChecked(),
+            "snap_to_edge": self.snap_to_edge_checkbox.isChecked(),
+            "snap_priority": self.snap_priority_combo.currentText(),
+            "weather_display": self.weather_display_combo.currentText(),
+            "temp_course_style": self.temp_course_style_combo.currentText()
         }
         
-        # 更新应用设置
-        self.app.settings.update(settings_data)
+        self.app.settings["update_interval"] = self.update_interval_slider.value()
         
-        # 保存到文件
+        # 保存设置
         self.app.save_data()
         
-        # 发出信号通知设置已保存
-        self.settings_saved.emit(settings_data)
+        # 发出设置保存信号
+        self.settings_saved.emit()
+        
+        # 显示成功消息
+        QMessageBox.information(self, "成功", "设置已保存")
         
         # 关闭窗口
         self.accept()
-    
-    def apply_settings(self):
-        """应用设置"""
-        # 保存设置但不关闭窗口
-        self.save_settings()
-    
-    def export_settings(self):
-        """导出设置"""
-        # 选择保存文件路径
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, "导出设置", "", "JSON Files (*.json)")
-        
-        if file_path:
-            try:
-                # 获取当前设置
-                settings_data = {
-                    "app_settings": self.app.settings,
-                    "floating_window_settings": {
-                        "hide_tray_menu": self.hide_tray_menu_checkbox.isChecked(),
-                        "remember_position": self.remember_position_checkbox.isChecked(),
-                        "auto_hide_threshold": self.auto_hide_slider.value(),
-                        "transparency": self.transparency_slider.value(),
-                        "snap_to_edge": self.snap_edge_checkbox.isChecked(),
-                        "snap_priority": self.snap_priority_combo.currentText(),
-                        "weather_display": self.weather_display_combo.currentText(),
-                        "temp_course_style": self.temp_course_style_combo.currentText()
-                    }
-                }
-                
-                # 保存到文件
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(settings_data, f, ensure_ascii=False, indent=2)
-                
-                QMessageBox.information(self, "导出成功", "设置已成功导出到文件。")
-            except Exception as e:
-                QMessageBox.critical(self, "导出失败", f"导出设置时发生错误：{str(e)}")
-    
-    def import_settings(self):
-        """导入设置"""
-        # 选择导入文件路径
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "导入设置", "", "JSON Files (*.json)")
-        
-        if file_path:
-            try:
-                # 从文件读取设置
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    settings_data = json.load(f)
-                
-                # 应用设置
-                # TODO: 实现具体的设置导入逻辑
-                
-                QMessageBox.information(self, "导入成功", "设置已成功从文件导入。")
-            except Exception as e:
-                QMessageBox.critical(self, "导入失败", f"导入设置时发生错误：{str(e)}")

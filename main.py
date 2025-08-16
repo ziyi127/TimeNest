@@ -3,18 +3,21 @@
 
 """
 TimeNest - 智能课程表桌面应用
-前端应用入口
+主应用程序入口
 """
 
 import sys
 from pathlib import Path
+from typing import Any
 
 # 添加项目根目录到Python路径
-project_root = Path(__file__).parent.parent.resolve()
+project_root = Path(__file__).parent.resolve()
 sys.path.insert(0, str(project_root))
 
 # 导入PySide6模块
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QSystemTrayIcon, QStyle
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QGuiApplication, QIcon
 
 # 导入GUI组件
 from frontend.gui.floating_window import FloatingWindow
@@ -22,9 +25,11 @@ from frontend.gui.floating_window import FloatingWindow
 from frontend.system_tray_icon import FrontendSystemTrayIcon
 # 导入API客户端
 from frontend.api_client import APIClient
+# 导入前端应用类
+from frontend.main import TimeNestFrontendApp
 
 
-class TimeNestFrontendApp(QApplication):
+class TimeNestApp(TimeNestFrontendApp):
     def __init__(self, args: list[str]):
         super().__init__(args)
         self.setApplicationName("TimeNest")
@@ -50,7 +55,7 @@ class TimeNestFrontendApp(QApplication):
         self.tray_icon = FrontendSystemTrayIcon(self)
         self.tray_icon.show()
     
-    def load_data(self):
+    def load_data(self) -> None:
         """加载数据"""
         # 从后端API获取数据
         self.courses = self.api_client.get_courses()
@@ -58,7 +63,7 @@ class TimeNestFrontendApp(QApplication):
         self.temp_changes = self.api_client.get_temp_changes()
         self.settings = self.api_client.get_settings()
     
-    def save_data(self):
+    def save_data(self) -> None:
         """保存所有数据到后端"""
         # 保存数据到后端API
         success_courses = self.api_client.save_courses(self.courses)
@@ -70,20 +75,20 @@ class TimeNestFrontendApp(QApplication):
         if not (success_courses and success_schedules and success_temp_changes and success_settings):
             print("警告：无法保存数据到后端")
     
-    def get_course_by_id(self, course_id: str):
+    def get_course_by_id(self, course_id: str) -> dict[str, str] | None:
         """根据ID获取课程"""
         for course in self.courses:
             if course["id"] == course_id:
                 return course
         return None
     
-    def get_today_schedule(self):
+    def get_today_schedule(self) -> dict[str, str]:
         """获取今天的课程表"""
         # 从后端API获取今天的课程安排
         schedule = self.api_client.get_today_schedule()
         return schedule
     
-    def get_weather_data(self):
+    def get_weather_data(self) -> dict[str, Any] | None:
         """获取天气数据"""
         try:
             # 从后端API获取天气数据
@@ -99,11 +104,62 @@ class TimeNestFrontendApp(QApplication):
             return None
 
 
-def main():
-    """前端应用程序主入口点"""
-    app = TimeNestFrontendApp(sys.argv)
+def main() -> None:
+    """应用程序主入口点"""
+    # 创建应用程序实例
+    app = TimeNestApp(sys.argv)
+    
+    # 设置窗口位置和大小
+    screen_geometry = QGuiApplication.primaryScreen().availableGeometry()
+    screen_width = screen_geometry.width()
+    screen_height = screen_geometry.height()
+    window_width = 300
+    window_height = 150
+    x = (screen_width - window_width) // 2
+    y = (screen_height - window_height) // 3
+    
+    # 如果是首次启动（使用默认设置），则设置为屏幕中上部
+    if (app.settings["window_position"]["x"] == 100 and 
+        app.settings["window_position"]["y"] == 100):
+        app.floating_window.setGeometry(x, y, window_width, window_height)
+        # 更新设置
+        app.settings["window_position"] = {
+            "x": x,
+            "y": y
+        }
+        app.save_data()
+    else:
+        # 否则使用用户之前保存的位置
+        app.floating_window.setGeometry(
+            app.settings["window_position"]["x"],
+            app.settings["window_position"]["y"],
+            window_width,
+            window_height
+        )
+    
+    # 启动定时器
+    timer = QTimer()
+    timer.timeout.connect(lambda: print("Timer tick"))
+    timer.start(app.settings.get("update_interval", 1000))
+    
+    # 显示系统托盘图标
+    app.tray_icon.show()
+    
+    # 连接系统托盘激活信号
+    app.tray_icon.activated.connect(on_activated)
+    
+    # 显示悬浮窗
+    app.floating_window.show()
+    
+    # 设置系统托盘图标
+    tray_icon = QSystemTrayIcon()
+    tray_icon.setIcon(app.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
+    
     sys.exit(app.exec())
 
+def on_activated(reason: int) -> None:
+    """系统托盘激活回调函数"""
+    print(f"Tray icon activated with reason: {reason}")
 
 if __name__ == "__main__":
     main()

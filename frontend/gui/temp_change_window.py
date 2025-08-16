@@ -7,24 +7,24 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
-import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from frontend.main import TimeNestFrontendApp
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
 # 导入PySide6模块
-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout,
-                               QHBoxLayout, QPushButton, QMenu,
-                               QSystemTrayIcon, QMessageBox, QDialog, QFormLayout,
-                               QLineEdit, QComboBox, QDateEdit, QTimeEdit,
-                               QListWidget, QListWidgetItem, QTabWidget,
-                               QTableWidget, QTableWidgetItem, QHeaderView,
-                               QFrame, QCheckBox)
-from PySide6.QtCore import QDate, QEvent, Qt, QTimer, QPropertyAnimation
-from PySide6.QtGui import QIcon, QFont, QColor, QCursor, QAction, QMouseEvent, QGuiApplication
+from PySide6.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout,
+    QHBoxLayout, QPushButton,
+    QMessageBox, QComboBox, QDateEdit
+)
+from PySide6.QtCore import QDate
 
 
 class TempChangeWindow(QWidget):
