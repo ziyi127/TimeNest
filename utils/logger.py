@@ -1,11 +1,8 @@
 """
 日志工具函数
 提供统一的日志记录功能
-<<<<<<< HEAD
 
 This module provides logging utilities for the TimeNest application.
-=======
->>>>>>> 3ebc1a0d5b5d68fcc8be71ad4e1441605fb57214
 """
 
 import logging
