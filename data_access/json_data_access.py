@@ -9,7 +9,7 @@ import os
 import shutil
 import sys
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 # 配置日志
@@ -33,6 +33,31 @@ class JSONDataAccess:
         self.backup_dir = os.path.join(self.data_dir, "backups")
         self.backup_dir = os.path.normpath(self.backup_dir)
         os.makedirs(self.backup_dir, exist_ok=True)
+        
+        # 添加缓存机制
+        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache_ttl = timedelta(minutes=5)  # 5分钟缓存
+    
+    def _is_cache_valid(self, filename: str) -> bool:
+        """检查缓存是否有效"""
+        if filename not in self._cache:
+            return False
+        
+        cached_time = self._cache[filename]['timestamp']
+        return datetime.now() - cached_time < self._cache_ttl
+    
+    def _get_from_cache(self, filename: str) -> Optional[Dict[str, Any]]:
+        """从缓存获取数据"""
+        if self._is_cache_valid(filename):
+            return self._cache[filename]['data']
+        return None
+    
+    def _set_cache(self, filename: str, data: Dict[str, Any]) -> None:
+        """设置缓存数据"""
+        self._cache[filename] = {
+            'data': data,
+            'timestamp': datetime.now()
+        }
     
     def _get_file_path(self, filename: str) -> str:
         """
@@ -56,12 +81,20 @@ class JSONDataAccess:
         Returns:
             JSON数据字典，如果文件不存在或读取失败则返回None
         """
+        # 检查缓存
+        cached_data = self._get_from_cache(filename)
+        if cached_data is not None:
+            return cached_data
+        
         file_path = self._get_file_path(filename)
         
         try:
             if os.path.exists(file_path):
                 with open(file_path, 'r', encoding='utf-8') as file:
-                    return json.load(file)
+                    data = json.load(file)
+                    # 缓存数据
+                    self._set_cache(filename, data)
+                    return data
             else:
                 logger.warning(f"文件 {file_path} 不存在")
                 return None
@@ -100,6 +133,9 @@ class JSONDataAccess:
             
             # 原子性地替换原文件
             shutil.move(temp_file_path, file_path)
+            
+            # 更新缓存
+            self._set_cache(filename, data)
             return True
         except PermissionError as e:
             logger.error(f"没有权限写入文件 {file_path}: {e}")
@@ -190,6 +226,10 @@ class JSONDataAccess:
             # 复制备份文件到目标位置
             shutil.copy2(backup_path, target_path)
             logger.info(f"已从 {backup_filename} 恢复文件 {filename}")
+            
+            # 清除缓存以确保下次读取的是最新数据
+            if filename in self._cache:
+                del self._cache[filename]
             return True
         except PermissionError as e:
             logger.error(f"没有权限恢复文件: {e}")

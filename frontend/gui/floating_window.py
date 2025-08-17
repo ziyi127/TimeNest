@@ -152,12 +152,16 @@ class FloatingWindow(QWidget):
 
         # 更新时间和状态
         self.update_time()
-        self.update_status()
+        # 不再在初始化时调用update_status，而是使用缓存的默认值
+        # self.update_status()
 
         # 启动时间更新计时器
         self.time_timer = QTimer(self)
         self.time_timer.timeout.connect(self.update_time)
         self.time_timer.start(1000)
+        
+        # 使用QTimer.singleShot将首次数据更新推迟到事件循环开始后执行
+        QTimer.singleShot(100, self.update_data)
 
     def update_time(self):
         """更新时间显示"""
@@ -224,14 +228,14 @@ class FloatingWindow(QWidget):
         self.opacity_animation.start()
         
     def show(self):
-        """重写show方法，确保在显示时更新托盘菜单项文本"""
+        """show方法，确保在显示时更新托盘菜单项文本"""
         super().show()
         # 更新托盘菜单项文本
         if hasattr(self.app, 'tray_icon') and hasattr(self.app.tray_icon, 'update_toggle_action_text'):
             self.app.tray_icon.update_toggle_action_text()
     
     def hide(self):
-        """重写hide方法，确保在隐藏时更新托盘菜单项文本"""
+        """hide方法，确保在隐藏时更新托盘菜单项文本"""
         super().hide()
         # 更新托盘菜单项文本
         if hasattr(self.app, 'tray_icon') and hasattr(self.app.tray_icon, 'update_toggle_action_text'):

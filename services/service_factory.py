@@ -3,7 +3,7 @@
 用于统一管理所有服务的创建和访问
 """
 
-from typing import Dict, Type, Any
+from typing import Dict, Type, Any, Callable
 from services.course_service import CourseService
 from services.schedule_service import ScheduleService
 from services.temp_change_service import TempChangeService
@@ -30,6 +30,19 @@ from services.debug_service import DebugService
 from services.time_sync_service import TimeSyncService
 
 
+class LazyServiceWrapper:
+    """延迟加载服务包装器"""
+    
+    def __init__(self, service_factory: Callable[[], Any]):
+        self._service_factory = service_factory
+        self._service_instance = None
+    
+    def __getattr__(self, name):
+        if self._service_instance is None:
+            self._service_instance = self._service_factory()
+        return getattr(self._service_instance, name)
+
+
 class ServiceFactory:
     """服务工厂类"""
     
@@ -47,7 +60,7 @@ class ServiceFactory:
             服务实例
         """
         if service_type not in cls._services:
-            cls._services[service_type] = cls._create_service(service_type)
+            cls._services[service_type] = LazyServiceWrapper(lambda: cls._create_service(service_type))
         return cls._services[service_type]
     
     @classmethod
