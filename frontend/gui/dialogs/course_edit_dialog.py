@@ -32,8 +32,20 @@ class CourseEditDialog(QDialog):
         super().__init__()
         self.app = app
         self.course = course
+        self.course_id = course.get('id', None) if course else None
         self.setWindowTitle("编辑课程" if course else "添加课程")
         self.initUI()
+
+    def get_course_data(self) -> dict[str, Any]:
+        """获取课程数据"""
+        return {
+            'id': self.course_id,
+            'name': self.name_edit.text(),
+            'teacher': self.teacher_edit.text(),
+            'location': self.location_edit.text(),
+            'start_time': self.start_time_edit.time().toString('HH:mm'),
+            'end_time': self.end_time_edit.time().toString('HH:mm')
+        }
 
     def initUI(self):
         # 创建表单布局

@@ -276,6 +276,10 @@ class ManagementWindow(QWidget):
         for course in self.app.courses:
             self._add_course_to_list(course)
 
+    def load_course_data(self):
+        """加载课程数据"""
+        self.update_course_list()
+
     def _add_course_to_list(self, course: dict[str, Any]):
         """
         添加课程到列表
@@ -331,6 +335,7 @@ class ManagementWindow(QWidget):
         if reply == QMessageBox.Yes:  # type: ignore
             # 执行删除课程的步骤
             self._execute_delete_course_steps(course_id)
+            QMessageBox.information(self, '成功', '课程删除成功')
 
     def _execute_delete_course_steps(self, course_id: str):
         """
@@ -477,6 +482,10 @@ class ManagementWindow(QWidget):
             # 填充行数据
             self._fill_schedule_row(row, schedule, weekdays, week_parity_map)
 
+    def load_schedule_data(self):
+        """加载课程表数据"""
+        self.update_schedule_table()
+
     def _fill_schedule_row(self, row: int, schedule: dict[str, Any], weekdays: list[str], week_parity_map: dict[str, str]):
         """
         填充课程表行数据
@@ -556,6 +565,7 @@ class ManagementWindow(QWidget):
         if reply == QMessageBox.Yes:  # type: ignore
             # 执行删除课程表项的步骤
             self._execute_delete_schedule_steps(schedule_id)
+            QMessageBox.information(self, '成功', '课程表删除成功')
 
     def _execute_delete_schedule_steps(self, schedule_id: str):
         """

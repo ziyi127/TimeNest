@@ -104,11 +104,27 @@ def install_dependencies() -> bool:
 def start_backend() -> bool:
     """启动后端组件"""
     print_status("启动后端组件...")
-    # 在这个项目中，后端逻辑与前端界面集成在 main.py 中
-    # 因此这里只是模拟后端启动过程
-    time.sleep(1)  # 模拟启动时间
-    print_status("后端组件启动完成")
-    return True
+    
+    try:
+        # 使用虚拟环境中的 Python 启动后端服务
+        if platform.system() == "Windows":
+            python_path = Path("venv/Scripts/python.exe")
+        else:
+            python_path = Path("venv/bin/python")
+        
+        # 检查虚拟环境中的 Python 是否存在
+        if not python_path.exists():
+            print_status("错误: 虚拟环境中的 Python 解释器不存在")
+            return False
+        
+        # 在后台启动后端服务
+        subprocess.Popen([str(python_path), "backend/main.py"], cwd=".")
+        time.sleep(2)  # 等待后端服务启动
+        print_status("后端组件启动完成")
+        return True
+    except Exception as e:
+        print_status(f"错误: 启动后端组件失败: {e}")
+        return False
 
 
 def start_frontend() -> bool:

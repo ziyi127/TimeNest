@@ -10,6 +10,7 @@ from utils.validation_utils import validate_schedule_data
 from utils.date_utils import is_date_in_range
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException, NotFoundException, ConflictException
+from data_access.json_data_access import JSONDataAccess
 
 # 初始化日志记录器
 logger = get_service_logger("schedule_service")
@@ -20,7 +21,9 @@ class ScheduleService:
     
     def __init__(self):
         """初始化课程表服务"""
+        self.data_access = JSONDataAccess()
         self.schedules: List[ClassPlan] = []
+        self._load_schedules()
         logger.info("ScheduleService initialized")
     
     def create_schedule(self, schedule: ClassPlan) -> ClassPlan:
@@ -102,6 +105,7 @@ class ScheduleService:
             schedule: 课程表对象
         """
         self.schedules.append(schedule)
+        self._save_schedules()
     
     def update_schedule(self, schedule_id: str, updated_schedule: ClassPlan) -> ClassPlan:
         """
@@ -163,6 +167,32 @@ class ScheduleService:
             logger.warning(f"Schedule {schedule_id} not found")
             raise NotFoundException(f"课程表 {schedule_id} 未找到")
     
+    def _load_schedules(self):
+        """加载课程表数据"""
+        try:
+            data = self.data_access.read_json("schedules.json")
+            if data and "schedules" in data:
+                self.schedules = [
+                    ClassPlan.from_dict(schedule_data) 
+                    for schedule_data in data["schedules"]
+                ]
+            logger.info(f"加载了 {len(self.schedules)} 个课程表项")
+        except Exception as e:
+            logger.error(f"加载课程表数据失败: {str(e)}")
+            self.schedules = []
+    
+    def _save_schedules(self):
+        """保存课程表数据"""
+        try:
+            data = {
+                "schedules": [schedule.to_dict() for schedule in self.schedules]
+            }
+            self.data_access.write_json("schedules.json", data)
+            logger.debug("课程表数据已保存")
+        except Exception as e:
+            logger.error(f"保存课程表数据失败: {str(e)}")
+            raise ValidationException("保存课程表数据失败")
+    
     def _update_schedule_at_index(self, index: int, schedule: ClassPlan) -> None:
         """
         在指定索引处更新课程表项
@@ -172,6 +202,17 @@ class ScheduleService:
             schedule: 新的课程表对象
         """
         self.schedules[index] = schedule
+        self._save_schedules()
+    
+    def _remove_schedule_at_index(self, index: int) -> None:
+        """
+        删除指定索引处的课程表项
+        
+        Args:
+            index: 课程表项索引
+        """
+        del self.schedules[index]
+        self._save_schedules()
     
     def delete_schedule(self, schedule_id: str) -> bool:
         """

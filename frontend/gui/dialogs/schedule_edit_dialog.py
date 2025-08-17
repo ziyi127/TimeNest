@@ -34,6 +34,17 @@ class ScheduleEditDialog(QDialog):
         self.setWindowTitle("编辑课程表项" if schedule else "添加课程表项")
         self.initUI()
 
+    def get_schedule_data(self) -> dict[str, Any]:
+        """获取课程表数据"""
+        return {
+            'id': self.id_edit.text().strip(),
+            'day_of_week': self.day_of_week_combo.currentIndex(),
+            'week_parity': ["both", "odd", "even"][self.week_parity_combo.currentIndex()],
+            'course_id': self.course_combo.currentData(),
+            'valid_from': self.valid_from_edit.date().toString("yyyy-MM-dd"),
+            'valid_to': self.valid_to_edit.date().toString("yyyy-MM-dd")
+        }
+
     def initUI(self):
         # 创建表单布局
         layout = QFormLayout(self)

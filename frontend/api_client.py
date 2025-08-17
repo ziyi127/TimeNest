@@ -16,6 +16,8 @@ sys.path.insert(0, str(project_root))
 
 # 导入requests库
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 # API客户端类
@@ -28,6 +30,20 @@ class APIClient:
         self._cache_ttl = 300  # 5分钟
         # 上次缓存更新时间
         self._cache_timestamps: Dict[str, float] = {}
+        
+        # 创建带重试策略的会话
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,  # 总重试次数
+            backoff_factor=1,  # 重试间隔
+            status_forcelist=[429, 500, 502, 503, 504],  # 需要重试的状态码
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
+        # 设置默认超时时间
+        self.timeout = 10
         
     def _is_cache_valid(self, cache_key: str) -> bool:
         """检查缓存是否有效"""
@@ -43,7 +59,7 @@ class APIClient:
             return self._cache[cache_key]
             
         try:
-            response = requests.get(f"{self.base_url}/courses")
+            response = self.session.get(f"{self.base_url}/courses", timeout=self.timeout)
             if response.status_code == 200:
                 data = response.json()
                 # 更新缓存
@@ -80,7 +96,7 @@ class APIClient:
                 }
             
             try:
-                response = requests.post(f"{self.base_url}/courses", json=course_data)
+                response = self.session.post(f"{self.base_url}/courses", json=course_data, timeout=self.timeout)
                 # 接受201（创建成功）和409（冲突，已存在）状态码
                 if response.status_code not in [201, 409]:
                     print(f"创建课程失败: {response.status_code} - {response.text}")
@@ -95,6 +111,59 @@ class APIClient:
             del self._cache_timestamps["courses"]
         return success
 
+    def update_course(self, course_id: str, course_data: Dict[str, Any]) -> bool:
+        """更新课程"""
+        try:
+            # 检查课程数据是否已经包含duration字段
+            if "duration" in course_data:
+                # 如果已经包含duration字段，则直接使用
+                data = course_data
+            else:
+                # 否则，转换课程数据格式以匹配后端API期望的结构
+                data = {
+                    "id": course_data["id"],
+                    "name": course_data["name"],
+                    "teacher": course_data["teacher"],
+                    "location": course_data["location"],
+                    "duration": {
+                        "start_time": course_data["start_time"],
+                        "end_time": course_data["end_time"]
+                    }
+                }
+            
+            response = self.session.put(f"{self.base_url}/courses/{course_id}", json=data, timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除课程缓存
+                if "courses" in self._cache:
+                    del self._cache["courses"]
+                if "courses" in self._cache_timestamps:
+                    del self._cache_timestamps["courses"]
+                return True
+            else:
+                print(f"更新课程失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"更新课程时发生错误: {e}")
+            return False
+
+    def delete_course(self, course_id: str) -> bool:
+        """删除课程"""
+        try:
+            response = self.session.delete(f"{self.base_url}/courses/{course_id}", timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除课程缓存
+                if "courses" in self._cache:
+                    del self._cache["courses"]
+                if "courses" in self._cache_timestamps:
+                    del self._cache_timestamps["courses"]
+                return True
+            else:
+                print(f"删除课程失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"删除课程时发生错误: {e}")
+            return False
+
     def get_schedules(self) -> List[Dict[str, Any]]:
         """获取所有课程表"""
         cache_key = "schedules"
@@ -102,7 +171,7 @@ class APIClient:
             return self._cache[cache_key]
             
         try:
-            response = requests.get(f"{self.base_url}/schedules")
+            response = self.session.get(f"{self.base_url}/schedules", timeout=self.timeout)
             if response.status_code == 200:
                 data = response.json()
                 # 更新缓存
@@ -122,7 +191,7 @@ class APIClient:
         success = True
         for schedule in schedules:
             try:
-                response = requests.post(f"{self.base_url}/schedules", json=schedule)
+                response = self.session.post(f"{self.base_url}/schedules", json=schedule, timeout=self.timeout)
                 # 接受201（创建成功）和409（冲突，已存在）状态码
                 if response.status_code not in [201, 409]:
                     print(f"创建课程表失败: {response.status_code} - {response.text}")
@@ -137,6 +206,42 @@ class APIClient:
             del self._cache_timestamps["schedules"]
         return success
 
+    def update_schedule(self, schedule_id: str, schedule_data: Dict[str, Any]) -> bool:
+        """更新课程表"""
+        try:
+            response = self.session.put(f"{self.base_url}/schedules/{schedule_id}", json=schedule_data, timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除课程表缓存
+                if "schedules" in self._cache:
+                    del self._cache["schedules"]
+                if "schedules" in self._cache_timestamps:
+                    del self._cache_timestamps["schedules"]
+                return True
+            else:
+                print(f"更新课程表失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"更新课程表时发生错误: {e}")
+            return False
+
+    def delete_schedule(self, schedule_id: str) -> bool:
+        """删除课程表"""
+        try:
+            response = self.session.delete(f"{self.base_url}/schedules/{schedule_id}", timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除课程表缓存
+                if "schedules" in self._cache:
+                    del self._cache["schedules"]
+                if "schedules" in self._cache_timestamps:
+                    del self._cache_timestamps["schedules"]
+                return True
+            else:
+                print(f"删除课程表失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"删除课程表时发生错误: {e}")
+            return False
+
     def get_temp_changes(self) -> List[Dict[str, Any]]:
         """获取所有临时换课记录"""
         cache_key = "temp_changes"
@@ -144,7 +249,7 @@ class APIClient:
             return self._cache[cache_key]
             
         try:
-            response = requests.get(f"{self.base_url}/temp_changes")
+            response = self.session.get(f"{self.base_url}/temp_changes", timeout=self.timeout)
             if response.status_code == 200:
                 data = response.json()
                 # 更新缓存
@@ -164,7 +269,7 @@ class APIClient:
         success = True
         for temp_change in temp_changes:
             try:
-                response = requests.post(f"{self.base_url}/temp_changes", json=temp_change)
+                response = self.session.post(f"{self.base_url}/temp_changes", json=temp_change, timeout=self.timeout)
                 # 接受201（创建成功）和409（冲突，已存在）状态码
                 if response.status_code not in [201, 409]:
                     print(f"创建临时换课记录失败: {response.status_code} - {response.text}")
@@ -179,6 +284,42 @@ class APIClient:
             del self._cache_timestamps["temp_changes"]
         return success
 
+    def update_temp_change(self, temp_change_id: str, temp_change_data: Dict[str, Any]) -> bool:
+        """更新临时换课记录"""
+        try:
+            response = self.session.put(f"{self.base_url}/temp_changes/{temp_change_id}", json=temp_change_data, timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除临时换课记录缓存
+                if "temp_changes" in self._cache:
+                    del self._cache["temp_changes"]
+                if "temp_changes" in self._cache_timestamps:
+                    del self._cache_timestamps["temp_changes"]
+                return True
+            else:
+                print(f"更新临时换课记录失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"更新临时换课记录时发生错误: {e}")
+            return False
+
+    def delete_temp_change(self, temp_change_id: str) -> bool:
+        """删除临时换课记录"""
+        try:
+            response = self.session.delete(f"{self.base_url}/temp_changes/{temp_change_id}", timeout=self.timeout)
+            if response.status_code == 200:
+                # 清除临时换课记录缓存
+                if "temp_changes" in self._cache:
+                    del self._cache["temp_changes"]
+                if "temp_changes" in self._cache_timestamps:
+                    del self._cache_timestamps["temp_changes"]
+                return True
+            else:
+                print(f"删除临时换课记录失败: {response.status_code} - {response.text}")
+                return False
+        except Exception as e:
+            print(f"删除临时换课记录时发生错误: {e}")
+            return False
+
     def get_settings(self) -> Dict[str, Any]:
         """获取设置"""
         cache_key = "settings"
@@ -186,7 +327,7 @@ class APIClient:
             return self._cache[cache_key]
             
         try:
-            response = requests.get(f"{self.base_url}/settings")
+            response = self.session.get(f"{self.base_url}/settings", timeout=self.timeout)
             if response.status_code == 200:
                 data = response.json()
                 # 更新缓存
@@ -204,7 +345,7 @@ class APIClient:
     def save_settings(self, settings: Dict[str, Any]) -> bool:
         """保存设置"""
         try:
-            response = requests.put(f"{self.base_url}/settings", json=settings)
+            response = self.session.put(f"{self.base_url}/settings", json=settings, timeout=self.timeout)
             if response.status_code == 200:
                 # 清除设置缓存
                 if "settings" in self._cache:
@@ -226,7 +367,7 @@ class APIClient:
             url = f"{self.base_url}/today_schedule"
             if date:
                 url += f"?date={date}"
-            response = requests.get(url)
+            response = self.session.get(url, timeout=self.timeout)
             if response.status_code == 200:
                 return response.json()
             else:
@@ -236,12 +377,19 @@ class APIClient:
             print(f"获取今日课程表时发生错误: {e}")
             return {"type": "none"}
 
-    def get_weather_data(self) -> Dict[str, Any]:
+    def get_weather_data(self, location: str) -> Dict[str, Any]:
         """获取天气数据"""
-        # 天气数据通过ServiceFactory获取，不通过HTTP请求
-        from backend.services import ServiceFactory
-        weather_service = ServiceFactory.get_weather_service()
-        return weather_service.get_weather_data()
+        # 天气数据不缓存，因为可能需要实时更新
+        try:
+            response = self.session.get(f"{self.base_url}/weather?location={location}", timeout=self.timeout)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"获取天气数据失败: {response.status_code}")
+                return {}
+        except Exception as e:
+            print(f"获取天气数据时发生错误: {e}")
+            return {}
 
     def clear_cache(self):
         """清除所有缓存"""

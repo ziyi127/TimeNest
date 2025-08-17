@@ -8,6 +8,7 @@ from models.class_item import ClassItem
 from utils.validation_utils import validate_course_data
 from utils.logger import get_service_logger
 from utils.exceptions import ValidationException, NotFoundException, ConflictException
+from data_access.json_data_access import JSONDataAccess
 
 # 初始化日志记录器
 logger = get_service_logger("course_service")
@@ -18,7 +19,9 @@ class CourseService:
     
     def __init__(self):
         """初始化课程服务"""
+        self.data_access = JSONDataAccess()
         self.courses: List[ClassItem] = []
+        self._load_courses()
         logger.info("CourseService initialized")
     
     def create_course(self, course: ClassItem) -> ClassItem:
@@ -83,6 +86,7 @@ class CourseService:
             course: 要添加的课程
         """
         self.courses.append(course)
+        self._save_courses()
     
     def update_course(self, course_id: str, updated_course: ClassItem) -> ClassItem:
         """
@@ -431,6 +435,32 @@ class CourseService:
             logger.warning(f"Course {course_id} not found")
             raise NotFoundException(f"课程 {course_id} 未找到")
     
+    def _load_courses(self):
+        """加载课程数据"""
+        try:
+            data = self.data_access.read_json("courses.json")
+            if data and "courses" in data:
+                self.courses = [
+                    ClassItem.from_dict(course_data) 
+                    for course_data in data["courses"]
+                ]
+            logger.info(f"加载了 {len(self.courses)} 门课程")
+        except Exception as e:
+            logger.error(f"加载课程数据失败: {str(e)}")
+            self.courses = []
+    
+    def _save_courses(self):
+        """保存课程数据"""
+        try:
+            data = {
+                "courses": [course.to_dict() for course in self.courses]
+            }
+            self.data_access.write_json("courses.json", data)
+            logger.debug("课程数据已保存")
+        except Exception as e:
+            logger.error(f"保存课程数据失败: {str(e)}")
+            raise ValidationException("保存课程数据失败")
+    
     def _update_course_at_index(self, index: int, course: ClassItem) -> None:
         """
         在指定索引处更新课程
@@ -440,6 +470,7 @@ class CourseService:
             course: 新的课程对象
         """
         self.courses[index] = course
+        self._save_courses()
     
     def _remove_course_at_index(self, index: int) -> None:
         """
