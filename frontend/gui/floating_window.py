@@ -47,7 +47,7 @@ class FloatingWindow(QWidget):
 
     def initUI(self):
         # 设置窗口样式
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput | Qt.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # 设置触控穿透属性（在初始化完成后会在__init__中再次设置）
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -318,14 +318,14 @@ class FloatingWindow(QWidget):
             # 编辑模式下，禁用触控穿透，恢复透明度
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
             self.setWindowOpacity(0.8)
-            # 确保窗口标志正确设置以支持拖动
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+            # 确保窗口标志正确设置以支持拖动，添加Qt.Tool避免在任务栏显示图标
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
             self.show()
         else:
             # 非编辑模式下，启用触控穿透
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-            # 恢复原始窗口标志
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput)
+            # 恢复原始窗口标志，添加Qt.Tool避免在任务栏显示图标
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput | Qt.Tool)
             self.show()
     
     def snap_to_edge(self):
