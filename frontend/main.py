@@ -85,18 +85,8 @@ class TimeNestFrontendApp(QApplication):
     
     def get_weather_data(self):
         """获取天气数据"""
-        try:
-            # 从后端API获取天气数据
-            weather_data = self.api_client.get_weather_data()
-            if weather_data:
-                self.weather_data = weather_data
-                return self.weather_data
-            else:
-                print("获取天气数据失败")
-                return None
-        except Exception as e:
-            print(f"获取天气数据时发生错误: {str(e)}")
-            return None
+        # 天气功能已禁用
+        return None
 
 
 def main():

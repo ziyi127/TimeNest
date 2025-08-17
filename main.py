@@ -51,9 +51,7 @@ class TimeNestApp(TimeNestFrontendApp):
         self.floating_window = FloatingWindow(self)
         self.floating_window.show()
 
-        # 创建系统托盘图标
-        self.tray_icon = FrontendSystemTrayIcon(self)
-        self.tray_icon.show()
+        # 注意：托盘图标已经在父类TimeNestFrontendApp中创建，无需重复创建
     
     def load_data(self) -> None:
         """加载数据"""
@@ -139,7 +137,7 @@ def main() -> None:
     
     # 启动定时器
     timer = QTimer()
-    timer.timeout.connect(lambda: print("Timer tick"))
+    timer.timeout.connect(lambda: None)  # 不显示Timer tick
     timer.start(app.settings.get("update_interval", 1000))
     
     # 显示系统托盘图标
@@ -150,10 +148,6 @@ def main() -> None:
     
     # 显示悬浮窗
     app.floating_window.show()
-    
-    # 设置系统托盘图标
-    tray_icon = QSystemTrayIcon()
-    tray_icon.setIcon(app.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
     
     sys.exit(app.exec())
 

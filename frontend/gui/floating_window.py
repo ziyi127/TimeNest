@@ -35,17 +35,21 @@ class FloatingWindow(QWidget):
         # 添加编辑模式标志
         self.edit_mode = False
         self.initUI()
+        # 确保非编辑模式下启用触控穿透
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         """鼠标双击事件，显示管理窗口"""
-        self.app.tray_icon.show_management_window()
+        # 只在编辑模式下响应双击事件
+        if self.edit_mode:
+            self.app.tray_icon.show_management_window()
         event.accept()
 
     def initUI(self):
         # 设置窗口样式
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # 设置触控穿透属性
+        # 设置触控穿透属性（在初始化完成后会在__init__中再次设置）
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
         # 窗口大小和位置 - 调整为屏幕中上部
@@ -91,7 +95,6 @@ class FloatingWindow(QWidget):
                 background-color: rgba(255, 255, 255, 0.9);
                 border-radius: 15px;
                 border: 1px solid rgba(200, 200, 200, 0.5);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             }
         """)
         self.background_frame.setMinimumSize(280, 100)
@@ -114,12 +117,7 @@ class FloatingWindow(QWidget):
         self.status_label.setStyleSheet("QLabel { color: #666666; }")
         background_layout.addWidget(self.status_label)
 
-        # 天气标签
-        self.weather_label = QLabel("小雨 25℃", self)
-        self.weather_label.setFont(QFont("Microsoft YaHei", 12))
-        self.weather_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.weather_label.setStyleSheet("QLabel { color: #555555; }")
-        background_layout.addWidget(self.weather_label)
+
 
         main_layout.addWidget(self.background_frame)
 
@@ -195,23 +193,7 @@ class FloatingWindow(QWidget):
         """更新数据"""
         self.app.load_data()
         self.update_status()
-        # 获取真实天气数据
-        weather_data = self.app.get_weather_data()
-        if weather_data:
-            # 根据设置决定天气显示方式
-            weather_display = self.app.settings.get("floating_window", {}).get("weather_display", "温度 + 天气描述")
-            weather_condition = weather_data.get("weather_condition", "未知")
-            temperature = weather_data.get("temperature", "--")
-            
-            if weather_display == "仅显示温度":
-                self.weather_label.setText(f"{temperature}℃")
-            elif weather_display == "温度 + 天气描述":
-                self.weather_label.setText(f"{weather_condition} {temperature}℃")
-            elif weather_display == "隐藏天气":
-                self.weather_label.setText("")
-        else:
-            # 如果无法获取天气数据，显示默认值
-            self.weather_label.setText("无法获取天气数据")
+        pass
 
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""
@@ -219,6 +201,20 @@ class FloatingWindow(QWidget):
         self.opacity_animation.setStartValue(self.windowOpacity())
         self.opacity_animation.finished.connect(self.hide)
         self.opacity_animation.start()
+        
+    def show(self):
+        """重写show方法，确保在显示时更新托盘菜单项文本"""
+        super().show()
+        # 更新托盘菜单项文本
+        if hasattr(self.app, 'tray_icon') and hasattr(self.app.tray_icon, 'update_toggle_action_text'):
+            self.app.tray_icon.update_toggle_action_text()
+    
+    def hide(self):
+        """重写hide方法，确保在隐藏时更新托盘菜单项文本"""
+        super().hide()
+        # 更新托盘菜单项文本
+        if hasattr(self.app, 'tray_icon') and hasattr(self.app.tray_icon, 'update_toggle_action_text'):
+            self.app.tray_icon.update_toggle_action_text()
 
     def fade_to_transparent(self):
         """淡出到透明但不隐藏"""
@@ -245,7 +241,7 @@ class FloatingWindow(QWidget):
             # 用户交互后，重置自动隐藏计时器
             self.hide_timer.stop()
             event.accept()
-        elif event.button() == Qt.MouseButton.RightButton:
+        elif event.button() == Qt.MouseButton.RightButton and self.edit_mode:
             self.show_menu()
             # 用户交互后，重置自动隐藏计时器
             self.hide_timer.stop()
@@ -291,8 +287,8 @@ class FloatingWindow(QWidget):
             # 在非编辑模式下，恢复透明度
             self.setWindowOpacity(0.8)
         else:
-            # 在编辑模式下，启动自动隐藏计时器
-            self.hide_timer.start(self.auto_hide_timeout)
+            # 在编辑模式下，不启动自动隐藏计时器，保持窗口显示
+            pass
         event.accept()
 
     def show_menu(self):

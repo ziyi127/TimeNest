@@ -167,13 +167,14 @@ class WeatherService:
             return False
     
     def get_current_weather(self) -> Optional[WeatherData]:
-        """
+        """ 
         获取当前天气数据
         
         Returns:
             Optional[WeatherData]: 天气数据
         """
-        return self.current_weather
+        # 天气功能已禁用
+        return None
     
     def fetch_weather_data(self) -> Optional[WeatherData]:
         """
@@ -182,111 +183,8 @@ class WeatherService:
         Returns:
             Optional[WeatherData]: 天气数据
         """
-        if not self.settings or not self.settings.enabled:
-            logger.warning("天气服务未启用")
-            return None
-        
-        # 使用用户配置的API ID和KEY，如果没有则使用默认的公共ID和KEY
-        api_id: str = self.settings.api_id if self.settings.api_id else "88888888"
-        api_key: str = self.settings.api_key if self.settings.api_key else "88888888"
-        
-        # API接口地址
-        api_urls: List[str] = [
-            "https://cn.apihz.cn/api/tianqi/tqyb.php",  # 域名接口(默认)
-            "http://101.35.2.25/api/tianqi/tqybip.php",  # 集群IP接口1
-            "http://124.222.204.22/api/tianqi/tqybip.php",  # 集群IP接口2
-            "http://124.220.49.230/api/tianqi/tqybip.php",  # 集群IP接口3
-            "https://vip.apihz.cn/api/tianqi/tqyb.php"  # 彩钻接口(高稳定性)
-        ]
-        
-        # 尝试多个API接口以提高稳定性
-        for i, api_url in enumerate(api_urls):
-            try:
-                logger.info(f"尝试使用API接口 {i+1}: {api_url}")
-                
-                # 根据API文档要求，需要将location拆分为省份和城市
-                # 假设location格式为"省份,城市" 或 "城市"
-                location_parts = self.settings.location.split(',')
-                if len(location_parts) >= 2:
-                    province = location_parts[0].strip()
-                    city = location_parts[1].strip()
-                else:
-                    # 如果没有省份信息，直接使用城市名
-                    province = ""
-                    city = self.settings.location.strip()
-                
-                params: Dict[str, str] = {
-                    "id": api_id,
-                    "key": api_key,
-                    "sheng": province if province else city,  # 如果没有省份，则使用城市名作为省份
-                    "place": city
-                }
-                
-                logger.info(f"正在获取天气数据: 省份={params['sheng']}, 城市={params['place']}")
-                
-                response = requests.get(api_url, params=params, timeout=10)
-                response.raise_for_status()
-                
-                data = response.json()
-                
-                # 检查API返回的状态码
-                if data.get("code") != 200:
-                    logger.warning(f"API {api_url} 返回错误: {data.get('msg', '未知错误')}")
-                    continue  # 尝试下一个API接口
-                
-                # 解析天气数据（根据新API文档）
-                weather_data = WeatherData(
-                    location=data.get("place", self.settings.location),
-                    temperature=float(data.get("temperature", 0)),
-                    humidity=int(data.get("humidity", 0)),
-                    pressure=int(data.get("pressure", 0)),
-                    wind_speed=float(data.get("windSpeed", 0)),
-                    weather_condition=f"{data.get('weather1', '')}转{data.get('weather2', '')}".strip(),
-                    last_updated=datetime.now()
-                )
-                
-                # 添加额外的天气信息作为forecast的一部分
-                extra_weather_info: Dict[str, Union[str, int, float, None]] = {
-                    "wind_direction": data.get("windDirection", "未知"),
-                    "wind_scale": data.get("windScale", "未知"),
-                    "wind_direction_degree": data.get("windDirectionDegree", 0),
-                    "precipitation": data.get("precipitation", 0),
-                    "weather1img": data.get("weather1img", ""),
-                    "weather2img": data.get("weather2img", ""),
-                    "uptime": data.get("uptime", ""),
-                }
-                
-                # 创建包含额外信息的forecast列表
-                weather_data = WeatherData(
-                    location=weather_data.location,
-                    temperature=weather_data.temperature,
-                    humidity=weather_data.humidity,
-                    pressure=weather_data.pressure,
-                    wind_speed=weather_data.wind_speed,
-                    weather_condition=weather_data.weather_condition,
-                    forecast=[extra_weather_info],
-                    last_updated=weather_data.last_updated
-                )
-                
-                # 更新当前天气数据
-                self.current_weather = weather_data
-                self._save_weather_data()
-                
-                logger.info(f"成功获取天气数据: {weather_data.location}")
-                return weather_data
-                
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"API {api_url} 请求失败: {str(e)}")
-                continue  # 尝试下一个API接口
-            except ValueError as e:
-                logger.error(f"API {api_url} 数据解析失败: {str(e)}")
-                continue  # 尝试下一个API接口
-            except Exception as e:
-                logger.error(f"使用API {api_url} 获取天气数据失败: {str(e)}")
-                continue  # 尝试下一个API接口
-        
-        # 所有API接口都失败了
-        logger.error("所有API接口都不可用，获取天气数据失败")
+        # 天气功能已禁用
+        logger.info("天气功能已禁用，不获取天气数据")
         return None
     
     def refresh_weather_data(self) -> Optional[WeatherData]:
@@ -296,27 +194,9 @@ class WeatherService:
         Returns:
             Optional[WeatherData]: 天气数据
         """
-        if not self.settings or not self.settings.enabled:
-            logger.warning("天气服务未启用")
-            return None
-        
-        # 如果没有缓存数据或需要刷新，则获取新数据
-        if not self.current_weather:
-            return self.fetch_weather_data()
-        
-        # 检查上次更新时间
-        try:
-            last_update = self.current_weather.last_updated
-            time_diff = (datetime.now() - last_update).total_seconds()  # 秒
-            
-            if time_diff >= self.settings.update_interval:
-                return self.fetch_weather_data()
-            else:
-                logger.debug("天气数据未过期，返回缓存数据")
-                return self.current_weather
-        except Exception as e:
-            logger.error(f"检查天气数据更新时间失败: {str(e)}")
-            return self.fetch_weather_data()
+        # 天气功能已禁用
+        logger.info("天气功能已禁用，不刷新天气数据")
+        return None
     
     def get_weather_info(self) -> Dict[str, Any]:
         """
@@ -325,21 +205,9 @@ class WeatherService:
         Returns:
             Dict[str, Any]: 天气信息字典
         """
-        weather_data = self.refresh_weather_data()
-        
-        if weather_data:
-            return {
-                "location": weather_data.location,
-                "temperature": weather_data.temperature,
-                "humidity": weather_data.humidity,
-                "pressure": weather_data.pressure,
-                "wind_speed": weather_data.wind_speed,
-                "weather_condition": weather_data.weather_condition,
-                "forecast": weather_data.forecast,
-                "last_updated": weather_data.last_updated.isoformat()
-            }
-        else:
-            return {}
+        # 天气功能已禁用
+        logger.info("天气功能已禁用，不获取天气信息")
+        return {}
     
     def is_service_enabled(self) -> bool:
         """
@@ -348,4 +216,5 @@ class WeatherService:
         Returns:
             bool: 服务是否启用
         """
-        return self.settings.enabled if self.settings else False
+        # 天气功能已禁用
+        return False

@@ -34,7 +34,11 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
 
     def initUI(self):
         # 设置托盘图标
-        self.setIcon(QIcon.fromTheme("computer", QApplication.style().standardIcon(QStyle.SP_ComputerIcon)))
+        icon_path = Path(__file__).parent.parent.parent / "res" / "logo.ico"
+        if icon_path.exists():
+            self.setIcon(QIcon(str(icon_path)))
+        else:
+            self.setIcon(QIcon.fromTheme("computer", QApplication.style().standardIcon(QStyle.SP_ComputerIcon)))
         
         # 创建右键菜单
         self.context_menu = QMenu()
@@ -65,13 +69,9 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         self.context_menu.addSeparator()
         
         # 显示/隐藏菜单项
-        self.show_action = QAction("显示悬浮窗", self.app)
-        self.show_action.triggered.connect(self.show_floating_window)
-        self.context_menu.addAction(self.show_action)
-        
-        self.hide_action = QAction("隐藏悬浮窗", self.app)
-        self.hide_action.triggered.connect(self.hide_floating_window)
-        self.context_menu.addAction(self.hide_action)
+        self.toggle_window_action = QAction("显示悬浮窗", self.app)
+        self.toggle_window_action.triggered.connect(self.toggle_floating_window)
+        self.context_menu.addAction(self.toggle_window_action)
         
         # 分隔线
         self.context_menu.addSeparator()
@@ -89,16 +89,17 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         
         # 显示托盘图标
         self.show()
+        
+        # 初始化切换悬浮窗动作的文本
+        self.update_toggle_action_text()
 
     def on_activated(self, reason: QSystemTrayIcon.ActivationReason):
         """处理托盘图标激活事件"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             # 左键单击切换悬浮窗显示/隐藏
-            if self.app.floating_window.isVisible():
-                self.app.floating_window.hide()
-            else:
-                self.app.floating_window.show()
-                self.app.floating_window.raise_()
+            self.toggle_floating_window()
+            # 更新菜单项文本
+            self.update_toggle_action_text()
 
     def show_management_window(self):
         """显示课表管理窗口"""
@@ -138,14 +139,23 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
             self.app.floating_window.show()
             self.app.floating_window.stop_fade_out()
         else:
-            # 非编辑模式：恢复自动隐藏
-            self.app.floating_window.hide_timer.start(self.app.settings.get("auto_hide_timeout", 5000))
+            # 非编辑模式：停止自动隐藏计时器，保持悬浮窗显示
+            self.app.floating_window.hide_timer.stop()
+            self.app.floating_window.setWindowOpacity(0.8)
 
-    def show_floating_window(self):
-        """显示悬浮窗"""
-        self.app.floating_window.show()
-        self.app.floating_window.raise_()
-
-    def hide_floating_window(self):
-        """隐藏悬浮窗"""
-        self.app.floating_window.hide()
+    def toggle_floating_window(self):
+        """切换悬浮窗显示/隐藏状态"""
+        if self.app.floating_window.isVisible():
+            self.app.floating_window.hide()
+            self.toggle_window_action.setText("显示悬浮窗")
+        else:
+            self.app.floating_window.show()
+            self.app.floating_window.raise_()
+            self.toggle_window_action.setText("隐藏悬浮窗")
+    
+    def update_toggle_action_text(self):
+        """更新切换悬浮窗动作的文本"""
+        if self.app.floating_window.isVisible():
+            self.toggle_window_action.setText("隐藏悬浮窗")
+        else:
+            self.toggle_window_action.setText("显示悬浮窗")
