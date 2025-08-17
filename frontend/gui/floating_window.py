@@ -34,6 +34,10 @@ class FloatingWindow(QWidget):
         self.app = app
         # 添加编辑模式标志
         self.edit_mode = False
+        # 缓存今日课程表数据
+        self.cached_schedule = None
+        # 上次更新时间
+        self.last_update_time = None
         self.initUI()
         # 确保非编辑模式下启用触控穿透
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -142,7 +146,8 @@ class FloatingWindow(QWidget):
         # 数据更新计时器
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.update_data)
-        update_interval = self.app.settings.get("update_interval", 1000)
+        # 将更新间隔从1秒调整为5秒，减少频繁请求
+        update_interval = self.app.settings.get("update_interval", 5000)
         self.update_timer.start(update_interval)
 
         # 更新时间和状态
@@ -167,7 +172,9 @@ class FloatingWindow(QWidget):
 
     def update_status(self):
         """更新课程状态显示"""
-        schedule = self.app.get_today_schedule()
+        # 使用缓存的数据更新界面，避免频繁API调用
+        schedule = self.cached_schedule if self.cached_schedule is not None else self.app.get_today_schedule()
+        
         if schedule["type"] == "none":
             self.status_label.setText("今日无课程")
             self.status_label.setStyleSheet("color: #666666;")
@@ -192,9 +199,22 @@ class FloatingWindow(QWidget):
 
     def update_data(self):
         """更新数据"""
-        self.app.load_data()
+        # 每5分钟才从API获取一次最新数据，减少频繁请求
+        from datetime import datetime, timedelta
+        
+        # 检查是否需要更新数据
+        should_update = (
+            self.last_update_time is None or 
+            datetime.now() - self.last_update_time > timedelta(minutes=5)
+        )
+        
+        if should_update:
+            self.app.load_data()
+            self.last_update_time = datetime.now()
+        
+        # 更新缓存的今日课程表数据
+        self.cached_schedule = self.app.get_today_schedule()
         self.update_status()
-        pass
 
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""
