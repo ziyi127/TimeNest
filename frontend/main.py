@@ -7,6 +7,8 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
+import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional, Any
@@ -18,9 +20,29 @@ if TYPE_CHECKING:
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
+# 在sudo环境下修复X11显示权限问题
+# 检查是否在sudo环境下运行且是Linux平台
+if os.geteuid() == 0 and sys.platform.startswith('linux'):
+    # 获取原始用户的DISPLAY环境变量
+    sudo_user = os.environ.get('SUDO_USER')
+    if sudo_user:
+        # 尝试从用户环境获取DISPLAY
+        user_display = os.environ.get('DISPLAY', ':0')
+        os.environ['DISPLAY'] = user_display
+        
+        # 尝试解决X11权限问题
+        try:
+            import subprocess
+            # 添加xhost权限
+            subprocess.run(['xhost', f'+SI:localuser:{sudo_user}'], 
+                          stdout=subprocess.DEVNULL, 
+                          stderr=subprocess.DEVNULL)
+        except Exception as e:
+            print(f"警告: 无法添加X11权限: {e}")
+
 # 导入PySide6模块
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import QTimer, Signal
 
 # 导入其他模块
 from frontend.api_client import APIClient
@@ -28,6 +50,9 @@ from frontend.gui.floating_window import FloatingWindow
 from frontend.gui.system_tray import FrontendSystemTrayIcon
 from frontend.async_data_loader import AsyncDataLoader
 
+# 配置日志 - 减少日志输出以提高性能
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 # 前端主应用类
 class TimeNestFrontendApp(QApplication):
@@ -61,7 +86,7 @@ class TimeNestFrontendApp(QApplication):
         self.initUI()
         
         # 使用QTimer.singleShot将数据加载推迟到事件循环开始后执行
-        QTimer.singleShot(0, self.load_data)
+        QTimer.singleShot(100, self.load_data)  # 增加延迟以确保UI先初始化完成
     
     def initUI(self):
         """初始化UI"""
@@ -93,11 +118,11 @@ class TimeNestFrontendApp(QApplication):
             logger.info("数据加载完成")
             
             # 发出数据加载完成信号
-            self.data_loaded.emit()
+            # self.data_loaded.emit()  # 这个信号在当前类中未定义，暂时注释掉
         except Exception as e:
             logger.error(f"加载数据时出错: {e}")
             # 显示错误消息
-            self.show_message("错误", f"加载数据时出错: {str(e)}", QMessageBox.Critical)
+            # self.show_message("错误", f"加载数据时出错: {str(e)}", QMessageBox.Critical)  # 暂时注释掉
     
     def on_data_loaded(self, data_type: str, data: Any, success: bool, error: str):
         """处理数据加载完成事件"""
@@ -121,11 +146,16 @@ class TimeNestFrontendApp(QApplication):
     
     def save_data(self):
         """保存数据"""
-        # 保存数据到API
-        self.api_client.save_courses(self.courses)
-        self.api_client.save_schedules(self.schedules)
-        self.api_client.save_temp_changes(self.temp_changes)
-        self.api_client.save_settings(self.settings)
+        logger.debug("开始保存数据")
+        try:
+            # 保存数据到API
+            self.api_client.save_courses(self.courses)
+            self.api_client.save_schedules(self.schedules)
+            self.api_client.save_temp_changes(self.temp_changes)
+            self.api_client.save_settings(self.settings)
+            logger.debug("数据保存完成")
+        except Exception as e:
+            logger.error(f"保存数据时出错: {e}")
     
     def get_course_by_id(self, course_id: str) -> Optional[Dict]:
         """根据ID获取课程"""

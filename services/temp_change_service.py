@@ -43,6 +43,36 @@ class TempChangeService:
         logger.info(f"Temp change {temp_change.id} created successfully")
         return temp_change
     
+    def batch_create_temp_changes(self, temp_changes: List[TempChange]) -> bool:
+        """
+        批量创建临时换课
+        
+        Args:
+            temp_changes: 临时换课对象列表
+            
+        Returns:
+            是否创建成功
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
+        logger.info(f"Batch creating {len(temp_changes)} temp changes")
+        
+        try:
+            for temp_change in temp_changes:
+                try:
+                    self.create_temp_change(temp_change)
+                except ConflictException:
+                    # 忽略已存在的临时换课
+                    logger.debug(f"Temp change {temp_change.id} already exists, skipping")
+                    continue
+            
+            logger.info("Batch temp changes creation completed")
+            return True
+        except Exception as e:
+            logger.error(f"Batch temp changes creation failed: {str(e)}")
+            raise ValidationException("批量创建临时换课失败")
+    
     def _execute_create_temp_change_steps(self, temp_change: TempChange) -> None:
         """
         执行创建临时换课的步骤

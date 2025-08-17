@@ -7,9 +7,11 @@ TimeNest - 智能课程表桌面应用
 """
 
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
+import platform
 
 if TYPE_CHECKING:
     from frontend.main import TimeNestFrontendApp
@@ -23,8 +25,42 @@ from PySide6.QtWidgets import (
     QWidget, QLabel, QVBoxLayout,
     QMenu, QFrame
 )
-from PySide6.QtCore import QEvent, Qt, QTimer, QPropertyAnimation
+from PySide6.QtCore import QEvent, Qt, QTimer, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QFont, QCursor, QAction, QMouseEvent, QGuiApplication
+
+
+# Windows平台特定导入 - 延迟导入以提高启动速度
+WINDOWS_API_AVAILABLE = False
+if platform.system() == "Windows":
+    try:
+        import ctypes
+        
+        # Windows API常量
+        GWL_EXSTYLE = -20
+        WS_EX_LAYERED = 0x80000
+        WS_EX_TRANSPARENT = 0x20
+        LWA_ALPHA = 0x2
+        
+        # Windows API函数
+        try:
+            GetWindowLong = ctypes.windll.user32.GetWindowLongPtrW  # type: ignore
+            SetWindowLong = ctypes.windll.user32.SetWindowLongPtrW  # type: ignore
+        except AttributeError:
+            GetWindowLong = ctypes.windll.user32.GetWindowLongW  # type: ignore
+            SetWindowLong = ctypes.windll.user32.SetWindowLongW  # type: ignore
+        
+        SetLayeredWindowAttributes = ctypes.windll.user32.SetLayeredWindowAttributes  # type: ignore
+        SetWindowPos = ctypes.windll.user32.SetWindowPos  # type: ignore
+        
+        # Windows常量
+        HWND_TOPMOST = -1
+        SWP_NOMOVE = 0x0002
+        SWP_NOSIZE = 0x0001
+        SWP_NOACTIVATE = 0x0010
+        
+        WINDOWS_API_AVAILABLE = True
+    except Exception as e:
+        print(f"Windows API导入失败: {e}")
 
 
 # 悬浮窗类
@@ -35,11 +71,15 @@ class FloatingWindow(QWidget):
         # 添加编辑模式标志
         self.edit_mode = False
         # 缓存今日课程表数据
-        self.cached_schedule = None
+        self.cached_schedule = None  # type: ignore
         # 上次更新时间
         self.last_update_time = None
         # 动态更新频率（秒）
         self.update_frequency = 60
+        # 定时器确保窗口始终保持在最前面
+        self.topmost_timer = QTimer(self)
+        self.topmost_timer.timeout.connect(self.ensure_topmost)
+        self.topmost_timer.start(1000)  # 每秒检查一次
         self.initUI()
         # 确保非编辑模式下启用触控穿透
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -52,42 +92,70 @@ class FloatingWindow(QWidget):
         event.accept()
 
     def initUI(self):
-        # 设置窗口样式
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput | Qt.Tool)
+        # 根据不同平台设置窗口样式
+        if platform.system() == "Windows":
+            # Windows平台使用增强的窗口标志
+            self.setWindowFlags(
+                Qt.FramelessWindowHint |
+                Qt.WindowStaysOnTopHint |
+                Qt.WindowTransparentForInput |
+                Qt.Tool |
+                Qt.WindowDoesNotAcceptFocus |
+                Qt.NoDropShadowWindowHint
+            )  # type: ignore
+        elif platform.system() == "Darwin":  # macOS
+            # macOS平台使用特定的窗口标志
+            self.setWindowFlags(
+                Qt.FramelessWindowHint |
+                Qt.WindowStaysOnTopHint |
+                Qt.WindowTransparentForInput |
+                Qt.Tool |
+                Qt.WindowDoesNotAcceptFocus |
+                Qt.X11BypassWindowManagerHint  # 绕过窗口管理器以获得更高权限
+            )  # type: ignore
+        else:  # Linux和其他平台
+            # Linux平台使用特定的窗口标志
+            window_flags = (
+                Qt.FramelessWindowHint | 
+                Qt.WindowStaysOnTopHint | 
+                Qt.WindowTransparentForInput | 
+                Qt.Tool | 
+                Qt.WindowDoesNotAcceptFocus
+            )
+            
+            # 在sudo环境下添加特殊处理
+            if os.geteuid() == 0 and sys.platform.startswith('linux'):
+                # 在sudo环境下，可能需要特殊的窗口管理器绕过设置
+                try:
+                    # 尝试添加X11绕过标志
+                    window_flags |= Qt.X11BypassWindowManagerHint
+                except:
+                    # 如果不支持该标志，则忽略
+                    pass
+            else:
+                # 非sudo环境下正常添加绕过标志
+                window_flags |= Qt.X11BypassWindowManagerHint
+                
+            self.setWindowFlags(window_flags)
+        
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # 设置触控穿透属性（在初始化完成后会在__init__中再次设置）
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
         # 窗口大小和位置 - 调整为屏幕中上部
-        screen_geometry = QGuiApplication.primaryScreen().availableGeometry()
-        screen_width = screen_geometry.width()
-        screen_height = screen_geometry.height()
         window_width = 300
         window_height = 120
-        x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 3  # 屏幕中上部
-
-        # 获取窗口位置设置，如果不存在则使用默认值
-        window_position = self.app.settings.get("window_position", {"x": 100, "y": 100})
         
-        # 如果是首次启动（使用默认设置），则设置为屏幕中上部
-        if (window_position["x"] == 100 and 
-            window_position["y"] == 100):
-            self.setGeometry(x, y, window_width, window_height)
-            # 更新设置
-            self.app.settings["window_position"] = {
-                "x": x,
-                "y": y
-            }
-            self.app.save_data()
-        else:
-            # 否则使用用户之前保存的位置
-            self.setGeometry(
-                window_position["x"],
-                window_position["y"],
-                window_width,
-                window_height
-            )
+        # 获取窗口位置设置，如果不存在则使用默认值
+        window_position: dict[str, int] = self.app.settings.get("window_position", {"x": 100, "y": 100})  # type: ignore
+        
+        # 设置窗口位置和大小
+        self.setGeometry(
+            window_position["x"],  # type: ignore
+            window_position["y"],  # type: ignore
+            window_width,
+            window_height
+        )
 
         # 创建主布局
         main_layout = QVBoxLayout(self)
@@ -134,7 +202,7 @@ class FloatingWindow(QWidget):
         self.opacity_animation.setEndValue(0.0)
         
         # 设置初始透明度
-        transparency = self.app.settings.get("floating_window", {}).get("transparency", 80)
+        transparency: int = self.app.settings.get("floating_window", {}).get("transparency", 80)  # type: ignore
         self.setWindowOpacity(transparency / 100.0)
 
         # 自动隐藏计时器
@@ -142,7 +210,7 @@ class FloatingWindow(QWidget):
         self.hide_timer.setSingleShot(True)
         self.hide_timer.timeout.connect(self.start_fade_out)
         # 设置自动隐藏时间
-        auto_hide_threshold = self.app.settings.get("floating_window", {}).get("auto_hide_threshold", 50)
+        auto_hide_threshold: int = self.app.settings.get("floating_window", {}).get("auto_hide_threshold", 50)  # type: ignore
         self.auto_hide_timeout = auto_hide_threshold * 100  # 转换为毫秒
 
         # 数据更新计时器
@@ -178,7 +246,7 @@ class FloatingWindow(QWidget):
     def update_status(self):
         """更新课程状态显示"""
         # 使用缓存的数据更新界面，避免频繁API调用
-        schedule = self.cached_schedule if self.cached_schedule is not None else self.app.get_today_schedule()
+        schedule: dict = self.cached_schedule if self.cached_schedule is not None else self.app.get_today_schedule()  # type: ignore
         
         if schedule["type"] == "none":
             self.status_label.setText("今日无课程")
@@ -192,7 +260,7 @@ class FloatingWindow(QWidget):
             self.status_label.setText(f"【临时】{course['name']} ({course['teacher']}) {course['location']}")
             
             # 根据设置决定临时课程样式
-            temp_course_style = self.app.settings.get("floating_window", {}).get("temp_course_style", "临时调课标红边框")
+            temp_course_style: str = self.app.settings.get("floating_window", {}).get("temp_course_style", "临时调课标红边框")  # type: ignore
             if temp_course_style == "临时调课标红边框":
                 self.status_label.setStyleSheet("color: #FF5722;")
             elif temp_course_style == "临时调课闪烁提醒":
@@ -218,7 +286,7 @@ class FloatingWindow(QWidget):
             self.last_update_time = datetime.now()
         
         # 更新缓存的今日课程表数据
-        self.cached_schedule = self.app.get_today_schedule()
+        self.cached_schedule: dict = self.app.get_today_schedule()  # type: ignore
         self.update_status()
         
         # 调整更新频率
@@ -241,6 +309,41 @@ class FloatingWindow(QWidget):
         except Exception as e:
             print(f"局部更新{data_type}时出错: {e}")
 
+    def ensure_topmost(self):
+        """确保窗口始终保持在最前面"""
+        if self.isVisible() and not self.edit_mode:
+            # 在不同平台上使用不同的方法确保窗口置顶
+            if platform.system() == "Windows" and WINDOWS_API_AVAILABLE:
+                self.ensure_topmost_windows()
+            else:
+                # 对于其他平台，使用Qt原生方法
+                self.raise_()
+                self.show()
+                # 确保窗口标志正确
+                current_flags = self.windowFlags()
+                if not (current_flags & Qt.WindowStaysOnTopHint):
+                    self.setWindowFlags(current_flags | Qt.WindowStaysOnTopHint)  # type: ignore
+                    self.show()
+
+    def ensure_topmost_windows(self):
+        """Windows平台下确保窗口置顶的特殊处理"""
+        if platform.system() != "Windows" or not WINDOWS_API_AVAILABLE:
+            return
+            
+        try:
+            # 使用Windows API确保窗口置顶
+            hwnd = self.winId()
+            SetWindowPos(
+                int(hwnd),
+                HWND_TOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+            )
+        except Exception:
+            # 如果Windows API调用失败，回退到Qt原生方法
+            self.raise_()
+            self.show()
+
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""
         # 只在非编辑模式下执行淡出动画
@@ -254,7 +357,18 @@ class FloatingWindow(QWidget):
         
     def show(self):
         """show方法，确保在显示时更新托盘菜单项文本"""
+        # 在sudo环境下尝试修复显示问题
+        if os.geteuid() == 0 and sys.platform.startswith('linux'):
+            try:
+                # 确保有正确的显示环境
+                current_flags = self.windowFlags()
+                self.setWindowFlags(current_flags)
+            except:
+                pass
+        
         super().show()
+        # 确保显示时窗口在最前面
+        self.raise_()
         # 更新托盘菜单项文本
         if hasattr(self.app, 'tray_icon') and hasattr(self.app.tray_icon, 'update_toggle_action_text'):
             self.app.tray_icon.update_toggle_action_text()
@@ -309,7 +423,7 @@ class FloatingWindow(QWidget):
             self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
             
             # 根据设置决定是否吸附到边缘
-            snap_to_edge = self.app.settings.get("floating_window", {}).get("snap_to_edge", False)
+            snap_to_edge: bool = self.app.settings.get("floating_window", {}).get("snap_to_edge", False)  # type: ignore
             if snap_to_edge:
                 self.snap_to_edge()
             
@@ -368,13 +482,76 @@ class FloatingWindow(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
             self.setWindowOpacity(0.8)
             # 确保窗口标志正确设置以支持拖动，添加Qt.Tool避免在任务栏显示图标
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+            if platform.system() == "Windows":
+                self.setWindowFlags(
+                    Qt.FramelessWindowHint |
+                    Qt.WindowStaysOnTopHint |
+                    Qt.Tool
+                )  # type: ignore
+            elif platform.system() == "Darwin":  # macOS
+                self.setWindowFlags(
+                    Qt.FramelessWindowHint |
+                    Qt.WindowStaysOnTopHint |
+                    Qt.Tool
+                )  # type: ignore
+            else:  # Linux和其他平台
+                window_flags = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+                # 在sudo环境下添加特殊处理
+                if os.geteuid() == 0 and sys.platform.startswith('linux'):
+                    try:
+                        # 尝试添加X11绕过标志
+                        window_flags |= Qt.X11BypassWindowManagerHint
+                    except:
+                        # 如果不支持该标志，则忽略
+                        pass
+                else:
+                    window_flags |= Qt.X11BypassWindowManagerHint
+                    
+                self.setWindowFlags(window_flags)  # type: ignore
             self.show()
         else:
             # 非编辑模式下，启用触控穿透
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
             # 恢复原始窗口标志，添加Qt.Tool避免在任务栏显示图标
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput | Qt.Tool)
+            if platform.system() == "Windows":
+                self.setWindowFlags(
+                    Qt.FramelessWindowHint |
+                    Qt.WindowStaysOnTopHint |
+                    Qt.WindowTransparentForInput |
+                    Qt.Tool |
+                    Qt.WindowDoesNotAcceptFocus |
+                    Qt.NoDropShadowWindowHint
+                )  # type: ignore
+            elif platform.system() == "Darwin":  # macOS
+                self.setWindowFlags(
+                    Qt.FramelessWindowHint |
+                    Qt.WindowStaysOnTopHint |
+                    Qt.WindowTransparentForInput |
+                    Qt.Tool |
+                    Qt.WindowDoesNotAcceptFocus |
+                    Qt.X11BypassWindowManagerHint
+                )  # type: ignore
+            else:  # Linux和其他平台
+                window_flags = (
+                    Qt.FramelessWindowHint |
+                    Qt.WindowStaysOnTopHint |
+                    Qt.WindowTransparentForInput |
+                    Qt.Tool |
+                    Qt.WindowDoesNotAcceptFocus
+                )
+                
+                # 在sudo环境下添加特殊处理
+                if os.geteuid() == 0 and sys.platform.startswith('linux'):
+                    try:
+                        # 尝试添加X11绕过标志
+                        window_flags |= Qt.X11BypassWindowManagerHint
+                    except:
+                        # 如果不支持该标志，则忽略
+                        pass
+                else:
+                    window_flags |= Qt.X11BypassWindowManagerHint
+                    
+                self.setWindowFlags(window_flags)  # type: ignore
             self.show()
     
     def snap_to_edge(self):
@@ -396,7 +573,7 @@ class FloatingWindow(QWidget):
             distance_to_top = y
             
             # 根据设置的优先级决定吸附到哪条边
-            snap_priority = self.app.settings.get("floating_window", {}).get("snap_priority", "右侧 > 顶部 > 左侧")
+            snap_priority: str = self.app.settings.get("floating_window", {}).get("snap_priority", "右侧 > 顶部 > 左侧")  # type: ignore
             
             if snap_priority == "右侧 > 顶部 > 左侧":
                 if distance_to_right <= min(distance_to_top, distance_to_left):

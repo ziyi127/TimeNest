@@ -49,6 +49,36 @@ class CourseService:
         logger.info(f"Course {course.id} created successfully")
         return course
     
+    def batch_create_courses(self, courses: List[ClassItem]) -> bool:
+        """
+        批量创建课程
+        
+        Args:
+            courses: 课程对象列表
+            
+        Returns:
+            是否创建成功
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
+        logger.info(f"Batch creating {len(courses)} courses")
+        
+        try:
+            for course in courses:
+                try:
+                    self.create_course(course)
+                except ConflictException:
+                    # 忽略已存在的课程
+                    logger.debug(f"Course {course.id} already exists, skipping")
+                    continue
+            
+            logger.info("Batch courses creation completed")
+            return True
+        except Exception as e:
+            logger.error(f"Batch courses creation failed: {str(e)}")
+            raise ValidationException("批量创建课程失败")
+    
     def _validate_and_check_course(self, course: ClassItem) -> None:
         """
         验证课程数据

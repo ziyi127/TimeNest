@@ -24,8 +24,8 @@ sys.path.insert(0, str(project_root))
 # 导入配置
 from config import FRONTEND_API_BASE_URL
 
-# 配置日志
-logging.basicConfig(level=logging.INFO)
+# 配置日志 - 减少日志级别以提高性能
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +37,7 @@ class APIClient:
         # 优化的HTTP重试机制
         retry_strategy = Retry(
             total=3,
-            backoff_factor=0.5,  # 减少退避时间
+            backoff_factor=0.3,  # 减少退避时间以提高响应速度
             status_forcelist=[429, 500, 502, 503, 504],
             allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
         )
@@ -122,13 +122,9 @@ class APIClient:
     def save_courses(self, courses: List[Dict[str, Any]]) -> bool:
         """保存课程"""
         try:
-            success = True
-            for course in courses:
-                # 发送单个课程对象
-                response = self.session.post(f"{self.base_url}/courses", json=course)
-                # 检查响应状态码，409表示数据已存在，这是预期的行为
-                if response.status_code != 409:
-                    response.raise_for_status()
+            # 一次性发送整个课程列表
+            response = self.session.post(f"{self.base_url}/courses/batch", json={"courses": courses})
+            response.raise_for_status()
             
             # 清除缓存
             self._clear_cache()
@@ -207,7 +203,11 @@ class APIClient:
             return cached_data
         
         try:
-            response = self.session.get(f"{self.base_url}/temp_changes")
+            url = f"{self.base_url}/temp_changes"
+            logger.debug(f"获取临时换课记录请求URL: {url}")
+            response = self.session.get(url)
+            logger.debug(f"获取临时换课记录响应状态码: {response.status_code}")
+            logger.debug(f"获取临时换课记录响应内容: {response.text}")
             response.raise_for_status()
             data = response.json()
             
@@ -268,7 +268,12 @@ class APIClient:
     def save_settings(self, settings: Dict[str, Any]) -> bool:
         """保存用户设置"""
         try:
-            response = self.session.put(f"{self.base_url}/settings/settings", json=settings)
+            url = f"{self.base_url}/settings"
+            logger.debug(f"保存设置请求URL: {url}")
+            logger.debug(f"保存设置请求数据: {settings}")
+            response = self.session.put(url, json=settings)
+            logger.debug(f"保存设置响应状态码: {response.status_code}")
+            logger.debug(f"保存设置响应内容: {response.text}")
             response.raise_for_status()
             
             # 只清除设置相关的缓存
@@ -323,13 +328,9 @@ class APIClient:
     def save_schedules(self, schedules: List[Dict[str, Any]]) -> bool:
         """保存课表"""
         try:
-            success = True
-            for schedule in schedules:
-                # 发送单个课表对象
-                response = self.session.post(f"{self.base_url}/schedules", json=schedule)
-                # 检查响应状态码，409表示数据已存在，这是预期的行为
-                if response.status_code != 409:
-                    response.raise_for_status()
+            # 一次性发送整个课表列表
+            response = self.session.post(f"{self.base_url}/schedules/batch", json={"schedules": schedules})
+            response.raise_for_status()
             
             # 清除缓存
             self._clear_cache()
@@ -341,13 +342,9 @@ class APIClient:
     def save_temp_changes(self, temp_changes: List[Dict[str, Any]]) -> bool:
         """保存临时换课记录"""
         try:
-            success = True
-            for temp_change in temp_changes:
-                # 发送单个临时换课记录对象
-                response = self.session.post(f"{self.base_url}/temp_changes", json=temp_change)
-                # 检查响应状态码，409表示数据已存在，这是预期的行为
-                if response.status_code != 409:
-                    response.raise_for_status()
+            # 一次性发送整个临时换课记录列表
+            response = self.session.post(f"{self.base_url}/temp_changes/batch", json={"temp_changes": temp_changes})
+            response.raise_for_status()
             
             # 清除缓存
             self._clear_cache()

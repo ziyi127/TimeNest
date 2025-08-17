@@ -48,6 +48,36 @@ class ScheduleService:
         logger.info(f"Schedule {schedule.id} created successfully")
         return schedule
     
+    def batch_create_schedules(self, schedules: List[ClassPlan]) -> bool:
+        """
+        批量创建课程表项
+        
+        Args:
+            schedules: 课程表对象列表
+            
+        Returns:
+            是否创建成功
+            
+        Raises:
+            ValidationException: 数据验证失败
+        """
+        logger.info(f"Batch creating {len(schedules)} schedules")
+        
+        try:
+            for schedule in schedules:
+                try:
+                    self.create_schedule(schedule)
+                except ConflictException:
+                    # 忽略已存在的课程表项
+                    logger.debug(f"Schedule {schedule.id} already exists, skipping")
+                    continue
+            
+            logger.info("Batch schedules creation completed")
+            return True
+        except Exception as e:
+            logger.error(f"Batch schedules creation failed: {str(e)}")
+            raise ValidationException("批量创建课程表项失败")
+    
     def _execute_create_schedule_steps(self, schedule: ClassPlan) -> None:
         """
         执行创建课程表项的步骤
