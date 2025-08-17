@@ -47,7 +47,7 @@ class FloatingWindow(QWidget):
 
     def initUI(self):
         # 设置窗口样式
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # 设置触控穿透属性（在初始化完成后会在__init__中再次设置）
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -159,7 +159,8 @@ class FloatingWindow(QWidget):
         now = datetime.now()
         time_str = now.strftime("%H:%M %a %d/%m/%y")
         # 替换星期为中文
-        weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+        # weekday()返回0-6代表周一到周日，需要调整索引
+        weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
         weekday_zh = weekdays[now.weekday()]
         time_str = time_str.replace(now.strftime("%a"), weekday_zh)
         self.time_label.setText(time_str)
@@ -317,9 +318,15 @@ class FloatingWindow(QWidget):
             # 编辑模式下，禁用触控穿透，恢复透明度
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
             self.setWindowOpacity(0.8)
+            # 确保窗口标志正确设置以支持拖动
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+            self.show()
         else:
             # 非编辑模式下，启用触控穿透
             self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+            # 恢复原始窗口标志
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput)
+            self.show()
     
     def snap_to_edge(self):
         """吸附到屏幕边缘"""
