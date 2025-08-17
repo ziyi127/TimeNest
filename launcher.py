@@ -57,16 +57,18 @@ def activate_virtual_environment() -> bool:
     """激活虚拟环境"""
     print_status("激活虚拟环境...")
     
+    # 实际上不需要显式激活虚拟环境，因为我们会直接使用虚拟环境中的 Python 解释器
+    # 这里只是检查虚拟环境是否存在
     if platform.system() == "Windows":
-        activate_script = Path("venv/Scripts/activate.bat")
+        python_path = Path("venv/Scripts/python.exe")
     else:
-        activate_script = Path("venv/bin/activate")
+        python_path = Path("venv/bin/python")
     
-    if not activate_script.exists():
-        print_status("错误: 虚拟环境激活脚本不存在")
+    if not python_path.exists():
+        print_status("错误: 虚拟环境中的 Python 解释器不存在")
         return False
     
-    # 在子进程中激活虚拟环境并执行命令
+    print_status("虚拟环境已就绪")
     return True
 
 
@@ -75,25 +77,17 @@ def install_dependencies() -> bool:
     print_status("检查并安装依赖项...")
     
     try:
-        # 检查是否在虚拟环境中
-        in_venv = hasattr(sys, 'real_prefix') or (
-            hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
-        )
-        
-        if not in_venv:
-            # 如果没有在虚拟环境中，使用虚拟环境的 pip
-            if platform.system() == "Windows":
-                pip_path = Path("venv/Scripts/pip.exe")
-            else:
-                pip_path = Path("venv/bin/pip")
-            
-            if not pip_path.exists():
-                print_status("错误: 未找到 pip")
-                return False
-            
-            pip_cmd = [str(pip_path)]
+        # 使用虚拟环境中的 pip
+        if platform.system() == "Windows":
+            pip_path = Path("venv/Scripts/pip.exe")
         else:
-            pip_cmd = [sys.executable, "-m", "pip"]
+            pip_path = Path("venv/bin/pip")
+        
+        if not pip_path.exists():
+            print_status("错误: 未找到 pip")
+            return False
+        
+        pip_cmd = [str(pip_path)]
         
         # 安装依赖项
         subprocess.run(pip_cmd + ["install", "-r", "requirements.txt"], check=True)
@@ -132,7 +126,7 @@ def start_application() -> bool:
     print_status("启动 TimeNest 应用程序...")
     
     try:
-        # 使用虚拟环境中的 Python 运行 frontend/main.py
+        # 使用虚拟环境中的 Python 运行 main.py
         if platform.system() == "Windows":
             python_path = Path("venv/Scripts/python.exe")
         else:
@@ -143,8 +137,8 @@ def start_application() -> bool:
             print_status("错误: 虚拟环境中的 Python 解释器不存在")
             return False
         
-        # 使用虚拟环境中的 Python 运行 frontend/main.py，并设置工作目录
-        subprocess.run([str(python_path), "frontend/main.py"], cwd=".", check=True)
+        # 使用虚拟环境中的 Python 运行 main.py，并设置工作目录
+        subprocess.run([str(python_path), "main.py"], cwd=".", check=True)
         print_status("TimeNest 应用程序已启动")
         return True
     except subprocess.CalledProcessError as e:

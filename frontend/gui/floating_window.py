@@ -57,9 +57,12 @@ class FloatingWindow(QWidget):
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 3  # 屏幕中上部
 
+        # 获取窗口位置设置，如果不存在则使用默认值
+        window_position = self.app.settings.get("window_position", {"x": 100, "y": 100})
+        
         # 如果是首次启动（使用默认设置），则设置为屏幕中上部
-        if (self.app.settings["window_position"]["x"] == 100 and 
-            self.app.settings["window_position"]["y"] == 100):
+        if (window_position["x"] == 100 and 
+            window_position["y"] == 100):
             self.setGeometry(x, y, window_width, window_height)
             # 更新设置
             self.app.settings["window_position"] = {
@@ -70,8 +73,8 @@ class FloatingWindow(QWidget):
         else:
             # 否则使用用户之前保存的位置
             self.setGeometry(
-                self.app.settings["window_position"]["x"],
-                self.app.settings["window_position"]["y"],
+                window_position["x"],
+                window_position["y"],
                 window_width,
                 window_height
             )
@@ -141,7 +144,8 @@ class FloatingWindow(QWidget):
         # 数据更新计时器
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.update_data)
-        self.update_timer.start(self.app.settings["update_interval"])
+        update_interval = self.app.settings.get("update_interval", 1000)
+        self.update_timer.start(update_interval)
 
         # 更新时间和状态
         self.update_time()
