@@ -150,7 +150,10 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
             self.toggle_window_action.setText("显示悬浮窗")
         else:
             self.app.floating_window.show()
-            self.app.floating_window.raise_()
+            # 只在需要时才激活窗口
+            if not self.app.floating_window.isActiveWindow():
+                self.app.floating_window.raise_()
+                self.app.floating_window.activateWindow()
             self.toggle_window_action.setText("隐藏悬浮窗")
     
     def update_toggle_action_text(self):

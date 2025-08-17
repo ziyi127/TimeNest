@@ -34,19 +34,34 @@ class APIClient:
         self.base_url = base_url
         self.session = requests.Session()
         
-        # 配置重试策略
+        # 优化的HTTP重试机制
         retry_strategy = Retry(
             total=3,
-            backoff_factor=1,
+            backoff_factor=0.5,  # 减少退避时间
             status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
         
+        # 设置连接池参数
+        adapter = HTTPAdapter(pool_connections=5, pool_maxsize=10)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        
         # 缓存机制
         self.cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl = timedelta(minutes=5)  # 5分钟缓存
+        # 为不同类型的数据设置不同的缓存TTL
+        self.cache_ttls = {
+            'courses': timedelta(minutes=30),      # 课程信息变化较少，缓存30分钟
+            'schedules': timedelta(minutes=10),     # 课表信息变化中等，缓存10分钟
+            'temp_changes': timedelta(minutes=2),   # 临时换课记录变化频繁，缓存2分钟
+            'settings': timedelta(minutes=60),      # 设置信息变化较少，缓存60分钟
+            'today_schedule': timedelta(minutes=5), # 今日课表信息变化中等，缓存5分钟
+            'weather': timedelta(minutes=30)        # 天气信息变化较少，缓存30分钟
+        }
+        self.default_cache_ttl = timedelta(minutes=5)  # 默认缓存时间
     
     def _is_cache_valid(self, cache_key: str) -> bool:
         """检查缓存是否有效"""
@@ -54,7 +69,9 @@ class APIClient:
             return False
         
         cached_time = self.cache[cache_key]['timestamp']
-        return datetime.now() - cached_time < self.cache_ttl
+        # 使用特定数据类型的缓存TTL，如果没有设置则使用默认TTL
+        cache_ttl = self.cache_ttls.get(cache_key, self.default_cache_ttl)
+        return datetime.now() - cached_time < cache_ttl
     
     def _get_from_cache(self, cache_key: str) -> Optional[Any]:
         """从缓存获取数据"""

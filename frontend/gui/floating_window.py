@@ -38,6 +38,8 @@ class FloatingWindow(QWidget):
         self.cached_schedule = None
         # 上次更新时间
         self.last_update_time = None
+        # 动态更新频率（秒）
+        self.update_frequency = 60
         self.initUI()
         # 确保非编辑模式下启用触控穿透
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -146,9 +148,8 @@ class FloatingWindow(QWidget):
         # 数据更新计时器
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.update_data)
-        # 将更新间隔从1秒调整为5秒，减少频繁请求
-        update_interval = self.app.settings.get("update_interval", 5000)
-        self.update_timer.start(update_interval)
+        # 设置初始更新频率
+        self.update_timer.start(self.update_frequency * 1000)
 
         # 更新时间和状态
         self.update_time()
@@ -203,13 +204,13 @@ class FloatingWindow(QWidget):
 
     def update_data(self):
         """更新数据"""
-        # 每5分钟才从API获取一次最新数据，减少频繁请求
+        # 根据动态频率更新数据
         from datetime import datetime, timedelta
         
         # 检查是否需要更新数据
         should_update = (
             self.last_update_time is None or 
-            datetime.now() - self.last_update_time > timedelta(minutes=5)
+            datetime.now() - self.last_update_time > timedelta(seconds=self.update_frequency)
         )
         
         if should_update:
@@ -219,13 +220,37 @@ class FloatingWindow(QWidget):
         # 更新缓存的今日课程表数据
         self.cached_schedule = self.app.get_today_schedule()
         self.update_status()
+        
+        # 调整更新频率
+        self.adjust_update_frequency()
+    
+    def adjust_update_frequency(self):
+        """根据系统负载和数据变化情况动态调整更新频率"""
+        # TODO: 实现动态调整更新频率的逻辑
+        # 这里可以根据系统负载、数据变化频率等因素来调整更新频率
+        # 暂时保持固定频率
+        pass
+    
+    def partial_update(self, data_type: str):
+        """局部更新特定类型的数据"""
+        try:
+            if data_type == "status":
+                self.update_status()
+            elif data_type == "time":
+                self.update_time()
+        except Exception as e:
+            print(f"局部更新{data_type}时出错: {e}")
 
     def start_fade_out(self):
         """开始淡出动画并隐藏窗口"""
-        # 动态设置动画起始值为当前透明度
-        self.opacity_animation.setStartValue(self.windowOpacity())
-        self.opacity_animation.finished.connect(self.hide)
-        self.opacity_animation.start()
+        # 只在非编辑模式下执行淡出动画
+        if not self.edit_mode:
+            # 动态设置动画起始值为当前透明度
+            self.opacity_animation.setStartValue(self.windowOpacity())
+            self.opacity_animation.setDuration(300)  # 缩短动画时间
+            self.opacity_animation.setEasingCurve(QEasingCurve.Type.Linear)  # 使用线性动画曲线
+            self.opacity_animation.finished.connect(self.hide)
+            self.opacity_animation.start()
         
     def show(self):
         """show方法，确保在显示时更新托盘菜单项文本"""
