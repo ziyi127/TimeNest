@@ -63,6 +63,18 @@ class APIClient:
         }
         self.default_cache_ttl = timedelta(minutes=5)  # 默认缓存时间
     
+    def _clear_cache(self) -> None:
+        """清除所有缓存"""
+        self.cache.clear()
+        logger.debug("已清除所有缓存")
+    
+    def _clear_cache_by_prefix(self, prefix: str):
+        """根据前缀清除缓存"""
+        keys_to_remove = [key for key in self.cache.keys() if key.startswith(prefix)]
+        for key in keys_to_remove:
+            del self.cache[key]
+        logger.debug(f"已清除前缀为{prefix}的缓存")
+    
     def _is_cache_valid(self, cache_key: str) -> bool:
         """检查缓存是否有效"""
         if cache_key not in self.cache:
@@ -85,10 +97,6 @@ class APIClient:
             'data': data,
             'timestamp': datetime.now()
         }
-    
-    def _clear_cache(self) -> None:
-        """清除所有缓存"""
-        self.cache.clear()
     
     def get_courses(self) -> List[Dict[str, Any]]:
         """获取所有课程"""
@@ -258,13 +266,13 @@ class APIClient:
             return {}
     
     def save_settings(self, settings: Dict[str, Any]) -> bool:
-        """保存设置"""
+        """保存用户设置"""
         try:
-            response = self.session.put(f"{self.base_url}/settings", json=settings)
+            response = self.session.put(f"{self.base_url}/settings/settings", json=settings)
             response.raise_for_status()
             
-            # 清除缓存
-            self._clear_cache()
+            # 只清除设置相关的缓存
+            self._clear_cache_by_prefix("settings_")
             return True
         except requests.RequestException as e:
             logger.error(f"保存设置失败: {e}")

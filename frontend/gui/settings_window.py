@@ -212,28 +212,52 @@ class SettingsWindow(QDialog):
 
     def save_settings(self):
         """保存设置"""
-        # 更新设置数据
-        self.app.settings["floating_window"] = {
-            "transparency": self.transparency_slider.value(),
-            "hide_tray_menu": not self.auto_hide_checkbox.isChecked(),
-            "auto_hide_threshold": self.auto_hide_threshold_slider.value(),
-            "remember_position": self.remember_position_checkbox.isChecked(),
-            "snap_to_edge": self.snap_to_edge_checkbox.isChecked(),
-            "snap_priority": self.snap_priority_combo.currentText(),
-            "weather_display": self.weather_display_combo.currentText(),
-            "temp_course_style": self.temp_course_style_combo.currentText()
-        }
-        
-        self.app.settings["update_interval"] = self.update_interval_slider.value()
-        
-        # 保存设置
-        self.app.save_data()
-        
-        # 发出设置保存信号
-        self.settings_saved.emit()
-        
-        # 显示成功消息
-        QMessageBox.information(self, "成功", "设置已保存")
-        
-        # 关闭窗口
-        self.accept()
+        try:
+            # 收集变更的设置
+            changed_settings = {}
+            
+            # 检查悬浮窗设置是否有变更
+            current_floating_settings = self.app.settings.get("floating_window", {})
+            new_floating_settings = {
+                "transparency": self.transparency_slider.value(),
+                "hide_tray_menu": not self.auto_hide_checkbox.isChecked(),
+                "auto_hide_threshold": self.auto_hide_threshold_slider.value(),
+                "remember_position": self.remember_position_checkbox.isChecked(),
+                "snap_to_edge": self.snap_to_edge_checkbox.isChecked(),
+                "snap_priority": self.snap_priority_combo.currentText(),
+                "weather_display": self.weather_display_combo.currentText(),
+                "temp_course_style": self.temp_course_style_combo.currentText()
+            }
+            
+            # 只有当设置发生变化时才添加到变更字典中
+            if new_floating_settings != current_floating_settings:
+                changed_settings["floating_window"] = new_floating_settings
+            
+            # 检查更新间隔是否有变更
+            new_update_interval = self.update_interval_slider.value()
+            if new_update_interval != self.app.settings.get("update_interval", 1000):
+                changed_settings["update_interval"] = new_update_interval
+            
+            # 如果有变更的设置，则保存
+            if changed_settings:
+                # 更新应用设置
+                for key, value in changed_settings.items():
+                    self.app.settings[key] = value
+                
+                # 保存设置
+                self.app.save_data()
+                
+                # 发出设置保存完成信号
+                self.settings_saved.emit()
+                
+                # 显示成功消息
+                QMessageBox.information(self, "成功", "设置已保存")
+            else:
+                # 没有变更，直接显示消息
+                QMessageBox.information(self, "提示", "没有检测到设置变更")
+            
+            # 关闭窗口
+            self.accept()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"保存设置时出错: {str(e)}")

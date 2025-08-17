@@ -330,5 +330,9 @@ class UserService:
         
         # 保存配置
         self._save_user_settings()
+        
+        # 清空变更字段记录
+        self.user_settings.clear_changed_fields()
+        
         logger.info("用户设置更新成功")
         return self.user_settings

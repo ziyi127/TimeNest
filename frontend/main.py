@@ -74,8 +74,30 @@ class TimeNestFrontendApp(QApplication):
     
     def load_data(self):
         """加载数据"""
-        # 使用增量加载方法，只加载发生变化的数据
-        self.async_data_loader.load_incremental_data_with_local_fallback()
+        try:
+            logger.info("开始加载数据")
+            
+            # 使用增量加载并回退到本地存储
+            data = self.async_data_loader.load_incremental_data_async()
+            
+            # 更新应用数据
+            if 'courses' in data:
+                self.courses = data['courses']
+            if 'schedules' in data:
+                self.schedules = data['schedules']
+            if 'settings' in data:
+                self.settings = data['settings']
+            if 'temp_changes' in data:
+                self.temp_changes = data['temp_changes']
+            
+            logger.info("数据加载完成")
+            
+            # 发出数据加载完成信号
+            self.data_loaded.emit()
+        except Exception as e:
+            logger.error(f"加载数据时出错: {e}")
+            # 显示错误消息
+            self.show_message("错误", f"加载数据时出错: {str(e)}", QMessageBox.Critical)
     
     def on_data_loaded(self, data_type: str, data: Any, success: bool, error: str):
         """处理数据加载完成事件"""

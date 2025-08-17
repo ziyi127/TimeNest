@@ -148,16 +148,65 @@ class AsyncDataLoader(QObject):
         for data_type in data_types:
             self.load_data_async(data_type)
     
-    def load_incremental_data_async(self, data_types: List[str] = None):
-        """增量异步加载数据，只加载发生变化的数据类型"""
+    def load_incremental_data_async(self, data_types: List[str] = None) -> Dict[str, Any]:
+        """增量加载数据（异步）
+        只加载本地不存在或已过期的数据
+        """
         if data_types is None:
-            data_types = ["courses", "schedules", "temp_changes", "settings", "today_schedule", "weather"]
+            data_types = ['courses', 'schedules', 'settings', 'temp_changes']
         
-        # TODO: 实现增量加载逻辑，检查数据是否发生变化
-        # 这里可以添加检查数据变化的逻辑，例如通过ETag或Last-Modified头
-        # 暂时先调用普通异步加载
+        results = {}
+        
+        # 检查本地数据
+        local_data = self._load_from_local_storage()
+        
+        # 确定需要加载的数据类型
+        data_types_to_load = []
         for data_type in data_types:
-            self.load_data_async(data_type)
+            cache_key = f"{data_type}_data"
+            if cache_key not in local_data or not self._is_data_fresh(data_type, local_data[cache_key]['timestamp']):
+                data_types_to_load.append(data_type)
+        
+        # 如果没有需要加载的数据，直接返回本地数据
+        if not data_types_to_load:
+            return {data_type: local_data.get(f"{data_type}_data", {}).get('data') for data_type in data_types}
+        
+        # 加载需要更新的数据
+        for data_type in data_types_to_load:
+            try:
+                if data_type == 'courses':
+                    results[data_type] = self.api_client.get_courses()
+                elif data_type == 'schedules':
+                    results[data_type] = self.api_client.get_schedules()
+                elif data_type == 'settings':
+                    results[data_type] = self.api_client.get_settings()
+                elif data_type == 'temp_changes':
+                    results[data_type] = self.api_client.get_temp_changes()
+                else:
+                    logger.warning(f"未知的数据类型: {data_type}")
+                    results[data_type] = []
+            except Exception as e:
+                logger.error(f"加载{data_type}数据时出错: {e}")
+                # 如果加载失败，使用本地数据
+                results[data_type] = local_data.get(f"{data_type}_data", {}).get('data', [])
+        
+        # 更新本地存储
+        for data_type, data in results.items():
+            local_data[f"{data_type}_data"] = {
+                'data': data,
+                'timestamp': datetime.now()
+            }
+        self._save_to_local_storage(local_data)
+        
+        # 返回所有请求的数据
+        final_results = {}
+        for data_type in data_types:
+            if data_type in results:
+                final_results[data_type] = results[data_type]
+            else:
+                final_results[data_type] = local_data.get(f"{data_type}_data", {}).get('data', [])
+        
+        return final_results
     
     def load_data_with_local_fallback(self, data_type: str):
         """加载数据，优先从本地存储加载，然后在后台更新"""
