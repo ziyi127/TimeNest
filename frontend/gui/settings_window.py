@@ -170,6 +170,17 @@ class SettingsWindow(QDialog):
         """初始化系统设置标签页"""
         layout = QVBoxLayout(self.system_tab)
 
+        # 数据设置
+        data_group = QGroupBox("数据设置")
+        data_layout = QFormLayout(data_group)
+        
+        # 从后端获取数据目录设置
+        data_dir = self.app.settings.get("data_dir", "./data")
+        self.data_dir_label = QLabel(data_dir)
+        data_layout.addRow("数据目录:", self.data_dir_label)
+        
+        layout.addWidget(data_group)
+
         # 更新间隔设置
         update_group = QGroupBox("更新设置")
         update_layout = QFormLayout(update_group)
