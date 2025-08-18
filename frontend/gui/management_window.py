@@ -29,6 +29,7 @@ from PySide6.QtGui import QColor
 # 导入对话框
 from frontend.gui.dialogs.course_edit_dialog import CourseEditDialog
 from frontend.gui.dialogs.schedule_edit_dialog import ScheduleEditDialog
+from frontend.gui.school_mode_window_simple import SchoolModeWindowSimple
 
 
 class ManagementWindow(QWidget):

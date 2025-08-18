@@ -3,7 +3,7 @@
 
 """
 TimeNest - 智能课程表桌面应用
-系统托盘图标类（前端专用）
+系统托盘图标类（前端专用） - 修复版本
 """
 
 from pathlib import Path
@@ -12,9 +12,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from frontend.main import TimeNestFrontendApp
 
-from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication, QStyle
+from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import Qt
 
 # 导入GUI组件
 from frontend.gui.management_window import ManagementWindow
@@ -39,7 +38,7 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         if icon_path.exists():
             self.setIcon(QIcon(str(icon_path)))
         else:
-            self.setIcon(QIcon.fromTheme("computer", QApplication.style().standardIcon(QStyle.SP_ComputerIcon)))
+            self.setIcon(QIcon.fromTheme("computer", QApplication.style().standardIcon(42)))  # SP_ComputerIcon
         
         # 创建右键菜单
         self.context_menu = QMenu()
@@ -94,7 +93,7 @@ class FrontendSystemTrayIcon(QSystemTrayIcon):
         # 初始化切换悬浮窗动作的文本
         self.update_toggle_action_text()
 
-    def on_activated(self, reason: QSystemTrayIcon.ActivationReason):
+    def on_activated(self, reason):
         """处理托盘图标激活事件"""
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             # 左键单击切换悬浮窗显示/隐藏
