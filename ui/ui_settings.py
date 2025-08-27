@@ -1,7 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, colorchooser
+from tkinter import ttk, colorchooser, filedialog, messagebox
 import json
 import os
+import platform
+import logging
+from pathlib import Path
 
 class UISettings:
     def __init__(self, parent, drag_window):
@@ -9,49 +12,84 @@ class UISettings:
         self.drag_window = drag_window
         self.window = tk.Toplevel(parent)
         self.window.title("UI设置")
-        self.window.geometry("400x500")
+        self.window.geometry("450x600")
+        self.window.resizable(False, False)
         
         # 初始化设置
         self.settings = {
-            "background_color": "white",
-            "text_color": "black",
-            "transparency": 100,
+            "theme": "dark",
+            "transparency": 85,
             "position_x": 100,
             "position_y": 100,
             "show_next_class": True,
-            "show_countdown": True
+            "show_countdown": True,
+            "background_color": "#2b2b2b",
+            "text_color": "#ffffff"
         }
         
         self.create_widgets()
         self.load_settings()
     
     def create_widgets(self):
-        # 创建设置项
+        # 创建主框架
+        main_frame = tk.Frame(self.window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # 主题设置
+        theme_frame = tk.LabelFrame(main_frame, text="主题设置", padx=10, pady=10)
+        theme_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        self.theme_var = tk.StringVar(value=self.settings["theme"])
+        theme_options = [
+            ("深色主题", "dark"),
+            ("浅色主题", "light"), 
+            ("玻璃主题", "glass")
+        ]
+        
+        for text, value in theme_options:
+            tk.Radiobutton(theme_frame, text=text, value=value, 
+                          variable=self.theme_var, command=self.on_theme_change).pack(anchor=tk.W)
+        
+        # 外观设置
+        appearance_frame = tk.LabelFrame(main_frame, text="外观设置", padx=10, pady=10)
+        appearance_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # 透明度设置
+        transparency_frame = tk.Frame(appearance_frame)
+        transparency_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        tk.Label(transparency_frame, text="透明度:").pack(side=tk.LEFT)
+        self.transparency_scale = tk.Scale(transparency_frame, from_=30, to=100, 
+                                         orient=tk.HORIZONTAL, command=self.on_transparency_change)
+        self.transparency_scale.set(self.settings["transparency"])
+        self.transparency_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        
+        self.transparency_label = tk.Label(appearance_frame, text=f"{self.settings['transparency']}%")
+        self.transparency_label.pack()
+        
+        # 颜色设置（根据主题自动调整或自定义）
+        self.color_frame = tk.LabelFrame(main_frame, text="自定义颜色", padx=10, pady=10)
+        self.color_frame.pack(fill=tk.X, pady=(0, 10))
         
         # 背景颜色设置
-        bg_frame = tk.Frame(self.window)
-        bg_frame.pack(fill=tk.X, padx=10, pady=5)
+        bg_frame = tk.Frame(self.color_frame)
+        bg_frame.pack(fill=tk.X, pady=(0, 5))
         
         tk.Label(bg_frame, text="背景颜色:").pack(side=tk.LEFT)
-        self.bg_color_btn = tk.Button(bg_frame, text="选择颜色", command=self.choose_bg_color)
+        self.bg_color_btn = tk.Button(bg_frame, text="选择颜色", command=self.choose_bg_color,
+                                    bg=self.settings["background_color"], 
+                                    fg=self.settings["text_color"])
         self.bg_color_btn.pack(side=tk.RIGHT)
         
         # 文字颜色设置
-        text_frame = tk.Frame(self.window)
-        text_frame.pack(fill=tk.X, padx=10, pady=5)
+        text_frame = tk.Frame(self.color_frame)
+        text_frame.pack(fill=tk.X, pady=(0, 5))
         
         tk.Label(text_frame, text="文字颜色:").pack(side=tk.LEFT)
-        self.text_color_btn = tk.Button(text_frame, text="选择颜色", command=self.choose_text_color)
+        self.text_color_btn = tk.Button(text_frame, text="选择颜色", command=self.choose_text_color,
+                                      bg=self.settings["text_color"], 
+                                      fg=self.settings["background_color"])
         self.text_color_btn.pack(side=tk.RIGHT)
-        
-        # 透明度设置
-        transparency_frame = tk.Frame(self.window)
-        transparency_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        tk.Label(transparency_frame, text="透明度:").pack(side=tk.LEFT)
-        self.transparency_scale = tk.Scale(transparency_frame, from_=0, to=100, orient=tk.HORIZONTAL, command=self.on_transparency_change)
-        self.transparency_scale.set(self.settings["transparency"])
-        self.transparency_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
         
         # 位置设置
         position_frame = tk.Frame(self.window)
@@ -110,6 +148,9 @@ class UISettings:
                 with open(settings_file, 'r', encoding='utf-8') as f:
                     self.settings = json.load(f)
                 
+                # 更新主题选择
+                self.theme_var.set(self.settings.get("theme", "dark"))
+                
                 # 更新输入框的值
                 self.x_entry.delete(0, tk.END)
                 self.x_entry.insert(0, str(self.settings["position_x"]))
@@ -119,10 +160,35 @@ class UISettings:
                 # 更新预览框的样式
                 self.preview_frame.config(bg=self.settings["background_color"])
                 self.transparency_scale.set(self.settings["transparency"])
+                self.transparency_label.config(text=f"{self.settings['transparency']}%")
                 self.show_next_class_var.set(self.settings["show_next_class"])
                 self.show_countdown_var.set(self.settings["show_countdown"])
+                
+                # 更新颜色按钮
+                self.bg_color_btn.config(bg=self.settings["background_color"])
+                self.text_color_btn.config(bg=self.settings["text_color"])
+                
+                # 根据主题启用/禁用自定义颜色
+                self._update_color_frame_state()
+                
         except Exception as e:
             print(f"加载设置时出错: {e}")
+    
+    def _update_color_frame_state(self):
+        """根据主题更新颜色框架状态"""
+        theme = self.theme_var.get()
+        if theme in ["dark", "light", "glass"]:
+            # 预设主题，禁用自定义颜色
+            for child in self.color_frame.winfo_children():
+                for widget in child.winfo_children():
+                    if isinstance(widget, tk.Button):
+                        widget.config(state=tk.DISABLED)
+        else:
+            # 自定义主题，启用颜色选择
+            for child in self.color_frame.winfo_children():
+                for widget in child.winfo_children():
+                    if isinstance(widget, tk.Button):
+                        widget.config(state=tk.NORMAL)
     
     def save_settings(self):
         """保存设置"""
@@ -132,11 +198,14 @@ class UISettings:
             settings_file = os.path.join(project_path, "timetable_ui_settings.json")
             
             # 更新设置值
+            self.settings["theme"] = self.theme_var.get()
             self.settings["position_x"] = int(self.x_entry.get())
             self.settings["position_y"] = int(self.y_entry.get())
             self.settings["transparency"] = self.transparency_scale.get()
             self.settings["show_next_class"] = self.show_next_class_var.get()
             self.settings["show_countdown"] = self.show_countdown_var.get()
+            self.settings["background_color"] = self.settings["background_color"]
+            self.settings["text_color"] = self.settings["text_color"]
             
             with open(settings_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=2)
@@ -147,6 +216,22 @@ class UISettings:
         """应用设置"""
         # 保存设置
         self.save_settings()
+        
+        # 应用主题
+        theme = self.settings["theme"]
+        if hasattr(self.drag_window, '_switch_theme'):
+            self.drag_window._switch_theme(theme)
+        
+        # 根据主题设置颜色
+        if theme == "dark":
+            self.settings["background_color"] = "#2b2b2b"
+            self.settings["text_color"] = "#ffffff"
+        elif theme == "light":
+            self.settings["background_color"] = "#ffffff"
+            self.settings["text_color"] = "#000000"
+        elif theme == "glass":
+            self.settings["background_color"] = "#f0f0f0"
+            self.settings["text_color"] = "#333333"
         
         # 应用背景颜色
         self.drag_window.configure(bg=self.settings["background_color"])
@@ -186,7 +271,8 @@ class UISettings:
             self.drag_window.next_class_label.pack_forget()
         
         # 重新设置鼠标穿透状态以确保背景色正确显示
-        self.drag_window.set_draggable(self.drag_window.is_draggable)
+        if hasattr(self.drag_window, 'set_draggable'):
+            self.drag_window.set_draggable(self.drag_window.is_draggable)
     
     def save_and_close(self):
         """保存设置并关闭窗口"""
@@ -207,13 +293,45 @@ class UISettings:
             self.settings["text_color"] = color
     
     def on_transparency_change(self, value):
-        """透明度改变事件"""
-        # 实时预览透明度变化
-        alpha = int(value) / 100.0
+        """透明度变化时的处理"""
         try:
+            alpha = int(value) / 100.0
+            self.transparency_label.config(text=f"{value}%")
             self.drag_window.wm_attributes("-alpha", alpha)
         except Exception as e:
-            print(f"设置透明度时出错: {e}")
+            print(f"更新透明度时出错: {e}")
+    
+    def on_theme_change(self):
+        """主题变化时的处理"""
+        theme = self.theme_var.get()
+        self.settings["theme"] = theme
+        
+        # 根据主题自动设置颜色
+        if theme == "dark":
+            self.settings["background_color"] = "#2b2b2b"
+            self.settings["text_color"] = "#ffffff"
+        elif theme == "light":
+            self.settings["background_color"] = "#ffffff"
+            self.settings["text_color"] = "#000000"
+        elif theme == "glass":
+            self.settings["background_color"] = "#f0f0f0"
+            self.settings["text_color"] = "#333333"
+        
+        # 更新颜色按钮显示
+        self.bg_color_btn.config(bg=self.settings["background_color"], 
+                               fg=self.settings["text_color"])
+        self.text_color_btn.config(bg=self.settings["text_color"], 
+                                   fg=self.settings["background_color"])
+        
+        # 更新预览框
+        self.preview_frame.config(bg=self.settings["background_color"])
+        
+        # 更新颜色框架状态
+        self._update_color_frame_state()
+        
+        # 立即应用主题
+        if hasattr(self.drag_window, '_switch_theme'):
+            self.drag_window._switch_theme(theme)
 
     def start_drag(self, event):
         """开始拖拽预览框"""

@@ -6,6 +6,10 @@ import os
 import tkinter as tk
 import platform
 import sys
+import logging
+import threading
+import time
+from pathlib import Path
 
 # 导入课程表设置界面
 try:
@@ -30,6 +34,8 @@ class TrayManager:
         self.allow_drag = tk.BooleanVar(value=False)
         self.timetable_settings = None
         self.ui_settings = None
+        self.logger = logging.getLogger(__name__)
+        self.platform = platform.system().lower()
         
         self.create_icon()
         
@@ -38,33 +44,62 @@ class TrayManager:
             self.root_window.set_draggable(self.allow_drag.get())
     
     def create_image(self):
-        """创建一个简单的托盘图标"""
+        """创建一个简单的托盘图标（跨平台兼容）"""
         width = 64
         height = 64
-        image = Image.new('RGB', (width, height), (255, 255, 255))
+        
+        # 根据平台选择合适的图标颜色
+        if self.platform == "darwin":  # macOS
+            bg_color = (0, 0, 0, 0)  # 透明背景
+            icon_color = (0, 122, 255)  # macOS系统蓝色
+        elif self.platform == "linux":
+            bg_color = (255, 255, 255)  # 白色背景
+            icon_color = (53, 132, 228)  # Linux系统蓝色
+        else:  # Windows
+            bg_color = (255, 255, 255)  # 白色背景
+            icon_color = (0, 0, 0)  # 黑色
+            
+        image = Image.new('RGBA', (width, height), bg_color)
         dc = ImageDraw.Draw(image)
-        # 绘制一个简单的时钟图标
-        dc.ellipse((10, 10, 54, 54), outline=(0, 0, 0), width=2)
-        dc.line((32, 32, 32, 15), fill=(0, 0, 0), width=2)  # 时针
-        dc.line((32, 32, 45, 32), fill=(0, 0, 0), width=2)  # 分针
+        
+        # 绘制时钟图标
+        dc.ellipse((8, 8, 56, 56), outline=icon_color, width=3)
+        dc.line((32, 32, 32, 16), fill=icon_color, width=3)  # 时针
+        dc.line((32, 32, 48, 32), fill=icon_color, width=2)  # 分针
+        dc.ellipse((30, 30, 34, 34), fill=icon_color)  # 中心点
+        
         return image
     
     def create_icon(self):
-        """创建系统托盘图标"""
+        """创建系统托盘图标（跨平台兼容）"""
         try:
-            # 检查图标文件路径
-            icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'TKtimetable.ico')
+            # 获取图标文件路径（使用pathlib处理跨平台路径）
+            base_path = Path(__file__).parent.parent
             
-            if os.path.exists(icon_path):
+            # 平台特定的图标文件
+            icon_files = {
+                'windows': 'TKtimetable.ico',
+                'darwin': 'TKtimetable.icns',  # macOS
+                'linux': 'TKtimetable.png'   # Linux
+            }
+            
+            icon_filename = icon_files.get(self.platform, 'TKtimetable.ico')
+            icon_path = base_path / icon_filename
+            
+            image = None
+            
+            # 尝试加载平台特定图标
+            if icon_path.exists():
                 try:
                     image = Image.open(icon_path)
+                    self.logger.info(f"加载平台特定图标: {icon_path}")
                 except Exception as e:
-                    print(f"加载图标文件失败: {e}")
-                    # 如果图标文件加载失败，使用生成的图像
-                    image = self.create_image()
-            else:
-                # 如果图标文件不存在，使用生成的图像
+                    self.logger.warning(f"加载图标文件失败: {e}")
+            
+            # 如果加载失败，使用生成的图标
+            if image is None:
                 image = self.create_image()
+                self.logger.info("使用生成的图标")
             
             # 创建菜单 - 使用英文菜单项避免编码问题
             menu = Menu(
@@ -77,34 +112,102 @@ class TrayManager:
             # 创建托盘图标（使用英文标题避免编码问题）
             self.icon = pystray.Icon("Timetable", image, "Timetable", menu)
             
-            # 启动托盘图标 - 使用更简单的方式
-            try:
-                # 直接运行托盘图标，不尝试detached模式
-                import threading
-                def run_icon():
-                    try:
-                        self.icon.run()
-                        print("托盘图标运行中...")
-                    except Exception as e:
-                        print(f"托盘图标运行失败: {e}")
-                
-                # 在守护线程中运行托盘图标
-                icon_thread = threading.Thread(target=run_icon, daemon=True)
-                icon_thread.start()
-                print("托盘图标已启动")
-                
-                # 添加延迟确保托盘图标有时间初始化
-                import time
-                time.sleep(0.5)
-                
-            except Exception as e:
-                print(f"启动托盘图标时出错: {e}")
-                print("托盘图标启动失败，但程序将继续运行")
+            # 启动托盘图标（跨平台兼容）
+            self._start_icon_platform_specific()
             
         except Exception as e:
-            print(f"创建托盘图标时出错: {e}")
+            self.logger.error(f"创建托盘图标时出错: {e}")
             # 即使托盘图标创建失败，程序也应该继续运行
             print("托盘图标创建失败，但程序将继续运行")
+    
+    def _start_icon_platform_specific(self):
+        """平台特定的托盘图标启动方式"""
+        try:
+            # 根据平台选择合适的启动方式
+            if self.platform == "darwin":  # macOS
+                self._start_icon_macos()
+            elif self.platform == "linux":
+                self._start_icon_linux()
+            else:  # Windows
+                self._start_icon_windows()
+        except Exception as e:
+            self.logger.error(f"平台特定启动失败: {e}")
+            self._start_icon_fallback()
+    
+    def _start_icon_windows(self):
+        """Windows平台托盘图标启动"""
+        try:
+            # Windows使用标准方式
+            def run_icon():
+                try:
+                    self.icon.run()
+                    self.logger.info("Windows托盘图标运行中...")
+                except Exception as e:
+                    self.logger.error(f"Windows托盘图标运行失败: {e}")
+            
+            icon_thread = threading.Thread(target=run_icon, daemon=True)
+            icon_thread.start()
+            self.logger.info("Windows托盘图标已启动")
+            
+        except Exception as e:
+            self.logger.error(f"Windows托盘启动失败: {e}")
+            raise
+    
+    def _start_icon_macos(self):
+        """macOS平台托盘图标启动"""
+        try:
+            # macOS使用标准方式
+            def run_icon():
+                try:
+                    self.icon.run()
+                    self.logger.info("macOS托盘图标运行中...")
+                except Exception as e:
+                    self.logger.error(f"macOS托盘图标运行失败: {e}")
+            
+            icon_thread = threading.Thread(target=run_icon, daemon=True)
+            icon_thread.start()
+            self.logger.info("macOS托盘图标已启动")
+            
+        except Exception as e:
+            self.logger.error(f"macOS托盘启动失败: {e}")
+            raise
+    
+    def _start_icon_linux(self):
+        """Linux平台托盘图标启动"""
+        try:
+            # Linux使用标准方式
+            def run_icon():
+                try:
+                    self.icon.run()
+                    self.logger.info("Linux托盘图标运行中...")
+                except Exception as e:
+                    self.logger.error(f"Linux托盘图标运行失败: {e}")
+            
+            icon_thread = threading.Thread(target=run_icon, daemon=True)
+            icon_thread.start()
+            self.logger.info("Linux托盘图标已启动")
+            
+        except Exception as e:
+            self.logger.error(f"Linux托盘启动失败: {e}")
+            raise
+    
+    def _start_icon_fallback(self):
+        """托盘图标启动的备用方案"""
+        try:
+            # 通用的备用启动方式
+            def run_icon():
+                try:
+                    self.icon.run()
+                    self.logger.info("托盘图标备用启动方式运行中...")
+                except Exception as e:
+                    self.logger.error(f"托盘图标备用启动失败: {e}")
+            
+            icon_thread = threading.Thread(target=run_icon, daemon=True)
+            icon_thread.start()
+            self.logger.info("托盘图标备用启动方式已启动")
+            
+        except Exception as e:
+            self.logger.error(f"托盘图标所有启动方式均失败: {e}")
     
     def _start_icon(self):
         """启动托盘图标，适配不同平台"""

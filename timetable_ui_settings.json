@@ -1,9 +1,18 @@
 {
+<<<<<<< Updated upstream
   "background_color": "white",
   "text_color": "black",
   "transparency": 69,
   "position_x": 600,
   "position_y": 100,
+=======
+  "background_color": "#f0f0f0",
+  "text_color": "#333333",
+  "transparency": 100,
+  "position_x": 175,
+  "position_y": 176,
+>>>>>>> Stashed changes
   "show_next_class": true,
-  "show_countdown": true
+  "show_countdown": true,
+  "theme": "glass"
 }
