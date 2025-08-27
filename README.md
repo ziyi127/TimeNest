@@ -15,16 +15,26 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 ## 安装说明
 
 1. 确保系统已安装 Python 3.6 或更高版本
-2. 下载或克隆本项目到本地
-3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
+2. 在 Arch Linux 上安装 Tk 库：`sudo pacman -S tk`
+3. 下载或克隆本项目到本地
+4. 创建虚拟环境：`python -m venv venv`
+5. 激活虚拟环境：`source venv/bin/activate`
+6. 安装requirements.txt中所写依赖包：`pip install -r requirements.txt`
 
 ## 使用方法
 
-1. 运行 `main.py` 启动程序
+### 方法一：使用启动脚本（推荐）
+```bash
+./run.sh
+```
+
+### 方法二：手动运行
+1. 运行程序：`source venv/bin/activate && python main.py`
 2. 程序启动后会在桌面显示课程表悬浮窗
-3. 右键点击悬浮窗可打开系统托盘菜单
-4. 通过托盘菜单可以：
-   - 切换拖拽状态
+3. 悬浮窗默认处于鼠标穿透状态，不会影响其他应用程序的操作
+4. 右键点击系统托盘图标可打开菜单
+5. 通过托盘菜单可以：
+   - 切换拖拽状态（允许编辑悬浮窗位置）
    - 打开课程表设置
    - 打开UI设置
    - 退出程序

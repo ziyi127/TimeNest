@@ -50,22 +50,25 @@ class DragWindow(tk.Tk):
         """初始化透明度设置"""
         if not self.is_draggable:
             # 不允许编辑时，鼠标事件穿透到后方界面
-            # 使用更可靠的方法实现鼠标穿透
-            # 使用分层窗口技术实现鼠标穿透，同时保持背景色显示
+            # 使用透明度实现鼠标穿透
             try:
-                # 尝试使用分层窗口实现鼠标穿透
-                self.wm_attributes("-transparentcolor", "")
-                # 设置窗口为分层窗口并使用完全透明实现鼠标穿透
-                self.wm_attributes("-alpha", 0.0)
-                # 重新应用背景色和透明度
-                self.after(200, self._apply_background_and_transparency)
+                # 使用合理的透明度值，确保窗口可见但可穿透
+                alpha_value = 0.7  # 70%透明度，保持可见性
+                self.wm_attributes("-alpha", alpha_value)
+                print(f"设置窗口透明度为{alpha_value}")
             except Exception as e:
-                print(f"设置分层窗口时出错: {e}")
-                # 回退到原来的实现方式
-                self.wm_attributes("-transparentcolor", self.background_color)
-                # 确保背景色正确显示
-                self.configure(bg=self.background_color)
-                self.main_frame.configure(bg=self.background_color)
+                print(f"设置透明度时出错: {e}")
+                # 如果设置透明度失败，尝试其他方法
+                try:
+                    alpha_value = 0.8  # 80%透明度
+                    self.wm_attributes("-alpha", alpha_value)
+                    print(f"设置窗口透明度为{alpha_value}")
+                except Exception as e2:
+                    print(f"设置透明度时再次出错: {e2}")
+            # 确保背景色正确显示
+            self.configure(bg=self.background_color)
+            self.main_frame.configure(bg=self.background_color)
+            print(f"窗口背景色已设置为: {self.background_color}")
             print("初始状态：窗口已设置鼠标穿透，背景色正常显示")
         else:
             print("初始状态：窗口已启用，鼠标事件被拦截")
@@ -92,6 +95,12 @@ class DragWindow(tk.Tk):
         
         # 绑定窗口关闭事件
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+        # 打印窗口信息用于调试
+        print(f"窗口初始化完成:")
+        print(f"  位置: {self.winfo_x()}, {self.winfo_y()}")
+        print(f"  大小: {self.winfo_width()}x{self.winfo_height()}")
+        print(f"  透明度: {self.wm_attributes('-alpha')}")
         
         # 开始更新时间
         self.update_time()
@@ -155,19 +164,46 @@ class DragWindow(tk.Tk):
         # 设置鼠标穿透
         if draggable:
             # 允许编辑时，窗口拦截鼠标事件
-            self.wm_attributes("-transparentcolor", "")
+            # 设置完全不透明
+            try:
+                self.wm_attributes("-alpha", 1.0)
+                print("设置窗口完全不透明")
+            except Exception as e:
+                print(f"设置窗口完全不透明时出错: {e}")
             # 确保背景色正确显示
             self.configure(bg=self.background_color)
             self.main_frame.configure(bg=self.background_color)
             print("窗口已启用，鼠标事件被拦截")
         else:
             # 不允许编辑时，鼠标事件穿透到后方界面
-            # 使用背景色作为透明色实现鼠标穿透
-            self.wm_attributes("-transparentcolor", self.background_color)
+            # 使用透明度实现鼠标穿透
+            try:
+                # 使用合理的透明度值，确保窗口可见但可穿透
+                alpha_value = 0.7  # 70%透明度，保持可见性
+                self.wm_attributes("-alpha", alpha_value)
+                print(f"设置窗口透明度为{alpha_value}")
+            except Exception as e:
+                print(f"设置透明度时出错: {e}")
+                # 如果设置失败，尝试使用稍高一点的透明度
+                try:
+                    alpha_value = 0.8  # 80%透明度
+                    self.wm_attributes("-alpha", alpha_value)
+                    print(f"设置窗口透明度为{alpha_value}")
+                except Exception as e2:
+                    print(f"再次设置透明度时出错: {e2}")
             # 确保背景色正确显示
             self.configure(bg=self.background_color)
             self.main_frame.configure(bg=self.background_color)
+            print(f"窗口背景色已设置为: {self.background_color}")
             print("窗口已禁用，鼠标事件穿透到后方界面")
+            
+            # 打印窗口信息用于调试
+            print(f"窗口位置: {self.winfo_x()}, {self.winfo_y()}")
+            print(f"窗口大小: {self.winfo_width()}x{self.winfo_height()}")
+            try:
+                print(f"窗口透明度: {self.wm_attributes('-alpha')}")
+            except:
+                print("无法获取窗口透明度")
             
         # 强制更新窗口
         self.update()
