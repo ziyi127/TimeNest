@@ -17,9 +17,14 @@ except KeyboardInterrupt:
 except Exception as e:
     print(f"程序运行出错: {e}")
 finally:
-    # 确保程序完全退出
+    # 通过托盘管理器来退出程序
     try:
-        root.destroy()
-    except:
-        pass
-    sys.exit(0)
+        tray_manager.quit_window(None, None)
+    except Exception as e:
+        print(f"通过托盘管理器退出时出错: {e}")
+        # 如果托盘管理器退出失败，则直接销毁窗口
+        try:
+            root.destroy()
+        except:
+            pass
+        sys.exit(0)

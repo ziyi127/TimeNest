@@ -419,8 +419,6 @@ class DragWindow(tk.Tk):
                         pass
             except Exception as e:
                 print(f"解除事件绑定时出错: {e}")
-                import traceback
-                traceback.print_exc()
             
             # 保存窗口位置
             try:
@@ -429,13 +427,9 @@ class DragWindow(tk.Tk):
                 pass  # 忽略可能的异常
         except Exception as e:
             print(f"关闭窗口时出错: {e}")
-            import traceback
-            traceback.print_exc()
         finally:
             # 销毁窗口
             try:
                 self.destroy()
             except Exception as e:
                 print(f"销毁窗口时出错: {e}")
-                import traceback
-                traceback.print_exc()

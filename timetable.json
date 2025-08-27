@@ -42,7 +42,7 @@
     "wednesday": [
       {
         "start_time": "08:00",
-        "end_time": "08:40",
+        "end_time": "20:40",
         "subject": "物理",
         "teacher": "王老师",
         "classroom": "303"
@@ -51,8 +51,7 @@
         "start_time": "08:50",
         "end_time": "20:30",
         "subject": "生物",
-        "teacher": "孙老师",
-        "classroom": "E505"
+        "teacher": "孙老师"
       }
     ],
     "friday": [],
