@@ -1,0 +1,9 @@
+{
+  "background_color": "white",
+  "text_color": "black",
+  "transparency": 69,
+  "position_x": 600,
+  "position_y": 100,
+  "show_next_class": true,
+  "show_countdown": true
+}
