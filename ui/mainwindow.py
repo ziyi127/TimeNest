@@ -15,6 +15,12 @@ class DragWindow(tk.Tk):
         # 初始化可拖动状态
         self.is_draggable = False
         
+        # 初始化after任务ID列表
+        self.after_ids = []
+        
+        # 初始化更新任务ID
+        self.update_job = None
+        
         # 加载窗口位置
         self.load_window_position()
         
@@ -45,8 +51,22 @@ class DragWindow(tk.Tk):
         if not self.is_draggable:
             # 不允许编辑时，鼠标事件穿透到后方界面
             # 使用更可靠的方法实现鼠标穿透
-            self.wm_attributes("-transparentcolor", self.background_color)
-            print("初始状态：窗口已设置透明色，鼠标事件穿透到后方界面")
+            # 使用分层窗口技术实现鼠标穿透，同时保持背景色显示
+            try:
+                # 尝试使用分层窗口实现鼠标穿透
+                self.wm_attributes("-transparentcolor", "")
+                # 设置窗口为分层窗口并使用完全透明实现鼠标穿透
+                self.wm_attributes("-alpha", 0.0)
+                # 重新应用背景色和透明度
+                self.after(200, self._apply_background_and_transparency)
+            except Exception as e:
+                print(f"设置分层窗口时出错: {e}")
+                # 回退到原来的实现方式
+                self.wm_attributes("-transparentcolor", self.background_color)
+                # 确保背景色正确显示
+                self.configure(bg=self.background_color)
+                self.main_frame.configure(bg=self.background_color)
+            print("初始状态：窗口已设置鼠标穿透，背景色正常显示")
         else:
             print("初始状态：窗口已启用，鼠标事件被拦截")
         
@@ -75,6 +95,23 @@ class DragWindow(tk.Tk):
         
         # 开始更新时间
         self.update_time()
+    
+    def _apply_background_and_transparency(self):
+        """应用背景色和透明度设置"""
+        # 重新设置背景色
+        self.configure(bg=self.background_color)
+        self.main_frame.configure(bg=self.background_color)
+        self.time_label.configure(bg=self.background_color)
+        self.date_label.configure(bg=self.background_color)
+        self.class_info_label.configure(bg=self.background_color)
+        self.next_class_label.configure(bg=self.background_color)
+        
+        # 应用透明度
+        alpha = self.transparency / 100.0
+        try:
+            self.wm_attributes("-alpha", alpha)
+        except Exception as e:
+            print(f"应用透明度时出错: {e}")
     
     def load_ui_settings(self):
         """加载UI设置"""
@@ -119,11 +156,17 @@ class DragWindow(tk.Tk):
         if draggable:
             # 允许编辑时，窗口拦截鼠标事件
             self.wm_attributes("-transparentcolor", "")
+            # 确保背景色正确显示
+            self.configure(bg=self.background_color)
+            self.main_frame.configure(bg=self.background_color)
             print("窗口已启用，鼠标事件被拦截")
         else:
             # 不允许编辑时，鼠标事件穿透到后方界面
             # 使用背景色作为透明色实现鼠标穿透
             self.wm_attributes("-transparentcolor", self.background_color)
+            # 确保背景色正确显示
+            self.configure(bg=self.background_color)
+            self.main_frame.configure(bg=self.background_color)
             print("窗口已禁用，鼠标事件穿透到后方界面")
             
         # 强制更新窗口
@@ -178,7 +221,10 @@ class DragWindow(tk.Tk):
         
         # 每秒更新一次
         try:
-            self.after(1000, self.update_time)
+            after_id = self.after(1000, self.update_time)
+            self.after_ids.append(after_id)
+            # 保存更新任务ID
+            self.update_job = after_id
         except Exception as e:
             # 窗口可能已被销毁，停止更新
             print(f"安排下次更新时出错: {e}")
@@ -335,7 +381,61 @@ class DragWindow(tk.Tk):
     
     def on_closing(self):
         """窗口关闭事件"""
-        # 保存窗口位置
-        self.save_window_position()
-        # 销毁窗口
-        self.destroy()
+        try:
+            # 取消所有待执行的after任务
+            if hasattr(self, 'after_ids'):
+                for after_id in self.after_ids:
+                    try:
+                        self.after_cancel(after_id)
+                    except:
+                        pass  # 忽略可能的异常
+                self.after_ids.clear()
+            
+            # 停止所有可能的更新循环
+            if hasattr(self, 'update_job') and self.update_job:
+                try:
+                    self.after_cancel(self.update_job)
+                except:
+                    pass  # 忽略可能的异常
+            
+            # 停止更新循环标志
+            if hasattr(self, 'update_loop_running'):
+                self.update_loop_running = False
+            
+            # 解除所有事件绑定
+            try:
+                for widget in self.winfo_children():
+                    try:
+                        widget.unbind("<Button-1>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<B1-Motion>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<ButtonRelease-1>")
+                    except:
+                        pass
+            except Exception as e:
+                print(f"解除事件绑定时出错: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            # 保存窗口位置
+            try:
+                self.save_window_position()
+            except:
+                pass  # 忽略可能的异常
+        except Exception as e:
+            print(f"关闭窗口时出错: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            # 销毁窗口
+            try:
+                self.destroy()
+            except Exception as e:
+                print(f"销毁窗口时出错: {e}")
+                import traceback
+                traceback.print_exc()

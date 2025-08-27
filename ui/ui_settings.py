@@ -184,6 +184,9 @@ class UISettings:
             self.drag_window.next_class_label.pack(anchor='w')
         else:
             self.drag_window.next_class_label.pack_forget()
+        
+        # 重新设置鼠标穿透状态以确保背景色正确显示
+        self.drag_window.set_draggable(self.drag_window.is_draggable)
     
     def save_and_close(self):
         """保存设置并关闭窗口"""

@@ -1,9 +1,9 @@
-import tkinter as tk
 from PIL import Image, ImageDraw
 import pystray
 from pystray import Menu, MenuItem
 import json
 import os
+import tkinter as tk
 
 # 导入课程表设置界面
 try:
@@ -103,13 +103,98 @@ class TrayManager:
     
     def quit_window(self, icon, item):
         # 退出程序
-        if self.icon:
-            self.icon.stop()
-        # 调用窗口的关闭方法以保存位置
-        if hasattr(self.root_window, 'on_closing'):
-            self.root_window.on_closing()
-        else:
-            self.root_window.destroy()
+        try:
+            # 清理资源
+            if self.timetable_settings:
+                try:
+                    self.timetable_settings.window.destroy()
+                except:
+                    pass
+                self.timetable_settings = None
+            
+            if self.ui_settings:
+                try:
+                    self.ui_settings.window.destroy()
+                except:
+                    pass
+                self.ui_settings = None
+            
+            # 确保所有Tkinter事件都被处理
+            try:
+                self.root_window.update_idletasks()
+                self.root_window.update()
+            except:
+                pass  # 窗口可能已经被销毁
+            
+            # 调用窗口的关闭方法以保存位置
+            if hasattr(self.root_window, 'on_closing'):
+                try:
+                    self.root_window.on_closing()
+                except Exception as e:
+                    print(f"调用窗口关闭方法时出错: {e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                try:
+                    self.root_window.destroy()
+                except Exception as e:
+                    print(f"销毁窗口时出错: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            # 停止托盘图标
+            if self.icon:
+                try:
+                    # 停止托盘图标
+                    self.icon.stop()
+                except Exception as e:
+                    print(f"停止托盘图标时出错: {e}")
+                    import traceback
+                    traceback.print_exc()
+                finally:
+                    self.icon = None
+        except Exception as e:
+            print(f"退出程序时出错: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            # 使用Tkinter的quit方法优雅退出
+            try:
+                if hasattr(self.root_window, 'quit'):
+                    self.root_window.quit()
+            except:
+                pass
+            
+            # 确保所有线程都被终止
+            import threading
+            import time
+            for thread in threading.enumerate():
+                if thread != threading.current_thread() and thread.is_alive():
+                    try:
+                        thread.join(timeout=1.0)
+                    except:
+                        pass
+            
+            # 延迟确保所有资源都被释放
+            time.sleep(0.5)
+            
+            # 最终强制退出
+            import os
+            import sys
+            # 先尝试正常退出
+            try:
+                # 直接调用主窗口的quit方法
+                if hasattr(self.root_window, 'quit'):
+                    self.root_window.quit()
+            except:
+                pass
+            
+            # 再尝试sys.exit
+            try:
+                sys.exit(0)
+            except:
+                # 如果sys.exit失败，使用os._exit强制退出
+                os._exit(0)
     
     def run(self):
         if self.icon:
