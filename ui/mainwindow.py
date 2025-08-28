@@ -74,6 +74,51 @@ class DragWindow(tk.Tk):
         # 开始更新时间
         self.update_time()
     
+    def _adjust_font_size(self, label, text):
+        """根据文本长度调整标签的字体大小"""
+        # 获取标签的宽度
+        label_width = label.winfo_width()
+        
+        # 如果标签宽度为0（可能还未完全初始化），使用窗口宽度作为参考
+        if label_width <= 0:
+            label_width = self.winfo_width() - 20  # 减去一些边距
+        
+        # 获取当前字体
+        current_font = label.cget("font")
+        
+        # 解析字体信息
+        if isinstance(current_font, str):
+            # 如果是字体名称字符串，需要解析
+            font_parts = current_font.split()
+            if len(font_parts) >= 2:
+                font_family = font_parts[0]
+                try:
+                    font_size = int(font_parts[1])
+                except ValueError:
+                    font_size = 12  # 默认字体大小
+            else:
+                font_family = "Arial"
+                font_size = 12
+        else:
+            # 如果是字体元组
+            font_family = current_font[0] if len(current_font) > 0 else "Arial"
+            font_size = current_font[1] if len(current_font) > 1 else 12
+        
+        # 创建一个临时的字体对象来测量文本宽度
+        import tkinter.font as tkFont
+        font_obj = tkFont.Font(family=font_family, size=font_size)
+        text_width = font_obj.measure(text)
+        
+        # 如果文本宽度大于标签宽度，减小字体大小
+        if text_width > label_width and font_size > 8:  # 最小字体大小为8
+            # 计算新的字体大小
+            new_font_size = max(8, int(font_size * (label_width / text_width * 0.9)))  # 保留一些边距
+            label.config(font=(font_family, new_font_size))
+        elif text_width < label_width * 0.8 and font_size < 14:  # 如果文本宽度小于标签宽度的80%，增大字体大小，但不超过14
+            # 计算新的字体大小
+            new_font_size = min(14, int(font_size * (label_width / text_width * 0.9)))
+            label.config(font=(font_family, new_font_size))
+    
     def _apply_background_and_transparency(self):
         """应用背景色和透明度设置"""
         # 重新设置背景色
@@ -90,6 +135,12 @@ class DragWindow(tk.Tk):
             self.wm_attributes("-alpha", alpha)
         except Exception as e:
             print(f"应用透明度时出错: {e}")
+        
+        # 重新调整课程信息标签的字体大小
+        if hasattr(self, 'class_info_label') and self.class_info_label.cget("text"):
+            self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
+        if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
+            self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
     
     def load_ui_settings(self):
         """加载UI设置"""
@@ -280,15 +331,62 @@ class DragWindow(tk.Tk):
         
         # 更新当前课程信息
         if current_class:
-            self.class_info_label.config(text=f"正在上课: {current_class['subject']} ({current_class['start_time']}-{current_class['end_time']})")
+            text = f"现在是:{current_class['subject']}({current_class['start_time']}-{current_class['end_time']})"
+            self.class_info_label.config(text=text)
+            self._adjust_font_size(self.class_info_label, text)
             # print(f"当前课程: {current_class['subject']} ({current_class['start_time']}-{current_class['end_time']})")  # 调试信息
         else:
-            # 即使当天没有课程也保持程序正常运行
-            self.class_info_label.config(text="今天没有课程")
+            # 特殊处理周末和课间休息
+            if current_weekday_en in ['saturday', 'sunday'] and not self.timetable.get(current_weekday_en):
+                text = "今天休息，无课程安排"
+                self.class_info_label.config(text=text)
+                self._adjust_font_size(self.class_info_label, text)
+            elif next_class:
+                # 计算距离下一节课的时间
+                next_class_time = datetime.datetime.strptime(next_class["start_time"], "%H:%M").time()
+                next_class_datetime = datetime.datetime.combine(now.date(), next_class_time)
+                
+                # 如果下一节课是明天的，需要调整日期
+                if next_class_datetime < now:
+                    next_class_datetime += datetime.timedelta(days=1)
+                text = "课间休息中"
+                self.class_info_label.config(text=text)
+                self._adjust_font_size(self.class_info_label, text)
+            elif self.timetable.get(current_weekday_en):
+                # 当天有课程但不在课间休息时间（第一节课前或放学后）
+                if classes:  # 确保当天有课程安排
+                    text = "今天没有课程进行中"
+                    self.class_info_label.config(text=text)
+                    self._adjust_font_size(self.class_info_label, text)
+                else:
+                    text = "今天没有课程安排"
+                    self.class_info_label.config(text=text)
+                    self._adjust_font_size(self.class_info_label, text)
+            else:
+                # 当天无课程安排
+                text = "今天没有课程安排"
+                self.class_info_label.config(text=text)
+                self._adjust_font_size(self.class_info_label, text)
             # print("今天没有课程")  # 调试信息
         
         # 更新下一节课信息
-        if next_class:
+        if next_class and current_class:  # 只有在有当前课程时才显示下一节课信息
+            # 计算距离下一节课的时间
+            next_class_time = datetime.datetime.strptime(next_class["start_time"], "%H:%M").time()
+            next_class_datetime = datetime.datetime.combine(now.date(), next_class_time)
+            
+            # 如果下一节课是明天的，需要调整日期
+            if next_class_datetime < now:
+                next_class_datetime += datetime.timedelta(days=1)
+            
+            time_diff = next_class_datetime - now
+            
+            text = f"下节课: {next_class['subject']}({next_class['start_time']})"
+            self.next_class_label.config(text=text)
+            self._adjust_font_size(self.next_class_label, text)
+            # print(f"下一节课: {next_class['subject']} ({next_class['start_time']})")  # 调试信息
+        elif next_class and not current_class:
+            # 在非课间时间显示下一节课信息（第一节课前）
             # 计算距离下一节课的时间
             next_class_time = datetime.datetime.strptime(next_class["start_time"], "%H:%M").time()
             next_class_datetime = datetime.datetime.combine(now.date(), next_class_time)
@@ -300,11 +398,19 @@ class DragWindow(tk.Tk):
             time_diff = next_class_datetime - now
             minutes_diff = int(time_diff.total_seconds() / 60)
             
-            self.next_class_label.config(text=f"下一节课: {next_class['subject']} ({next_class['start_time']}) 还有{minutes_diff}分钟")
-            # print(f"下一节课: {next_class['subject']} ({next_class['start_time']}) 还有{minutes_diff}分钟")  # 调试信息
+            text = f"下一节课: {next_class['subject']} ({next_class['start_time']}) 还有{minutes_diff}分钟"
+            self.next_class_label.config(text=text)
+            self._adjust_font_size(self.next_class_label, text)
+        elif self.timetable.get(current_weekday_en):
+            # 当天有课程但没有下一节课（已放学）
+            text = "今天课程已结束"
+            self.next_class_label.config(text=text)
+            self._adjust_font_size(self.next_class_label, text)
         else:
             # 即使当天没有更多课程也保持程序正常运行
-            self.next_class_label.config(text="今天没有更多课程")
+            text = "今天没有更多课程"
+            self.next_class_label.config(text=text)
+            self._adjust_font_size(self.next_class_label, text)
             # print("今天没有更多课程")  # 调试信息
     
     def load_window_position(self):
@@ -330,13 +436,15 @@ class DragWindow(tk.Tk):
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             position_file = os.path.join(project_path, "timetable_window_position.json")
             
-            # 获取当前窗口位置
-            x = self.winfo_x()
-            y = self.winfo_y()
-            
-            # 保存位置到文件
-            with open(position_file, 'w', encoding='utf-8') as f:
-                json.dump({"x": x, "y": y}, f, ensure_ascii=False, indent=2)
+            # 检查窗口是否仍然存在
+            if self.winfo_exists():
+                # 获取当前窗口位置
+                x = self.winfo_x()
+                y = self.winfo_y()
+                
+                # 保存位置到文件
+                with open(position_file, 'w', encoding='utf-8') as f:
+                    json.dump({"x": x, "y": y}, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"保存窗口位置时出错: {e}")
     
@@ -363,34 +471,38 @@ class DragWindow(tk.Tk):
             if hasattr(self, 'update_loop_running'):
                 self.update_loop_running = False
             
-            # 解除所有事件绑定
-            try:
-                for widget in self.winfo_children():
-                    try:
-                        widget.unbind("<Button-1>")
-                    except:
-                        pass
-                    try:
-                        widget.unbind("<B1-Motion>")
-                    except:
-                        pass
-                    try:
-                        widget.unbind("<ButtonRelease-1>")
-                    except:
-                        pass
-            except Exception as e:
-                print(f"解除事件绑定时出错: {e}")
-            
             # 保存窗口位置
             try:
                 self.save_window_position()
             except:
                 pass  # 忽略可能的异常
+            
+            # 解除所有事件绑定
+            try:
+                # 只有在窗口仍然存在时才尝试解除绑定
+                if self.winfo_exists():
+                    for widget in self.winfo_children():
+                        try:
+                            widget.unbind("<Button-1>")
+                        except:
+                            pass
+                        try:
+                            widget.unbind("<B1-Motion>")
+                        except:
+                            pass
+                        try:
+                            widget.unbind("<ButtonRelease-1>")
+                        except:
+                            pass
+            except Exception as e:
+                print(f"解除事件绑定时出错: {e}")
         except Exception as e:
             print(f"关闭窗口时出错: {e}")
         finally:
             # 销毁窗口
             try:
-                self.destroy()
+                # 只有在窗口仍然存在时才尝试销毁
+                if self.winfo_exists():
+                    self.destroy()
             except Exception as e:
                 print(f"销毁窗口时出错: {e}")
