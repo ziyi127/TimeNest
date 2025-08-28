@@ -1,9 +1,21 @@
 from PIL import Image, ImageDraw
-import pystray
-from pystray import Menu, MenuItem
 import json
 import os
 import tkinter as tk
+import platform
+
+# Linux环境下不导入pystray以避免兼容性问题
+if platform.system() != "Linux":
+    try:
+        import pystray
+        from pystray import Menu, MenuItem
+        PYSTRAY_AVAILABLE = True
+    except ImportError:
+        PYSTRAY_AVAILABLE = False
+        print("无法导入pystray库")
+else:
+    PYSTRAY_AVAILABLE = False
+    print("Linux环境下禁用系统托盘功能")
 
 # 导入UI设置界面
 try:
@@ -34,6 +46,11 @@ class TrayManager:
         return image
     
     def create_icon(self):
+        # Linux环境下不创建系统托盘图标
+        if not PYSTRAY_AVAILABLE:
+            print("系统托盘功能不可用")
+            return
+        
         # 使用项目目录下的图标文件
         icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'TKtimetable.ico')
         if os.path.exists(icon_path):
