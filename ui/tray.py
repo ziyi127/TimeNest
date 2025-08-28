@@ -17,15 +17,10 @@ class TrayManager:
     def __init__(self, root_window):
         self.root_window = root_window
         self.icon = None
-        self.allow_drag = tk.BooleanVar(value=False)
         self.create_icon()
         
         # UI设置窗口实例
         self.ui_settings = None
-        
-        # 初始化时设置窗口的可拖动状态
-        if hasattr(self.root_window, 'set_draggable'):
-            self.root_window.set_draggable(self.allow_drag.get())
     
     def create_image(self):
         # 创建一个简单的图标
@@ -47,6 +42,9 @@ class TrayManager:
             # 如果图标文件不存在，使用生成的图像
             image = self.create_image()
         
+        # 添加允许拖拽的状态变量，默认为关闭状态
+        self.allow_drag = tk.BooleanVar(value=False)
+        
         menu = Menu(
             MenuItem('允许编辑悬浮窗', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
             MenuItem('UI设置', self.open_ui_settings),
@@ -57,11 +55,11 @@ class TrayManager:
         self.icon.run_detached()
     
     def toggle_drag(self, icon, item):
+        # 切换允许拖拽状态
         self.allow_drag.set(not self.allow_drag.get())
-        print(f"切换拖动状态: {self.allow_drag.get()}")
-        # 更新悬浮窗的可拖动状态
-        if hasattr(self.root_window, 'set_draggable'):
-            self.root_window.set_draggable(self.allow_drag.get())
+        # 应用新的拖拽状态到主窗口
+        self.root_window.set_draggable(self.allow_drag.get())
+        print(f"允许拖拽状态: {self.allow_drag.get()}")
     
 
     

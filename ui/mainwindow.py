@@ -12,7 +12,7 @@ class DragWindow(tk.Tk):
         self.overrideredirect(True)  # 无边框窗口
         self.wm_attributes("-topmost", True)  # 窗口置顶
         
-        # 初始化可拖动状态
+        # 初始化可拖动状态，默认为不可拖动
         self.is_draggable = False
         
         # 初始化after任务ID列表
@@ -48,28 +48,6 @@ class DragWindow(tk.Tk):
         
     def _initialize_transparency(self):
         """初始化透明度设置"""
-        if not self.is_draggable:
-            # 不允许编辑时，鼠标事件穿透到后方界面
-            # 使用更可靠的方法实现鼠标穿透
-            # 使用分层窗口技术实现鼠标穿透，同时保持背景色显示
-            try:
-                # 尝试使用分层窗口实现鼠标穿透
-                self.wm_attributes("-transparentcolor", "")
-                # 设置窗口为分层窗口并使用完全透明实现鼠标穿透
-                self.wm_attributes("-alpha", 0.0)
-                # 重新应用背景色和透明度
-                self.after(200, self._apply_background_and_transparency)
-            except Exception as e:
-                print(f"设置分层窗口时出错: {e}")
-                # 回退到原来的实现方式
-                self.wm_attributes("-transparentcolor", self.background_color)
-                # 确保背景色正确显示
-                self.configure(bg=self.background_color)
-                self.main_frame.configure(bg=self.background_color)
-            print("初始状态：窗口已设置鼠标穿透，背景色正常显示")
-        else:
-            print("初始状态：窗口已启用，鼠标事件被拦截")
-        
         # 创建日期和星期标签
         self.date_label = tk.Label(self.time_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
         self.date_label.pack(side='left', padx=(3, 0))
@@ -152,23 +130,6 @@ class DragWindow(tk.Tk):
         self.is_draggable = draggable
         print(f"设置可拖动状态: {draggable}")
         
-        # 设置鼠标穿透
-        if draggable:
-            # 允许编辑时，窗口拦截鼠标事件
-            self.wm_attributes("-transparentcolor", "")
-            # 确保背景色正确显示
-            self.configure(bg=self.background_color)
-            self.main_frame.configure(bg=self.background_color)
-            print("窗口已启用，鼠标事件被拦截")
-        else:
-            # 不允许编辑时，鼠标事件穿透到后方界面
-            # 使用背景色作为透明色实现鼠标穿透
-            self.wm_attributes("-transparentcolor", self.background_color)
-            # 确保背景色正确显示
-            self.configure(bg=self.background_color)
-            self.main_frame.configure(bg=self.background_color)
-            print("窗口已禁用，鼠标事件穿透到后方界面")
-            
         # 强制更新窗口
         self.update()
     
