@@ -44,6 +44,7 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 1. 确保系统已安装 Python 3.6 或更高版本
 2. 下载或克隆本项目到本地
 3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
+4. linux发行版需要单独安装tk框架
 
 ## 使用方法
 
