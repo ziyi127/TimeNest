@@ -1,5 +1,19 @@
 # TimeNest vtktt 课程表桌面应用
 
+<div align="center">
+
+<img src="https://github.com/ziyi127/TimeNest/blob/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+
+**一个功能强大的跨平台课程表管理工具**
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
+
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+
+</div>
+
 TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
 
 ## 功能特点
@@ -56,6 +70,35 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 
 本程序完全由AI开发，使用Python和Tkinter库实现。
 
+## 🏆 致谢
+
+### 核心贡献者
+
+<table>
+<tr>
+<td align="center">
+<a href="https://github.com/hujinming0722ispassword">
+<img src="https://github.com/hujinming0722ispassword.png" width="100px;" alt="hujinming0722ispassword"/>
+<br />
+<sub><b>hujinming0722ispassword</b></sub>
+</a>
+<br />
+
+</td>
+<tr>
+<td align="center">
+<a href="https://github.com/ziyi127">
+<img src="https://github.com/ziyi127.png" width="100px;" alt="ziyi127"/>
+<br />
+<sub><b>ziyi127</b></sub>
+</a>
+<br />
+
+</td>
+<!-- 更多贡献者 -->
+</tr>
+</table>
+
 ## 许可证
 
-APACHE License
+Apache-2.0 license
