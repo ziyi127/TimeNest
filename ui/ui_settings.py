@@ -134,15 +134,10 @@ class UISettings:
             print(f"应用透明度时出错: {e}")
         
         # 应用显示控制
-        if self.settings["show_next_class"]:
-            self.drag_window.class_info_label.pack(anchor='w')
-        else:
-            self.drag_window.class_info_label.pack_forget()
-            
-        if self.settings["show_countdown"]:
-            self.drag_window.next_class_label.pack(anchor='w')
-        else:
-            self.drag_window.next_class_label.pack_forget()
+        print(f"应用显示设置: show_next_class={self.settings['show_next_class']}, show_countdown={self.settings['show_countdown']}")
+        self.drag_window.show_next_class = self.settings["show_next_class"]
+        self.drag_window.show_countdown = self.settings["show_countdown"]
+        self.drag_window.update_display_settings()
         
 
     
