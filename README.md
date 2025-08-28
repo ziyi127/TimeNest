@@ -92,14 +92,7 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
       </a>
     </td>
     <!-- 第三个人 -->
-    <td align="center">
-      <a href="https://github.com/anotheruser">
-        <img src="https://github.com/anotheruser.png" width="100" alt="anotheruser" />
-        <br />
-        <sub><b>anotheruser</b></sub>
-      </a>
-    </td>
-  </tr>
+
 </table>
 
 ## 许可证
