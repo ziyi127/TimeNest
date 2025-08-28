@@ -76,28 +76,30 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 ### 核心贡献者
 
 <table>
-<tr>
-<td align="center">
-<a href="https://github.com/hujinming0722ispassword">
-<img src="https://github.com/hujinming0722ispassword.png" width="100px;" alt="hujinming0722ispassword"/>
-<br />
-<sub><b>hujinming0722ispassword</b></sub>
-</a>
-<br />
-
-</td>
-<tr>
-<td align="center">
-<a href="https://github.com/ziyi127">
-<img src="https://github.com/ziyi127.png" width="100px;" alt="ziyi127"/>
-<br />
-<sub><b>ziyi127</b></sub>
-</a>
-<br />
-
-</td>
-<!-- 更多贡献者 -->
-</tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/hujinming0722ispassword">
+        <img src="https://github.com/hujinming0722ispassword.png" width="100" alt="hujinming0722ispassword" />
+        <br />
+        <sub><b>hujinming0722ispassword</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/ziyi127">
+        <img src="https://github.com/ziyi127.png" width="100" alt="ziyi127" />
+        <br />
+        <sub><b>ziyi127</b></sub>
+      </a>
+    </td>
+    <!-- 第三个人 -->
+    <td align="center">
+      <a href="https://github.com/anotheruser">
+        <img src="https://github.com/anotheruser.png" width="100" alt="anotheruser" />
+        <br />
+        <sub><b>anotheruser</b></sub>
+      </a>
+    </td>
+  </tr>
 </table>
 
 ## 许可证
