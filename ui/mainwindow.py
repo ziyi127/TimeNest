@@ -62,11 +62,13 @@ class DragWindow(tk.Tk):
         
         # 创建课程信息标签
         self.class_info_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
-        self.class_info_label.pack(anchor='w')
+        if self.show_next_class:
+            self.class_info_label.pack(anchor='w')
         
         # 创建下一节课信息标签
         self.next_class_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
-        self.next_class_label.pack(anchor='w')
+        if self.show_countdown:
+            self.next_class_label.pack(anchor='w')
         
         # 加载课程表
         self.timetable = self.load_timetable()
@@ -150,6 +152,20 @@ class DragWindow(tk.Tk):
         if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
             self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
     
+    def update_display_settings(self):
+        """更新显示设置"""
+        # 控制课程信息标签的显示
+        if self.show_next_class:
+            self.class_info_label.pack(anchor='w')
+        else:
+            self.class_info_label.pack_forget()
+        
+        # 控制下一节课信息标签的显示
+        if self.show_countdown:
+            self.next_class_label.pack(anchor='w')
+        else:
+            self.next_class_label.pack_forget()
+    
     def load_ui_settings(self):
         """加载UI设置"""
         try:
@@ -161,6 +177,8 @@ class DragWindow(tk.Tk):
             self.background_color = "white"
             self.text_color = "black"
             self.transparency = 100
+            self.show_next_class = True
+            self.show_countdown = True
             
             if os.path.exists(settings_file):
                 with open(settings_file, 'r', encoding='utf-8') as f:
@@ -170,6 +188,8 @@ class DragWindow(tk.Tk):
                 self.background_color = settings.get("background_color", "white")
                 self.text_color = settings.get("text_color", "black")
                 self.transparency = settings.get("transparency", 100)
+                self.show_next_class = settings.get("show_next_class", True)
+                self.show_countdown = settings.get("show_countdown", True)
             
             # 应用透明度
             alpha = self.transparency / 100.0
@@ -183,6 +203,8 @@ class DragWindow(tk.Tk):
             self.background_color = "white"
             self.text_color = "black"
             self.transparency = 100
+            self.show_next_class = True
+            self.show_countdown = True
     
     def set_draggable(self, draggable):
         """设置窗口是否可拖动"""
