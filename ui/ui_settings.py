@@ -112,26 +112,16 @@ class UISettings:
         # 保存设置
         self.save_settings()
         
-        # 应用背景颜色
-        self.drag_window.configure(bg=self.settings["background_color"])
-        self.drag_window.main_frame.configure(bg=self.settings["background_color"])
-        self.drag_window.time_label.configure(bg=self.settings["background_color"])
-        self.drag_window.date_label.configure(bg=self.settings["background_color"])
-        self.drag_window.class_info_label.configure(bg=self.settings["background_color"])
-        self.drag_window.next_class_label.configure(bg=self.settings["background_color"])
+        # 应用背景颜色和透明度
+        self.drag_window.background_color = self.settings["background_color"]
+        self.drag_window.transparency = self.settings["transparency"]
+        self.drag_window._apply_background_and_transparency()
         
         # 应用文字颜色
         self.drag_window.time_label.configure(fg=self.settings["text_color"])
         self.drag_window.date_label.configure(fg=self.settings["text_color"])
         self.drag_window.class_info_label.configure(fg=self.settings["text_color"])
         self.drag_window.next_class_label.configure(fg=self.settings["text_color"])
-        
-        # 应用透明度
-        alpha = self.settings["transparency"] / 100.0
-        try:
-            self.drag_window.wm_attributes("-alpha", alpha)
-        except Exception as e:
-            print(f"应用透明度时出错: {e}")
         
         # 应用显示控制
         print(f"应用显示设置: show_next_class={self.settings['show_next_class']}, show_countdown={self.settings['show_countdown']}")
