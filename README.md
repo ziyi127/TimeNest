@@ -47,7 +47,6 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 - `main.py`: 程序入口文件
 - `timetable.json`: 课程表数据文件
 - `timetable_ui_settings.json`: UI设置数据文件
-- `timetable_window_position.json`: 窗口位置数据文件
 - `ui/`: UI相关模块目录
   - `mainwindow.py`: 主窗口实现
   - `tray.py`: 系统托盘实现

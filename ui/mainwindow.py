@@ -21,11 +21,11 @@ class DragWindow(tk.Tk):
         # 初始化更新任务ID
         self.update_job = None
         
-        # 加载窗口位置
-        self.load_window_position()
-        
         # 加载UI设置
         self.load_ui_settings()
+        
+        # 使用after方法确保窗口完全初始化后再加载窗口位置
+        self.after(100, self.load_window_position)
         
         # 配置背景颜色
         self.configure(bg=self.background_color)
@@ -418,14 +418,14 @@ class DragWindow(tk.Tk):
         try:
             # 获取程序主目录
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            position_file = os.path.join(project_path, "timetable_window_position.json")
+            settings_file = os.path.join(project_path, "timetable_ui_settings.json")
             
-            if os.path.exists(position_file):
-                with open(position_file, 'r', encoding='utf-8') as f:
-                    position = json.load(f)
+            if os.path.exists(settings_file):
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
                 
                 # 设置窗口位置
-                self.set_display_postion(position["x"], position["y"])
+                self.set_display_postion(settings["position_x"], settings["position_y"])
         except Exception as e:
             print(f"加载窗口位置时出错: {e}")
     
@@ -434,7 +434,7 @@ class DragWindow(tk.Tk):
         try:
             # 获取程序主目录
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            position_file = os.path.join(project_path, "timetable_window_position.json")
+            settings_file = os.path.join(project_path, "timetable_ui_settings.json")
             
             # 检查窗口是否仍然存在
             if self.winfo_exists():
@@ -442,9 +442,21 @@ class DragWindow(tk.Tk):
                 x = self.winfo_x()
                 y = self.winfo_y()
                 
-                # 保存位置到文件
-                with open(position_file, 'w', encoding='utf-8') as f:
-                    json.dump({"x": x, "y": y}, f, ensure_ascii=False, indent=2)
+                # 读取现有设置
+                if os.path.exists(settings_file):
+                    with open(settings_file, 'r', encoding='utf-8') as f:
+                        settings = json.load(f)
+                else:
+                    settings = {}
+                
+                # 更新位置信息
+                settings["position_x"] = x
+                settings["position_y"] = y
+                
+                # 保存设置到文件
+                with open(settings_file, 'w', encoding='utf-8') as f:
+                    json.dump(settings, f, ensure_ascii=False, indent=2)
+                print(f"窗口位置已保存: x={x}, y={y}")
         except Exception as e:
             print(f"保存窗口位置时出错: {e}")
     
@@ -472,37 +484,40 @@ class DragWindow(tk.Tk):
                 self.update_loop_running = False
             
             # 保存窗口位置
+            # 在解除事件绑定和销毁窗口之前保存位置
             try:
-                self.save_window_position()
+                # 检查窗口是否仍然存在
+                if self.winfo_exists():
+                    self.save_window_position()
             except:
                 pass  # 忽略可能的异常
             
             # 解除所有事件绑定
             try:
-                # 只有在窗口仍然存在时才尝试解除绑定
-                if self.winfo_exists():
-                    for widget in self.winfo_children():
-                        try:
-                            widget.unbind("<Button-1>")
-                        except:
-                            pass
-                        try:
-                            widget.unbind("<B1-Motion>")
-                        except:
-                            pass
-                        try:
-                            widget.unbind("<ButtonRelease-1>")
-                        except:
-                            pass
-            except Exception as e:
-                print(f"解除事件绑定时出错: {e}")
+                # 在窗口销毁前解除所有事件绑定，不检查窗口是否存在
+                for widget in self.winfo_children():
+                    try:
+                        widget.unbind("<Button-1>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<B1-Motion>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<ButtonRelease-1>")
+                    except:
+                        pass
+            except:
+                # 忽略解除绑定时的任何异常
+                pass
         except Exception as e:
             print(f"关闭窗口时出错: {e}")
         finally:
             # 销毁窗口
             try:
-                # 只有在窗口仍然存在时才尝试销毁
-                if self.winfo_exists():
-                    self.destroy()
+                # 直接销毁窗口，不再检查是否存在
+                self.destroy()
             except Exception as e:
-                print(f"销毁窗口时出错: {e}")
+                # 忽略销毁时的异常
+                pass
