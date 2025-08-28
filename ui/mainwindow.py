@@ -8,7 +8,7 @@ class DragWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("课程表悬浮窗")
-        self.geometry("250x150")
+        self.geometry("180x70")
         self.overrideredirect(True)  # 无边框窗口
         self.wm_attributes("-topmost", True)  # 窗口置顶
         
@@ -32,14 +32,14 @@ class DragWindow(tk.Tk):
         
         # 创建主框架
         self.main_frame = tk.Frame(self, bg=self.background_color)
-        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=2)
         
         # 创建时间框架
         self.time_frame = tk.Frame(self.main_frame, bg=self.background_color)
         self.time_frame.pack(anchor='w')
         
         # 创建时间标签
-        self.time_label = tk.Label(self.time_frame, font=("Arial", 16), bg=self.background_color, fg=self.text_color)
+        self.time_label = tk.Label(self.time_frame, font=("Arial", 14), bg=self.background_color, fg=self.text_color)
         self.time_label.pack(side='left')
         
         # 设置初始鼠标穿透状态
@@ -71,15 +71,15 @@ class DragWindow(tk.Tk):
             print("初始状态：窗口已启用，鼠标事件被拦截")
         
         # 创建日期和星期标签
-        self.date_label = tk.Label(self.time_frame, font=("Arial", 13), bg=self.background_color, fg=self.text_color)
-        self.date_label.pack(side='left', padx=(10, 0))
+        self.date_label = tk.Label(self.time_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
+        self.date_label.pack(side='left', padx=(3, 0))
         
         # 创建课程信息标签
-        self.class_info_label = tk.Label(self.main_frame, font=("Arial", 10), bg=self.background_color, fg=self.text_color)
+        self.class_info_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
         self.class_info_label.pack(anchor='w')
         
         # 创建下一节课信息标签
-        self.next_class_label = tk.Label(self.main_frame, font=("Arial", 10), bg=self.background_color, fg=self.text_color)
+        self.next_class_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
         self.next_class_label.pack(anchor='w')
         
         # 加载课程表

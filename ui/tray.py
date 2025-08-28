@@ -5,14 +5,6 @@ import json
 import os
 import tkinter as tk
 
-# 导入课程表设置界面
-try:
-    from ui.timetable_settings import TimetableSettings
-    TIMETABLE_AVAILABLE = True
-except ImportError:
-    TIMETABLE_AVAILABLE = False
-    print("无法导入课程表设置模块")
-
 # 导入UI设置界面
 try:
     from ui.ui_settings import UISettings
@@ -27,9 +19,6 @@ class TrayManager:
         self.icon = None
         self.allow_drag = tk.BooleanVar(value=False)
         self.create_icon()
-        
-        # 课程表设置窗口实例
-        self.timetable_settings = None
         
         # UI设置窗口实例
         self.ui_settings = None
@@ -60,7 +49,6 @@ class TrayManager:
         
         menu = Menu(
             MenuItem('允许编辑悬浮窗', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
-            MenuItem('课程表设置', self.open_timetable_settings),
             MenuItem('UI设置', self.open_ui_settings),
             MenuItem('退出', self.quit_window)
         )
@@ -75,18 +63,7 @@ class TrayManager:
         if hasattr(self.root_window, 'set_draggable'):
             self.root_window.set_draggable(self.allow_drag.get())
     
-    def open_timetable_settings(self, icon, item):
-        # 打开课程表设置界面
-        if TIMETABLE_AVAILABLE:
-            # 如果窗口已存在，将其带到前台
-            if self.timetable_settings and self.timetable_settings.window.winfo_exists():
-                self.timetable_settings.window.lift()
-                self.timetable_settings.window.focus_force()
-            else:
-                # 创建新窗口
-                self.timetable_settings = TimetableSettings(self.root_window)
-        else:
-            print("课程表设置功能不可用")
+
     
     def open_ui_settings(self, icon, item):
         # 打开UI设置界面
@@ -105,13 +82,6 @@ class TrayManager:
         # 退出程序
         try:
             # 清理资源
-            if self.timetable_settings:
-                try:
-                    self.timetable_settings.window.destroy()
-                except:
-                    pass
-                self.timetable_settings = None
-            
             if self.ui_settings:
                 try:
                     self.ui_settings.window.destroy()

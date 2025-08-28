@@ -169,11 +169,6 @@ class UISettings:
         except Exception as e:
             print(f"应用透明度时出错: {e}")
         
-        # 应用位置
-        x = self.settings["position_x"]
-        y = self.settings["position_y"]
-        self.drag_window.set_display_postion(x, y)
-        
         # 应用显示控制
         if self.settings["show_next_class"]:
             self.drag_window.class_info_label.pack(anchor='w')
@@ -186,6 +181,7 @@ class UISettings:
             self.drag_window.next_class_label.pack_forget()
         
         # 重新设置鼠标穿透状态以确保背景色正确显示
+        # 修复：在应用设置后，需要重新设置鼠标穿透状态，确保与当前的可拖动状态一致
         self.drag_window.set_draggable(self.drag_window.is_draggable)
     
     def save_and_close(self):

@@ -3,7 +3,7 @@ from ui.tray import TrayManager
 import sys
 
 root = DragWindow()
-root.geometry("200x100")
+root.geometry("180x70")
 root.set_display_postion(850, 0)
 
 # 创建系统托盘管理器
