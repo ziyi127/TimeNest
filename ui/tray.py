@@ -11,13 +11,7 @@ import threading
 import time
 from pathlib import Path
 
-# 导入课程表设置界面
-try:
-    from ui.timetable_settings import TimetableSettings
-    TIMETABLE_AVAILABLE = True
-except ImportError:
-    TIMETABLE_AVAILABLE = False
-    print("无法导入课程表设置模块")
+# 课程表设置界面已删除
 
 # 导入UI设置界面
 try:
@@ -32,7 +26,6 @@ class TrayManager:
         self.root_window = root_window
         self.icon = None
         self.allow_drag = tk.BooleanVar(value=False)
-        self.timetable_settings = None
         self.ui_settings = None
         self.logger = logging.getLogger(__name__)
         self.platform = platform.system().lower()
@@ -104,7 +97,6 @@ class TrayManager:
             # 创建菜单 - 使用英文菜单项避免编码问题
             menu = Menu(
                 MenuItem('Allow Edit Window', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
-                MenuItem('Timetable Settings', self.open_timetable_settings),
                 MenuItem('UI Settings', self.open_ui_settings),
                 MenuItem('Exit', self.quit_window)
             )
@@ -242,30 +234,18 @@ class TrayManager:
         if hasattr(self.root_window, 'set_draggable'):
             self.root_window.set_draggable(new_value)
     
-    def open_timetable_settings(self, icon, item):
-        """打开课程表设置界面"""
-        # 打开课程表设置界面
-        if TIMETABLE_AVAILABLE:
-            # 如果窗口已存在，将其带到前台
-            if self.timetable_settings and self.timetable_settings.window.winfo_exists():
-                self.timetable_settings.window.lift()
-                self.timetable_settings.window.focus_force()
-            else:
-                # 创建新窗口
-                self.timetable_settings = TimetableSettings(self.root_window)
-        else:
-            print("课程表设置功能不可用")
+
     
     def open_ui_settings(self, icon, item):
         """打开UI设置界面"""
         # 打开UI设置界面
         if UI_SETTINGS_AVAILABLE:
             # 如果窗口已存在，将其带到前台
-            if self.ui_settings and self.ui_settings.window.winfo_exists():
+            if self.ui_settings and hasattr(self.ui_settings, 'window') and self.ui_settings.window.winfo_exists():
                 self.ui_settings.window.lift()
                 self.ui_settings.window.focus_force()
             else:
-                # 创建新窗口
+                # 创建新窗口，传递悬浮窗实例
                 self.ui_settings = UISettings(self.root_window, self.root_window)
         else:
             print("UI设置功能不可用")
@@ -275,13 +255,6 @@ class TrayManager:
         # 退出程序
         try:
             # 清理资源
-            if self.timetable_settings:
-                try:
-                    self.timetable_settings.window.destroy()
-                except Exception as e:
-                    print(f"销毁课程表设置窗口时出错: {e}")
-                self.timetable_settings = None
-            
             if self.ui_settings:
                 try:
                     self.ui_settings.window.destroy()

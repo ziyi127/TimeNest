@@ -1,18 +1,12 @@
 {
-<<<<<<< Updated upstream
-  "background_color": "white",
-  "text_color": "black",
-  "transparency": 69,
-  "position_x": 600,
+  "theme": "dark",
+  "position_x": 100,
   "position_y": 100,
-=======
-  "background_color": "#f0f0f0",
-  "text_color": "#333333",
-  "transparency": 100,
-  "position_x": 175,
-  "position_y": 176,
->>>>>>> Stashed changes
+  "transparency": 80,
   "show_next_class": true,
   "show_countdown": true,
-  "theme": "glass"
+  "compact_mode": false,
+  "pointer_passthrough": true,
+  "background_color": "#2c3e50",
+  "text_color": "#ffffff"
 }
