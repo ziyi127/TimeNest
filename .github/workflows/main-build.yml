@@ -83,134 +83,24 @@ jobs:
         echo "Contents of TimeNest-portable directory:"
         Get-ChildItem -Path "TimeNest-portable" -Recurse -ErrorAction SilentlyContinue
         
-    - name: Create Windows installer and package
+    - name: Create portable ZIP package
       run: |
-        # 安装NSIS for creating exe installer
-        choco install nsis -y
-        $env:PATH += ";C:\Program Files (x86)\NSIS"
-
-        # 创建NSIS安装脚本
-        $nsisScript = @"
-        !define APP_NAME "TimeNest"
-        !define APP_VERSION "${{ steps.get_version.outputs.version }}"
-        !define APP_ARCH "${{ matrix.arch }}"
-        !define PUBLISHER "ziyi127"
-        !define WEB_SITE "https://timenest.qzz.io"
-        !define INSTALL_DIR "$PROGRAMFILES64\TimeNest"
-
-        Name "${APP_NAME} ${APP_VERSION}"
-        OutFile "TimeNest_${APP_VERSION}_${APP_ARCH}.exe"
-        InstallDir "${INSTALL_DIR}"
+        # 直接将TimeNest-portable目录打包成ZIP文件
+        $zipFile = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.zip"
+        echo "Creating portable ZIP package: $zipFile"
         
-        # 设置安装包属性
-        VIProductVersion "${APP_VERSION}.0"
-        VIAddVersionKey /LANG=2052 "ProductName" "${APP_NAME}"
-        VIAddVersionKey /LANG=2052 "Comments" "智能时间管理助手"
-        VIAddVersionKey /LANG=2052 "CompanyName" "${PUBLISHER}"
-        VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (C) 2024 ${PUBLISHER}"
-        VIAddVersionKey /LANG=2052 "FileDescription" "TimeNest Installer"
-        VIAddVersionKey /LANG=2052 "FileVersion" "${APP_VERSION}"
-
-        Page directory
-        Page instfiles
-
-        Section "MainSection" SEC01
-            SetOutPath "$INSTDIR"
-            
-            # Check if portable directory exists and has content
-            !system 'if not exist "TimeNest-portable" echo ERROR: TimeNest-portable directory not found && exit 1'
-            !system 'if not exist "TimeNest-portable\*" echo ERROR: TimeNest-portable directory is empty && exit 1'
-            
-            File /r "TimeNest-portable\*"
-            
-            # 创建开始菜单目录
-            SetShellVarContext all
-            CreateDirectory "$SMPROGRAMS\$APP_NAME"
-            
-            # 创建开始菜单快捷方式
-            CreateShortCut "$SMPROGRAMS\$APP_NAME\$APP_NAME.lnk" "$INSTDIR\TimeNest.exe"
-            
-            # 创建桌面快捷方式
-            CreateShortCut "$DESKTOP\$APP_NAME.lnk" "$INSTDIR\TimeNest.exe"
-            
-            # 注册卸载信息
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "DisplayName" "TimeNest"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "UninstallString" "$INSTDIR\uninstall.exe"
-            WriteUninstaller "$INSTDIR\uninstall.exe"
-        SectionEnd
-
-        Section "Uninstall"
-            # 删除安装目录
-            Delete "$INSTDIR\*.*"
-            RMDir /r "$INSTDIR"
-            
-            # 删除开始菜单项
-            Delete "$SMPROGRAMS\$APP_NAME\*.*"
-            RMDir "$SMPROGRAMS\$APP_NAME"
-            
-            # 删除桌面快捷方式
-            Delete "$DESKTOP\$APP_NAME.lnk"
-            
-            # 删除注册表项
-            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\$APP_NAME"
-        SectionEnd
-        "@
-
-        $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
-
-        # 编译安装程序
-        echo "Compiling NSIS installer..."
-        # 先检查NSIS脚本文件是否存在
-        if (Test-Path "installer.nsi") {
-          echo "NSIS script file exists, displaying contents:"
-          Get-Content "installer.nsi" | Select-Object -First 30
-        } else {
-          echo "ERROR: NSIS script file installer.nsi does not exist"
-          exit 1
-        }
-        
-        # 编译NSIS脚本
-        $nsisResult = & makensis installer.nsi 2>&1
-        if ($LASTEXITCODE -ne 0) {
-          echo "NSIS compilation failed with exit code: $LASTEXITCODE"
-          echo "NSIS output: $nsisResult"
-          # List current directory to see what files were created
-          echo "Contents of current directory:"
-          Get-ChildItem -Path "." -ErrorAction SilentlyContinue
-          exit 1
-        } else {
-          echo "NSIS compilation successful"
-          # List current directory to see what files were created
-          echo "Contents of current directory after NSIS compilation:"
-          Get-ChildItem -Path "." -ErrorAction SilentlyContinue
-          
-          # Check that the installer file was created
-          $expectedInstaller = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe"
-          if (Test-Path $expectedInstaller) {
-            echo "SUCCESS: Installer file $expectedInstaller was created"
-          } else {
-            echo "ERROR: Expected installer file $expectedInstaller was not found"
-            exit 1
-          }
-        }
-
-        # 检查安装程序文件是否存在
-        $exeFile = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe"
-        echo "Looking for installer file: $exeFile"
-        if (Test-Path $exeFile) {
-          echo "Found installer file: $exeFile"
-          # 压缩安装程序
-          $zipFile = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe.zip"
-          echo "Creating zip file: $zipFile"
-          Compress-Archive -Path $exeFile -DestinationPath $zipFile -CompressionLevel Optimal
-          echo "Created Windows installer: $zipFile"
+        # 检查TimeNest-portable目录是否存在
+        if (Test-Path "TimeNest-portable") {
+          echo "Found TimeNest-portable directory, creating ZIP package"
+          Compress-Archive -Path "TimeNest-portable" -DestinationPath $zipFile -CompressionLevel Optimal
+          echo "Created portable ZIP package: $zipFile"
           
           # 显示文件大小
           $fileInfo = Get-Item $zipFile
           $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
           echo "Package size: $sizeMB MB"
         } else {
-          echo "ERROR: Installer file $exeFile was not created"
+          echo "ERROR: TimeNest-portable directory not found"
           echo "Contents of current directory:"
           Get-ChildItem -Path "." -ErrorAction SilentlyContinue
           exit 1
@@ -220,7 +110,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: TimeNest-windows-${{ matrix.arch }}
-        path: TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe.zip
+        path: TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.zip
         retention-days: 30
 
   build-linux-x86_64:
