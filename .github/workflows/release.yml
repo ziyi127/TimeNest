@@ -531,7 +531,7 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
+          TimeNest_${{ steps.version_info_macos.outputs.version }}_*.dmg.zip
 
     - name: Upload macOS artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
