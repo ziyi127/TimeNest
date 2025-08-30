@@ -145,9 +145,8 @@ jobs:
           $tag = "${{ github.ref_name }}"
           $version = $tag -replace '^v', ''
         } else {
-          # 从app_info.json读取版本信息
-          $appInfo = Get-Content app_info.json | ConvertFrom-Json
-          $version = $appInfo.version.number
+          # 默认版本设置为3.0.0
+          $version = "3.0.0"
           $tag = "v$version"
         }
         echo "version=$version" >> $env:GITHUB_OUTPUT
@@ -266,7 +265,8 @@ jobs:
           VERSION="${{ github.ref_name }}"
           VERSION=${VERSION#v}
         else
-          VERSION=$(python -c "import json; print(json.load(open('app_info.json'))['version']['number'])")
+          # 默认版本设置为3.0.0
+          VERSION="3.0.0"
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
@@ -420,7 +420,8 @@ jobs:
           VERSION="${{ github.ref_name }}"
           VERSION=${VERSION#v}
         else
-          VERSION=$(python -c "import json; print(json.load(open('app_info.json'))['version']['number'])")
+          # 默认版本设置为3.0.0
+          VERSION="3.0.0"
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
