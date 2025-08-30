@@ -45,15 +45,10 @@ jobs:
         $env:PYTHONIOENCODING = "utf-8"
 
         pip install pyinstaller
-        if (Test-Path "TimeNest.spec") {
-          echo "Building dev version with spec file..."
-          pyinstaller TimeNest.spec --clean --noconfirm
-          if (Test-Path "dist\TimeNest.exe") {
-            Rename-Item "dist\TimeNest.exe" "dist\TimeNest-dev.exe"
-          }
-        } else {
-          echo "Building dev version with simple command..."
-          pyinstaller --onefile --windowed --name TimeNest-dev main.py
+        echo "Building dev version with onedir mode..."
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json;." --add-data "TKtimetable.ico;." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
+        if (Test-Path "dist\TimeNest") {
+          Rename-Item "dist\TimeNest" "dist\TimeNest-dev"
         }
       shell: pwsh
         

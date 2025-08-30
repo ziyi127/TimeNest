@@ -15,13 +15,16 @@ def install_requirements():
 def build_app():
     # 构建命令
     cmd = [
-        'pyinstaller',
+        sys.executable,
+        '-m',
+        'PyInstaller',
         '--noconfirm',
         '--onedir',  # 使用onedir模式，而不是onefile
         '--windowed',
         '--icon', os.path.join(current_dir, 'TKtimetable.ico'),
         '--name', 'TimeNest',
         '--add-data', f'{os.path.join(current_dir, "timetable.json")};.',
+        '--add-data', f'{os.path.join(current_dir, "TKtimetable.ico")};.',
         '--hidden-import', 'tkinter',
         '--hidden-import', 'PIL',
         '--hidden-import', 'pystray',

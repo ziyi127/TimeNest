@@ -39,12 +39,12 @@ TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形�
 
 程序还会显示下一节课的信息，包括课程名称和距离开始的时间。
 
-## 安装说明
+## 源码编辑说明
 
 1. 确保系统已安装 Python 3.6 或更高版本
 2. 下载或克隆本项目到本地
 3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
-4. Linux发行版需要单独安装tk框架
+4. 若您使用的是Linux发行版，请您查看“Linux桌面环境适配说明”来安装依赖
 
 ### Linux桌面环境适配说明
 
@@ -75,7 +75,7 @@ sudo dnf install gnome-shell-extension-appindicator
 ```
 
 **注意事项**:
-- 在某些Linux发行版中，可能需要重启桌面环境或系统才能使系统托盘正常显示
+- 在某些Linux发行版中，当依赖完成安装后，可能需要重启桌面环境或系统才能使系统托盘正常显示
 - 如果系统托盘无法正常显示，请检查桌面环境是否支持系统托盘功能
 - KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
 - 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
@@ -126,7 +126,7 @@ sudo dnf install gnome-shell-extension-appindicator
         <sub><b>ziyi127</b></sub>
       </a>
     </td>
-    <!-- 第三个人 -->
+    <!-- 我们一直在等第三个人，加入我们的团队，一起完善这个项目！ -->
 
 </table>
 

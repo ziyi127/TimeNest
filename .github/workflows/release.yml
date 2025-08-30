@@ -57,22 +57,14 @@ jobs:
         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
         $env:PYTHONIOENCODING = "utf-8"
 
-        if (Test-Path "TimeNest.spec") {
-          echo "Building with spec file..."
-          pyinstaller TimeNest.spec --clean --noconfirm
-        } elseif (Test-Path "build_simple.py") {
-          echo "Using simple build script..."
-          python build_simple.py
-        } else {
-          echo "Using fallback build script..."
-          python build_fallback.py
-        }
+        echo "Building with onedir mode..."
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json;." --add-data "TKtimetable.ico;." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
       shell: pwsh
         
     - name: Create portable package
       run: |
         mkdir TimeNest-portable
-        copy dist\TimeNest.exe TimeNest-portable\
+        xcopy /E /I dist\TimeNest TimeNest-portable\
         copy README.md TimeNest-portable\
         copy LICENSE TimeNest-portable\
         if (Test-Path "config") { xcopy /E /I config TimeNest-portable\config }
@@ -260,24 +252,7 @@ jobs:
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
         # 构建可执行文件
-        pyinstaller --onefile \
-          --name TimeNest \
-          --add-data "qml:qml" \
-          --add-data "resources:resources" \
-          --add-data "themes:themes" \
-          --add-data "config:config" \
-          --add-data "app_info.json:." \
-          --hidden-import PySide6.QtCore \
-          --hidden-import PySide6.QtGui \
-          --hidden-import PySide6.QtWidgets \
-          --hidden-import PySide6.QtQml \
-          --hidden-import PySide6.QtQuick \
-          --hidden-import RinUI \
-          --hidden-import utils.common_imports \
-          --hidden-import utils.shared_utilities \
-          --hidden-import utils.config_constants \
-          --windowed \
-          main.py
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json:." --add-data "TKtimetable.ico:." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
 
 
 
@@ -305,7 +280,7 @@ jobs:
         mkdir -p TimeNest-${{ steps.version_info.outputs.version }}/usr/share/doc/TimeNest
 
         # 复制可执行文件
-        cp dist/TimeNest TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
+        cp -r dist/TimeNest/* TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/
         chmod +x TimeNest-${{ steps.version_info.outputs.version }}/usr/bin/TimeNest
 
         # 创建桌面文件
@@ -433,26 +408,7 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd)
 
         # 构建可执行文件
-        pyinstaller --onefile \
-          --name TimeNest \
-          --add-data "qml:qml" \
-          --add-data "resources:resources" \
-          --add-data "themes:themes" \
-          --add-data "config:config" \
-          --add-data "app_info.json:." \
-          --hidden-import PySide6.QtCore \
-          --hidden-import PySide6.QtGui \
-          --hidden-import PySide6.QtWidgets \
-          --hidden-import PySide6.QtQml \
-          --hidden-import PySide6.QtQuick \
-          --hidden-import RinUI \
-          --hidden-import utils.common_imports \
-          --hidden-import utils.shared_utilities \
-          --hidden-import utils.config_constants \
-          --hidden-import utils.rinui_patch \
-          --hidden-import utils.rinui_init \
-          --windowed \
-          main.py
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json:." --add-data "TKtimetable.ico:." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
 
     - name: Get version info and architecture
       id: version_info_macos
@@ -480,7 +436,7 @@ jobs:
         mkdir -p TimeNest.app/Contents/Resources
 
         # 复制可执行文件
-        cp dist/TimeNest TimeNest.app/Contents/MacOS/TimeNest
+        cp -r dist/TimeNest/* TimeNest.app/Contents/MacOS/
         chmod +x TimeNest.app/Contents/MacOS/TimeNest
 
         # 创建Info.plist文件

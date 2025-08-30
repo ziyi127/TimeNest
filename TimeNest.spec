@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['main.py'],
+    ['C:\\Users\\hujin\\Desktop\\TimeNest\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('timetable.json', '.')],
+    datas=[('C:\\Users\\hujin\\Desktop\\TimeNest\\timetable.json', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico', '.')],
     hiddenimports=['tkinter', 'PIL', 'pystray'],
     hookspath=[],
     hooksconfig={},
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['TKtimetable.ico'],
+    icon=['C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico'],
 )
 coll = COLLECT(
     exe,
