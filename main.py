@@ -11,6 +11,9 @@ root.set_display_postion(850, 0)
 # Linux环境下也可以使用系统托盘（需要安装相应依赖）
 tray_manager = TrayManager(root)
 
+# 将托盘管理器实例传递给主窗口，用于右键菜单
+root.tray_manager = tray_manager
+
 # 运行主窗口
 try:
     root.mainloop()

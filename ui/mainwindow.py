@@ -25,6 +25,8 @@ class DragWindow(tk.Tk):
                 self.wm_attributes("-type", "dock")  # KDE推荐
             else:
                 self.wm_attributes("-type", "splash")  # GNOME等其他桌面环境
+            # 在Linux环境下也设置窗口置顶
+            self.wm_attributes("-topmost", True)
             self.resizable(False, False)  # 禁止调整大小
         
         # 初始化可拖动状态，默认为不可拖动
@@ -67,6 +69,9 @@ class DragWindow(tk.Tk):
         self.date_label = tk.Label(self.time_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
         self.date_label.pack(side='left', padx=(3, 0))
         
+        # 创建右键菜单
+        self.context_menu = None
+        
         # 创建课程信息标签
         self.class_info_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
         if self.show_next_class:
@@ -85,11 +90,21 @@ class DragWindow(tk.Tk):
         self.bind("<ButtonRelease-1>", self.stop_move)
         self.bind("<B1-Motion>", self.on_motion)
         
+        # Linux环境下绑定右键菜单事件
+        import platform
+        if platform.system() == "Linux":
+            self.bind("<Button-3>", self._show_context_menu)
+        
         # 绑定窗口关闭事件
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
         # 开始更新时间
         self.update_time()
+        
+        # Linux环境下定期检查并确保窗口置顶
+        import platform
+        if platform.system() == "Linux":
+            self._ensure_topmost()
     
     def _adjust_font_size(self, label, text):
         """根据文本长度调整标签的字体大小"""
@@ -158,6 +173,59 @@ class DragWindow(tk.Tk):
             self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
         if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
             self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
+    
+    def _show_context_menu(self, event):
+        """显示右键菜单"""
+        # 创建菜单
+        if not self.context_menu:
+            self.context_menu = tk.Menu(self, tearoff=0)
+            self.context_menu.add_command(label="允许编辑悬浮窗", command=self._toggle_drag_from_menu)
+            self.context_menu.add_command(label="UI设置", command=self._open_ui_settings_from_menu)
+            self.context_menu.add_separator()
+            self.context_menu.add_command(label="退出", command=self._quit_from_menu)
+        
+        # 显示菜单
+        try:
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
+    
+    def _toggle_drag_from_menu(self):
+        """从菜单切换拖拽状态"""
+        # 这个方法需要与托盘管理器交互
+        if hasattr(self, 'tray_manager'):
+            # 切换拖拽状态
+            current_state = self.tray_manager.allow_drag.get()
+            self.tray_manager.allow_drag.set(not current_state)
+            self.set_draggable(not current_state)
+            print(f"允许拖拽状态: {not current_state}")
+    
+    def _open_ui_settings_from_menu(self):
+        """从菜单打开UI设置"""
+        if hasattr(self, 'tray_manager'):
+            self.tray_manager.open_ui_settings(None, None)
+    
+    def _quit_from_menu(self):
+        """从菜单退出程序"""
+        if hasattr(self, 'tray_manager'):
+            self.tray_manager.quit_window(None, None)
+        else:
+            self.destroy()
+    
+    def _ensure_topmost(self):
+        """确保窗口在Linux环境下保持置顶"""
+        try:
+            # 重新设置窗口置顶属性
+            self.wm_attributes("-topmost", True)
+        except Exception as e:
+            print(f"设置窗口置顶时出错: {e}")
+        
+        # 每5秒检查一次窗口置顶状态
+        try:
+            after_id = self.after(5000, self._ensure_topmost)
+            self.after_ids.append(after_id)
+        except Exception as e:
+            print(f"安排下次检查窗口置顶时出错: {e}")
     
     def update_display_settings(self):
         """更新显示设置"""

@@ -29,6 +29,9 @@ class TrayManager:
         
         # UI设置窗口实例
         self.ui_settings = None
+        
+        # 添加托盘可用性检查
+        self.root_window.after(1000, self._check_tray_availability)
     
     def create_image(self):
         # 创建一个简单的图标
@@ -66,7 +69,24 @@ class TrayManager:
         
         try:
             self.icon = pystray.Icon("test_icon", image, menu=menu)
-            self.icon.run_detached()
+            # 在Linux环境下，尝试使用不同的方法创建托盘图标
+            if platform.system() == "Linux":
+                # 先尝试运行图标
+                try:
+                    self.icon.run_detached()
+                except Exception as e:
+                    print(f"首次创建系统托盘图标失败: {e}")
+                    # 如果失败，等待一段时间后重试
+                    import time
+                    time.sleep(0.5)
+                    try:
+                        self.icon.run_detached()
+                    except Exception as e2:
+                        print(f"重试创建系统托盘图标失败: {e2}")
+                        print("系统托盘功能在当前Linux环境中不可用")
+                        self.icon = None
+            else:
+                self.icon.run_detached()
         except Exception as e:
             print(f"创建系统托盘图标失败: {e}")
             print("系统托盘功能在当前环境中不可用")
@@ -144,3 +164,15 @@ class TrayManager:
             except Exception as e:
                 print(f"运行系统托盘时出错: {e}")
                 print("系统托盘功能在当前环境中不可用")
+    
+    def _check_tray_availability(self):
+        """检查系统托盘是否可用，如果不可用则尝试重新创建"""
+        if PYSTRAY_AVAILABLE and not self.icon:
+            print("尝试重新创建系统托盘图标...")
+            self.create_icon()
+            # 如果重新创建成功，绑定右键菜单事件到主窗口
+            if self.icon:
+                print("系统托盘图标重新创建成功")
+            else:
+                # 如果仍然失败，继续定期检查
+                self.root_window.after(5000, self._check_tray_availability)

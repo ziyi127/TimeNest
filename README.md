@@ -79,12 +79,13 @@ sudo dnf install gnome-shell-extension-appindicator
 - 如果系统托盘无法正常显示，请检查桌面环境是否支持系统托盘功能
 - KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
 - 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
+- 在Linux环境下，程序会自动尝试保持窗口置顶，如果发现窗口被其他应用遮挡，可以尝试重启程序
 
 ## 使用方法
 
 1. 运行 `main.py` 启动程序
 2. 程序启动后会在桌面显示课程表悬浮窗
-3. 右键点击悬浮窗可打开系统托盘菜单（在Linux环境下需要安装相应依赖）
+3. 右键点击悬浮窗可打开系统托盘菜单（在Linux环境下需要安装相应依赖，如果系统托盘不可用，仍可通过右键菜单访问所有功能）
 4. 通过托盘菜单可以：
    - 切换拖拽状态
    - 打开课程表设置
