@@ -199,6 +199,9 @@ class DragWindow(tk.Tk):
             self.tray_manager.allow_drag.set(not current_state)
             self.set_draggable(not current_state)
             print(f"允许拖拽状态: {not current_state}")
+            
+            # 更新菜单项文本
+            self.tray_manager._update_menu_text()
     
     def _open_ui_settings_from_menu(self):
         """从菜单打开UI设置"""

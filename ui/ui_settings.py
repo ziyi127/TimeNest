@@ -63,7 +63,7 @@ class UISettings:
         tk.Checkbutton(display_frame, text="显示正在上的课程名称和休息提示", variable=self.show_next_class_var).pack(anchor=tk.W)
         
         self.show_countdown_var = tk.BooleanVar(value=self.settings["show_countdown"])
-        tk.Checkbutton(display_frame, text="显示距离下节课的时间", variable=self.show_countdown_var).pack(anchor=tk.W)
+        tk.Checkbutton(display_frame, text="显示下节课的时间和名称", variable=self.show_countdown_var).pack(anchor=tk.W)
         
         # 按钮区域
         button_frame = tk.Frame(self.window)

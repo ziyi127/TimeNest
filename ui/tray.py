@@ -62,7 +62,7 @@ class TrayManager:
         self.allow_drag = tk.BooleanVar(value=False)
         
         menu = Menu(
-            MenuItem('允许编辑悬浮窗', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
+            MenuItem('允许编辑悬浮窗位置', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
             MenuItem('UI设置', self.open_ui_settings),
             MenuItem('退出', self.quit_window)
         )
@@ -98,6 +98,23 @@ class TrayManager:
         # 应用新的拖拽状态到主窗口
         self.root_window.set_draggable(self.allow_drag.get())
         print(f"允许拖拽状态: {self.allow_drag.get()}")
+        
+        # 更新菜单项文本
+        self._update_menu_text()
+    
+    def _update_menu_text(self):
+        """更新菜单项文本"""
+        # 在Linux环境下，更新右键菜单的文本
+        import platform
+        if platform.system() == "Linux" and hasattr(self.root_window, 'context_menu') and self.root_window.context_menu:
+            # 获取当前菜单项
+            menu = self.root_window.context_menu
+            
+            # 根据当前状态更新菜单项文本
+            if self.allow_drag.get():
+                menu.entryconfig(0, label="不允许编辑悬浮窗位置")
+            else:
+                menu.entryconfig(0, label="允许编辑悬浮窗位置")
     
 
     
