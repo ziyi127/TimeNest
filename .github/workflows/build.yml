@@ -57,5 +57,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: TimeNest-dev-build
-        path: dist/TimeNest-dev.exe
+        path: dist/TimeNest-dev/
         retention-days: 7
