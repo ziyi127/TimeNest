@@ -64,8 +64,13 @@ class TrayManager:
             MenuItem('退出', self.quit_window)
         )
         
-        self.icon = pystray.Icon("test_icon", image, menu=menu)
-        self.icon.run_detached()
+        try:
+            self.icon = pystray.Icon("test_icon", image, menu=menu)
+            self.icon.run_detached()
+        except Exception as e:
+            print(f"创建系统托盘图标失败: {e}")
+            print("系统托盘功能在当前环境中不可用")
+            self.icon = None
     
     def toggle_drag(self, icon, item):
         # 切换允许拖拽状态
@@ -134,4 +139,8 @@ class TrayManager:
     
     def run(self):
         if self.icon:
-            self.icon.run()
+            try:
+                self.icon.run()
+            except Exception as e:
+                print(f"运行系统托盘时出错: {e}")
+                print("系统托盘功能在当前环境中不可用")

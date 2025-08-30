@@ -78,6 +78,7 @@ sudo dnf install gnome-shell-extension-appindicator
 - 在某些Linux发行版中，可能需要重启桌面环境或系统才能使系统托盘正常显示
 - 如果系统托盘无法正常显示，请检查桌面环境是否支持系统托盘功能
 - KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
+- 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
 
 ## 使用方法
 
