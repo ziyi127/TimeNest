@@ -167,34 +167,23 @@ jobs:
         echo "Installer size: $sizeMB MB"
 
     - name: Upload Windows package to release
-        if: github.ref_name == 'main' || github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.release_info.outputs.tag }}
-          name: TimeNest ${{ steps.release_info.outputs.version }} Windows
-          body: |
-            TimeNest ${{ steps.release_info.outputs.version }} Windows版本发布
-            
-            包含:
-            - Windows安装程序 (exe文件)
-            - 便携版本 (zip文件)
-          draft: false
-          prerelease: false
-          files: |
-            TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
-            TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-
-    - name: Upload Build Artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
       with:
-        name: TimeNest-${{ github.sha }}-windows-${{ matrix.arch }}
-        path: |
+        tag_name: ${{ steps.release_info.outputs.tag }}
+        name: TimeNest ${{ steps.release_info.outputs.version }} Windows
+        body: |
+          TimeNest ${{ steps.release_info.outputs.version }} Windows版本发布
+          
+          包含:
+          - Windows安装程序 (exe文件)
+          - 便携版本 (zip文件)
+        draft: false
+        prerelease: false
+        files: |
           TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
           TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-        retention-days: 30
 
   build-linux:
     runs-on: ubuntu-latest
