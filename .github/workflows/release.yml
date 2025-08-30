@@ -183,14 +183,17 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            *.zip
+            TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
+            TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
 
     - name: Upload Build Artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
       uses: actions/upload-artifact@v4
       with:
         name: TimeNest-${{ github.sha }}-windows-${{ matrix.arch }}
-        path: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
+        path: |
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.zip
+          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
         retention-days: 30
 
   build-linux:
