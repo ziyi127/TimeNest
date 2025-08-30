@@ -61,8 +61,29 @@ jobs:
         python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json;." --add-data "TKtimetable.ico;." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
       shell: pwsh
         
+    - name: Get release info and architecture
+      id: release_info
+      run: |
+        # 使用matrix架构
+        $archName = "${{ matrix.arch }}"
+        echo "architecture=$archName" >> $env:GITHUB_OUTPUT
+
+        if ("${{ github.ref_type }}" -eq "tag") {
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''
+        } else {
+          # 默认版本设置为3.0.0
+          $version = "3.0.0"
+          $tag = "v$version"
+        }
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "tag=$tag" >> $env:GITHUB_OUTPUT
+        
     - name: Create portable package
       run: |
+        $version = "${{ steps.release_info.outputs.version }}"
+        $arch = "${{ steps.release_info.outputs.architecture }}"
+        
         mkdir TimeNest-portable
         xcopy /E /I dist\TimeNest TimeNest-portable\
         copy README.md TimeNest-portable\
@@ -70,6 +91,17 @@ jobs:
         if (Test-Path "resources") { xcopy /E /I resources TimeNest-portable\resources }
         if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
         if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
+        
+        # 压缩便携包
+        $zipFile = "TimeNest_${version}_${arch}.zip"
+        Compress-Archive -Path TimeNest-portable\* -DestinationPath $zipFile -CompressionLevel Optimal
+        
+        echo "Created Windows portable package: $zipFile"
+
+        # 显示文件大小
+        $fileInfo = Get-Item $zipFile
+        $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+        echo "Package size: $sizeMB MB"
         
     - name: Create Windows installer and package
       run: |
@@ -124,64 +156,34 @@ jobs:
 
         # 压缩安装程序
         $exeFile = "TimeNest_${version}_${arch}.exe"
-        $zipFile = "TimeNest_${version}_${arch}.exe.zip"
-        Compress-Archive -Path $exeFile -DestinationPath $zipFile -CompressionLevel Optimal
+        $exeZipFile = "TimeNest_${version}_${arch}.exe.zip"
+        Compress-Archive -Path $exeFile -DestinationPath $exeZipFile -CompressionLevel Optimal
 
-        echo "Created Windows installer: $zipFile"
+        echo "Created Windows installer: $exeZipFile"
 
         # 显示文件大小
-        $fileInfo = Get-Item $zipFile
+        $fileInfo = Get-Item $exeZipFile
         $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
-        echo "Package size: $sizeMB MB"
-
-    - name: Get release info and architecture
-      id: release_info
-      run: |
-        # 使用matrix架构
-        $archName = "${{ matrix.arch }}"
-        echo "architecture=$archName" >> $env:GITHUB_OUTPUT
-
-        if ("${{ github.ref_type }}" -eq "tag") {
-          $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v', ''
-        } else {
-          # 默认版本设置为3.0.0
-          $version = "3.0.0"
-          $tag = "v$version"
-        }
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-        echo "tag=$tag" >> $env:GITHUB_OUTPUT
+        echo "Installer size: $sizeMB MB"
 
     - name: Upload Windows package to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.release_info.outputs.tag }}
-        name: TimeNest ${{ steps.release_info.outputs.version }}
-        body: |
-          ## TimeNest ${{ steps.release_info.outputs.version }}
-
-          ### 📦 Windows 下载
-          - **Windows 安装程序**: TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
-
-          ### 📋 Windows 安装说明
-          1. 下载 ZIP 文件
-          2. 解压得到 `.exe` 安装程序
-          3. 双击运行安装程序
-          4. 按照向导完成安装
-
-          ### 💡 系统要求
-          - Windows 10 或更高版本
-          - 架构: ${{ matrix.arch }}
-
-          ### 🚀 运行
-          安装完成后，可以从开始菜单或桌面快捷方式启动 TimeNest。
-        draft: false
-        prerelease: ${{ contains(steps.release_info.outputs.version, 'Preview') || contains(steps.release_info.outputs.version, 'Beta') || contains(steps.release_info.outputs.version, 'RC') }}
-        files: |
-          TimeNest_${{ steps.release_info.outputs.version }}_${{ steps.release_info.outputs.architecture }}.exe.zip
+        if: github.ref_name == 'main' || github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: TimeNest ${{ steps.release_info.outputs.version }} Windows
+          body: |
+            TimeNest ${{ steps.release_info.outputs.version }} Windows版本发布
+            
+            包含:
+            - Windows安装程序 (exe文件)
+            - 便携版本 (zip文件)
+          draft: false
+          prerelease: false
+          files: |
+            *.zip
 
     - name: Upload Build Artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
@@ -361,9 +363,9 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.version_info.outputs.version, 'Preview') || contains(steps.version_info.outputs.version, 'Beta') || contains(steps.version_info.outputs.version, 'RC') }}
         files: |
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
+          *.deb.zip
+          *.rpm.zip
+          *.pkg.zip
 
     - name: Upload Linux artifacts (for non-release builds)
       if: github.ref_name != 'main' && github.ref_type != 'tag'
