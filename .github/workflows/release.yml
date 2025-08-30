@@ -66,7 +66,6 @@ jobs:
         mkdir TimeNest-portable
         xcopy /E /I dist\TimeNest TimeNest-portable\
         copy README.md TimeNest-portable\
-        copy LICENSE TimeNest-portable\
         if (Test-Path "config") { xcopy /E /I config TimeNest-portable\config }
         if (Test-Path "resources") { xcopy /E /I resources TimeNest-portable\resources }
         if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
