@@ -47,8 +47,26 @@ jobs:
         pip install pyinstaller
         echo "Building dev version with onedir mode..."
         python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json;." --add-data "TKtimetable.ico;." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
+        
+        # Enhanced directory check and rename logic
+        Write-Host "Checking dist directory contents..."
+        Get-ChildItem -Path "dist" -ErrorAction SilentlyContinue
+        
+        # Check if the directory exists and rename it
         if (Test-Path "dist\TimeNest") {
-          Rename-Item "dist\TimeNest" "dist\TimeNest-dev"
+          Write-Host "Renaming dist\TimeNest to dist\TimeNest-dev"
+          try {
+            Rename-Item "dist\TimeNest" "dist\TimeNest-dev" -ErrorAction Stop
+            Write-Host "Successfully renamed directory"
+          } catch {
+            Write-Host "Error renaming directory: $($_.Exception.Message)"
+            Write-Host "Full error details: $_"
+            exit 1
+          }
+        } else {
+          Write-Host "Directory dist\TimeNest does not exist"
+          Write-Host "Current working directory contents:"
+          Get-ChildItem -Path "." -ErrorAction SilentlyContinue
         }
       shell: pwsh
         
