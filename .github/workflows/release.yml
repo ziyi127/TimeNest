@@ -314,7 +314,6 @@ jobs:
 
 
     - name: Upload Linux packages to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
       uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -358,17 +357,6 @@ jobs:
           *.deb.zip
           *.rpm.zip
           *.pkg.zip
-
-    - name: Upload Linux artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
-      with:
-        name: TimeNest-${{ github.sha }}-linux-${{ matrix.arch }}
-        path: |
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.deb.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.rpm.zip
-          TimeNest_${{ steps.version_info.outputs.version }}_x86_64.pkg.zip
-        retention-days: 30
 
   build-macos:
     runs-on: macos-latest
@@ -492,7 +480,6 @@ jobs:
         ls -lh "TimeNest_${VERSION}_${ARCH}.dmg.zip"
 
     - name: Upload macOS package to release
-      if: github.ref_name == 'main' || github.ref_type == 'tag'
       uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -521,12 +508,3 @@ jobs:
         prerelease: ${{ contains(steps.version_info_macos.outputs.version, 'Preview') || contains(steps.version_info_macos.outputs.version, 'Beta') || contains(steps.version_info_macos.outputs.version, 'RC') }}
         files: |
           TimeNest_${{ steps.version_info_macos.outputs.version }}_*.dmg.zip
-
-    - name: Upload macOS artifacts (for non-release builds)
-      if: github.ref_name != 'main' && github.ref_type != 'tag'
-      uses: actions/upload-artifact@v4
-      with:
-        name: TimeNest-${{ github.sha }}-macos-${{ matrix.arch }}
-        path: |
-          TimeNest_${{ steps.version_info_macos.outputs.version }}_${{ steps.version_info_macos.outputs.architecture }}.dmg.zip
-        retention-days: 30
