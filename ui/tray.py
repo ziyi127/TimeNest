@@ -4,18 +4,14 @@ import os
 import tkinter as tk
 import platform
 
-# Linux环境下不导入pystray以避免兼容性问题
-if platform.system() != "Linux":
-    try:
-        import pystray
-        from pystray import Menu, MenuItem
-        PYSTRAY_AVAILABLE = True
-    except ImportError:
-        PYSTRAY_AVAILABLE = False
-        print("无法导入pystray库")
-else:
+# 尝试导入pystray，Linux环境下也可以使用
+try:
+    import pystray
+    from pystray import Menu, MenuItem
+    PYSTRAY_AVAILABLE = True
+except ImportError:
     PYSTRAY_AVAILABLE = False
-    print("Linux环境下禁用系统托盘功能")
+    print("无法导入pystray库")
 
 # 导入UI设置界面
 try:
@@ -46,7 +42,7 @@ class TrayManager:
         return image
     
     def create_icon(self):
-        # Linux环境下不创建系统托盘图标
+        # 尝试创建系统托盘图标
         if not PYSTRAY_AVAILABLE:
             print("系统托盘功能不可用")
             return

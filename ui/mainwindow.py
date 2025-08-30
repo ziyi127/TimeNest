@@ -12,12 +12,19 @@ class DragWindow(tk.Tk):
         
         # 检查操作系统类型，Linux环境下不使用无边框窗口以避免兼容性问题
         import platform
+        import os
+        
         if platform.system() != "Linux":
             self.overrideredirect(True)  # 无边框窗口
             self.wm_attributes("-topmost", True)  # 窗口置顶
         else:
             # Linux环境下使用普通窗口并设置为工具窗口以减少装饰
-            self.wm_attributes("-type", "splash")  # GNOME环境下减少窗口装饰
+            # 根据桌面环境设置不同的窗口类型
+            desktop_env = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+            if 'kde' in desktop_env:
+                self.wm_attributes("-type", "dock")  # KDE推荐
+            else:
+                self.wm_attributes("-type", "splash")  # GNOME等其他桌面环境
             self.resizable(False, False)  # 禁止调整大小
         
         # 初始化可拖动状态，默认为不可拖动

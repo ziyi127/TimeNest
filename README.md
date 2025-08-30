@@ -44,13 +44,46 @@ TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形�
 1. 确保系统已安装 Python 3.6 或更高版本
 2. 下载或克隆本项目到本地
 3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
-4. linux发行版需要单独安装tk框架
+4. Linux发行版需要单独安装tk框架
+
+### Linux桌面环境适配说明
+
+对于Linux用户，特别是使用KDE或GNOME桌面环境的用户，可能需要手动安装额外的依赖包以确保程序正常运行：
+
+**Ubuntu/Debian系统**:
+```bash
+# 安装基本依赖
+sudo apt-get update
+sudo apt-get install python3-pil python3-pil.imagetk python3-tk
+pip3 install pystray
+
+# GNOME桌面环境额外需要
+sudo apt-get install gnome-shell-extension-appindicator
+
+# KDE桌面环境可能需要
+sudo apt-get install libappindicator3-1
+```
+
+**Fedora系统**:
+```bash
+# 安装基本依赖
+sudo dnf install python3-pillow python3-pillow-tk python3-tkinter
+pip3 install pystray
+
+# GNOME桌面环境额外需要
+sudo dnf install gnome-shell-extension-appindicator
+```
+
+**注意事项**:
+- 在某些Linux发行版中，可能需要重启桌面环境或系统才能使系统托盘正常显示
+- 如果系统托盘无法正常显示，请检查桌面环境是否支持系统托盘功能
+- KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
 
 ## 使用方法
 
 1. 运行 `main.py` 启动程序
 2. 程序启动后会在桌面显示课程表悬浮窗
-3. 右键点击悬浮窗可打开系统托盘菜单
+3. 右键点击悬浮窗可打开系统托盘菜单（在Linux环境下需要安装相应依赖）
 4. 通过托盘菜单可以：
    - 切换拖拽状态
    - 打开课程表设置

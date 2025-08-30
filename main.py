@@ -7,13 +7,9 @@ root = DragWindow()
 root.geometry("180x70")
 root.set_display_postion(850, 0)
 
-# Linux环境下不创建系统托盘
-if platform.system() != "Linux":
-    # 创建系统托盘管理器
-    tray_manager = TrayManager(root)
-else:
-    tray_manager = None
-    print("Linux环境下禁用系统托盘功能")
+# 创建系统托盘管理器
+# Linux环境下也可以使用系统托盘（需要安装相应依赖）
+tray_manager = TrayManager(root)
 
 # 运行主窗口
 try:
