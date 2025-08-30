@@ -1,0 +1,447 @@
+name: Main Branch Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller Pillow pystray
+        
+    - name: Set UTF-8 encoding
+      run: |
+        $OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $env:PYTHONIOENCODING = "utf-8"
+      shell: pwsh
+
+    - name: Build executable with spec
+      run: |
+        $OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $env:PYTHONIOENCODING = "utf-8"
+
+        echo "Building with onedir mode..."
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json;." --add-data "TKtimetable.ico;." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
+      shell: pwsh
+        
+    - name: Get version
+      id: get_version
+      run: |
+        # 使用默认版本号
+        $version = "1.0.0"
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+        
+    - name: Create portable package
+      run: |
+        mkdir TimeNest-portable
+        xcopy /E /I dist\TimeNest TimeNest-portable\
+        copy README.md TimeNest-portable\
+        if (Test-Path "config") { xcopy /E /I config TimeNest-portable\config }
+        if (Test-Path "resources") { xcopy /E /I resources TimeNest-portable\resources }
+        if (Test-Path "themes") { xcopy /E /I themes TimeNest-portable\themes }
+        if (Test-Path "schedule_template.xlsx") { copy schedule_template.xlsx TimeNest-portable\ }
+        
+    - name: Create Windows installer and package
+      run: |
+        # 安装NSIS for creating exe installer
+        choco install nsis -y
+        $env:PATH += ";C:\Program Files (x86)\NSIS"
+
+        # 创建NSIS安装脚本
+        $nsisScript = @"
+        !define APP_NAME "TimeNest"
+        !define APP_VERSION "${{ steps.get_version.outputs.version }}"
+        !define APP_ARCH "${{ matrix.arch }}"
+        !define PUBLISHER "ziyi127"
+        !define WEB_SITE "https://timenest.qzz.io"
+        !define INSTALL_DIR "$PROGRAMFILES64\TimeNest"
+
+        Name "${APP_NAME} ${APP_VERSION}"
+        OutFile "TimeNest_${APP_VERSION}_${APP_ARCH}.exe"
+        InstallDir "${INSTALL_DIR}"
+
+        Page directory
+        Page instfiles
+
+        Section "MainSection" SEC01
+            SetOutPath "$INSTDIR"
+            File /r "TimeNest-portable\*"
+            CreateDirectory "$SMPROGRAMS\TimeNest"
+            CreateShortCut "$SMPROGRAMS\TimeNest\TimeNest.lnk" "$INSTDIR\TimeNest.exe"
+            CreateShortCut "$DESKTOP\TimeNest.lnk" "$INSTDIR\TimeNest.exe"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "DisplayName" "TimeNest"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest" "UninstallString" "$INSTDIR\uninstall.exe"
+            WriteUninstaller "$INSTDIR\uninstall.exe"
+        SectionEnd
+
+        Section "Uninstall"
+            Delete "$INSTDIR\*.*"
+            RMDir /r "$INSTDIR"
+            Delete "$SMPROGRAMS\TimeNest\*.*"
+            RMDir "$SMPROGRAMS\TimeNest"
+            Delete "$DESKTOP\TimeNest.lnk"
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\TimeNest"
+        SectionEnd
+        "@
+
+        $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
+
+        # 编译安装程序
+        makensis installer.nsi
+
+        # 压缩安装程序
+        $exeFile = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe"
+        $zipFile = "TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe.zip"
+        Compress-Archive -Path $exeFile -DestinationPath $zipFile -CompressionLevel Optimal
+
+        echo "Created Windows installer: $zipFile"
+
+        # 显示文件大小
+        $fileInfo = Get-Item $zipFile
+        $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+        echo "Package size: $sizeMB MB"
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TimeNest-windows-${{ matrix.arch }}
+        path: TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.exe.zip
+        retention-days: 30
+
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-dev \
+          python3-tk \
+          build-essential \
+          fakeroot \
+          devscripts \
+          debhelper \
+          dh-python \
+          rpm \
+          alien \
+          git \
+          desktop-file-utils
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller Pillow pystray
+        pip install -r requirements.txt || echo "Some dependencies may have failed, continuing..."
+
+    - name: Build Linux executable
+      run: |
+        # 设置环境变量
+        export QT_QPA_PLATFORM=offscreen
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        export DISPLAY=:99
+
+        # 启动虚拟显示（如果需要）
+        sudo apt-get install -y xvfb || true
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
+        # 构建可执行文件
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json:." --add-data "TKtimetable.ico:." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
+
+    - name: Create application directory structure
+      run: |
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/bin
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/applications
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/pixmaps
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/doc/TimeNest
+
+        # 复制可执行文件
+        cp -r dist/TimeNest/* TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/
+        chmod +x TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/TimeNest
+
+        # 创建桌面文件
+        cat > TimeNest-${{ steps.get_version.outputs.version }}/usr/share/applications/TimeNest.desktop << EOF
+        [Desktop Entry]
+        Name=TimeNest
+        Comment=智能时间管理助手
+        Exec=TimeNest
+        Icon=TimeNest
+        Terminal=false
+        Type=Application
+        Categories=Office;Utility;
+        StartupNotify=true
+        EOF
+
+        # 复制图标（如果存在）
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png TimeNest-${{ steps.get_version.outputs.version }}/usr/share/pixmaps/TimeNest.png
+        fi
+
+        # 复制文档
+        cp README.md TimeNest-${{ steps.get_version.outputs.version }}/usr/share/doc/TimeNest/
+
+    - name: Create Debian package
+      run: |
+        # 创建DEBIAN目录
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN
+        
+        # 创建control文件
+        cat > TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN/control << EOF
+        Package: timenest
+        Version: ${{ steps.get_version.outputs.version }}
+        Section: utils
+        Priority: optional
+        Architecture: ${{ matrix.arch }}
+        Maintainer: ziyi127 <ziyi127@example.com>
+        Description: 智能时间管理助手
+         TimeNest是一个功能强大的跨平台课程表管理工具，
+         以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
+        EOF
+        
+        # 设置权限
+        chmod 644 TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN/control
+        find TimeNest-${{ steps.get_version.outputs.version }} -type d -exec chmod 755 {} \;
+        find TimeNest-${{ steps.get_version.outputs.version }} -type f -exec chmod 644 {} \;
+        chmod +x TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/TimeNest
+        
+        # 构建deb包
+        sudo dpkg-deb --build --root-owner-group TimeNest-${{ steps.get_version.outputs.version }}
+        
+        # 重命名deb包
+        mv TimeNest-${{ steps.get_version.outputs.version }}.deb TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.deb
+
+    - name: Upload Linux x86_64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TimeNest-linux-x86_64-deb
+        path: TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.deb
+        retention-days: 30
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-dev \
+          python3-tk \
+          build-essential \
+          fakeroot \
+          devscripts \
+          debhelper \
+          dh-python \
+          rpm \
+          alien \
+          git \
+          desktop-file-utils \
+          gcc-aarch64-linux-gnu \
+          libc6-dev-arm64-cross
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller Pillow pystray
+        pip install -r requirements.txt || echo "Some dependencies may have failed, continuing..."
+
+    - name: Build Linux executable for ARM64
+      run: |
+        # 设置环境变量
+        export QT_QPA_PLATFORM=offscreen
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        export DISPLAY=:99
+
+        # 启动虚拟显示（如果需要）
+        sudo apt-get install -y xvfb || true
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
+        # 构建可执行文件
+        python -m PyInstaller --noconfirm --onedir --windowed --icon TKtimetable.ico --name TimeNest --add-data "timetable.json:." --add-data "TKtimetable.ico:." --hidden-import tkinter --hidden-import PIL --hidden-import pystray main.py
+
+    - name: Create application directory structure
+      run: |
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/bin
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/applications
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/pixmaps
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/usr/share/doc/TimeNest
+
+        # 复制可执行文件
+        cp -r dist/TimeNest/* TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/
+        chmod +x TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/TimeNest
+
+        # 创建桌面文件
+        cat > TimeNest-${{ steps.get_version.outputs.version }}/usr/share/applications/TimeNest.desktop << EOF
+        [Desktop Entry]
+        Name=TimeNest
+        Comment=智能时间管理助手
+        Exec=TimeNest
+        Icon=TimeNest
+        Terminal=false
+        Type=Application
+        Categories=Office;Utility;
+        StartupNotify=true
+        EOF
+
+        # 复制图标（如果存在）
+        if [ -f "resources/app_icon.png" ]; then
+          cp resources/app_icon.png TimeNest-${{ steps.get_version.outputs.version }}/usr/share/pixmaps/TimeNest.png
+        fi
+
+        # 复制文档
+        cp README.md TimeNest-${{ steps.get_version.outputs.version }}/usr/share/doc/TimeNest/
+
+    - name: Create Debian package for ARM64
+      run: |
+        # 创建DEBIAN目录
+        mkdir -p TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN
+        
+        # 创建control文件
+        cat > TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN/control << EOF
+        Package: timenest
+        Version: ${{ steps.get_version.outputs.version }}
+        Section: utils
+        Priority: optional
+        Architecture: ${{ matrix.arch }}
+        Maintainer: ziyi127 <ziyi127@example.com>
+        Description: 智能时间管理助手
+         TimeNest是一个功能强大的跨平台课程表管理工具，
+         以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
+        EOF
+        
+        # 设置权限
+        chmod 644 TimeNest-${{ steps.get_version.outputs.version }}/DEBIAN/control
+        find TimeNest-${{ steps.get_version.outputs.version }} -type d -exec chmod 755 {} \;
+        find TimeNest-${{ steps.get_version.outputs.version }} -type f -exec chmod 644 {} \;
+        chmod +x TimeNest-${{ steps.get_version.outputs.version }}/usr/bin/TimeNest
+        
+        # 构建deb包
+        sudo dpkg-deb --build --root-owner-group TimeNest-${{ steps.get_version.outputs.version }}
+        
+        # 重命名deb包
+        mv TimeNest-${{ steps.get_version.outputs.version }}.deb TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.deb
+
+    - name: Upload Linux arm64 artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TimeNest-linux-arm64-deb
+        path: TimeNest_${{ steps.get_version.outputs.version }}_${{ matrix.arch }}.deb
+        retention-days: 30
+
+  # 构建AUR包
+  build-aur:
+    needs: [build-windows, build-linux-x86_64, build-linux-arm64]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]  # aarch64对应ARM64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: |
+          # 使用默认版本号
+          version="1.0.0"
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Create AUR package structure
+        run: |
+          mkdir -p timenest-aur-${{ matrix.arch }}
+          cd timenest-aur-${{ matrix.arch }}
+          
+          # 创建PKGBUILD文件
+          cat > PKGBUILD << 'EOF'
+          # Maintainer: ziyi127 <ziyi127@example.com>
+          pkgname=timenest
+          pkgver=${{ steps.get_version.outputs.version }}
+          pkgrel=1
+          pkgdesc="智能时间管理助手"
+          arch=('${{ matrix.arch }}')
+          url="https://github.com/ziyi127/TimeNest"
+          license=('MIT')
+          depends=('python' 'python-pillow' 'python-pystray' 'tk')
+          makedepends=('python-setuptools')
+          source=("TimeNest-${{ steps.get_version.outputs.version }}.tar.gz::https://github.com/ziyi127/TimeNest/archive/v${{ steps.get_version.outputs.version }}.tar.gz")
+          sha256sums=('SKIP')
+          
+          build() {
+            cd "TimeNest-${{ steps.get_version.outputs.version }}"
+            python setup.py build
+          }
+          
+          package() {
+            cd "TimeNest-${{ steps.get_version.outputs.version }}"
+            python setup.py install --root="$pkgdir" --optimize=1
+          }
+          EOF
+
+      - name: Upload AUR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TimeNest-aur-${{ matrix.arch }}
+          path: timenest-aur-${{ matrix.arch }}/
+
+  # 上传所有构建产物
+  upload-artifacts:
+    needs: [build-windows, build-linux-x86_64, build-linux-arm64, build-aur]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            */*
