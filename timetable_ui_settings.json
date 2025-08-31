@@ -1,12 +1,9 @@
 {
-  "theme": "dark",
-  "position_x": 100,
-  "position_y": 100,
-  "transparency": 80,
+  "background_color": "#bbf4be",
+  "text_color": "#000000",
+  "transparency": 74,
+  "position_x": 854,
+  "position_y": 1,
   "show_next_class": true,
-  "show_countdown": true,
-  "compact_mode": false,
-  "pointer_passthrough": true,
-  "background_color": "#2c3e50",
-  "text_color": "#ffffff"
+  "show_countdown": true
 }

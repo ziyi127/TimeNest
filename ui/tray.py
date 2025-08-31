@@ -1,17 +1,17 @@
 from PIL import Image, ImageDraw
-import pystray
-from pystray import Menu, MenuItem
 import json
 import os
 import tkinter as tk
 import platform
-import sys
-import logging
-import threading
-import time
-from pathlib import Path
 
-# 课程表设置界面已删除
+# 尝试导入pystray，Linux环境下也可以使用
+try:
+    import pystray
+    from pystray import Menu, MenuItem
+    PYSTRAY_AVAILABLE = True
+except ImportError:
+    PYSTRAY_AVAILABLE = False
+    print("无法导入pystray库")
 
 # 导入UI设置界面
 try:
@@ -25,241 +25,121 @@ class TrayManager:
     def __init__(self, root_window):
         self.root_window = root_window
         self.icon = None
-        self.allow_drag = tk.BooleanVar(value=False)
-        self.ui_settings = None
-        self.logger = logging.getLogger(__name__)
-        self.platform = platform.system().lower()
-        
         self.create_icon()
         
-        # 初始化时设置窗口的可拖动状态
-        if hasattr(self.root_window, 'set_draggable'):
-            self.root_window.set_draggable(self.allow_drag.get())
+        # UI设置窗口实例
+        self.ui_settings = None
+        
+        # 添加托盘可用性检查
+        self.root_window.after(1000, self._check_tray_availability)
     
     def create_image(self):
-        """创建一个简单的托盘图标（跨平台兼容）"""
+        # 创建一个简单的图标
         width = 64
         height = 64
-        
-        # 根据平台选择合适的图标颜色
-        if self.platform == "darwin":  # macOS
-            bg_color = (0, 0, 0, 0)  # 透明背景
-            icon_color = (0, 122, 255)  # macOS系统蓝色
-        elif self.platform == "linux":
-            bg_color = (255, 255, 255)  # 白色背景
-            icon_color = (53, 132, 228)  # Linux系统蓝色
-        else:  # Windows
-            bg_color = (255, 255, 255)  # 白色背景
-            icon_color = (0, 0, 0)  # 黑色
-            
-        image = Image.new('RGBA', (width, height), bg_color)
+        image = Image.new('RGB', (width, height), (255, 255, 255))
         dc = ImageDraw.Draw(image)
-        
-        # 绘制时钟图标
-        dc.ellipse((8, 8, 56, 56), outline=icon_color, width=3)
-        dc.line((32, 32, 32, 16), fill=icon_color, width=3)  # 时针
-        dc.line((32, 32, 48, 32), fill=icon_color, width=2)  # 分针
-        dc.ellipse((30, 30, 34, 34), fill=icon_color)  # 中心点
-        
+        dc.rectangle(
+            (width // 2 - 10, height // 2 - 10, width // 2 + 10, height // 2 + 10),
+            fill=(0, 0, 0))
         return image
     
     def create_icon(self):
-        """创建系统托盘图标（跨平台兼容）"""
+        # 尝试创建系统托盘图标
+        if not PYSTRAY_AVAILABLE:
+            print("系统托盘功能不可用")
+            return
+        
+        # 使用项目目录下的图标文件
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'TKtimetable.ico')
+        if os.path.exists(icon_path):
+            image = Image.open(icon_path)
+        else:
+            # 如果图标文件不存在，使用生成的图像
+            image = self.create_image()
+        
+        # 添加允许拖拽的状态变量，默认为关闭状态
+        self.allow_drag = tk.BooleanVar(value=False)
+        
+        menu = Menu(
+            MenuItem('允许编辑悬浮窗位置', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
+            MenuItem('UI设置', self.open_ui_settings),
+            MenuItem('退出', self.quit_window)
+        )
+        
         try:
-            # 获取图标文件路径（使用pathlib处理跨平台路径）
-            base_path = Path(__file__).parent.parent
-            
-            # 平台特定的图标文件
-            icon_files = {
-                'windows': 'TKtimetable.ico',
-                'darwin': 'TKtimetable.icns',  # macOS
-                'linux': 'TKtimetable.png'   # Linux
-            }
-            
-            icon_filename = icon_files.get(self.platform, 'TKtimetable.ico')
-            icon_path = base_path / icon_filename
-            
-            image = None
-            
-            # 尝试加载平台特定图标
-            if icon_path.exists():
+            self.icon = pystray.Icon("test_icon", image, menu=menu)
+            # 在Linux环境下，尝试使用不同的方法创建托盘图标
+            if platform.system() == "Linux":
+                # 先尝试运行图标
                 try:
-                    image = Image.open(icon_path)
-                    self.logger.info(f"加载平台特定图标: {icon_path}")
+                    self.icon.run_detached()
                 except Exception as e:
-                    self.logger.warning(f"加载图标文件失败: {e}")
-            
-            # 如果加载失败，使用生成的图标
-            if image is None:
-                image = self.create_image()
-                self.logger.info("使用生成的图标")
-            
-            # 创建菜单 - 使用英文菜单项避免编码问题
-            menu = Menu(
-                MenuItem('Allow Edit Window', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
-                MenuItem('UI Settings', self.open_ui_settings),
-                MenuItem('Exit', self.quit_window)
-            )
-            
-            # 创建托盘图标（使用英文标题避免编码问题）
-            self.icon = pystray.Icon("Timetable", image, "Timetable", menu)
-            
-            # 启动托盘图标（跨平台兼容）
-            self._start_icon_platform_specific()
-            
-        except Exception as e:
-            self.logger.error(f"创建托盘图标时出错: {e}")
-            # 即使托盘图标创建失败，程序也应该继续运行
-            print("托盘图标创建失败，但程序将继续运行")
-    
-    def _start_icon_platform_specific(self):
-        """平台特定的托盘图标启动方式"""
-        try:
-            # 根据平台选择合适的启动方式
-            if self.platform == "darwin":  # macOS
-                self._start_icon_macos()
-            elif self.platform == "linux":
-                self._start_icon_linux()
-            else:  # Windows
-                self._start_icon_windows()
-        except Exception as e:
-            self.logger.error(f"平台特定启动失败: {e}")
-            self._start_icon_fallback()
-    
-    def _start_icon_windows(self):
-        """Windows平台托盘图标启动"""
-        try:
-            # Windows使用标准方式
-            def run_icon():
-                try:
-                    self.icon.run()
-                    self.logger.info("Windows托盘图标运行中...")
-                except Exception as e:
-                    self.logger.error(f"Windows托盘图标运行失败: {e}")
-            
-            icon_thread = threading.Thread(target=run_icon, daemon=True)
-            icon_thread.start()
-            self.logger.info("Windows托盘图标已启动")
-            
-        except Exception as e:
-            self.logger.error(f"Windows托盘启动失败: {e}")
-            raise
-    
-    def _start_icon_macos(self):
-        """macOS平台托盘图标启动"""
-        try:
-            # macOS使用标准方式
-            def run_icon():
-                try:
-                    self.icon.run()
-                    self.logger.info("macOS托盘图标运行中...")
-                except Exception as e:
-                    self.logger.error(f"macOS托盘图标运行失败: {e}")
-            
-            icon_thread = threading.Thread(target=run_icon, daemon=True)
-            icon_thread.start()
-            self.logger.info("macOS托盘图标已启动")
-            
-        except Exception as e:
-            self.logger.error(f"macOS托盘启动失败: {e}")
-            raise
-    
-    def _start_icon_linux(self):
-        """Linux平台托盘图标启动"""
-        try:
-            # Linux使用标准方式
-            def run_icon():
-                try:
-                    self.icon.run()
-                    self.logger.info("Linux托盘图标运行中...")
-                except Exception as e:
-                    self.logger.error(f"Linux托盘图标运行失败: {e}")
-            
-            icon_thread = threading.Thread(target=run_icon, daemon=True)
-            icon_thread.start()
-            self.logger.info("Linux托盘图标已启动")
-            
-        except Exception as e:
-            self.logger.error(f"Linux托盘启动失败: {e}")
-            raise
-    
-    def _start_icon_fallback(self):
-        """托盘图标启动的备用方案"""
-        try:
-            # 通用的备用启动方式
-            def run_icon():
-                try:
-                    self.icon.run()
-                    self.logger.info("托盘图标备用启动方式运行中...")
-                except Exception as e:
-                    self.logger.error(f"托盘图标备用启动失败: {e}")
-            
-            icon_thread = threading.Thread(target=run_icon, daemon=True)
-            icon_thread.start()
-            self.logger.info("托盘图标备用启动方式已启动")
-            
-        except Exception as e:
-            self.logger.error(f"托盘图标所有启动方式均失败: {e}")
-    
-    def _start_icon(self):
-        """启动托盘图标，适配不同平台"""
-        try:
-            # 首先尝试detached模式（推荐方式）
-            self.icon.run_detached()
-        except Exception as e:
-            print(f"detached模式启动失败: {e}")
-            
-            try:
-                # 如果detached模式失败，尝试在线程中运行
-                import threading
-                def run_icon():
+                    print(f"首次创建系统托盘图标失败: {e}")
+                    # 如果失败，等待一段时间后重试
+                    import time
+                    time.sleep(0.5)
                     try:
-                        self.icon.run()
+                        self.icon.run_detached()
                     except Exception as e2:
-                        print(f"线程模式启动失败: {e2}")
-                
-                # 在守护线程中运行托盘图标
-                icon_thread = threading.Thread(target=run_icon, daemon=True)
-                icon_thread.start()
-            except Exception as e2:
-                print(f"线程启动失败: {e2}")
-                print("托盘图标启动失败，但程序将继续运行")
+                        print(f"重试创建系统托盘图标失败: {e2}")
+                        print("系统托盘功能在当前Linux环境中不可用")
+                        self.icon = None
+            else:
+                self.icon.run_detached()
+        except Exception as e:
+            print(f"创建系统托盘图标失败: {e}")
+            print("系统托盘功能在当前环境中不可用")
+            self.icon = None
     
     def toggle_drag(self, icon, item):
-        """切换悬浮窗的可拖动状态"""
-        current_value = self.allow_drag.get()
-        new_value = not current_value
-        self.allow_drag.set(new_value)
-        # 更新悬浮窗的可拖动状态
-        if hasattr(self.root_window, 'set_draggable'):
-            self.root_window.set_draggable(new_value)
+        # 切换允许拖拽状态
+        self.allow_drag.set(not self.allow_drag.get())
+        # 应用新的拖拽状态到主窗口
+        self.root_window.set_draggable(self.allow_drag.get())
+        print(f"允许拖拽状态: {self.allow_drag.get()}")
+        
+        # 更新菜单项文本
+        self._update_menu_text()
+    
+    def _update_menu_text(self):
+        """更新菜单项文本"""
+        # 在Linux环境下，更新右键菜单的文本
+        import platform
+        if platform.system() == "Linux" and hasattr(self.root_window, 'context_menu') and self.root_window.context_menu:
+            # 获取当前菜单项
+            menu = self.root_window.context_menu
+            
+            # 根据当前状态更新菜单项文本
+            if self.allow_drag.get():
+                menu.entryconfig(0, label="不允许编辑悬浮窗位置")
+            else:
+                menu.entryconfig(0, label="允许编辑悬浮窗位置")
     
 
     
     def open_ui_settings(self, icon, item):
-        """打开UI设置界面"""
         # 打开UI设置界面
         if UI_SETTINGS_AVAILABLE:
             # 如果窗口已存在，将其带到前台
-            if self.ui_settings and hasattr(self.ui_settings, 'window') and self.ui_settings.window.winfo_exists():
+            if self.ui_settings and self.ui_settings.window.winfo_exists():
                 self.ui_settings.window.lift()
                 self.ui_settings.window.focus_force()
             else:
-                # 创建新窗口，传递悬浮窗实例
+                # 创建新窗口
                 self.ui_settings = UISettings(self.root_window, self.root_window)
         else:
             print("UI设置功能不可用")
     
     def quit_window(self, icon, item):
-        """退出程序"""
         # 退出程序
         try:
             # 清理资源
             if self.ui_settings:
                 try:
                     self.ui_settings.window.destroy()
-                except Exception as e:
-                    print(f"销毁UI设置窗口时出错: {e}")
+                except:
+                    pass
                 self.ui_settings = None
             
             # 调用窗口的关闭方法以保存位置
@@ -293,3 +173,23 @@ class TrayManager:
                 # 如果sys.exit失败，使用os._exit强制退出
                 import os
                 os._exit(0)
+    
+    def run(self):
+        if self.icon:
+            try:
+                self.icon.run()
+            except Exception as e:
+                print(f"运行系统托盘时出错: {e}")
+                print("系统托盘功能在当前环境中不可用")
+    
+    def _check_tray_availability(self):
+        """检查系统托盘是否可用，如果不可用则尝试重新创建"""
+        if PYSTRAY_AVAILABLE and not self.icon:
+            print("尝试重新创建系统托盘图标...")
+            self.create_icon()
+            # 如果重新创建成功，绑定右键菜单事件到主窗口
+            if self.icon:
+                print("系统托盘图标重新创建成功")
+            else:
+                # 如果仍然失败，继续定期检查
+                self.root_window.after(5000, self._check_tray_availability)

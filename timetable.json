@@ -1,174 +1,233 @@
 {
   "timetable": {
-    "周一": [
+    "monday": [
       {
         "start_time": "08:00",
-        "end_time": "09:40",
-        "subject": "高等数学",
-        "classroom": "理学楼A201"
+        "end_time": "08:40",
+        "subject": "历史",
+        "teacher": "教师1",
+        "classroom": "教室101"
       },
       {
-        "start_time": "10:00",
-        "end_time": "11:40",
-        "subject": "大学英语",
-        "classroom": "外语楼B305"
+        "start_time": "08:50",
+        "end_time": "09:30",
+        "subject": "历史",
+        "teacher": "教师1",
+        "classroom": "教室101"
+      },
+      {
+        "start_time": "09:40",
+        "end_time": "10:20",
+        "subject": "英语",
+        "teacher": "教师2",
+        "classroom": "教室202"
+      },
+      {
+        "start_time": "10:30",
+        "end_time": "11:10",
+        "subject": "英语",
+        "teacher": "教师2",
+        "classroom": "教室202"
       },
       {
         "start_time": "14:00",
-        "end_time": "15:40",
-        "subject": "程序设计基础",
-        "classroom": "计算机楼C405"
+        "end_time": "14:40",
+        "subject": "数学",
+        "teacher": "教师3",
+        "classroom": "教室303"
       },
       {
-        "start_time": "16:00",
-        "end_time": "17:40",
-        "subject": "体育-篮球",
-        "classroom": "体育馆"
+        "start_time": "14:50",
+        "end_time": "15:30",
+        "subject": "数学",
+        "teacher": "教师3",
+        "classroom": "教室303"
+      },
+      {
+        "start_time": "15:40",
+        "end_time": "16:20",
+        "subject": "班会",
+        "teacher": "班主任",
+        "classroom": "本班教室"
       }
     ],
-    "周二": [
+    "tuesday": [
       {
         "start_time": "08:00",
-        "end_time": "09:40",
-        "subject": "线性代数",
-        "classroom": "理学楼A202"
+        "end_time": "08:40",
+        "subject": "通信原理与系统",
+        "teacher": "教师4",
+        "classroom": "教室404"
       },
       {
-        "start_time": "10:00",
-        "end_time": "11:40",
-        "subject": "大学物理",
-        "classroom": "理学楼B301"
+        "start_time": "08:50",
+        "end_time": "09:30",
+        "subject": "通信原理与系统",
+        "teacher": "教师4",
+        "classroom": "教室404"
+      },
+      {
+        "start_time": "09:40",
+        "end_time": "10:20",
+        "subject": "语文",
+        "teacher": "教师5",
+        "classroom": "教室505"
+      },
+      {
+        "start_time": "10:30",
+        "end_time": "11:10",
+        "subject": "语文",
+        "teacher": "教师5",
+        "classroom": "教室505"
       },
       {
         "start_time": "14:00",
-        "end_time": "15:40",
-        "subject": "数据结构",
-        "classroom": "计算机楼C407"
+        "end_time": "14:40",
+        "subject": "电子技术基础",
+        "teacher": "教师6",
+        "classroom": "教室606"
       },
       {
-        "start_time": "19:00",
-        "end_time": "20:40",
-        "subject": "学术讲座",
-        "classroom": "图书馆报告厅"
+        "start_time": "14:50",
+        "end_time": "15:30",
+        "subject": "电子技术基础",
+        "teacher": "教师6",
+        "classroom": "教室606"
       }
     ],
-    "周三": [
+    "wednesday": [
       {
         "start_time": "08:00",
-        "end_time": "09:40",
-        "subject": "离散数学",
-        "classroom": "理学楼A203"
+        "end_time": "08:40",
+        "subject": "英语",
+        "teacher": "教师2",
+        "classroom": "教室202"
       },
       {
-        "start_time": "10:00",
-        "end_time": "11:40",
-        "subject": "马克思主义原理",
-        "classroom": "人文楼D201"
+        "start_time": "08:50",
+        "end_time": "09:30",
+        "subject": "体育",
+        "teacher": "体育老师",
+        "classroom": "操场"
+      },
+      {
+        "start_time": "09:40",
+        "end_time": "10:20",
+        "subject": "数学",
+        "teacher": "教师3",
+        "classroom": "教室303"
+      },
+      {
+        "start_time": "10:30",
+        "end_time": "11:10",
+        "subject": "数学",
+        "teacher": "教师3",
+        "classroom": "教室303"
       },
       {
         "start_time": "14:00",
-        "end_time": "17:40",
-        "subject": "实验课-物理",
-        "classroom": "实验楼E301"
+        "end_time": "14:40",
+        "subject": "语文",
+        "teacher": "教师5",
+        "classroom": "教室505"
       },
       {
-        "start_time": "19:00",
-        "end_time": "21:30",
-        "subject": "社团活动",
-        "classroom": "学生活动中心"
+        "start_time": "14:50",
+        "end_time": "15:30",
+        "subject": "语文",
+        "teacher": "教师5",
+        "classroom": "教室505"
+      },
+      {
+        "start_time": "15:40",
+        "end_time": "16:20",
+        "subject": "物理",
+        "teacher": "教师7",
+        "classroom": "教室707"
       }
     ],
-    "周四": [
+    "thursday": [
       {
         "start_time": "08:00",
-        "end_time": "09:40",
-        "subject": "概率论",
-        "classroom": "理学楼A204"
+        "end_time": "08:40",
+        "subject": "信息技术",
+        "teacher": "教师8",
+        "classroom": "机房808"
       },
       {
-        "start_time": "10:00",
-        "end_time": "11:40",
-        "subject": "计算机组成原理",
-        "classroom": "计算机楼C401"
+        "start_time": "08:50",
+        "end_time": "09:30",
+        "subject": "信息技术",
+        "teacher": "教师8",
+        "classroom": "机房808"
+      },
+      {
+        "start_time": "09:40",
+        "end_time": "10:20",
+        "subject": "体育",
+        "teacher": "体育老师",
+        "classroom": "操场"
+      },
+      {
+        "start_time": "10:30",
+        "end_time": "11:10",
+        "subject": "物理",
+        "teacher": "教师7",
+        "classroom": "教室707"
+      },
+      {
+        "start_time": "11:10",
+        "end_time": "14:00",
+        "subject": "电子技术基础",
+        "teacher": "教师6",
+        "classroom": "教室606"
       },
       {
         "start_time": "14:00",
-        "end_time": "15:40",
-        "subject": "操作系统",
-        "classroom": "计算机楼C402"
+        "end_time": "15:10",
+        "subject": "电子技术基础",
+        "teacher": "教师6",
+        "classroom": "教室606"
       },
       {
-        "start_time": "16:00",
-        "end_time": "17:40",
-        "subject": "体育-羽毛球",
-        "classroom": "体育馆"
+        "start_time": "15:40",
+        "end_time": "16:20",
+        "subject": "电子技术基础",
+        "teacher": "教师6",
+        "classroom": "教室606"
       }
     ],
-    "周五": [
+    "friday": [
       {
         "start_time": "08:00",
-        "end_time": "09:40",
-        "subject": "软件工程",
-        "classroom": "计算机楼C403"
+        "end_time": "08:40",
+        "subject": "心理健康与职业",
+        "teacher": "心理老师",
+        "classroom": "教室909"
       },
       {
-        "start_time": "10:00",
-        "end_time": "11:40",
-        "subject": "数据库原理",
-        "classroom": "计算机楼C404"
+        "start_time": "08:50",
+        "end_time": "09:30",
+        "subject": "心理健康与职业",
+        "teacher": "心理老师",
+        "classroom": "教室909"
       },
       {
-        "start_time": "14:00",
-        "end_time": "15:40",
-        "subject": "人工智能导论",
-        "classroom": "计算机楼C406"
+        "start_time": "09:40",
+        "end_time": "10:20",
+        "subject": "电子技能与实训",
+        "teacher": "教师10",
+        "classroom": "实训教室1010"
       },
       {
-        "start_time": "16:00",
-        "end_time": "17:40",
-        "subject": "创新创业基础",
-        "classroom": "经管楼F201"
+        "start_time": "10:30",
+        "end_time": "11:10",
+        "subject": "电子技能与实训",
+        "teacher": "教师10",
+        "classroom": "实训教室1010"
       }
     ],
-    "周六": [
-      {
-        "start_time": "09:00",
-        "end_time": "10:40",
-        "subject": "英语口语",
-        "classroom": "外语楼B306"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "17:40",
-        "subject": "实验课-数据库",
-        "classroom": "实验楼E302"
-      },
-      {
-        "start_time": "19:00",
-        "end_time": "21:00",
-        "subject": "电影赏析",
-        "classroom": "人文楼报告厅"
-      }
-    ],
-    "周日": [
-      {
-        "start_time": "10:00",
-        "end_time": "11:30",
-        "subject": "自习",
-        "classroom": "图书馆"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "16:00",
-        "subject": "小组讨论",
-        "classroom": "咖啡厅"
-      },
-      {
-        "start_time": "19:00",
-        "end_time": "21:30",
-        "subject": "网络课程",
-        "classroom": "宿舍"
-      }
-    ]
+    "saturday": [],
+    "sunday": []
   }
 }

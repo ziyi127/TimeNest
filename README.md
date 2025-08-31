@@ -1,40 +1,106 @@
-# TimeNest 课程表桌面应用
+# TimeNest vtktt 课程表桌面应用
 
-TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
+<div align="center">
+
+<img src="https://github.com/ziyi127/TimeNest/blob/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+
+**一个功能强大的跨平台课程表管理工具**
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
+
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+
+</div>
+
+TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
 
 ## 功能特点
 
 - **桌面悬浮窗**: 课程表以半透明悬浮窗形式显示在桌面上，不遮挡其他应用
 - **实时课程信息**: 显示当前时间和日期，以及当前和下一节课的详细信息
 - **系统托盘管理**: 最小化到系统托盘，支持快速操作
-- **自动加载课表**: 启动时自动读取timetable.json文件加载课程安排
+- **课程表设置**: 可自定义一周七天的课程安排（此功能暂时不可用，请利用ai直接修改timetable.json文件）
 - **UI个性化**: 支持背景颜色、文字颜色、透明度等界面设置
 - **拖拽移动**: 可以拖拽窗口到任意位置
 - **鼠标穿透**: 可设置鼠标穿透功能，避免误操作
 
-## 安装说明
+## 课表显示逻辑
+
+程序会根据当前时间和课表数据动态显示课程信息：
+
+1. **正在上课**: 如果当前时间在某节课的时间段内，会显示"正在上课: 课程名 (开始时间-结束时间)"
+2. **课间休息**: 如果当前时间不在任何课程时间段内，但当天还有未开始的课程，会显示"课间休息: 距离下一节课还有X分钟"
+3. **周末**: 周六和周日如果没有课程安排，会显示"今天休息，无课程安排"
+4. **放学后**: 如果当天课程已结束，会显示"今天课程已结束"
+5. **无课程安排**: 如果当天没有任何课程，会显示"今天没有课程安排"
+6. **第一节课前**: 如果当天有课程但还没到第一节课时间，会显示"今天没有课程进行中"
+
+程序还会显示下一节课的信息，包括课程名称和距离开始的时间。
+
+## 源码编辑说明
 
 1. 确保系统已安装 Python 3.6 或更高版本
-2. 在安装 Tk 库：`sudo pacman -S tk`
-3. 下载或克隆本项目到本地
-4. 创建虚拟环境：`python -m venv venv`
-5. 激活虚拟环境：`source venv/bin/activate`
-6. 安装requirements.txt中所写依赖包：`pip install -r requirements.txt`
+2. 下载或克隆本项目到本地
+3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
+4. 若您使用的是Linux发行版，请您查看“Linux桌面环境适配说明”来安装依赖
+
+### Linux桌面环境适配说明
+
+对于Linux用户，特别是使用KDE或GNOME桌面环境的用户，可能需要手动安装额外的依赖包以确保程序正常运行：
+
+**Ubuntu/Debian系统**:
+```bash
+# 安装基本依赖
+sudo apt-get update
+sudo apt-get install python3-pil python3-pil.imagetk python3-tk
+pip3 install pystray
+
+# GNOME桌面环境额外需要
+sudo apt-get install gnome-shell-extension-appindicator
+
+# KDE桌面环境可能需要
+sudo apt-get install libappindicator3-1
+```
+
+**Fedora系统**:
+```bash
+# 安装基本依赖
+sudo dnf install python3-pillow python3-pillow-tk python3-tkinter
+pip3 install pystray
+
+# GNOME桌面环境额外需要
+sudo dnf install gnome-shell-extension-appindicator
+```
+
+**注意事项**:
+- 在某些Linux发行版中，当依赖完成安装后，可能需要重启桌面环境或系统才能使系统托盘正常显示
+- 如果系统托盘无法正常显示，请检查桌面环境是否支持系统托盘功能
+- KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
+- 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
+- 在Linux环境下，程序会自动尝试保持窗口置顶，如果发现窗口被其他应用遮挡，可以尝试重启程序
 
 ## 使用方法
 
-### 方法一：使用启动脚本（推荐）
-```bash
-./run.sh
-```
-
-### 方法二：手动运行
-1. 运行程序：`source venv/bin/activate && python main.py`
+### 源码运行
+1. 运行 `main.py` 启动程序
 2. 程序启动后会在桌面显示课程表悬浮窗
-3. 悬浮窗默认处于鼠标穿透状态，不会影响其他应用程序的操作
-4. 右键点击系统托盘图标可打开菜单
-5.- 通过托盘菜单可以：
-   - 切换拖拽状态（允许编辑悬浮窗位置）
+3. 右键点击悬浮窗可打开系统托盘菜单（在Linux环境下需要安装相应依赖，如果系统托盘不可用，仍可通过右键菜单访问所有功能）
+4. 通过托盘菜单可以：
+   - 切换拖拽状态
+   - 打开课程表设置
+   - 打开UI设置
+   - 退出程序
+
+### 便携版ZIP包
+1. 下载并解压便携版ZIP包
+2. 进入解压后的目录，运行 `TimeNest.exe` 启动程序
+3. 程序启动后会在桌面显示课程表悬浮窗
+4. 右键点击悬浮窗可打开系统托盘菜单
+5. 通过托盘菜单可以：
+   - 切换拖拽状态
+   - 打开课程表设置
    - 打开UI设置
    - 退出程序
 
@@ -43,7 +109,6 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 - `main.py`: 程序入口文件
 - `timetable.json`: 课程表数据文件
 - `timetable_ui_settings.json`: UI设置数据文件
-- `timetable_window_position.json`: 窗口位置数据文件
 - `ui/`: UI相关模块目录
   - `mainwindow.py`: 主窗口实现
   - `tray.py`: 系统托盘实现
@@ -51,8 +116,32 @@ TimeNest 是一个简洁美观的桌面课程表应用，由AI开发。它以悬
 
 ## 开发说明
 
-本程序部分由AI开发请仔细甄别，使用Python和Tkinter库实现。
+本程序部分由AI开发，请仔细甄别，使用Python和Tkinter库实现。
+
+## 🏆 致谢
+
+### 核心贡献者
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/hujinming0722ispassword">
+        <img src="https://github.com/hujinming0722ispassword.png" width="100" alt="hujinming0722ispassword" />
+        <br />
+        <sub><b>hujinming0722ispassword</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/ziyi127">
+        <img src="https://github.com/ziyi127.png" width="100" alt="ziyi127" />
+        <br />
+        <sub><b>ziyi127</b></sub>
+      </a>
+    </td>
+    <!-- 我们一直在等第三个人，加入我们的团队，一起完善这个项目！ -->
+
+</table>
 
 ## 许可证
 
-MIT License
+Apache-2.0 license
