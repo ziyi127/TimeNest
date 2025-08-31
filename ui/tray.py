@@ -82,12 +82,11 @@ class TrayManager:
                     print(f"首次创建系统托盘图标失败: {e}")
                     # 如果失败，等待一段时间后重试
                     import time
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                     try:
                         self.icon.run_detached()
                     except Exception as e2:
                         print(f"重试创建系统托盘图标失败: {e2}")
-                        print("系统托盘功能在当前Linux环境中不可用")
                         self.icon = None
             else:
                 self.icon.run_detached()
