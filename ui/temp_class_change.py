@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import json
 import os
 
+# 此文件是临时调课窗口文件和类
 class TempClassChangeWindow:
     def __init__(self, parent, main_window):
         self.parent = parent
@@ -93,13 +94,13 @@ class TempClassChangeWindow:
         # 星期选择
         ttk.Label(main_frame, text="星期:").grid(row=1, column=0, sticky=tk.W, padx=(10, 0))
         self.day_var = tk.StringVar()
-        self.day_combo = ttk.Combobox(main_frame, textvariable=self.day_var, state="readonly", width=15)
+        self.day_combo = ttk.Combobox(main_frame, textvariable=self.day_var, state="readonly", width=10)
         self.day_combo.grid(row=1, column=1, sticky=tk.W, padx=(5, 0), pady=5)
         
         # 节次选择
         ttk.Label(main_frame, text="第几节:").grid(row=1, column=2, sticky=tk.W, padx=(10, 0))
         self.period_var = tk.StringVar()
-        self.period_combo = ttk.Combobox(main_frame, textvariable=self.period_var, state="readonly", width=15)
+        self.period_combo = ttk.Combobox(main_frame, textvariable=self.period_var, state="readonly", width=10)
         self.period_combo.grid(row=1, column=3, sticky=tk.W, padx=(5, 0), pady=5)
         
         # 更改后的课程选择
@@ -108,7 +109,7 @@ class TempClassChangeWindow:
         # 课程选择
         ttk.Label(main_frame, text="课程:").grid(row=3, column=0, sticky=tk.W, padx=(10, 0))
         self.class_var = tk.StringVar()
-        self.class_combo = ttk.Combobox(main_frame, textvariable=self.class_var, state="readonly", width=30)
+        self.class_combo = ttk.Combobox(main_frame, textvariable=self.class_var, state="readonly", width=15)
         self.class_combo.grid(row=3, column=1, columnspan=3, sticky=tk.W, padx=(5, 0), pady=5)
         
         # 单次课程修改复选框
