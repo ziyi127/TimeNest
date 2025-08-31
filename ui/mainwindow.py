@@ -173,22 +173,7 @@ class DragWindow(tk.Tk):
             self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
         if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
             self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
-    def open_temp_class_change(self, icon, item):
-        # 打开临时调课界面
-        # 导入临时调课界面
-        try:
-            from ui.temp_class_change import TempClassChangeWindow
-            
-            # 如果窗口已存在，将其带到前台
-            if self.temp_class_change and self.temp_class_change.window and self.temp_class_change.window.winfo_exists():
-                self.temp_class_change.window.lift()
-                self.temp_class_change.window.focus_force()
-            else:
-                # 创建新窗口
-                self.temp_class_change = TempClassChangeWindow(self.root_window, self.root_window)
-                self.temp_class_change.open_window()
-        except Exception as e:
-            print(f"打开临时调课界面时出错: {e}")
+
     def _show_context_menu(self, event):#这个只有linux会起作用，win不会被激活
         """显示右键菜单"""
         # 创建菜单
@@ -196,7 +181,7 @@ class DragWindow(tk.Tk):
             self.context_menu = tk.Menu(self, tearoff=0)
             self.context_menu.add_command(label="允许编辑悬浮窗", command=self._toggle_drag_from_menu)
             self.context_menu.add_command(label="UI设置", command=self._open_ui_settings_from_menu)
-            self.context_menu.add_command(label='临时调课', command=self.open_temp_class_change)
+            self.context_menu.add_command(label='临时调课', command=self._open_temp_class_change_from_menu)
             self.context_menu.add_separator()
             self.context_menu.add_command(label="退出", command=self._quit_from_menu)
         
@@ -223,6 +208,11 @@ class DragWindow(tk.Tk):
         """从菜单打开UI设置"""
         if hasattr(self, 'tray_manager'):
             self.tray_manager.open_ui_settings(None, None)
+    
+    def _open_temp_class_change_from_menu(self):
+        """从菜单打开linshitiaoke"""
+        if hasattr(self, 'tray_manager'):
+            self.tray_manager.open_temp_class_change(None, None)
     
     def _quit_from_menu(self):
         """从菜单退出程序"""
