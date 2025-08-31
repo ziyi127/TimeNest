@@ -30,6 +30,9 @@ class TrayManager:
         # UI设置窗口实例
         self.ui_settings = None
         
+        # 临时调课界面实例
+        self.temp_class_change = None
+        
         # 添加托盘可用性检查
         self.root_window.after(1000, self._check_tray_availability)
     
@@ -63,6 +66,7 @@ class TrayManager:
         
         menu = Menu(
             MenuItem('允许编辑悬浮窗位置', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
+            MenuItem('临时调课', self.open_temp_class_change),
             MenuItem('UI设置', self.open_ui_settings),
             MenuItem('退出', self.quit_window)
         )
@@ -118,6 +122,23 @@ class TrayManager:
     
 
     
+    def open_temp_class_change(self, icon, item):
+        # 打开临时调课界面
+        # 导入临时调课界面
+        try:
+            from ui.temp_class_change import TempClassChangeWindow
+            
+            # 如果窗口已存在，将其带到前台
+            if self.temp_class_change and self.temp_class_change.window and self.temp_class_change.window.winfo_exists():
+                self.temp_class_change.window.lift()
+                self.temp_class_change.window.focus_force()
+            else:
+                # 创建新窗口
+                self.temp_class_change = TempClassChangeWindow(self.root_window, self.root_window)
+                self.temp_class_change.open_window()
+        except Exception as e:
+            print(f"打开临时调课界面时出错: {e}")
+    
     def open_ui_settings(self, icon, item):
         # 打开UI设置界面
         if UI_SETTINGS_AVAILABLE:
@@ -141,6 +162,15 @@ class TrayManager:
                 except:
                     pass
                 self.ui_settings = None
+            
+            # 清理临时调课界面
+            if self.temp_class_change:
+                try:
+                    if self.temp_class_change.window:
+                        self.temp_class_change.window.destroy()
+                except:
+                    pass
+                self.temp_class_change = None
             
             # 调用窗口的关闭方法以保存位置
             if hasattr(self.root_window, 'on_closing'):

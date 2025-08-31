@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import json
 import os
 import datetime
@@ -355,13 +355,37 @@ class DragWindow(tk.Tk):
             # 获取项目目录
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             
-            # 直接查找timetable.json文件
-            timetable_file = "timetable.json"
-            timetable_file_path = os.path.join(project_path, timetable_file)
+            # 定义文件路径
+            timetable_file_path = os.path.join(project_path, "timetable.json")
+            classtable_meta_file_path = os.path.join(project_path, "classtableMeta.json")
             
-            if not os.path.exists(timetable_file_path):
-                print("未找到课程表文件")
+            # 检查文件存在性
+            timetable_exists = os.path.exists(timetable_file_path)
+            classtable_meta_exists = os.path.exists(classtable_meta_file_path)
+            
+            # 如果两个文件都不存在，弹窗提示
+            if not timetable_exists and not classtable_meta_exists:
+                print("未找到课程表文件，请您自定义课表之后重启程序")
+                # 创建提示窗口
+                self._show_no_timetable_dialog()
                 return {}
+            
+            # 如果只有classtableMeta.json存在，转换为timetable.json
+            if classtable_meta_exists and not timetable_exists:
+                print("发现classtableMeta.json，正在转换为timetable.json...")
+                self._convert_classtable_meta_to_timetable(classtable_meta_file_path, timetable_file_path)
+            
+            # 如果只有timetable.json存在，转换为classtableMeta.json
+            elif timetable_exists and not classtable_meta_exists:
+                print("发现timetable.json，正在转换为classtableMeta.json...")
+                self._convert_timetable_to_classtable_meta(timetable_file_path, classtable_meta_file_path)
+            
+            # 加载classtableMeta.json（如果存在）
+            if classtable_meta_exists:
+                with open(classtable_meta_file_path, 'r', encoding='utf-8') as f:
+                    self.classtable_meta = json.load(f)
+            else:
+                self.classtable_meta = None
             
             # 加载课程表
             with open(timetable_file_path, 'r', encoding='utf-8') as f:
@@ -397,6 +421,118 @@ class DragWindow(tk.Tk):
             return converted_timetable
         except Exception as e:
             print(f"加载课程表时出错: {e}")
+    
+    def _convert_classtable_meta_to_timetable(self, meta_file_path, timetable_file_path):
+        """将classtableMeta.json转换为timetable.json"""
+        try:
+            # 读取classtableMeta.json
+            with open(meta_file_path, 'r', encoding='utf-8') as f:
+                meta_data = json.load(f)
+            
+            # 构建timetable.json数据结构
+            timetable_data = {"timetable": {}}
+            
+            # 获取classtable和timetable数据
+            classtable = meta_data.get("classtable", {})
+            time_slots = meta_data.get("timetable", {})
+            
+            # 合并时间信息和课程信息
+            weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            weekdays_cn = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+            
+            for i, day in enumerate(weekdays):
+                if day in time_slots and day in classtable:
+                    # 合并时间信息和课程信息
+                    timetable_data["timetable"][day] = []
+                    for j, time_slot in enumerate(time_slots[day]):
+                        if j < len(classtable[day]):
+                            # 添加课程信息
+                            slot = time_slot.copy()
+                            slot["subject"] = classtable[day][j]
+                            # 添加默认的教师和教室信息
+                            slot["teacher"] = "教师"
+                            slot["classroom"] = "教室"
+                            timetable_data["timetable"][day].append(slot)
+                elif day in time_slots:
+                    # 只有时间信息，没有课程信息
+                    timetable_data["timetable"][day] = time_slots[day]
+                elif day in classtable:
+                    # 只有课程信息，没有时间信息
+                    timetable_data["timetable"][day] = [{"subject": subject} for subject in classtable[day]]
+            
+            # 写入timetable.json
+            with open(timetable_file_path, 'w', encoding='utf-8') as f:
+                json.dump(timetable_data, f, ensure_ascii=False, indent=2)
+            
+            print("转换完成: classtableMeta.json -> timetable.json")
+        except Exception as e:
+            print(f"转换classtableMeta.json时出错: {e}")
+    
+    def _convert_timetable_to_classtable_meta(self, timetable_file_path, meta_file_path):
+        """将timetable.json转换为classtableMeta.json"""
+        try:
+            # 读取timetable.json
+            with open(timetable_file_path, 'r', encoding='utf-8') as f:
+                timetable_data = json.load(f)
+            
+            # 处理可能的嵌套结构
+            if "timetable" in timetable_data:
+                timetable = timetable_data["timetable"]
+            else:
+                timetable = timetable_data
+            
+            # 构建classtableMeta.json数据结构
+            meta_data = {
+                "timetable": {},
+                "classtable": {},
+                "allclass": []
+            }
+            
+            # 提取时间信息和课程信息
+            weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            all_classes = set()
+            
+            for day in weekdays:
+                if day in timetable:
+                    # 提取时间信息
+                    meta_data["timetable"][day] = [
+                        {"start_time": slot.get("start_time", ""), "end_time": slot.get("end_time", "")}
+                        for slot in timetable[day]
+                    ]
+                    
+                    # 提取课程信息
+                    meta_data["classtable"][day] = [slot.get("subject", "") for slot in timetable[day]]
+                    
+                    # 收集所有课程
+                    all_classes.update(meta_data["classtable"][day])    
+            # 设置allclass
+            meta_data["allclass"] = list(all_classes)
+            
+            # 写入classtableMeta.json
+            with open(meta_file_path, 'w', encoding='utf-8') as f:
+                json.dump(meta_data, f, ensure_ascii=False, indent=2)
+            
+            print("转换完成: timetable.json -> classtableMeta.json")
+        except Exception as e:
+            print(f"转换timetable.json时出错: {e}")
+    
+    def _show_no_timetable_dialog(self):
+        """显示无课表文件对话框"""
+        try:
+            import tkinter as tk
+            from tkinter import messagebox
+            
+            # 创建一个隐藏的主窗口
+            root = tk.Tk()
+            root.withdraw()  # 隐藏主窗口
+            
+            # 显示消息框
+            messagebox.showerror("错误", "未找到课程表文件，请您自定义课表之后重启程序")
+            
+            # 销毁隐藏的主窗口
+            root.destroy()
+        except Exception as e:
+            print(f"显示对话框时出错: {e}")
             import traceback
             traceback.print_exc()  # 打印详细的错误信息
             return {}
@@ -436,6 +572,37 @@ class DragWindow(tk.Tk):
                 # 查找下一节课
                 if start_time > now.time() and (next_class is None or start_time < datetime.datetime.strptime(next_class["start_time"], "%H:%M").time()):
                     next_class = class_info
+        
+        # 应用单次课程更改（如果有）
+        if current_class:
+            # 检查是否有单次课程更改
+            if hasattr(self, 'classtable_meta') and self.classtable_meta and "single_changes" in self.classtable_meta:
+                # 星期中文到英文的映射
+                day_map = {
+                    "周一": "monday",
+                    "周二": "tuesday",
+                    "周三": "wednesday",
+                    "周四": "thursday",
+                    "周五": "friday"
+                }
+                
+                # 获取当前课程的索引
+                current_day_en = current_weekday_en
+                current_period_index = None
+                
+                # 查找当前课程在课表中的索引
+                for i, class_info in enumerate(self.timetable[current_day_en]):
+                    if class_info["start_time"] == current_class["start_time"] and class_info["end_time"] == current_class["end_time"]:
+                        current_period_index = i
+                        break
+                
+                # 如果找到了索引，检查是否有单次更改
+                if current_period_index is not None:
+                    change_key = f"{current_day_en}_{current_period_index}"
+                    if change_key in self.classtable_meta["single_changes"]:
+                        # 应用单次更改
+                        single_change = self.classtable_meta["single_changes"][change_key]
+                        current_class["subject"] = single_change["new_class"]
         
         # 更新当前课程信息
         if current_class:
@@ -514,6 +681,9 @@ class DragWindow(tk.Tk):
             text = "今天课程已结束"
             self.next_class_label.config(text=text)
             self._adjust_font_size(self.next_class_label, text)
+            
+            # 检查是否需要清除已完成的临时调课记录
+            self._clear_completed_single_changes(current_weekday_en, now)
         else:
             # 即使当天没有更多课程也保持程序正常运行
             text = "今天没有更多课程"
@@ -629,3 +799,46 @@ class DragWindow(tk.Tk):
             except Exception as e:
                 # 忽略销毁时的异常
                 pass
+
+    def _clear_completed_single_changes(self, current_weekday_en, now):
+        """清除已完成的临时调课记录"""
+        # 检查是否有单次课程更改需要清理
+        if hasattr(self, 'classtable_meta') and self.classtable_meta and "single_changes" in self.classtable_meta:
+            # 获取当天的所有课程
+            day_classes = self.timetable.get(current_weekday_en, [])
+            
+            # 如果当天没有课程，则直接返回
+            if not day_classes:
+                return
+            
+            # 检查当天的最后一节课是否已经结束
+            last_class = day_classes[-1]
+            last_class_end_time = datetime.datetime.strptime(last_class["end_time"], "%H:%M").time()
+            
+            # 如果当前时间已经超过了最后一节课的结束时间，则清理当天的临时调课记录
+            if now.time() > last_class_end_time:
+                # 收集需要删除的键
+                keys_to_remove = []
+                for key in self.classtable_meta["single_changes"]:
+                    # 检查键是否以当前星期开头
+                    if key.startswith(current_weekday_en + "_"):
+                        keys_to_remove.append(key)
+                
+                # 删除收集到的键
+                for key in keys_to_remove:
+                    del self.classtable_meta["single_changes"][key]
+                
+                # 如果single_changes为空，则删除该字段
+                if not self.classtable_meta["single_changes"]:
+                    del self.classtable_meta["single_changes"]
+                
+                # 保存更新后的classtable_meta到文件
+                try:
+                    # 获取程序主目录
+                    project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    classtable_meta_file = os.path.join(project_path, "classtableMeta.json")
+                    
+                    with open(classtable_meta_file, 'w', encoding='utf-8') as f:
+                        json.dump(self.classtable_meta, f, ensure_ascii=False, indent=2)
+                except Exception as e:
+                    print(f"保存classtableMeta.json时出错: {e}")
