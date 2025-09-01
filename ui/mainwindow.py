@@ -532,16 +532,55 @@ class DragWindow(tk.Tk):
             root = tk.Tk()
             root.withdraw()  # 隐藏主窗口
             
-            # 显示消息框
-            messagebox.showerror("错误", "未找到课程表文件，请您自定义课表之后重启程序")
+            # 显示消息框，提供自定义课表选项
+            result = messagebox.askyesno("课表设置", "未找到课程表文件，是否现在自定义课表？")
             
             # 销毁隐藏的主窗口
             root.destroy()
+            
+            # 如果用户选择自定义课表，打开时间表设置向导
+            if result:
+                self.open_timetable_wizard()
         except Exception as e:
             print(f"显示对话框时出错: {e}")
             import traceback
             traceback.print_exc()  # 打印详细的错误信息
-            return {}
+            return
+
+
+    def open_timetable_wizard(self):
+        """打开时间表设置向导"""
+        try:
+            # 导入时间表设置向导
+            from .timetable_wizard import TimetableWizard
+            
+            # 创建时间表设置向导实例
+            if not hasattr(self, 'timetable_wizard'):
+                self.timetable_wizard = TimetableWizard(self, self)
+            
+            # 打开向导窗口
+            self.timetable_wizard.open_window()
+        except Exception as e:
+            print(f"打开时间表设置向导时出错: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def open_class_table_wizard(self):
+        """打开课程表设置向导"""
+        try:
+            # 导入课程表设置向导
+            from .classtable_wizard import ClassTableWizard
+            
+            # 创建课程表设置向导实例
+            if not hasattr(self, 'class_table_wizard'):
+                self.class_table_wizard = ClassTableWizard(self, self)
+            
+            # 打开向导窗口
+            self.class_table_wizard.open_window()
+        except Exception as e:
+            print(f"打开课程表设置向导时出错: {e}")
+            import traceback
+            traceback.print_exc()
     
     def update_info(self, now):
         """更新课程信息显示"""
@@ -747,6 +786,10 @@ class DragWindow(tk.Tk):
     def on_closing(self):
         """窗口关闭事件"""
         try:
+            # 停止更新循环标志
+            if hasattr(self, 'update_loop_running'):
+                self.update_loop_running = False
+            
             # 取消所有待执行的after任务
             if hasattr(self, 'after_ids'):
                 for after_id in self.after_ids:
@@ -763,9 +806,13 @@ class DragWindow(tk.Tk):
                 except:
                     pass  # 忽略可能的异常
             
-            # 停止更新循环标志
-            if hasattr(self, 'update_loop_running'):
-                self.update_loop_running = False
+            # 取消所有可能的定时任务
+            try:
+                # 取消_topmost检查任务
+                if hasattr(self, '_ensure_topmost_job') and self._ensure_topmost_job:
+                    self.after_cancel(self._ensure_topmost_job)
+            except:
+                pass
             
             # 保存窗口位置
             # 在解除事件绑定和销毁窗口之前保存位置
@@ -792,8 +839,38 @@ class DragWindow(tk.Tk):
                         widget.unbind("<ButtonRelease-1>")
                     except:
                         pass
+                    
+                    # 解除其他可能的事件绑定
+                    try:
+                        widget.unbind("<Configure>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<Destroy>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<FocusIn>")
+                    except:
+                        pass
+                    try:
+                        widget.unbind("<FocusOut>")
+                    except:
+                        pass
             except:
                 # 忽略解除绑定时的任何异常
+                pass
+            
+            # 清理所有子窗口和顶级窗口
+            try:
+                # 销毁所有子窗口
+                for child in self.winfo_children():
+                    try:
+                        if hasattr(child, 'destroy'):
+                            child.destroy()
+                    except:
+                        pass
+            except:
                 pass
         except Exception as e:
             print(f"关闭窗口时出错: {e}")

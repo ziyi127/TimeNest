@@ -227,7 +227,50 @@ class TempClassChangeWindow:
         messagebox.showinfo("成功", "课程调整已保存")
         
         # 关闭窗口
+        self._cleanup_resources()
         self.window.destroy()
+    
+    def _cleanup_resources(self):
+        """清理资源"""
+        try:
+            # 解除所有事件绑定
+            try:
+                self.day_combo.unbind('<<ComboboxSelected>>')
+            except:
+                pass
+            
+            # 解除所有按钮的事件绑定
+            try:
+                for child in self.window.winfo_children():
+                    try:
+                        if isinstance(child, tk.Button) or isinstance(child, ttk.Button):
+                            child.unbind("<Button-1>")
+                    except:
+                        pass
+                    
+                    # 解除其他可能的事件绑定
+                    try:
+                        child.unbind("<Configure>")
+                    except:
+                        pass
+                    try:
+                        child.unbind("<Destroy>")
+                    except:
+                        pass
+            except:
+                pass
+            
+            # 销毁所有子控件
+            try:
+                for child in self.window.winfo_children():
+                    try:
+                        child.destroy()
+                    except:
+                        pass
+            except:
+                pass
+        except Exception as e:
+            print(f"清理临时调课界面资源时出错: {e}")
     
     def save_single_change(self, day_en, period_index, new_class):
         """保存单次课程更改"""

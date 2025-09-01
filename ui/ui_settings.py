@@ -134,7 +134,49 @@ class UISettings:
     def save_and_close(self):
         """保存设置并关闭窗口"""
         self.apply_settings()
+        self._cleanup_resources()
         self.window.destroy()
+    
+    def _cleanup_resources(self):
+        """清理资源"""
+        try:
+            # 解除所有事件绑定
+            try:
+                self.bg_color_btn.unbind("<Button-1>")
+            except:
+                pass
+            try:
+                self.text_color_btn.unbind("<Button-1>")
+            except:
+                pass
+            
+            # 解除透明度滑块的事件绑定
+            try:
+                self.transparency_scale.unbind("<Configure>")
+            except:
+                pass
+            
+            # 解除复选框的事件绑定
+            try:
+                self.show_next_class_var.trace_remove('write', self.show_next_class_var.trace_info()[0][1])
+            except:
+                pass
+            try:
+                self.show_countdown_var.trace_remove('write', self.show_countdown_var.trace_info()[0][1])
+            except:
+                pass
+            
+            # 销毁所有子控件
+            try:
+                for child in self.window.winfo_children():
+                    try:
+                        child.destroy()
+                    except:
+                        pass
+            except:
+                pass
+        except Exception as e:
+            print(f"清理UI设置界面资源时出错: {e}")
     
     def choose_bg_color(self):
         """选择背景颜色"""

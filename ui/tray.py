@@ -194,6 +194,21 @@ class TrayManager:
         except Exception as e:
             print(f"退出程序时出错: {e}")
         finally:
+            # 强制清理所有可能的线程和资源
+            import threading
+            import time
+            
+            # 等待一小段时间确保所有资源都已释放
+            time.sleep(0.1)
+            
+            # 检查并终止所有非守护线程
+            for thread in threading.enumerate():
+                if thread != threading.current_thread() and not thread.daemon:
+                    try:
+                        print(f"检测到非守护线程: {thread.name}")
+                    except:
+                        pass
+            
             # 使用sys.exit优雅退出
             import sys
             try:
@@ -201,7 +216,18 @@ class TrayManager:
             except:
                 # 如果sys.exit失败，使用os._exit强制退出
                 import os
-                os._exit(0)
+                try:
+                    os._exit(0)
+                except:
+                    # 最后的备用方案：强制终止进程
+                    import signal
+                    try:
+                        os.kill(os.getpid(), signal.SIGTERM)
+                    except:
+                        try:
+                            os.kill(os.getpid(), signal.SIGKILL)
+                        except:
+                            pass
     
     def run(self):
         if self.icon:
