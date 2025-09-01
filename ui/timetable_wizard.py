@@ -10,10 +10,9 @@ class TimetableWizard:
         self.window = None
         
         # 初始化变量
-        self.earliest_day_var = tk.StringVar(value="周一")
-        self.earliest_time_var = tk.StringVar(value="最早")
-        self.latest_day_var = tk.StringVar(value="周五")
-        self.latest_time_var = tk.StringVar(value="最晚")
+        self.latest_day_var = tk.StringVar(value="周一")
+        self.latest_time_var = tk.StringVar(value="8:50")
+        self.max_classes_per_day_var = tk.StringVar(value="8")
         self.first_class_time_var = tk.StringVar(value="08:00")
         self.small_break_var = tk.StringVar(value="10")
         self.large_break_var = tk.StringVar(value="20")
@@ -37,7 +36,7 @@ class TimetableWizard:
         # 创建新窗口
         self.window = tk.Toplevel(self.parent)
         self.window.title("时间表设置向导")
-        self.window.geometry("600x700")
+        self.window.geometry("510x500")
         self.window.resizable(True, True)
         
         # 设置窗口属性
@@ -77,114 +76,116 @@ class TimetableWizard:
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(0, weight=1)
         
-        # 1. 最早或最晚第一节课上课时间
-        ttk.Label(scrollable_frame, text="1. 最早或最晚第一节课上课时间:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
-        
-        # 最早时间选择
-        earliest_frame = ttk.Frame(scrollable_frame)
-        earliest_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
-        ttk.Label(earliest_frame, text="最早:").pack(side=tk.LEFT)
-        earliest_day_combo = ttk.Combobox(earliest_frame, textvariable=self.earliest_day_var, state="readonly", width=10)
-        earliest_day_combo['values'] = ["周一", "周二", "周三", "周四", "周五"]
-        earliest_day_combo.pack(side=tk.LEFT, padx=5)
-        earliest_time_combo = ttk.Combobox(earliest_frame, textvariable=self.earliest_time_var, state="readonly", width=10)
-        earliest_time_combo['values'] = ["最早", "最晚"]
-        earliest_time_combo.pack(side=tk.LEFT, padx=5)
+        # 1. 最晚上课时间
+        latest_time_label = ttk.Label(scrollable_frame, text="1. 最晚上课时间:")
+        latest_time_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
         # 最晚时间选择
         latest_frame = ttk.Frame(scrollable_frame)
-        latest_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
-        ttk.Label(latest_frame, text="最晚:").pack(side=tk.LEFT)
+        latest_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+        ttk.Label(latest_frame, text="周").pack(side=tk.LEFT)
         latest_day_combo = ttk.Combobox(latest_frame, textvariable=self.latest_day_var, state="readonly", width=10)
-        latest_day_combo['values'] = ["周一", "周二", "周三", "周四", "周五"]
+        latest_day_combo['values'] = ["一", "二", "三", "四", "五"]
         latest_day_combo.pack(side=tk.LEFT, padx=5)
-        latest_time_combo = ttk.Combobox(latest_frame, textvariable=self.latest_time_var, state="readonly", width=10)
-        latest_time_combo['values'] = ["最早", "最晚"]
-        latest_time_combo.pack(side=tk.LEFT, padx=5)
+        ttk.Label(latest_frame, text="最晚上课时间:").pack(side=tk.LEFT, padx=(10, 5))
+        latest_time_entry = ttk.Entry(latest_frame, textvariable=self.latest_time_var, width=10)
+        latest_time_entry.pack(side=tk.LEFT, padx=5)
         
-        # 2. 日常第一节课上课时间
-        ttk.Label(scrollable_frame, text="2. 日常第一节课上课时间:").grid(row=3, column=0, sticky=tk.W, pady=(10, 5))
+        # 2. 一天最多有几节课
+        max_classes_label = ttk.Label(scrollable_frame, text="2. 一天最多有几节课:")
+        max_classes_label.grid(row=2, column=0, sticky=tk.W, pady=(10, 5))
+        max_classes_frame = ttk.Frame(scrollable_frame)
+        max_classes_frame.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+        max_classes_entry = ttk.Entry(max_classes_frame, textvariable=self.max_classes_per_day_var, width=10)
+        max_classes_entry.pack(side=tk.LEFT, padx=5)
+        
+        # 3. 日常第一节课上课时间
+        first_class_label = ttk.Label(scrollable_frame, text="3. 日常第一节课上课时间:")
+        first_class_label.grid(row=4, column=0, sticky=tk.W, pady=(10, 5))
         first_class_frame = ttk.Frame(scrollable_frame)
-        first_class_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=5)
+        first_class_frame.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
         ttk.Label(first_class_frame, text="时间:").pack(side=tk.LEFT)
         first_class_entry = ttk.Entry(first_class_frame, textvariable=self.first_class_time_var, width=10)
         first_class_entry.pack(side=tk.LEFT, padx=5)
         
-        # 3. 小课间时长
-        ttk.Label(scrollable_frame, text="3. 小课间时长 (分钟):")
-        ttk.Label(scrollable_frame, text="3. 小课间时长 (分钟):").grid(row=5, column=0, sticky=tk.W, pady=(10, 5))
+        # 4. 小课间时长
+        small_break_label = ttk.Label(scrollable_frame, text="4. 小课间时长 (分钟):")
+        small_break_label.grid(row=6, column=0, sticky=tk.W, pady=(10, 5))
         small_break_frame = ttk.Frame(scrollable_frame)
-        small_break_frame.grid(row=6, column=0, sticky=(tk.W, tk.E), pady=5)
+        small_break_frame.grid(row=6, column=1, sticky=(tk.W, tk.E), pady=5)
         small_break_entry = ttk.Entry(small_break_frame, textvariable=self.small_break_var, width=10)
         small_break_entry.pack(side=tk.LEFT, padx=5)
         
-        # 4. 大课间时长
-        ttk.Label(scrollable_frame, text="4. 大课间时长 (分钟):")
-        ttk.Label(scrollable_frame, text="4. 大课间时长 (分钟):").grid(row=7, column=0, sticky=tk.W, pady=(10, 5))
+        # 5. 大课间时长
+        large_break_label = ttk.Label(scrollable_frame, text="5. 大课间时长 (分钟):")
+        large_break_label.grid(row=8, column=0, sticky=tk.W, pady=(10, 5))
         large_break_frame = ttk.Frame(scrollable_frame)
-        large_break_frame.grid(row=8, column=0, sticky=(tk.W, tk.E), pady=5)
+        large_break_frame.grid(row=8, column=1, sticky=(tk.W, tk.E), pady=5)
         large_break_entry = ttk.Entry(large_break_frame, textvariable=self.large_break_var, width=10)
         large_break_entry.pack(side=tk.LEFT, padx=5)
         
-        # 5. 午休时长
-        ttk.Label(scrollable_frame, text="5. 午休时长 (分钟):")
-        ttk.Label(scrollable_frame, text="5. 午休时长 (分钟):").grid(row=9, column=0, sticky=tk.W, pady=(10, 5))
+        # 6. 午休时长
+        lunch_break_label = ttk.Label(scrollable_frame, text="6. 午休时长 (分钟):")
+        lunch_break_label.grid(row=10, column=0, sticky=tk.W, pady=(10, 5))
         lunch_break_frame = ttk.Frame(scrollable_frame)
-        lunch_break_frame.grid(row=10, column=0, sticky=(tk.W, tk.E), pady=5)
+        lunch_break_frame.grid(row=10, column=1, sticky=(tk.W, tk.E), pady=5)
         lunch_break_entry = ttk.Entry(lunch_break_frame, textvariable=self.lunch_break_var, width=10)
         lunch_break_entry.pack(side=tk.LEFT, padx=5)
         
-        # 6. 第几节课下课午休
-        ttk.Label(scrollable_frame, text="6. 第几节课下课午休:")
-        ttk.Label(scrollable_frame, text="6. 第几节课下课午休:").grid(row=11, column=0, sticky=tk.W, pady=(10, 5))
+        # 7. 第几节课下课午休
+        lunch_break_period_label = ttk.Label(scrollable_frame, text="7. 第几节课下课午休:")
+        lunch_break_period_label.grid(row=12, column=0, sticky=tk.W, pady=(10, 5))
         lunch_break_period_frame = ttk.Frame(scrollable_frame)
-        lunch_break_period_frame.grid(row=12, column=0, sticky=(tk.W, tk.E), pady=5)
+        lunch_break_period_frame.grid(row=12, column=1, sticky=(tk.W, tk.E), pady=5)
         lunch_break_period_entry = ttk.Entry(lunch_break_period_frame, textvariable=self.lunch_break_period_var, width=10)
         lunch_break_period_entry.pack(side=tk.LEFT, padx=5)
         
-        # 7. 上课时长
-        ttk.Label(scrollable_frame, text="7. 上课时长 (分钟):")
-        ttk.Label(scrollable_frame, text="7. 上课时长 (分钟):").grid(row=13, column=0, sticky=tk.W, pady=(10, 5))
+        # 8. 上课时长
+        class_duration_label = ttk.Label(scrollable_frame, text="8. 上课时长 (分钟):")
+        class_duration_label.grid(row=14, column=0, sticky=tk.W, pady=(10, 5))
         class_duration_frame = ttk.Frame(scrollable_frame)
-        class_duration_frame.grid(row=14, column=0, sticky=(tk.W, tk.E), pady=5)
+        class_duration_frame.grid(row=14, column=1, sticky=(tk.W, tk.E), pady=5)
         class_duration_entry = ttk.Entry(class_duration_frame, textvariable=self.class_duration_var, width=10)
         class_duration_entry.pack(side=tk.LEFT, padx=5)
         
-        # 8. 第几节课下课有大课间
-        ttk.Label(scrollable_frame, text="8. 第几节课下课有大课间:").grid(row=15, column=0, sticky=tk.W, pady=(10, 5))
+        # 9. 第几节课下课有大课间
+        large_break_period_label = ttk.Label(scrollable_frame, text="9. 第几节课下课有大课间:")
+        large_break_period_label.grid(row=16, column=0, sticky=tk.W, pady=(10, 5))
         self.large_break_frame = ttk.Frame(scrollable_frame)
-        self.large_break_frame.grid(row=16, column=0, sticky=(tk.W, tk.E), pady=5)
+        self.large_break_frame.grid(row=16, column=1, sticky=(tk.W, tk.E), pady=5)
         self.add_large_break_period_button = ttk.Button(self.large_break_frame, text="+", command=self.add_large_break_period)
         self.add_large_break_period_button.pack(side=tk.LEFT, padx=5)
         self.add_large_break_period()
         
-        # 9. 有哪些天没有大课间
-        ttk.Label(scrollable_frame, text="9. 有哪些天没有大课间:").grid(row=17, column=0, sticky=tk.W, pady=(10, 5))
+        # 10. 有哪些天没有大课间
+        no_large_break_label = ttk.Label(scrollable_frame, text="10. 有哪些天没有大课间:")
+        no_large_break_label.grid(row=18, column=0, sticky=tk.W, pady=(10, 5))
         self.no_large_break_frame = ttk.Frame(scrollable_frame)
-        self.no_large_break_frame.grid(row=18, column=0, sticky=(tk.W, tk.E), pady=5)
+        self.no_large_break_frame.grid(row=18, column=1, sticky=(tk.W, tk.E), pady=5)
         self.add_no_large_break_day_button = ttk.Button(self.no_large_break_frame, text="+", command=self.add_no_large_break_day)
         self.add_no_large_break_day_button.pack(side=tk.LEFT, padx=5)
         self.add_no_large_break_day()
         
-        # 10. 学生有哪些课程要上
-        ttk.Label(scrollable_frame, text="10. 学生有哪些课程要上:").grid(row=19, column=0, sticky=tk.W, pady=(10, 5))
+        # 11. 学生有哪些课程要上
+        classes_label = ttk.Label(scrollable_frame, text="11. 学生有哪些课程要上:")
+        classes_label.grid(row=20, column=0, sticky=tk.W, pady=(10, 5))
         self.classes_frame = ttk.Frame(scrollable_frame)
-        self.classes_frame.grid(row=20, column=0, sticky=(tk.W, tk.E), pady=5)
+        self.classes_frame.grid(row=20, column=1, sticky=(tk.W, tk.E), pady=5)
         self.add_class_button = ttk.Button(self.classes_frame, text="+", command=self.add_class)
         self.add_class_button.pack(side=tk.LEFT, padx=5)
         self.add_class()
         
         # 按钮框架
         button_frame = ttk.Frame(scrollable_frame)
-        button_frame.grid(row=21, column=0, pady=20)
+        button_frame.grid(row=21, column=0, pady=20, sticky=tk.E)
         
         # 保存按钮
         save_button = ttk.Button(button_frame, text="保存并继续", command=self.save_and_continue)
-        save_button.pack(side=tk.LEFT, padx=5)
+        save_button.pack(side=tk.RIGHT, padx=5)
         
         # 取消按钮
         cancel_button = ttk.Button(button_frame, text="取消", command=self.window.destroy)
-        cancel_button.pack(side=tk.LEFT, padx=5)
+        cancel_button.pack(side=tk.RIGHT, padx=5)
     
     def add_large_break_period(self):
         """添加大课间节次"""
@@ -257,10 +258,9 @@ class TimetableWizard:
         """保存并继续到课程表设置向导"""
         # 收集数据
         data = {
-            "earliest_day": self.earliest_day_var.get(),
-            "earliest_time": self.earliest_time_var.get(),
             "latest_day": self.latest_day_var.get(),
             "latest_time": self.latest_time_var.get(),
+            "max_classes_per_day": self.max_classes_per_day_var.get(),
             "first_class_time": self.first_class_time_var.get(),
             "small_break": self.small_break_var.get(),
             "large_break": self.large_break_var.get(),
@@ -353,8 +353,12 @@ class TimetableWizard:
                 messagebox.showerror("错误", "日常第一节课上课时间格式不正确")
                 return False
             
+            if not self.is_valid_time(data["latest_time"]):
+                messagebox.showerror("错误", "最晚上课时间格式不正确")
+                return False
+            
             # 验证数字字段
-            int_fields = ["small_break", "large_break", "lunch_break", "lunch_break_period", "class_duration"]
+            int_fields = ["small_break", "large_break", "lunch_break", "lunch_break_period", "class_duration", "max_classes_per_day"]
             for field in int_fields:
                 int(data[field])
             
@@ -425,6 +429,8 @@ class TimetableWizard:
         
         # 获取用户设置
         first_class_time = data.get("first_class_time", "08:00")
+        latest_time = data.get("latest_time", "18:00")
+        max_classes_per_day = int(data.get("max_classes_per_day", 8))
         class_duration = int(data.get("class_duration", 40))
         small_break = int(data.get("small_break", 10))
         large_break = int(data.get("large_break", 20))
@@ -439,19 +445,25 @@ class TimetableWizard:
         # 生成时间表
         timetable = {}
         
-        # 解析第一节课时间
+        # 解析第一节课时间和最晚时间
         try:
             start_hour, start_minute = map(int, first_class_time.split(":"))
             current_time = start_hour * 60 + start_minute
         except:
             current_time = 8 * 60  # 默认8:00
         
+        try:
+            end_hour, end_minute = map(int, latest_time.split(":"))
+            latest_time_minutes = end_hour * 60 + end_minute
+        except:
+            latest_time_minutes = 18 * 60  # 默认18:00
+        
         # 为每天生成时间表
         for day in weekdays:
             day_schedule = []
             
-            # 生成8节课
-            for period in range(1, 9):
+            # 生成指定数量的课程
+            for period in range(1, max_classes_per_day + 1):
                 # 计算开始时间
                 start_time = f"{current_time // 60:02d}:{current_time % 60:02d}"
                 
@@ -478,6 +490,10 @@ class TimetableWizard:
                 else:
                     # 小课间
                     current_time += small_break
+                
+                # 检查是否超过最晚时间
+                if current_time > latest_time_minutes:
+                    break
             
             timetable[day] = day_schedule
             

@@ -67,7 +67,7 @@ class ClassTableWizard:
         # 创建新窗口
         self.window = tk.Toplevel(self.parent)
         self.window.title("课程表设置向导")
-        self.window.geometry("800x600")
+        self.window.geometry("900x600")  # 调整窗口初始大小以适应新布局
         self.window.resizable(True, True)
         
         # 设置窗口属性
@@ -88,12 +88,12 @@ class ClassTableWizard:
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(0, weight=1)
         
-        # 配置网格权重
-        main_frame.columnconfigure(0, weight=3)  # 课程表区域
-        main_frame.columnconfigure(1, weight=1)  # 课程按钮区域
+        # 配置网格权重，保持课程表区域75%占比
+        main_frame.columnconfigure(0, weight=3)  # 课程表区域 (75%)
+        main_frame.columnconfigure(1, weight=1)  # 课程按钮区域 (25%)
         main_frame.rowconfigure(0, weight=1)
         
-        # 左侧课程表区域 (3/4)
+        # 左侧课程表区域 (75%)
         timetable_frame = ttk.Frame(main_frame)
         timetable_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
         timetable_frame.columnconfigure(0, weight=1)
@@ -102,24 +102,25 @@ class ClassTableWizard:
         # 创建课程表
         self.create_timetable(timetable_frame)
         
-        # 右侧课程按钮区域 (1/4)
+        # 右侧课程按钮区域 (25%)
         classes_frame = ttk.Frame(main_frame)
         classes_frame.grid(row=0, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
         classes_frame.columnconfigure(0, weight=1)
-        classes_frame.rowconfigure(1, weight=1)
+        classes_frame.rowconfigure(0, weight=0)  # 标题行
+        classes_frame.rowconfigure(1, weight=1)  # 按钮区域
         
         # 标题
-        ttk.Label(classes_frame, text="课程选择").grid(row=0, column=0, pady=(0, 10))
+        ttk.Label(classes_frame, text="课程选择").grid(row=0, column=0, pady=(0, 5), sticky=tk.W)
         
         # 创建课程按钮
         self.create_class_buttons(classes_frame)
         
         # 按钮框架
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=1, column=0, columnspan=2, pady=20)
+        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
         
         # 保存按钮
-        save_button = ttk.Button(button_frame, text="保存并重启", command=self.save_and_restart)
+        save_button = ttk.Button(button_frame, text="保存并重启程序", command=self.save_and_restart)
         save_button.pack(side=tk.LEFT, padx=5)
         
         # 取消按钮
@@ -180,7 +181,7 @@ class ClassTableWizard:
             # 创建输入框
             row_entries = []
             for day in range(5):  # 周一到周五
-                entry = ttk.Entry(scrollable_frame, width=12)
+                entry = ttk.Entry(scrollable_frame, width=15)  # 增加输入框宽度
                 entry.grid(row=period+1, column=day+1, padx=5, pady=5)
                 
                 # 绑定点击事件
@@ -206,7 +207,7 @@ class ClassTableWizard:
     def create_class_buttons(self, parent):
         """创建课程按钮"""
         # 创建滚动区域
-        canvas = tk.Canvas(parent)
+        canvas = tk.Canvas(parent, width=130)  # 设置固定宽度
         scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
@@ -221,7 +222,7 @@ class ClassTableWizard:
         canvas.grid(row=1, column=0, sticky="nsew")
         scrollbar.grid(row=1, column=1, sticky="ns")
         parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(1, weight=1)
+        parent.rowconfigure(1, weight=1)  # 恢复课程选择区域的高度权重
         
         # 获取所有课程
         all_classes = []
@@ -232,7 +233,7 @@ class ClassTableWizard:
         for i, class_name in enumerate(all_classes):
             button = ttk.Button(scrollable_frame, text=class_name, 
                               command=lambda name=class_name: self.on_class_button_click(name))
-            button.grid(row=i, column=0, sticky="ew", padx=5, pady=2)
+            button.grid(row=i, column=0, sticky="ew", padx=2, pady=1)  # 减小按钮间距
             scrollable_frame.columnconfigure(0, weight=1)
             self.buttons.append(button)
     
@@ -252,18 +253,18 @@ class ClassTableWizard:
             self.fill_class_from_left(class_name)
     
     def move_focus(self):
-        """移动焦点到下一个输入框"""
-        # 移动到下一列
-        self.current_focus_col += 1
+        """移动焦点到下一个输入框（从上到下）"""
+        # 移动到下一行
+        self.current_focus_row += 1
         
-        # 如果超出列数，移动到下一行
-        if self.current_focus_col >= 5:  # 周一到周五
-            self.current_focus_col = 0
-            self.current_focus_row += 1
+        # 如果超出行数，移动到下一列
+        if self.current_focus_row >= len(self.entries):
+            self.current_focus_row = 0
+            self.current_focus_col += 1
             
-            # 如果超出行数，回到第一行
-            if self.current_focus_row >= len(self.entries):
-                self.current_focus_row = 0
+            # 如果超出列数，回到第一列
+            if self.current_focus_col >= 5:  # 周一到周五
+                self.current_focus_col = 0
     
     def fill_class_from_left(self, class_name):
         """从左到右填入课程"""

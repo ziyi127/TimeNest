@@ -18,16 +18,24 @@
         "end_time": "11:10"
       },
       {
-        "start_time": "14:00",
-        "end_time": "14:40"
+        "start_time": "12:10",
+        "end_time": "12:50"
       },
       {
-        "start_time": "14:50",
-        "end_time": "15:30"
+        "start_time": "13:00",
+        "end_time": "13:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:20"
+        "start_time": "13:50",
+        "end_time": "14:30"
+      },
+      {
+        "start_time": "14:40",
+        "end_time": "15:20"
+      },
+      {
+        "start_time": "15:30",
+        "end_time": "16:10"
       }
     ],
     "tuesday": [
@@ -48,12 +56,24 @@
         "end_time": "11:10"
       },
       {
-        "start_time": "14:00",
-        "end_time": "14:40"
+        "start_time": "12:10",
+        "end_time": "12:50"
       },
       {
-        "start_time": "14:50",
-        "end_time": "15:30"
+        "start_time": "13:00",
+        "end_time": "13:40"
+      },
+      {
+        "start_time": "13:50",
+        "end_time": "14:30"
+      },
+      {
+        "start_time": "14:40",
+        "end_time": "15:20"
+      },
+      {
+        "start_time": "15:30",
+        "end_time": "16:10"
       }
     ],
     "wednesday": [
@@ -74,16 +94,24 @@
         "end_time": "11:10"
       },
       {
-        "start_time": "14:00",
-        "end_time": "14:40"
+        "start_time": "12:10",
+        "end_time": "12:50"
       },
       {
-        "start_time": "14:50",
-        "end_time": "15:30"
+        "start_time": "13:00",
+        "end_time": "13:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:20"
+        "start_time": "13:50",
+        "end_time": "14:30"
+      },
+      {
+        "start_time": "14:40",
+        "end_time": "15:20"
+      },
+      {
+        "start_time": "15:30",
+        "end_time": "16:10"
       }
     ],
     "thursday": [
@@ -104,16 +132,24 @@
         "end_time": "11:10"
       },
       {
-        "start_time": "11:10",
-        "end_time": "14:00"
+        "start_time": "12:10",
+        "end_time": "12:50"
       },
       {
-        "start_time": "14:00",
-        "end_time": "15:10"
+        "start_time": "13:00",
+        "end_time": "13:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:20"
+        "start_time": "13:50",
+        "end_time": "14:30"
+      },
+      {
+        "start_time": "14:40",
+        "end_time": "15:20"
+      },
+      {
+        "start_time": "15:30",
+        "end_time": "16:10"
       }
     ],
     "friday": [
@@ -132,74 +168,30 @@
       {
         "start_time": "10:30",
         "end_time": "11:10"
+      },
+      {
+        "start_time": "12:10",
+        "end_time": "12:50"
+      },
+      {
+        "start_time": "13:00",
+        "end_time": "13:40"
+      },
+      {
+        "start_time": "13:50",
+        "end_time": "14:30"
+      },
+      {
+        "start_time": "14:40",
+        "end_time": "15:20"
+      },
+      {
+        "start_time": "15:30",
+        "end_time": "16:10"
       }
-    ]
-  },
-  "classtable": {
-    "monday": [
-      "历史",
-      "历史",
-      "英语",
-      "英语",
-      "数学",
-      "数学",
-      "班会"
-    ],
-    "tuesday": [
-      "通信原理与系统",
-      "通信原理与系统",
-      "语文",
-      "语文",
-      "电子技术基础",
-      "电子技术基础"
-    ],
-    "wednesday": [
-      "英语",
-      "体育",
-      "数学",
-      "数学",
-      "语文",
-      "语文",
-      "物理"
-    ],
-    "thursday": [
-      "信息技术",
-      "信息技术",
-      "体育",
-      "物理",
-      "电子技术基础",
-      "电子技术基础",
-      "电子技术基础"
-    ],
-    "friday": [
-      "心理健康与职业",
-      "心理健康与职业",
-      "电子技能与实训",
-      "电子技能与实训"
     ]
   },
   "allclass": [
-    "英语",
-    "语文",
-    "班会",
-    "数学",
-    "电子技术基础",
-    "电子技能与实训",
-    "通信原理与系统",
-    "物理",
-    "信息技术",
-    "体育",
-    "历史",
-    "心理健康与职业"
-  ],
-  "single_changes": {
-    "wednesday_4": {
-      "original_class": "语文",
-      "new_class": "数学"
-    },
-    "wednesday_0": {
-      "original_class": "英语",
-      "new_class": "语文"
-    }
-  }
+    "1"
+  ]
 }
