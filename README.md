@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="https://github.com/ziyi127/TimeNest/blob/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+<img src="https://github.com/ziyi127/TimeNest/tree/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
 
 **一个简洁的课程表显示工具**
 
