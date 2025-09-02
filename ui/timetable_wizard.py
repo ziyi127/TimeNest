@@ -25,6 +25,71 @@ class TimetableWizard:
         self.no_large_break_days = []
         self.classes = []
     
+    def load_existing_data(self):
+        """加载现有数据到UI"""
+        try:
+            # 获取项目目录
+            project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            meta_file_path = os.path.join(project_path, "classtableMeta.json")
+            
+            # 如果文件不存在，直接返回
+            if not os.path.exists(meta_file_path):
+                return
+            
+            # 读取现有数据
+            with open(meta_file_path, 'r', encoding='utf-8') as f:
+                meta_data = json.load(f)
+            
+            # 加载设置项
+            if "settings" in meta_data:
+                settings = meta_data["settings"]
+                self.first_class_time_var.set(settings.get("first_class_time", "08:00"))
+                self.latest_time_var.set(settings.get("latest_time", "18:00"))
+                self.max_classes_per_day_var.set(str(settings.get("max_classes_per_day", 8)))
+                self.small_break_var.set(str(settings.get("small_break_duration", 10)))
+                self.large_break_var.set(str(settings.get("large_break_duration", 20)))
+                self.lunch_break_var.set(str(settings.get("lunch_break_duration", 60)))
+                self.lunch_break_period_var.set(str(settings.get("lunch_break_period", 4)))
+                self.class_duration_var.set(str(settings.get("class_duration", 40)))
+            
+            # 加载大课间设置
+            if "large_break_periods" in meta_data:
+                # 清除现有的大课间节次
+                for frame, _ in self.large_break_periods:
+                    frame.destroy()
+                self.large_break_periods.clear()
+                
+                # 添加新的大课间节次
+                for period in meta_data["large_break_periods"]:
+                    self.add_large_break_period()
+                    self.large_break_periods[-1][1].set(str(period))
+            
+            # 加载没有大课间的天
+            if "no_large_break_days" in meta_data:
+                # 清除现有的没有大课间的天
+                for frame, _ in self.no_large_break_days:
+                    frame.destroy()
+                self.no_large_break_days.clear()
+                
+                # 添加新的没有大课间的天
+                for day in meta_data["no_large_break_days"]:
+                    self.add_no_large_break_day()
+                    self.no_large_break_days[-1][1].set(day)
+            
+            # 加载课程列表
+            if "allclass" in meta_data:
+                # 清除现有的课程
+                for frame, _ in self.classes:
+                    frame.destroy()
+                self.classes.clear()
+                
+                # 添加新的课程
+                for class_name in meta_data["allclass"]:
+                    self.add_class()
+                    self.classes[-1][1].set(class_name)
+        except Exception as e:
+            print(f"加载现有数据时出错: {e}")
+    
     def open_window(self):
         """打开时间表设置向导"""
         # 如果窗口已存在，将其带到前台
@@ -51,6 +116,9 @@ class TimetableWizard:
         
         # 创建界面元素
         self.create_widgets()
+        
+        # 加载现有数据
+        self.load_existing_data()
     
     def create_widgets(self):
         """创建界面元素"""
@@ -86,8 +154,8 @@ class TimetableWizard:
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(0, weight=1)
         
-        # 1. 最晚上课时间
-        latest_time_label = ttk.Label(scrollable_frame, text="1. 最晚上课时间:")
+        # 1. 最晚第一节课上课时间
+        latest_time_label = ttk.Label(scrollable_frame, text="1. 最晚第一节课上课时间:")
         latest_time_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
         # 最晚时间选择
@@ -421,6 +489,22 @@ class TimetableWizard:
             # 更新timetable和allclass字段
             meta_data["timetable"] = self.generate_timetable(data)
             meta_data["allclass"] = data["classes"]
+            
+            # 保存设置项
+            meta_data["settings"] = {
+                "first_class_time": data["first_class_time"],
+                "latest_time": data["latest_time"],
+                "max_classes_per_day": int(data["max_classes_per_day"]),
+                "small_break_duration": int(data["small_break"]),
+                "large_break_duration": int(data["large_break"]),
+                "lunch_break_duration": int(data["lunch_break"]),
+                "lunch_break_period": int(data["lunch_break_period"]),
+                "class_duration": int(data["class_duration"])
+            }
+            
+            # 保存大课间设置
+            meta_data["large_break_periods"] = [int(p) for p in data["large_break_periods"] if p]
+            meta_data["no_large_break_days"] = data["no_large_break_days"]
             
             # 保存到classtableMeta.json
             with open(meta_file_path, 'w', encoding='utf-8') as f:

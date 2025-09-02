@@ -205,6 +205,9 @@ class ClassTableWizard:
             
             self.entries.append(row_entries)
         
+        # 填充现有课程表数据
+        self.load_existing_classtable()
+        
         # 配置午休样式
         style = ttk.Style()
         style.configure("Lunch.TEntry", relief="solid", borderwidth=2)
@@ -213,6 +216,25 @@ class ClassTableWizard:
         """当点击输入框时设置焦点"""
         self.current_focus_row = row
         self.current_focus_col = col
+    
+    def load_existing_classtable(self):
+        """加载现有的课程表数据到输入框"""
+        if self.classtable_meta is None or "classtable" not in self.classtable_meta:
+            return
+        
+        classtable = self.classtable_meta["classtable"]
+        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        
+        # 填充课程表数据到输入框
+        for day_index, day in enumerate(weekdays):
+            if day in classtable:
+                day_classes = classtable[day]
+                for period_index, class_name in enumerate(day_classes):
+                    # 检查索引是否有效
+                    if period_index < len(self.entries) and day_index < len(self.entries[0]):
+                        entry = self.entries[period_index][day_index]
+                        entry.delete(0, tk.END)
+                        entry.insert(0, class_name)
     
     def create_class_buttons(self, parent):
         """创建课程按钮"""

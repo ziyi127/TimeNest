@@ -33,6 +33,9 @@ class TrayManager:
         # 临时调课界面实例
         self.temp_class_change = None
         
+        # 时间表设置向导实例
+        self.timetable_wizard = None
+        
         # 添加托盘可用性检查
         self.root_window.after(1000, self._check_tray_availability)
     
@@ -68,6 +71,7 @@ class TrayManager:
             MenuItem('允许编辑悬浮窗位置', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
             MenuItem('临时调课', self.open_temp_class_change),
             MenuItem('UI设置', self.open_ui_settings),
+            MenuItem('编辑课表和时间表', self.open_timetable_wizard),
             MenuItem('退出', self.quit_window)
         )
         
@@ -151,6 +155,22 @@ class TrayManager:
         else:
             print("UI设置功能不可用")
     
+    def open_timetable_wizard(self, icon, item):
+        # 打开时间表设置向导
+        try:
+            from ui.timetable_wizard import TimetableWizard
+            
+            # 如果窗口已存在，将其带到前台
+            if self.timetable_wizard and self.timetable_wizard.window and self.timetable_wizard.window.winfo_exists():
+                self.timetable_wizard.window.lift()
+                self.timetable_wizard.window.focus_force()
+            else:
+                # 创建新窗口
+                self.timetable_wizard = TimetableWizard(self.root_window, self.root_window)
+                self.timetable_wizard.open_window()
+        except Exception as e:
+            print(f"打开时间表设置向导时出错: {e}")
+    
     def quit_window(self, icon, item):
         # 退出程序
         try:
@@ -170,6 +190,15 @@ class TrayManager:
                 except:
                     pass
                 self.temp_class_change = None
+            
+            # 清理时间表设置向导界面
+            if self.timetable_wizard:
+                try:
+                    if self.timetable_wizard.window:
+                        self.timetable_wizard.window.destroy()
+                except:
+                    pass
+                self.timetable_wizard = None
             
             # 调用窗口的关闭方法以保存位置
             if hasattr(self.root_window, 'on_closing'):
