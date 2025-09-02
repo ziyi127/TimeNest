@@ -143,6 +143,13 @@ class ClassTableWizard:
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
         
+        # 绑定鼠标滚轮事件
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        scrollable_frame.bind("<MouseWheel>", _on_mousewheel)
+        
         canvas.grid(row=0, column=0, sticky="nsew")
         scrollbar_y.grid(row=0, column=1, sticky="ns")
         scrollbar_x.grid(row=1, column=0, sticky="ew")
@@ -358,6 +365,13 @@ class ClassTableWizard:
                         child.unbind("<Destroy>")
                     except:
                         pass
+            except:
+                pass
+            
+            # 解除鼠标滚轮事件绑定
+            try:
+                canvas = self.window.nametowidget("!frame.!canvas")
+                canvas.unbind_all("<MouseWheel>")
             except:
                 pass
             
