@@ -1,27 +1,27 @@
-# TimeNest vtktt 课程表桌面应用
+# TimeNest for HTPC 课程表大屏应用
 
 <div align="center">
 
 <img src="https://github.com/ziyi127/TimeNest/blob/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
 
-**一个功能强大的跨平台课程表管理工具**
+**一个简洁的课程表显示工具**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
 
-[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
-
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐞 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+[🐧QQ群](https://qun.qq.com/universal-share/share?ac=1&authKey=EEu9RUAgQSCdOaeoQHVAubu1PZF4f7LnE6zXGhu1bitT4exPdY%2Fgx5c5RK9z6Jen&busi_data=eyJncm91cENvZGUiOiI3MTk5Mzc1ODYiLCJ0b2tlbiI6IjU0cmxuZlJMaWFnNmtzS3E4cFN0bGZRckZkZnp6SDhEcjM3bG50Y0lKRTZFaWxWRFBiZ0craGdjV1ZkKzNyWm8iLCJ1aW4iOiIzMjQ5MTk2OTk2In0%3D&data=cylTd1VkYAIVgm4wHNRQGp58TXGOdcF5LnvhD-d0joV5GnI2PG8IJ3wvDuw6E3fhUfWL4iitXT4Nx8sXOLnwfQ&svctype=4&tempid=h5_group_info)
 </div>
 
 TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
 
 ## 功能特点
 
-- **桌面悬浮窗**: 课程表以半透明悬浮窗形式显示在桌面上，不遮挡其他应用
+- **桌面悬浮窗**: 课程表以半透明悬浮窗形式显示在桌面上
 - **实时课程信息**: 显示当前时间和日期，以及当前和下一节课的详细信息
 - **系统托盘管理**: 最小化到系统托盘，支持快速操作
-- **课程表设置**: 可自定义一周七天的课程安排（此功能暂时不可用，请利用ai直接修改timetable.json文件）
+- **课程表设置**: 可自定义一周七天的课程安排
 - **UI个性化**: 支持背景颜色、文字颜色、透明度等界面设置
 - **拖拽移动**: 可以拖拽窗口到任意位置
 - **鼠标穿透**: 可设置鼠标穿透功能，避免误操作
