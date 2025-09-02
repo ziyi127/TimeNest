@@ -24,7 +24,7 @@ TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形�
 - **课程表设置**: 可自定义一周七天的课程安排
 - **UI个性化**: 支持背景颜色、文字颜色、透明度等界面设置
 - **拖拽移动**: 可以拖拽窗口到任意位置
-- **鼠标穿透**: 可设置鼠标穿透功能，避免误操作
+- **鼠标穿透**: 可设置鼠标穿透功能，避免误操作(此功能由于tkinter本身限制正在开发)
 
 ## 课表显示逻辑
 
@@ -50,28 +50,25 @@ TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形�
 
 对于Linux用户，特别是使用KDE或GNOME桌面环境的用户，可能需要手动安装额外的依赖包以确保程序正常运行：
 
-**Ubuntu/Debian系统**:
+**Ubuntu/Debian及UOS，deepin，kylin等信创系统**:
 ```bash
 # 安装基本依赖
 sudo apt-get update
 sudo apt-get install python3-pil python3-pil.imagetk python3-tk
 pip3 install pystray
 
-# GNOME桌面环境额外需要
+# 基于GNOME的桌面环境额外需要
 sudo apt-get install gnome-shell-extension-appindicator
 
-# KDE桌面环境可能需要
+# 基于KDE的桌面环境可能需要
 sudo apt-get install libappindicator3-1
 ```
 
-**Fedora系统**:
+**请注意，Fedora系统需要安装这些依赖**:
 ```bash
 # 安装基本依赖
 sudo dnf install python3-pillow python3-pillow-tk python3-tkinter
 pip3 install pystray
-
-# GNOME桌面环境额外需要
-sudo dnf install gnome-shell-extension-appindicator
 ```
 
 **注意事项**:
@@ -80,6 +77,7 @@ sudo dnf install gnome-shell-extension-appindicator
 - KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
 - 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
 - 在Linux环境下，程序会自动尝试保持窗口置顶，如果发现窗口被其他应用遮挡，可以尝试重启程序
+- 在Linux环境中若托盘菜单无法显示，可以直接右键点击悬浮窗来打开托盘菜单
 
 ## 使用方法
 
@@ -93,14 +91,14 @@ sudo dnf install gnome-shell-extension-appindicator
    - 打开UI设置
    - 退出程序
 
-### 便携版ZIP包
+### Windows便携版ZIP包
 1. 下载并解压便携版ZIP包
 2. 进入解压后的目录，运行 `TimeNest.exe` 启动程序
 3. 程序启动后会在桌面显示课程表悬浮窗
 4. 右键点击悬浮窗可打开系统托盘菜单
 5. 通过托盘菜单可以：
    - 切换拖拽状态
-   - 打开课程表设置
+   - 打开临时调课设置
    - 打开UI设置
    - 退出程序
 
