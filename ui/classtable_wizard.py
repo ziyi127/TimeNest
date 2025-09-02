@@ -414,22 +414,27 @@ class ClassTableWizard:
     
     def restart_program(self):
         """重启程序"""
-        # 这里需要实现程序重启逻辑
-        # 为简化起见，我们只关闭当前窗口
-        # 实际应用中可能需要使用subprocess或其他方法重启程序
         try:
             # 尝试重启程序
             import sys
             import subprocess
+            import os
             
             # 获取当前程序路径
             program = sys.executable
-            script = sys.argv[0]
+            
+            # 获取main.py的绝对路径
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            main_script = os.path.join(current_dir, "main.py")
             
             # 启动新实例
-            subprocess.Popen([program, script])
+            subprocess.Popen([program, main_script])
             
             # 关闭当前实例
-            self.main_window.destroy()
+            # 使用系统托盘管理器的退出方法来确保所有资源都被正确清理
+            if hasattr(self.main_window, 'tray_manager') and self.main_window.tray_manager:
+                self.main_window.tray_manager.quit_window(None, None)
+            else:
+                self.main_window.destroy()
         except Exception as e:
             messagebox.showerror("错误", f"重启程序时出错: {e}")
