@@ -1,0 +1,294 @@
+{
+  "timetable": {
+    "monday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:45",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "08:55",
+        "end_time": "09:40",
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:00",
+        "end_time": "10:45",
+        "subject": "物理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:55",
+        "end_time": "11:40",
+        "subject": "化学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:00",
+        "end_time": "14:45",
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:55",
+        "end_time": "15:40",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:00",
+        "end_time": "16:45",
+        "subject": "地理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:55",
+        "end_time": "17:40",
+        "subject": "生物",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ],
+    "tuesday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:45",
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "08:55",
+        "end_time": "09:40",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:00",
+        "end_time": "10:45",
+        "subject": "化学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:55",
+        "end_time": "11:40",
+        "subject": "物理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:00",
+        "end_time": "14:45",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:55",
+        "end_time": "15:40",
+        "subject": "电子技术基础",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:00",
+        "end_time": "16:45",
+        "subject": "生物",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:55",
+        "end_time": "17:40",
+        "subject": "地理",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ],
+    "wednesday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:45",
+        "subject": "物理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "08:55",
+        "end_time": "09:40",
+        "subject": "化学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:00",
+        "end_time": "10:45",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:55",
+        "end_time": "11:40",
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:00",
+        "end_time": "14:45",
+        "subject": "地理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:55",
+        "end_time": "15:40",
+        "subject": "生物",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:00",
+        "end_time": "16:45",
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:55",
+        "end_time": "17:40",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ],
+    "thursday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:45",
+        "subject": "化学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "08:55",
+        "end_time": "09:40",
+        "subject": "物理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:00",
+        "end_time": "10:45",
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:55",
+        "end_time": "11:40",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:00",
+        "end_time": "14:45",
+        "subject": "生物",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:55",
+        "end_time": "15:40",
+        "subject": "地理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:00",
+        "end_time": "16:45",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:55",
+        "end_time": "17:40",
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ],
+    "friday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:45",
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "08:55",
+        "end_time": "09:40",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:00",
+        "end_time": "10:45",
+        "subject": "地理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:55",
+        "end_time": "11:40",
+        "subject": "生物",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:00",
+        "end_time": "14:45",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:55",
+        "end_time": "15:40",
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:00",
+        "end_time": "16:45",
+        "subject": "物理",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:55",
+        "end_time": "17:40",
+        "subject": "化学",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ]
+  }
+}

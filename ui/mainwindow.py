@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import tkinter.font as tkFont
 import json
 import os
 import datetime
@@ -56,7 +57,8 @@ class DragWindow(tk.Tk):
         self.time_frame.pack(anchor='w')
         
         # 创建时间标签
-        self.time_label = tk.Label(self.time_frame, font=("Arial", 14), bg=self.background_color, fg=self.text_color)
+        time_font = tkFont.Font(family="Arial", size=self.time_font_size)
+        self.time_label = tk.Label(self.time_frame, font=time_font, fg=self.text_color, bg=self.background_color)
         self.time_label.pack(side='left')
         
         # 设置初始鼠标穿透状态
@@ -66,19 +68,22 @@ class DragWindow(tk.Tk):
     def _initialize_transparency(self):
         """初始化透明度设置"""
         # 创建日期和星期标签
-        self.date_label = tk.Label(self.time_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
+        date_font = tkFont.Font(family="Arial", size=self.date_font_size)
+        self.date_label = tk.Label(self.time_frame, font=date_font, bg=self.background_color, fg=self.text_color)
         self.date_label.pack(side='left', padx=(3, 0))
         
         # 创建右键菜单
         self.context_menu = None
         
         # 创建课程信息标签
-        self.class_info_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
+        class_info_font = tkFont.Font(family="Arial", size=self.class_info_font_size)
+        self.class_info_label = tk.Label(self.main_frame, font=class_info_font, bg=self.background_color, fg=self.text_color)
         if self.show_next_class:
             self.class_info_label.pack(anchor='w')
         
         # 创建下一节课信息标签
-        self.next_class_label = tk.Label(self.main_frame, font=("Arial", 12), bg=self.background_color, fg=self.text_color)
+        next_class_font = tkFont.Font(family="Arial", size=self.next_class_font_size)
+        self.next_class_label = tk.Label(self.main_frame, font=next_class_font, bg=self.background_color, fg=self.text_color)
         if self.show_countdown:
             self.next_class_label.pack(anchor='w')
         
@@ -151,6 +156,28 @@ class DragWindow(tk.Tk):
             new_font_size = min(14, int(font_size * (label_width / text_width * 0.9)))
             label.config(font=(font_family, new_font_size))
     
+    def _apply_fonts(self):
+        """应用字体设置"""
+        # 应用时间标签字体
+        time_font = tkFont.Font(family="Arial", size=self.time_font_size)
+        self.time_label.config(font=time_font)
+        
+        # 应用日期标签字体
+        date_font = tkFont.Font(family="Arial", size=self.date_font_size)
+        self.date_label.config(font=date_font)
+        
+        # 应用课程信息标签字体
+        class_info_font = tkFont.Font(family="Arial", size=self.class_info_font_size)
+        self.class_info_label.config(font=class_info_font)
+        
+        # 应用下节课标签字体
+        next_class_font = tkFont.Font(family="Arial", size=self.next_class_font_size)
+        self.next_class_label.config(font=next_class_font)
+        
+        # 调整字体大小以适应窗口
+        # 注意：_adjust_font_size需要参数，不能直接调用
+        # 在_apply_background_and_transparency中会处理字体调整
+        
     def _apply_background_and_transparency(self):
         """应用背景色和透明度设置"""
         # 重新设置背景色
@@ -263,6 +290,12 @@ class DragWindow(tk.Tk):
             self.transparency = 100
             self.show_next_class = True
             self.show_countdown = True
+            self.time_font_size = 14
+            self.date_font_size = 12
+            self.class_info_font_size = 12
+            self.next_class_font_size = 12
+            self.window_width = 180
+            self.window_height = 70
             
             if os.path.exists(settings_file):
                 with open(settings_file, 'r', encoding='utf-8') as f:
@@ -274,6 +307,15 @@ class DragWindow(tk.Tk):
                 self.transparency = settings.get("transparency", 100)
                 self.show_next_class = settings.get("show_next_class", True)
                 self.show_countdown = settings.get("show_countdown", True)
+                self.time_font_size = settings.get("time_font_size", 14)
+                self.date_font_size = settings.get("date_font_size", 12)
+                self.class_info_font_size = settings.get("class_info_font_size", 12)
+                self.next_class_font_size = settings.get("next_class_font_size", 12)
+                self.window_width = settings.get("window_width", 180)
+                self.window_height = settings.get("window_height", 70)
+            
+            # 设置窗口大小
+            self.geometry(f"{self.window_width}x{self.window_height}")
             
             # 应用透明度
             alpha = self.transparency / 100.0
@@ -289,6 +331,12 @@ class DragWindow(tk.Tk):
             self.transparency = 100
             self.show_next_class = True
             self.show_countdown = True
+            self.time_font_size = 14
+            self.date_font_size = 12
+            self.class_info_font_size = 12
+            self.next_class_font_size = 12
+            self.window_width = 180
+            self.window_height = 70
     
     def set_draggable(self, draggable):
         """设置窗口是否可拖动"""
