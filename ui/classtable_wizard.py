@@ -70,6 +70,9 @@ class ClassTableWizard:
         self.window.geometry("900x600")  # 调整窗口初始大小以适应新布局
         self.window.resizable(True, True)
         
+        # 居中显示窗口
+        if hasattr(self.main_window, '_center_window'):
+            self.main_window._center_window(self.window)
         # 设置窗口属性
         try:
             self.window.transient()

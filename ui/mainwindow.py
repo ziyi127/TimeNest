@@ -5,6 +5,7 @@ import json
 import os
 import datetime
 
+
 class DragWindow(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -200,6 +201,50 @@ class DragWindow(tk.Tk):
             self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
         if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
             self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
+    
+    def _get_screen_resolution(self):
+        """获取屏幕分辨率"""
+        try:
+            # 使用winfo_screenwidth和winfo_screenheight获取屏幕分辨率
+            screen_width = self.winfo_screenwidth()
+            screen_height = self.winfo_screenheight()
+            return screen_width, screen_height
+        except Exception as e:
+            print(f"获取屏幕分辨率时出错: {e}")
+            # 返回默认分辨率
+            return 1920, 1080
+    
+    def _calculate_window_position(self, screen_width, screen_height, base_x=878, base_y=0, base_screen_width=1920, base_screen_height=1080):
+        """根据屏幕分辨率计算窗口位置，使窗口在不同分辨率下出现在同一相对位置"""
+        # 计算相对位置比例
+        x_ratio = base_x / base_screen_width
+        y_ratio = base_y / base_screen_height
+        
+        # 根据比例计算新位置
+        new_x = int(screen_width * x_ratio)
+        new_y = int(screen_height * y_ratio)
+        
+        return new_x, new_y
+    
+    def _center_window(self, window):
+        """将窗口居中显示在屏幕中央"""
+        try:
+            # 获取屏幕分辨率
+            screen_width, screen_height = self._get_screen_resolution()
+            
+            # 获取窗口尺寸
+            window.update_idletasks()  # 确保窗口尺寸已更新
+            window_width = window.winfo_width()
+            window_height = window.winfo_height()
+            
+            # 计算居中位置
+            x = (screen_width - window_width) // 2
+            y = (screen_height - window_height) // 2
+            
+            # 设置窗口位置
+            window.geometry(f"+{x}+{y}")
+        except Exception as e:
+            print(f"居中窗口时出错: {e}")
 
     def _show_context_menu(self, event):#这个只有linux会起作用，win不会被激活
         """显示右键菜单"""
@@ -791,12 +836,23 @@ class DragWindow(tk.Tk):
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             settings_file = os.path.join(project_path, "timetable_ui_settings.json")
             
+            # 获取屏幕分辨率
+            screen_width, screen_height = self._get_screen_resolution()
+            
             if os.path.exists(settings_file):
                 with open(settings_file, 'r', encoding='utf-8') as f:
                     settings = json.load(f)
                 
+                # 根据屏幕分辨率计算窗口位置
+                x, y = self._calculate_window_position(screen_width, screen_height, 
+                                                       settings.get("position_x", 878), 
+                                                       settings.get("position_y", 0))
                 # 设置窗口位置
-                self.set_display_postion(settings["position_x"], settings["position_y"])
+                self.set_display_postion(x, y)
+            else:
+                # 如果没有设置文件，使用默认位置
+                x, y = self._calculate_window_position(screen_width, screen_height)
+                self.set_display_postion(x, y)
         except Exception as e:
             print(f"加载窗口位置时出错: {e}")
     

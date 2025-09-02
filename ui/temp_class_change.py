@@ -76,6 +76,10 @@ class TempClassChangeWindow:
         except Exception as e:
             print(f"设置窗口属性时出错: {e}")
         
+        # 居中显示窗口
+        if hasattr(self.main_window, '_center_window'):
+            self.main_window._center_window(self.window)
+        
         # 创建界面元素
         self.create_widgets()
         

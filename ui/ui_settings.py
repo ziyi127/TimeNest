@@ -11,6 +11,10 @@ class UISettings:
         self.window.title("UI设置")
         self.window.geometry("400x600")
         
+        # 居中显示窗口
+        if hasattr(self.drag_window, '_center_window'):
+            self.drag_window._center_window(self.window)
+        
         # 初始化设置
         self.settings = {
             "background_color": "white",
