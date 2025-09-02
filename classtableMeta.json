@@ -1,0 +1,63 @@
+{
+  "timetable": {
+    "monday": [
+      {"start_time": "08:00", "end_time": "08:45"},
+      {"start_time": "08:55", "end_time": "09:40"},
+      {"start_time": "10:00", "end_time": "10:45"},
+      {"start_time": "10:55", "end_time": "11:40"},
+      {"start_time": "14:00", "end_time": "14:45"},
+      {"start_time": "14:55", "end_time": "15:40"},
+      {"start_time": "16:00", "end_time": "16:45"},
+      {"start_time": "16:55", "end_time": "17:40"}
+    ],
+    "tuesday": [
+      {"start_time": "08:00", "end_time": "08:45"},
+      {"start_time": "08:55", "end_time": "09:40"},
+      {"start_time": "10:00", "end_time": "10:45"},
+      {"start_time": "10:55", "end_time": "11:40"},
+      {"start_time": "14:00", "end_time": "14:45"},
+      {"start_time": "14:55", "end_time": "15:40"},
+      {"start_time": "16:00", "end_time": "16:45"},
+      {"start_time": "16:55", "end_time": "17:40"}
+    ],
+    "wednesday": [
+      {"start_time": "08:00", "end_time": "08:45"},
+      {"start_time": "08:55", "end_time": "09:40"},
+      {"start_time": "10:00", "end_time": "10:45"},
+      {"start_time": "10:55", "end_time": "11:40"},
+      {"start_time": "14:00", "end_time": "14:45"},
+      {"start_time": "14:55", "end_time": "15:40"},
+      {"start_time": "16:00", "end_time": "16:45"},
+      {"start_time": "16:55", "end_time": "17:40"}
+    ],
+    "thursday": [
+      {"start_time": "08:00", "end_time": "08:45"},
+      {"start_time": "08:55", "end_time": "09:40"},
+      {"start_time": "10:00", "end_time": "10:45"},
+      {"start_time": "10:55", "end_time": "11:40"},
+      {"start_time": "14:00", "end_time": "14:45"},
+      {"start_time": "14:55", "end_time": "15:40"},
+      {"start_time": "16:00", "end_time": "16:45"},
+      {"start_time": "16:55", "end_time": "17:40"}
+    ],
+    "friday": [
+      {"start_time": "08:00", "end_time": "08:45"},
+      {"start_time": "08:55", "end_time": "09:40"},
+      {"start_time": "10:00", "end_time": "10:45"},
+      {"start_time": "10:55", "end_time": "11:40"},
+      {"start_time": "14:00", "end_time": "14:45"},
+      {"start_time": "14:55", "end_time": "15:40"},
+      {"start_time": "16:00", "end_time": "16:45"},
+      {"start_time": "16:55", "end_time": "17:40"}
+    ]
+  },
+  "classtable": {
+    "monday": ["数学", "英语", "物理", "化学", "语文", "历史", "地理", "生物"],
+    "tuesday": ["英语", "数学", "化学", "物理", "历史", "语文", "生物", "地理"],
+    "wednesday": ["物理", "化学", "数学", "英语", "地理", "生物", "语文", "历史"],
+    "thursday": ["化学", "物理", "英语", "数学", "生物", "地理", "历史", "语文"],
+    "friday": ["语文", "历史", "地理", "生物", "数学", "英语", "物理", "化学"]
+  },
+  "allclass": ["数学", "英语", "物理", "化学", "语文", "历史", "地理", "生物"],
+  "lunch_break_period": 4
+}
