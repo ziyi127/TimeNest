@@ -9,7 +9,11 @@ class UISettings:
         self.drag_window = drag_window
         self.window = tk.Toplevel(parent)
         self.window.title("UI设置")
-        self.window.geometry("400x500")
+        self.window.geometry("400x600")
+        
+        # 居中显示窗口
+        if hasattr(self.drag_window, '_center_window'):
+            self.drag_window._center_window(self.window)
         
         # 初始化设置
         self.settings = {
@@ -19,7 +23,13 @@ class UISettings:
             "position_x": 100,
             "position_y": 100,
             "show_next_class": True,
-            "show_countdown": True
+            "show_countdown": True,
+            "time_font_size": 14,
+            "date_font_size": 12,
+            "class_info_font_size": 12,
+            "next_class_font_size": 12,
+            "window_width": 180,
+            "window_height": 70
         }
         
         self.create_widgets()
@@ -53,7 +63,56 @@ class UISettings:
         self.transparency_scale.set(self.settings["transparency"])
         self.transparency_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
         
-
+        # 字体大小设置
+        font_size_frame = tk.LabelFrame(self.window, text="字体大小")
+        font_size_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        # 时间字体大小
+        time_font_frame = tk.Frame(font_size_frame)
+        time_font_frame.pack(fill=tk.X, padx=5, pady=2)
+        tk.Label(time_font_frame, text="时间:").pack(side=tk.LEFT)
+        self.time_font_scale = tk.Scale(time_font_frame, from_=8, to=24, orient=tk.HORIZONTAL)
+        self.time_font_scale.set(self.settings["time_font_size"])
+        self.time_font_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        
+        # 日期字体大小
+        date_font_frame = tk.Frame(font_size_frame)
+        date_font_frame.pack(fill=tk.X, padx=5, pady=2)
+        tk.Label(date_font_frame, text="日期:").pack(side=tk.LEFT)
+        self.date_font_scale = tk.Scale(date_font_frame, from_=8, to=24, orient=tk.HORIZONTAL)
+        self.date_font_scale.set(self.settings["date_font_size"])
+        self.date_font_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        
+        # 课程信息字体大小
+        class_info_font_frame = tk.Frame(font_size_frame)
+        class_info_font_frame.pack(fill=tk.X, padx=5, pady=2)
+        tk.Label(class_info_font_frame, text="课程信息:").pack(side=tk.LEFT)
+        self.class_info_font_scale = tk.Scale(class_info_font_frame, from_=8, to=24, orient=tk.HORIZONTAL)
+        self.class_info_font_scale.set(self.settings["class_info_font_size"])
+        self.class_info_font_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        
+        # 下一节课字体大小
+        next_class_font_frame = tk.Frame(font_size_frame)
+        next_class_font_frame.pack(fill=tk.X, padx=5, pady=2)
+        tk.Label(next_class_font_frame, text="下一节课:").pack(side=tk.LEFT)
+        self.next_class_font_scale = tk.Scale(next_class_font_frame, from_=8, to=24, orient=tk.HORIZONTAL)
+        self.next_class_font_scale.set(self.settings["next_class_font_size"])
+        self.next_class_font_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        
+        # 窗口大小设置
+        window_size_frame = tk.LabelFrame(self.window, text="窗口大小")
+        window_size_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        # 添加一个说明标签
+        tk.Label(window_size_frame, text="通过拖动条调整窗口大小，文字会同时变大").pack(fill=tk.X, padx=5, pady=2)
+        
+        # 使用单个拖动条调整窗口大小
+        size_frame = tk.Frame(window_size_frame)
+        size_frame.pack(fill=tk.X, padx=5, pady=2)
+        tk.Label(size_frame, text="窗口大小:").pack(side=tk.LEFT)
+        self.size_scale = tk.Scale(size_frame, from_=1, to=3, orient=tk.HORIZONTAL, resolution=0.1)
+        self.size_scale.set(1.0)  # 默认比例为1.0
+        self.size_scale.pack(side=tk.RIGHT, fill=tk.X, expand=True)
         
         # 显示控制
         display_frame = tk.Frame(self.window)
@@ -84,9 +143,32 @@ class UISettings:
                 with open(settings_file, 'r', encoding='utf-8') as f:
                     self.settings = json.load(f)
                 
+                # 确保所有设置项都存在
+                if "time_font_size" not in self.settings:
+                    self.settings["time_font_size"] = 14
+                if "date_font_size" not in self.settings:
+                    self.settings["date_font_size"] = 12
+                if "class_info_font_size" not in self.settings:
+                    self.settings["class_info_font_size"] = 12
+                if "next_class_font_size" not in self.settings:
+                    self.settings["next_class_font_size"] = 12
+                if "window_width" not in self.settings:
+                    self.settings["window_width"] = 180
+                if "window_height" not in self.settings:
+                    self.settings["window_height"] = 70
+                
                 self.transparency_scale.set(self.settings["transparency"])
                 self.show_next_class_var.set(self.settings["show_next_class"])
                 self.show_countdown_var.set(self.settings["show_countdown"])
+                self.time_font_scale.set(self.settings["time_font_size"])
+                self.date_font_scale.set(self.settings["date_font_size"])
+                self.class_info_font_scale.set(self.settings["class_info_font_size"])
+                self.next_class_font_scale.set(self.settings["next_class_font_size"])
+                # 移除对宽度和高度滑块的设置
+                # 添加对新的size_scale滑块的设置
+                # 根据窗口宽度计算比例因子
+                scale_factor = self.settings["window_width"] / 180.0
+                self.size_scale.set(scale_factor)
         except Exception as e:
             print(f"加载设置时出错: {e}")
     
@@ -101,6 +183,15 @@ class UISettings:
             self.settings["transparency"] = self.transparency_scale.get()
             self.settings["show_next_class"] = self.show_next_class_var.get()
             self.settings["show_countdown"] = self.show_countdown_var.get()
+            self.settings["time_font_size"] = self.time_font_scale.get()
+            self.settings["date_font_size"] = self.date_font_scale.get()
+            self.settings["class_info_font_size"] = self.class_info_font_scale.get()
+            self.settings["next_class_font_size"] = self.next_class_font_scale.get()
+            
+            # 根据size_scale的值计算窗口的宽度和高度
+            scale_factor = self.size_scale.get()
+            self.settings["window_width"] = int(180 * scale_factor)
+            self.settings["window_height"] = int(70 * scale_factor)
             
             with open(settings_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=2)
@@ -108,7 +199,56 @@ class UISettings:
             print(f"保存设置时出错: {e}")
     
     def apply_settings(self):
-        """应用设置"""
+        """应用设置到主窗口"""
+        if self.drag_window:
+            # 更新设置值
+            self.settings["transparency"] = self.transparency_scale.get()
+            self.settings["show_next_class"] = self.show_next_class_var.get()
+            self.settings["show_countdown"] = self.show_countdown_var.get()
+            
+            # 根据size_scale的值计算窗口的宽度和高度
+            scale_factor = self.size_scale.get()
+            self.settings["window_width"] = int(180 * scale_factor)
+            self.settings["window_height"] = int(70 * scale_factor)
+            
+            # 根据比例因子调整字体大小
+            self.settings["time_font_size"] = int(14 * scale_factor)
+            self.settings["date_font_size"] = int(12 * scale_factor)
+            self.settings["class_info_font_size"] = int(12 * scale_factor)
+            self.settings["next_class_font_size"] = int(12 * scale_factor)
+            
+            # 更新滑块的值以反映计算出的字体大小
+            self.time_font_scale.set(self.settings["time_font_size"])
+            self.date_font_scale.set(self.settings["date_font_size"])
+            self.class_info_font_scale.set(self.settings["class_info_font_size"])
+            self.next_class_font_scale.set(self.settings["next_class_font_size"])
+            
+            # 更新主窗口的设置
+            self.drag_window.background_color = self.settings["background_color"]
+            self.drag_window.text_color = self.settings["text_color"]
+            self.drag_window.transparency = self.settings["transparency"]
+            self.drag_window.show_next_class = self.settings["show_next_class"]
+            self.drag_window.show_countdown = self.settings["show_countdown"]
+            self.drag_window.time_font_size = self.settings["time_font_size"]
+            self.drag_window.date_font_size = self.settings["date_font_size"]
+            self.drag_window.class_info_font_size = self.settings["class_info_font_size"]
+            self.drag_window.next_class_font_size = self.settings["next_class_font_size"]
+            self.drag_window.window_width = self.settings["window_width"]
+            self.drag_window.window_height = self.settings["window_height"]
+            
+            # 应用背景色和透明度
+            self.drag_window._apply_background_and_transparency()
+            
+            # 应用字体设置
+            self.drag_window._apply_fonts()
+            
+            # 设置窗口大小
+            self.drag_window.geometry(f"{self.settings['window_width']}x{self.settings['window_height']}")
+            
+            # 更新显示设置
+            self.drag_window.update_display_settings()
+            
+            print("设置已应用到主窗口")
         # 保存设置
         self.save_settings()
         
@@ -117,24 +257,91 @@ class UISettings:
         self.drag_window.transparency = self.settings["transparency"]
         self.drag_window._apply_background_and_transparency()
         
-        # 应用文字颜色
-        self.drag_window.time_label.configure(fg=self.settings["text_color"])
-        self.drag_window.date_label.configure(fg=self.settings["text_color"])
-        self.drag_window.class_info_label.configure(fg=self.settings["text_color"])
-        self.drag_window.next_class_label.configure(fg=self.settings["text_color"])
+        # 应用文字颜色和字体大小
+        self.drag_window.time_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["time_font_size"]))
+        self.drag_window.date_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["date_font_size"]))
+        self.drag_window.class_info_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["class_info_font_size"]))
+        self.drag_window.next_class_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["next_class_font_size"]))
+        
+        # 应用窗口大小
+        self.drag_window.geometry(f"{self.settings['window_width']}x{self.settings['window_height']}")
         
         # 应用显示控制
         print(f"应用显示设置: show_next_class={self.settings['show_next_class']}, show_countdown={self.settings['show_countdown']}")
         self.drag_window.show_next_class = self.settings["show_next_class"]
         self.drag_window.show_countdown = self.settings["show_countdown"]
         self.drag_window.update_display_settings()
-        
-
     
     def save_and_close(self):
         """保存设置并关闭窗口"""
         self.apply_settings()
+        self._cleanup_resources()
         self.window.destroy()
+    
+    def _cleanup_resources(self):
+        """清理资源"""
+        try:
+            # 解除所有事件绑定
+            try:
+                self.bg_color_btn.unbind("<Button-1>")
+            except:
+                pass
+            try:
+                self.text_color_btn.unbind("<Button-1>")
+            except:
+                pass
+            
+            # 解除透明度滑块的事件绑定
+            try:
+                self.transparency_scale.unbind("<Configure>")
+            except:
+                pass
+            
+            # 解除字体大小滑块的事件绑定
+            try:
+                self.time_font_scale.unbind("<Configure>")
+            except:
+                pass
+            try:
+                self.date_font_scale.unbind("<Configure>")
+            except:
+                pass
+            try:
+                self.class_info_font_scale.unbind("<Configure>")
+            except:
+                pass
+            try:
+                self.next_class_font_scale.unbind("<Configure>")
+            except:
+                pass
+            
+            # 解除窗口大小滑块的事件绑定
+            try:
+                self.size_scale.unbind("<Configure>")
+            except:
+                pass
+            
+            # 解除复选框的事件绑定
+            try:
+                self.show_next_class_var.trace_remove('write', self.show_next_class_var.trace_info()[0][1])
+            except:
+                pass
+            try:
+                self.show_countdown_var.trace_remove('write', self.show_countdown_var.trace_info()[0][1])
+            except:
+                pass
+            
+            # 销毁所有子控件
+            try:
+                for child in self.window.winfo_children():
+                    try:
+                        child.destroy()
+                    except:
+                        pass
+            except:
+                pass
+        except Exception as e:
+            print(f"清理UI设置界面资源时出错: {e}")
     
     def choose_bg_color(self):
         """选择背景颜色"""

@@ -1,30 +1,30 @@
-# TimeNest vtktt 课程表桌面应用
+# TimeNest for HTPC 课程表大屏应用
 
 <div align="center">
 
-<img src="https://github.com/ziyi127/TimeNest/blob/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
+<img src="https://github.com/ziyi127/TimeNest/tree/TkTT/TKtimetable.ico" style="width:64%; max-width:500px; display:block; margin:auto;" alt="TimeNest Logo">
 
-**一个功能强大的跨平台课程表管理工具**
+**一个简洁的课程表显示工具**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/ziyi127/TimeNest.svg)](https://github.com/ziyi127/TimeNest/issues)
 
-[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐛 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
-
+[🌐 官方网站](https://timenest.qzz.io) | [📖 文档](https://timenest.qzz.io/docs) | [🐞 问题反馈](https://github.com/ziyi127/TimeNest/issues) | [💬 讨论](https://github.com/ziyi127/TimeNest/discussions)
+[🐧QQ群](https://qun.qq.com/universal-share/share?ac=1&authKey=EEu9RUAgQSCdOaeoQHVAubu1PZF4f7LnE6zXGhu1bitT4exPdY%2Fgx5c5RK9z6Jen&busi_data=eyJncm91cENvZGUiOiI3MTk5Mzc1ODYiLCJ0b2tlbiI6IjU0cmxuZlJMaWFnNmtzS3E4cFN0bGZRckZkZnp6SDhEcjM3bG50Y0lKRTZFaWxWRFBiZ0craGdjV1ZkKzNyWm8iLCJ1aW4iOiIzMjQ5MTk2OTk2In0%3D&data=cylTd1VkYAIVgm4wHNRQGp58TXGOdcF5LnvhD-d0joV5GnI2PG8IJ3wvDuw6E3fhUfWL4iitXT4Nx8sXOLnwfQ&svctype=4&tempid=h5_group_info)
 </div>
 
 TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形式显示在桌面上，可以随时查看当前和下一节课的信息。
 
 ## 功能特点
 
-- **桌面悬浮窗**: 课程表以半透明悬浮窗形式显示在桌面上，不遮挡其他应用
+- **桌面悬浮窗**: 课程表以半透明悬浮窗形式显示在桌面上
 - **实时课程信息**: 显示当前时间和日期，以及当前和下一节课的详细信息
 - **系统托盘管理**: 最小化到系统托盘，支持快速操作
-- **课程表设置**: 可自定义一周七天的课程安排（此功能暂时不可用，请利用ai直接修改timetable.json文件）
+- **课程表设置**: 可自定义一周五天（周一至周五）的课程安排
 - **UI个性化**: 支持背景颜色、文字颜色、透明度等界面设置
 - **拖拽移动**: 可以拖拽窗口到任意位置
-- **鼠标穿透**: 可设置鼠标穿透功能，避免误操作
+- **鼠标穿透**: 可设置鼠标穿透功能，避免误操作(此功能由于tkinter本身限制正在开发)
 
 ## 课表显示逻辑
 
@@ -44,34 +44,31 @@ TimeNest 是一个简洁美观的桌面课程表应用。它以悬浮窗的形�
 1. 确保系统已安装 Python 3.6 或更高版本
 2. 下载或克隆本项目到本地
 3. 安装requirements.txt中所写依赖包（可以使用`pip install -r requirements.txt`命令）
-4. 若您使用的是Linux发行版，请您查看“Linux桌面环境适配说明”来安装依赖
+4. 若您使用的是Linux发行版，请您查看"Linux桌面环境适配说明"来安装依赖
 
 ### Linux桌面环境适配说明
 
 对于Linux用户，特别是使用KDE或GNOME桌面环境的用户，可能需要手动安装额外的依赖包以确保程序正常运行：
 
-**Ubuntu/Debian系统**:
+**Ubuntu/Debian及UOS，deepin，kylin等信创系统**:
 ```bash
 # 安装基本依赖
 sudo apt-get update
 sudo apt-get install python3-pil python3-pil.imagetk python3-tk
 pip3 install pystray
 
-# GNOME桌面环境额外需要
+# 基于GNOME的桌面环境额外需要
 sudo apt-get install gnome-shell-extension-appindicator
 
-# KDE桌面环境可能需要
+# 基于KDE的桌面环境可能需要
 sudo apt-get install libappindicator3-1
 ```
 
-**Fedora系统**:
+**请注意，Fedora系统需要安装这些依赖**:
 ```bash
 # 安装基本依赖
 sudo dnf install python3-pillow python3-pillow-tk python3-tkinter
 pip3 install pystray
-
-# GNOME桌面环境额外需要
-sudo dnf install gnome-shell-extension-appindicator
 ```
 
 **注意事项**:
@@ -80,6 +77,7 @@ sudo dnf install gnome-shell-extension-appindicator
 - KDE和GNOME环境下推荐使用不同的窗口类型以获得最佳显示效果
 - 如果遇到"Failed to dock icon"错误，请确保已安装系统托盘支持组件，如Ubuntu/Debian系统中的`gnome-shell-extension-appindicator`或Fedora系统中的相应组件
 - 在Linux环境下，程序会自动尝试保持窗口置顶，如果发现窗口被其他应用遮挡，可以尝试重启程序
+- 在Linux环境中若托盘菜单无法显示，可以直接右键点击悬浮窗来打开托盘菜单
 
 ## 使用方法
 
@@ -93,7 +91,7 @@ sudo dnf install gnome-shell-extension-appindicator
    - 打开UI设置
    - 退出程序
 
-### 便携版ZIP包
+### Windows便携版ZIP包
 1. 下载并解压便携版ZIP包
 2. 进入解压后的目录，运行 `TimeNest.exe` 启动程序
 3. 程序启动后会在桌面显示课程表悬浮窗
@@ -113,6 +111,9 @@ sudo dnf install gnome-shell-extension-appindicator
   - `mainwindow.py`: 主窗口实现
   - `tray.py`: 系统托盘实现
   - `ui_settings.py`: UI设置窗口
+  - `temp_class_change.py`: 临时调课设置窗口
+  - `timetable_wizard.py`: 课程表向导窗口
+  - `classtable_wizard.py`: 课表设置窗口
 
 ## 开发说明
 

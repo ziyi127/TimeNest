@@ -30,6 +30,12 @@ class TrayManager:
         # UI设置窗口实例
         self.ui_settings = None
         
+        # 临时调课界面实例
+        self.temp_class_change = None
+        
+        # 时间表设置向导实例
+        self.timetable_wizard = None
+        
         # 添加托盘可用性检查
         self.root_window.after(1000, self._check_tray_availability)
     
@@ -63,7 +69,9 @@ class TrayManager:
         
         menu = Menu(
             MenuItem('允许编辑悬浮窗位置', self.toggle_drag, checked=lambda item: self.allow_drag.get()),
+            MenuItem('临时调课', self.open_temp_class_change),
             MenuItem('UI设置', self.open_ui_settings),
+            MenuItem('编辑课表和时间表', self.open_timetable_wizard),
             MenuItem('退出', self.quit_window)
         )
         
@@ -74,19 +82,33 @@ class TrayManager:
                 # 先尝试运行图标
                 try:
                     self.icon.run_detached()
+                    # 尝试设置pystray创建的线程为守护线程
+                    import threading
+                    for thread in threading.enumerate():
+                        if "pystray" in thread.name and not thread.daemon:
+                            thread.daemon = True
                 except Exception as e:
                     print(f"首次创建系统托盘图标失败: {e}")
                     # 如果失败，等待一段时间后重试
                     import time
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                     try:
                         self.icon.run_detached()
+                        # 尝试设置pystray创建的线程为守护线程
+                        import threading
+                        for thread in threading.enumerate():
+                            if "pystray" in thread.name and not thread.daemon:
+                                thread.daemon = True
                     except Exception as e2:
                         print(f"重试创建系统托盘图标失败: {e2}")
-                        print("系统托盘功能在当前Linux环境中不可用")
                         self.icon = None
             else:
                 self.icon.run_detached()
+                # 尝试设置pystray创建的线程为守护线程
+                import threading
+                for thread in threading.enumerate():
+                    if "pystray" in thread.name and not thread.daemon:
+                        thread.daemon = True
         except Exception as e:
             print(f"创建系统托盘图标失败: {e}")
             print("系统托盘功能在当前环境中不可用")
@@ -118,6 +140,23 @@ class TrayManager:
     
 
     
+    def open_temp_class_change(self, icon, item):
+        # 打开临时调课界面
+        # 导入临时调课界面
+        try:
+            from ui.temp_class_change import TempClassChangeWindow
+            
+            # 如果窗口已存在，将其带到前台
+            if self.temp_class_change and self.temp_class_change.window and self.temp_class_change.window.winfo_exists():
+                self.temp_class_change.window.lift()
+                self.temp_class_change.window.focus_force()
+            else:
+                # 创建新窗口
+                self.temp_class_change = TempClassChangeWindow(self.root_window, self.root_window)
+                self.temp_class_change.open_window()
+        except Exception as e:
+            print(f"打开临时调课界面时出错: {e}")
+    
     def open_ui_settings(self, icon, item):
         # 打开UI设置界面
         if UI_SETTINGS_AVAILABLE:
@@ -131,6 +170,22 @@ class TrayManager:
         else:
             print("UI设置功能不可用")
     
+    def open_timetable_wizard(self, icon, item):
+        # 打开时间表设置向导
+        try:
+            from ui.timetable_wizard import TimetableWizard
+            
+            # 如果窗口已存在，将其带到前台
+            if self.timetable_wizard and self.timetable_wizard.window and self.timetable_wizard.window.winfo_exists():
+                self.timetable_wizard.window.lift()
+                self.timetable_wizard.window.focus_force()
+            else:
+                # 创建新窗口
+                self.timetable_wizard = TimetableWizard(self.root_window, self.root_window)
+                self.timetable_wizard.open_window()
+        except Exception as e:
+            print(f"打开时间表设置向导时出错: {e}")
+    
     def quit_window(self, icon, item):
         # 退出程序
         try:
@@ -141,6 +196,44 @@ class TrayManager:
                 except:
                     pass
                 self.ui_settings = None
+            
+            # 清理临时调课界面
+            if self.temp_class_change:
+                try:
+                    # 调用资源清理方法
+                    if hasattr(self.temp_class_change, '_cleanup_resources'):
+                        self.temp_class_change._cleanup_resources()
+                    if self.temp_class_change.window:
+                        self.temp_class_change.window.destroy()
+                except:
+                    pass
+                self.temp_class_change = None
+            
+            # 清理时间表设置向导界面
+            if self.timetable_wizard:
+                try:
+                    # 调用资源清理方法
+                    if hasattr(self.timetable_wizard, '_cleanup_resources'):
+                        self.timetable_wizard._cleanup_resources()
+                    if self.timetable_wizard.window:
+                        self.timetable_wizard.window.destroy()
+                except:
+                    pass
+                self.timetable_wizard = None
+            
+            # 清理课程表设置向导界面
+            # 注意：课程表向导是通过时间表向导打开的，可能需要特殊处理
+            # 这里我们检查是否存在classtable_wizard实例
+            if hasattr(self, 'classtable_wizard') and self.classtable_wizard:
+                try:
+                    # 调用资源清理方法
+                    if hasattr(self.classtable_wizard, '_cleanup_resources'):
+                        self.classtable_wizard._cleanup_resources()
+                    if hasattr(self.classtable_wizard, 'window') and self.classtable_wizard.window:
+                        self.classtable_wizard.window.destroy()
+                except:
+                    pass
+                self.classtable_wizard = None
             
             # 调用窗口的关闭方法以保存位置
             if hasattr(self.root_window, 'on_closing'):
@@ -165,14 +258,50 @@ class TrayManager:
         except Exception as e:
             print(f"退出程序时出错: {e}")
         finally:
-            # 使用sys.exit优雅退出
+            # 强制清理所有可能的线程和资源
+            import threading
+            import time
             import sys
-            try:
-                sys.exit(0)
-            except:
-                # 如果sys.exit失败，使用os._exit强制退出
-                import os
-                os._exit(0)
+            import os
+            import signal
+            
+            # 等待一小段时间确保所有资源都已释放
+            time.sleep(0.1)
+            
+            # 检查并终止所有非守护线程
+            non_daemon_threads = []
+            for thread in threading.enumerate():
+                if thread != threading.current_thread() and not thread.daemon:
+                    non_daemon_threads.append(thread)
+                    print(f"检测到非守护线程: {thread.name}")
+            
+            # 如果检测到非守护线程，强制退出应用
+            if non_daemon_threads:
+                print("检测到非守护线程，强制退出应用...")
+                try:
+                    os._exit(0)
+                except:
+                    try:
+                        os.kill(os.getpid(), signal.SIGKILL)
+                    except:
+                        pass
+            else:
+                # 使用sys.exit优雅退出
+                try:
+                    sys.exit(0)
+                except:
+                    # 如果sys.exit失败，使用os._exit强制退出
+                    try:
+                        os._exit(0)
+                    except:
+                        # 最后的备用方案：强制终止进程
+                        try:
+                            os.kill(os.getpid(), signal.SIGTERM)
+                        except:
+                            try:
+                                os.kill(os.getpid(), signal.SIGKILL)
+                            except:
+                                pass
     
     def run(self):
         if self.icon:

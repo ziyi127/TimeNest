@@ -1,0 +1,128 @@
+{
+  "timetable": {
+    "monday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:40"
+      },
+      {
+        "start_time": "08:50",
+        "end_time": "09:30"
+      }
+    ],
+    "tuesday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:40"
+      },
+      {
+        "start_time": "08:50",
+        "end_time": "09:30"
+      }
+    ],
+    "wednesday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:40"
+      },
+      {
+        "start_time": "08:50",
+        "end_time": "09:30"
+      }
+    ],
+    "thursday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:40"
+      },
+      {
+        "start_time": "08:50",
+        "end_time": "09:30"
+      }
+    ],
+    "friday": [
+      {
+        "start_time": "08:00",
+        "end_time": "08:40"
+      },
+      {
+        "start_time": "08:50",
+        "end_time": "09:30"
+      }
+    ]
+  },
+  "allclass": [
+    "语文",
+    "数学",
+    "英语"
+  ],
+  "settings": {
+    "first_class_time": "08:00",
+    "latest_time": "8:50",
+    "max_classes_per_day": 8,
+    "small_break_duration": 10,
+    "large_break_duration": 20,
+    "lunch_break_duration": 60,
+    "lunch_break_period": 4,
+    "class_duration": 40
+  },
+  "large_break_periods": [
+    2,
+    6
+  ],
+  "no_large_break_days": [
+    "周三"
+  ],
+  "classtable": {
+    "monday": [
+      "英语",
+      "英语",
+      "英语",
+      "语文",
+      "英语",
+      "数学",
+      "英语",
+      "语文"
+    ],
+    "tuesday": [
+      "数学",
+      "数学",
+      "英语",
+      "英语",
+      "英语",
+      "英语",
+      "语文",
+      "数学"
+    ],
+    "wednesday": [
+      "英语",
+      "英语",
+      "语文",
+      "英语",
+      "英语",
+      "数学",
+      "语文",
+      "英语"
+    ],
+    "thursday": [
+      "语文",
+      "英语",
+      "英语",
+      "数学",
+      "语文",
+      "英语",
+      "英语",
+      "语文"
+    ],
+    "friday": [
+      "英语",
+      "语文",
+      "数学",
+      "英语",
+      "英语",
+      "英语",
+      "英语",
+      "语文"
+    ]
+  }
+}

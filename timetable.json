@@ -4,95 +4,32 @@
       {
         "start_time": "08:00",
         "end_time": "08:40",
-        "subject": "历史",
-        "teacher": "教师1",
-        "classroom": "教室101"
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
       },
       {
         "start_time": "08:50",
         "end_time": "09:30",
-        "subject": "历史",
-        "teacher": "教师1",
-        "classroom": "教室101"
-      },
-      {
-        "start_time": "09:40",
-        "end_time": "10:20",
         "subject": "英语",
-        "teacher": "教师2",
-        "classroom": "教室202"
-      },
-      {
-        "start_time": "10:30",
-        "end_time": "11:10",
-        "subject": "英语",
-        "teacher": "教师2",
-        "classroom": "教室202"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "14:40",
-        "subject": "数学",
-        "teacher": "教师3",
-        "classroom": "教室303"
-      },
-      {
-        "start_time": "14:50",
-        "end_time": "15:30",
-        "subject": "数学",
-        "teacher": "教师3",
-        "classroom": "教室303"
-      },
-      {
-        "start_time": "15:40",
-        "end_time": "16:20",
-        "subject": "班会",
-        "teacher": "班主任",
-        "classroom": "本班教室"
+        "teacher": "教师",
+        "classroom": "教室"
       }
     ],
     "tuesday": [
       {
         "start_time": "08:00",
         "end_time": "08:40",
-        "subject": "通信原理与系统",
-        "teacher": "教师4",
-        "classroom": "教室404"
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
       },
       {
         "start_time": "08:50",
         "end_time": "09:30",
-        "subject": "通信原理与系统",
-        "teacher": "教师4",
-        "classroom": "教室404"
-      },
-      {
-        "start_time": "09:40",
-        "end_time": "10:20",
-        "subject": "语文",
-        "teacher": "教师5",
-        "classroom": "教室505"
-      },
-      {
-        "start_time": "10:30",
-        "end_time": "11:10",
-        "subject": "语文",
-        "teacher": "教师5",
-        "classroom": "教室505"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "14:40",
-        "subject": "电子技术基础",
-        "teacher": "教师6",
-        "classroom": "教室606"
-      },
-      {
-        "start_time": "14:50",
-        "end_time": "15:30",
-        "subject": "电子技术基础",
-        "teacher": "教师6",
-        "classroom": "教室606"
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
       }
     ],
     "wednesday": [
@@ -100,134 +37,48 @@
         "start_time": "08:00",
         "end_time": "08:40",
         "subject": "英语",
-        "teacher": "教师2",
-        "classroom": "教室202"
+        "teacher": "教师",
+        "classroom": "教室"
       },
       {
         "start_time": "08:50",
         "end_time": "09:30",
-        "subject": "体育",
-        "teacher": "体育老师",
-        "classroom": "操场"
-      },
-      {
-        "start_time": "09:40",
-        "end_time": "10:20",
-        "subject": "数学",
-        "teacher": "教师3",
-        "classroom": "教室303"
-      },
-      {
-        "start_time": "10:30",
-        "end_time": "11:10",
-        "subject": "数学",
-        "teacher": "教师3",
-        "classroom": "教室303"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "14:40",
-        "subject": "语文",
-        "teacher": "教师5",
-        "classroom": "教室505"
-      },
-      {
-        "start_time": "14:50",
-        "end_time": "15:30",
-        "subject": "语文",
-        "teacher": "教师5",
-        "classroom": "教室505"
-      },
-      {
-        "start_time": "15:40",
-        "end_time": "16:20",
-        "subject": "物理",
-        "teacher": "教师7",
-        "classroom": "教室707"
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
       }
     ],
     "thursday": [
       {
         "start_time": "08:00",
         "end_time": "08:40",
-        "subject": "信息技术",
-        "teacher": "教师8",
-        "classroom": "机房808"
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
       },
       {
         "start_time": "08:50",
         "end_time": "09:30",
-        "subject": "信息技术",
-        "teacher": "教师8",
-        "classroom": "机房808"
-      },
-      {
-        "start_time": "09:40",
-        "end_time": "10:20",
-        "subject": "体育",
-        "teacher": "体育老师",
-        "classroom": "操场"
-      },
-      {
-        "start_time": "10:30",
-        "end_time": "11:10",
-        "subject": "物理",
-        "teacher": "教师7",
-        "classroom": "教室707"
-      },
-      {
-        "start_time": "11:10",
-        "end_time": "14:00",
-        "subject": "电子技术基础",
-        "teacher": "教师6",
-        "classroom": "教室606"
-      },
-      {
-        "start_time": "14:00",
-        "end_time": "15:10",
-        "subject": "电子技术基础",
-        "teacher": "教师6",
-        "classroom": "教室606"
-      },
-      {
-        "start_time": "15:40",
-        "end_time": "16:20",
-        "subject": "电子技术基础",
-        "teacher": "教师6",
-        "classroom": "教室606"
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
       }
     ],
     "friday": [
       {
         "start_time": "08:00",
         "end_time": "08:40",
-        "subject": "心理健康与职业",
-        "teacher": "心理老师",
-        "classroom": "教室909"
+        "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
       },
       {
         "start_time": "08:50",
         "end_time": "09:30",
-        "subject": "心理健康与职业",
-        "teacher": "心理老师",
-        "classroom": "教室909"
-      },
-      {
-        "start_time": "09:40",
-        "end_time": "10:20",
-        "subject": "电子技能与实训",
-        "teacher": "教师10",
-        "classroom": "实训教室1010"
-      },
-      {
-        "start_time": "10:30",
-        "end_time": "11:10",
-        "subject": "电子技能与实训",
-        "teacher": "教师10",
-        "classroom": "实训教室1010"
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
       }
-    ],
-    "saturday": [],
-    "sunday": []
+    ]
   }
 }
