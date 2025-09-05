@@ -111,6 +111,9 @@ class DragWindow(tk.Tk):
         import platform
         if platform.system() == "Linux":
             self._ensure_topmost()
+        
+        # 应用字体设置
+        self._apply_fonts()
     
     def _adjust_font_size(self, label, text):
         """根据文本长度调整标签的字体大小"""
@@ -196,11 +199,8 @@ class DragWindow(tk.Tk):
         except Exception as e:
             print(f"应用透明度时出错: {e}")
         
-        # 重新调整课程信息标签的字体大小
-        if hasattr(self, 'class_info_label') and self.class_info_label.cget("text"):
-            self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
-        if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
-            self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
+        # 应用字体设置
+        self._apply_fonts()
     
     def _get_screen_resolution(self):
         """获取屏幕分辨率"""
