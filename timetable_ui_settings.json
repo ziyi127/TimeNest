@@ -6,10 +6,10 @@
   "position_y": -8,
   "show_next_class": true,
   "show_countdown": true,
-  "time_font_size": 14,
-  "date_font_size": 12,
-  "class_info_font_size": 12,
-  "next_class_font_size": 12,
-  "window_width": 180,
-  "window_height": 70
+  "time_font_size": 21,
+  "date_font_size": 18,
+  "class_info_font_size": 18,
+  "next_class_font_size": 18,
+  "window_width": 270,
+  "window_height": 105
 }
