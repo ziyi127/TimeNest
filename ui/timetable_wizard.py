@@ -292,7 +292,7 @@ class TimetableWizard:
         frame = ttk.Frame(self.no_large_break_frame)
         frame.pack(side=tk.TOP, fill=tk.X, pady=2)
         
-        var = tk.StringVar()
+        var = tk.StringVar(value="周一")
         combo = ttk.Combobox(frame, textvariable=var, state="readonly", width=10)
         combo['values'] = ["周一", "周二", "周三", "周四", "周五"]
         combo.pack(side=tk.LEFT, padx=5)
