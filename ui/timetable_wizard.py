@@ -517,92 +517,83 @@ class TimetableWizard:
     
     def generate_timetable(self, data):
         """根据用户输入生成时间表"""
-        # 获取项目目录
-        project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        meta_file_path = os.path.join(project_path, "classtableMeta.json")
-        
-        # 读取现有数据
-        if os.path.exists(meta_file_path):
-            with open(meta_file_path, 'r', encoding='utf-8') as f:
-                meta_data = json.load(f)
-        else:
-            meta_data = {}
-        
-        # 获取用户设置
-        first_class_time = data.get("first_class_time", "08:00")
-        latest_time = data.get("latest_time", "18:00")
-        max_classes_per_day = int(data.get("max_classes_per_day", 8))
-        class_duration = int(data.get("class_duration", 40))
-        small_break = int(data.get("small_break", 10))
-        large_break = int(data.get("large_break", 20))
-        lunch_break = int(data.get("lunch_break", 60))
-        lunch_break_period = int(data.get("lunch_break_period", 4))
-        large_break_periods = [int(p) for p in data.get("large_break_periods", []) if p]
-        no_large_break_days = data.get("no_large_break_days", [])
-        
-        # 星期映射
-        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-        
-        # 生成时间表
-        timetable = {}
-        
-        # 解析第一节课时间和最晚时间
-        try:
-            start_hour, start_minute = map(int, first_class_time.split(":"))
-            current_time = start_hour * 60 + start_minute
-        except:
-            current_time = 8 * 60  # 默认8:00
-        
-        try:
-            end_hour, end_minute = map(int, latest_time.split(":"))
-            latest_time_minutes = end_hour * 60 + end_minute
-        except:
-            latest_time_minutes = 18 * 60  # 默认18:00
-        
-        # 为每天生成时间表
-        for day in weekdays:
-            day_schedule = []
-            
-            # 生成指定数量的课程
-            for period in range(1, max_classes_per_day + 1):
-                # 计算开始时间
-                start_time = f"{current_time // 60:02d}:{current_time % 60:02d}"
-                
-                # 计算结束时间
-                end_time_minutes = current_time + class_duration
-                end_time = f"{end_time_minutes // 60:02d}:{end_time_minutes % 60:02d}"
-                
-                # 添加课程时间段
-                day_schedule.append({
-                    "start_time": start_time,
-                    "end_time": end_time
-                })
-                
-                # 更新当前时间
-                current_time = end_time_minutes
-                
-                # 添加课间休息
-                if period == lunch_break_period:
-                    # 午休
-                    current_time += lunch_break
-                elif period in large_break_periods and day not in no_large_break_days:
-                    # 大课间
-                    current_time += large_break
+        # 定义课程表数据
+        timetable_data = {
+            "Monday": ["历史", "历史", "英语", "英语", "数学", "数学", "班校会"],
+            "Tuesday": ["体育", "体育", "语文", "语文", "电子技能与实训", "电子技能与实训", ""],
+            "Wednesday": ["数学", "数学", "公共艺术", "英语", "语文", "语文", "心理健康"],
+            "Thursday": ["哲学与人生", "哲学与人生", "体育", "移动通信网络设备", "单片机原理与应用", "单片机原理与应用", ""],
+            "Friday": ["移动通信网络设备", "移动通信网络设备", "手机原理与维修", "手机原理与维修", "", "", ""]
+        }
+
+        # 时间规则
+        rules = {
+            "latest_first_class_time": "08:40",  # 周一最晚第一节课上课时间
+            "normal_first_class_time": "08:00",  # 日常第一节课上课时间
+            "small_break_duration": 10,  # 小课间时长（分钟）
+            "large_break_duration": 20,  # 大课间时长（分钟）
+            "lunch_break_duration": 60,  # 午休时长（分钟）
+            "lunch_break_after_class": 4,  # 第几节课下课午休
+            "class_duration": 45,  # 上课时长（分钟）
+            "large_break_after_classes": [2, 6],  # 第几节课下课有大课间
+            "no_large_break_days": ["Monday"]  # 没有大课间的天
+        }
+
+        # 存储每天的课程时间
+        daily_timetable = {}
+
+        for day, subjects in timetable_data.items():
+            daily_timetable[day.lower()] = []
+            current_time = None
+            is_large_break_day = day not in rules["no_large_break_days"]
+
+            # 确定当天第一节课的上课时间
+            if day == "Monday":
+                first_class_time = rules["latest_first_class_time"]
+            else:
+                first_class_time = rules["normal_first_class_time"]
+
+            # 转换为分钟数，方便计算
+            def time_to_minutes(time_str):
+                hours, minutes = map(int, time_str.split(":"))
+                return hours * 60 + minutes
+
+            def minutes_to_time(minutes):
+                hours = minutes // 60
+                mins = minutes % 60
+                return f"{hours:02d}:{mins:02d}"
+
+            first_class_minutes = time_to_minutes(first_class_time)
+
+            for i, subject in enumerate(subjects, 1):
+                # 计算上课时间
+                class_start = first_class_minutes if i == 1 else current_time + rules["small_break_duration"]
+
+                # 计算下课时间
+                class_end = class_start + rules["class_duration"]
+
+                # 处理大课间
+                if is_large_break_day and i in rules["large_break_after_classes"]:
+                    break_end = class_end + rules["large_break_duration"]
+                    daily_timetable[day.lower()].append({
+                        "start_time": minutes_to_time(class_start),
+                        "end_time": minutes_to_time(class_end)
+                    })
+                    current_time = break_end
+                # 处理午休
+                elif i == rules["lunch_break_after_class"]:
+                    lunch_end = class_end + rules["lunch_break_duration"]
+                    daily_timetable[day.lower()].append({
+                        "start_time": minutes_to_time(class_start),
+                        "end_time": minutes_to_time(class_end)
+                    })
+                    current_time = lunch_end
+                # 普通课间
                 else:
-                    # 小课间
-                    current_time += small_break
-                
-                # 检查是否超过最晚时间
-                if current_time > latest_time_minutes:
-                    break
-            
-            timetable[day] = day_schedule
-            
-            # 重置时间为第二天的第一节课时间
-            try:
-                start_hour, start_minute = map(int, first_class_time.split(":"))
-                current_time = start_hour * 60 + start_minute
-            except:
-                current_time = 8 * 60  # 默认8:00
-        
-        return timetable
+                    daily_timetable[day.lower()].append({
+                        "start_time": minutes_to_time(class_start),
+                        "end_time": minutes_to_time(class_end)
+                    })
+                    current_time = class_end
+
+        return daily_timetable
