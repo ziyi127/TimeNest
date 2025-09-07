@@ -51,6 +51,7 @@ class TimetableWizard:
                 self.lunch_break_var.set(str(settings.get("lunch_break_duration", 60)))
                 self.lunch_break_period_var.set(str(settings.get("lunch_break_period", 4)))
                 self.class_duration_var.set(str(settings.get("class_duration", 40)))
+                self.latest_class_duration_var.set(str(settings.get("latest_class_duration", 40)))
             
             # 加载大课间设置
             if "large_break_periods" in meta_data:
@@ -194,8 +195,17 @@ class TimetableWizard:
         small_break_entry = ttk.Entry(small_break_frame, textvariable=self.small_break_var, width=10)
         small_break_entry.pack(side=tk.LEFT, padx=5)
         
-        # 5. 大课间时长
-        large_break_label = ttk.Label(scrollable_frame, text="5. 大课间时长 (分钟):")
+        # 5. 最晚上课时间日子的上课时长
+        latest_class_duration_label = ttk.Label(scrollable_frame, text="5. 最晚上课时间日子的上课时长 (分钟):")
+        latest_class_duration_label.grid(row=7, column=0, sticky=tk.W, pady=(10, 5))
+        latest_class_duration_frame = ttk.Frame(scrollable_frame)
+        latest_class_duration_frame.grid(row=7, column=1, sticky=(tk.W, tk.E), pady=5)
+        self.latest_class_duration_var = tk.StringVar(value="40")
+        latest_class_duration_entry = ttk.Entry(latest_class_duration_frame, textvariable=self.latest_class_duration_var, width=10)
+        latest_class_duration_entry.pack(side=tk.LEFT, padx=5)
+        
+        # 6. 大课间时长
+        large_break_label = ttk.Label(scrollable_frame, text="6. 大课间时长 (分钟):")
         large_break_label.grid(row=8, column=0, sticky=tk.W, pady=(10, 5))
         large_break_frame = ttk.Frame(scrollable_frame)
         large_break_frame.grid(row=8, column=1, sticky=(tk.W, tk.E), pady=5)
@@ -345,6 +355,7 @@ class TimetableWizard:
             "lunch_break": self.lunch_break_var.get(),
             "lunch_break_period": self.lunch_break_period_var.get(),
             "class_duration": self.class_duration_var.get(),
+            "latest_class_duration": self.latest_class_duration_var.get(),
             "large_break_periods": [var.get() for _, var in self.large_break_periods],
             "no_large_break_days": [var.get() for _, var in self.no_large_break_days],
             "classes": [var.get() for _, var in self.classes]
@@ -443,7 +454,7 @@ class TimetableWizard:
                 return False
             
             # 验证数字字段
-            int_fields = ["small_break", "large_break", "lunch_break", "lunch_break_period", "class_duration", "max_classes_per_day"]
+            int_fields = ["small_break", "large_break", "lunch_break", "lunch_break_period", "class_duration", "latest_class_duration", "max_classes_per_day"]
             for field in int_fields:
                 int(data[field])
             
@@ -499,7 +510,8 @@ class TimetableWizard:
                 "large_break_duration": int(data["large_break"]),
                 "lunch_break_duration": int(data["lunch_break"]),
                 "lunch_break_period": int(data["lunch_break_period"]),
-                "class_duration": int(data["class_duration"])
+                "class_duration": int(data["class_duration"]),
+                "latest_class_duration": int(data["latest_class_duration"])
             }
             
             # 保存大课间设置
@@ -528,15 +540,16 @@ class TimetableWizard:
 
         # 时间规则
         rules = {
-            "latest_first_class_time": "08:40",  # 周一最晚第一节课上课时间
-            "normal_first_class_time": "08:00",  # 日常第一节课上课时间
-            "small_break_duration": 10,  # 小课间时长（分钟）
-            "large_break_duration": 20,  # 大课间时长（分钟）
-            "lunch_break_duration": 60,  # 午休时长（分钟）
-            "lunch_break_after_class": 4,  # 第几节课下课午休
-            "class_duration": 45,  # 上课时长（分钟）
-            "large_break_after_classes": [2, 6],  # 第几节课下课有大课间
-            "no_large_break_days": ["Monday"]  # 没有大课间的天
+            "latest_first_class_time": data.get("latest_time", "08:40"),  # 周一最晚第一节课上课时间
+            "normal_first_class_time": data.get("first_class_time", "08:00"),  # 日常第一节课上课时间
+            "small_break_duration": int(data.get("small_break", 10)),  # 小课间时长（分钟）
+            "large_break_duration": int(data.get("large_break", 20)),  # 大课间时长（分钟）
+            "lunch_break_duration": int(data.get("lunch_break", 60)),  # 午休时长（分钟）
+            "lunch_break_after_class": int(data.get("lunch_break_period", 4)),  # 第几节课下课午休
+            "class_duration": int(data.get("class_duration", 45)),  # 上课时长（分钟）
+            "latest_class_duration": int(data.get("latest_class_duration", 45)),  # 最晚上课时间日子的上课时长（分钟）
+            "large_break_after_classes": [int(p) for p in data.get("large_break_periods", [2, 6]) if p],  # 第几节课下课有大课间
+            "no_large_break_days": data.get("no_large_break_days", ["Monday"])  # 没有大课间的天
         }
 
         # 存储每天的课程时间
@@ -545,13 +558,14 @@ class TimetableWizard:
         for day, subjects in timetable_data.items():
             daily_timetable[day.lower()] = []
             current_time = None
-            is_large_break_day = day not in rules["no_large_break_days"]
-
             # 确定当天第一节课的上课时间
             if day == "Monday":
                 first_class_time = rules["latest_first_class_time"]
+                # 检查周一是否在没有大课间的天数列表中
+                is_large_break_day = "Monday" not in rules["no_large_break_days"]
             else:
                 first_class_time = rules["normal_first_class_time"]
+                is_large_break_day = day not in rules["no_large_break_days"]
 
             # 转换为分钟数，方便计算
             def time_to_minutes(time_str):
@@ -566,11 +580,17 @@ class TimetableWizard:
             first_class_minutes = time_to_minutes(first_class_time)
 
             for i, subject in enumerate(subjects, 1):
+                # 确定当前课程的时长
+                if day == "Monday":
+                    current_class_duration = rules["latest_class_duration"]
+                else:
+                    current_class_duration = rules["class_duration"]
+                
                 # 计算上课时间
                 class_start = first_class_minutes if i == 1 else current_time + rules["small_break_duration"]
 
                 # 计算下课时间
-                class_end = class_start + rules["class_duration"]
+                class_end = class_start + current_class_duration
 
                 # 处理大课间
                 if is_large_break_day and i in rules["large_break_after_classes"]:
