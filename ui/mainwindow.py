@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
 import tkinter.font as tkFont
 import json
 import os
@@ -18,18 +17,21 @@ class DragWindow(tk.Tk):
         
         if platform.system() != "Linux":
             self.overrideredirect(True)  # 无边框窗口
-            self.wm_attributes("-topmost", True)  # 窗口置顶
+            self.wm_attributes("-topmost", True)  # 窗口置顶 # type: ignore
         else:
             # Linux环境下使用普通窗口并设置为工具窗口以减少装饰
             # 根据桌面环境设置不同的窗口类型
             desktop_env = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
             if 'kde' in desktop_env:
-                self.wm_attributes("-type", "dock")  # KDE推荐
+                self.wm_attributes("-type", "dock")  # KDE推荐 # type: ignore
             else:
-                self.wm_attributes("-type", "splash")  # GNOME等其他桌面环境
+                self.wm_attributes("-type", "splash")  # GNOME等其他桌面环境 # type: ignore
             # 在Linux环境下也设置窗口置顶
-            self.wm_attributes("-topmost", True)
+            self.wm_attributes("-topmost", True) # type: ignore #why:pylance :臣妾做不到啊XD
             self.resizable(False, False)  # 禁止调整大小
+            '''
+            这段好像是linux特有的库，所以win下报错也正常，看到pylance报错当没看到就好了
+            '''
         
         # 初始化可拖动状态，默认为不可拖动
         self.is_draggable = False
@@ -89,20 +91,17 @@ class DragWindow(tk.Tk):
             self.next_class_label.pack(anchor='w')
         
         # 加载课程表
-        self.timetable = self.load_timetable()
+        self.timetable = self.load_timetable()   
         
         # 绑定鼠标事件
-        self.bind("<ButtonPress-1>", self.start_move)
-        self.bind("<ButtonRelease-1>", self.stop_move)
-        self.bind("<B1-Motion>", self.on_motion)
+        self.bind("<ButtonPress-1>", self.start_move)# type: ignore
+        self.bind("<ButtonRelease-1>", self.stop_move)# type: ignore
+        self.bind("<B1-Motion>", self.on_motion)# type: ignore
         
         # Linux环境下绑定右键菜单事件
         import platform
         if platform.system() == "Linux":
-            self.bind("<Button-3>", self._show_context_menu)
-        
-        # 绑定窗口大小变化事件
-        self.bind("<Configure>", self._on_window_configure)
+            self.bind("<Button-3>", self._show_context_menu)# type: ignore
         
         # 绑定窗口关闭事件
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -114,39 +113,6 @@ class DragWindow(tk.Tk):
         import platform
         if platform.system() == "Linux":
             self._ensure_topmost()
-        
-        # 应用字体设置
-        self._apply_fonts()
-    
-    def _on_window_configure(self, event):
-        """处理窗口大小变化事件"""
-        # 检查事件是否来自主窗口
-        if event.widget == self:
-            # 重新调整字体大小以适应新的窗口大小
-            self._adjust_all_fonts()
-    
-    def _adjust_all_fonts(self):
-        """调整所有标签的字体大小"""
-        # 获取当前时间
-        now = datetime.datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        weekday = now.weekday()
-        weekdays = ["一", "二", "三", "四", "五", "六", "日"]
-        date_str = f"{now.month}月{now.day}日 星期{weekdays[weekday]}"
-        
-        # 调整时间标签字体
-        self._adjust_font_size(self.time_label, current_time)
-        
-        # 调整日期标签字体
-        self._adjust_font_size(self.date_label, date_str)
-        
-        # 调整课程信息标签字体
-        if hasattr(self, 'current_class_text'):
-            self._adjust_font_size(self.class_info_label, self.current_class_text)
-        
-        # 调整下一节课信息标签字体
-        if hasattr(self, 'next_class_text'):
-            self._adjust_font_size(self.next_class_label, self.next_class_text)
     
     def _adjust_font_size(self, label, text):
         """根据文本长度调整标签的字体大小"""
@@ -157,42 +123,9 @@ class DragWindow(tk.Tk):
         if label_width <= 0:
             label_width = self.winfo_width() - 20  # 减去一些边距
         
-        # 获取当前字体
-        current_font = label.cget("font")
-        
-        # 解析字体信息
-        if isinstance(current_font, str):
-            # 如果是字体名称字符串，需要解析
-            font_parts = current_font.split()
-            if len(font_parts) >= 2:
-                font_family = font_parts[0]
-                try:
-                    font_size = int(font_parts[1])
-                except ValueError:
-                    font_size = 12  # 默认字体大小
-            else:
-                font_family = "Arial"
-                font_size = 12
-        else:
-            # 如果是字体元组
-            font_family = current_font[0] if len(current_font) > 0 else "Arial"
-            font_size = current_font[1] if len(current_font) > 1 else 12
-        
-        # 创建一个临时的字体对象来测量文本宽度
-        import tkinter.font as tkFont
-        font_obj = tkFont.Font(family=font_family, size=font_size)
-        text_width = font_obj.measure(text)
-        
-        # 如果文本宽度大于标签宽度，减小字体大小
-        if text_width > label_width and font_size > 8:  # 最小字体大小为8
-            # 计算新的字体大小
-            new_font_size = max(8, int(font_size * (label_width / text_width * 0.9)))  # 保留一些边距
-            label.config(font=(font_family, new_font_size))
-        elif text_width < label_width * 0.8 and font_size < 14:  # 如果文本宽度小于标签宽度的80%，增大字体大小，但不超过14
-            # 计算新的字体大小
-            new_font_size = min(14, int(font_size * (label_width / text_width * 0.9)))
-            label.config(font=(font_family, new_font_size))
     
+        
+
     def _apply_fonts(self):
         """应用字体设置"""
         # 应用时间标签字体
@@ -232,8 +165,11 @@ class DragWindow(tk.Tk):
         except Exception as e:
             print(f"应用透明度时出错: {e}")
         
-        # 应用字体设置
-        self._apply_fonts()
+        # 重新调整课程信息标签的字体大小
+        if hasattr(self, 'class_info_label') and self.class_info_label.cget("text"):
+            self._adjust_font_size(self.class_info_label, self.class_info_label.cget("text"))
+        if hasattr(self, 'next_class_label') and self.next_class_label.cget("text"):
+            self._adjust_font_size(self.next_class_label, self.next_class_label.cget("text"))
     
     def _get_screen_resolution(self):
         """获取屏幕分辨率"""
@@ -779,7 +715,6 @@ class DragWindow(tk.Tk):
         if current_class:
             text = f"现在是:{current_class['subject']}({current_class['start_time']}-{current_class['end_time']})"
             self.class_info_label.config(text=text)
-            self.current_class_text = text  # 保存当前文本内容
             self._adjust_font_size(self.class_info_label, text)
             # print(f"当前课程: {current_class['subject']} ({current_class['start_time']}-{current_class['end_time']})")  # 调试信息
         else:
@@ -787,7 +722,6 @@ class DragWindow(tk.Tk):
             if current_weekday_en in ['saturday', 'sunday'] and not self.timetable.get(current_weekday_en):
                 text = "今天休息，无课程安排"
                 self.class_info_label.config(text=text)
-                self.current_class_text = text  # 保存当前文本内容
                 self._adjust_font_size(self.class_info_label, text)
             elif next_class:
                 # 计算距离下一节课的时间
@@ -799,25 +733,21 @@ class DragWindow(tk.Tk):
                     next_class_datetime += datetime.timedelta(days=1)
                 text = "课间休息中"
                 self.class_info_label.config(text=text)
-                self.current_class_text = text  # 保存当前文本内容
                 self._adjust_font_size(self.class_info_label, text)
             elif self.timetable.get(current_weekday_en):
                 # 当天有课程但不在课间休息时间（第一节课前或放学后）
                 if classes:  # 确保当天有课程安排
                     text = "今天没有课程进行中"
                     self.class_info_label.config(text=text)
-                    self.current_class_text = text  # 保存当前文本内容
                     self._adjust_font_size(self.class_info_label, text)
                 else:
                     text = "今天没有课程安排"
                     self.class_info_label.config(text=text)
-                    self.current_class_text = text  # 保存当前文本内容
                     self._adjust_font_size(self.class_info_label, text)
             else:
                 # 当天无课程安排
                 text = "今天没有课程安排"
                 self.class_info_label.config(text=text)
-                self.current_class_text = text  # 保存当前文本内容
                 self._adjust_font_size(self.class_info_label, text)
             # print("今天没有课程")  # 调试信息
         
@@ -835,7 +765,6 @@ class DragWindow(tk.Tk):
             
             text = f"下节课: {next_class['subject']}({next_class['start_time']})"
             self.next_class_label.config(text=text)
-            self.next_class_text = text  # 保存当前文本内容
             self._adjust_font_size(self.next_class_label, text)
             # print(f"下一节课: {next_class['subject']} ({next_class['start_time']})")  # 调试信息
         elif next_class and not current_class:
@@ -853,13 +782,11 @@ class DragWindow(tk.Tk):
             
             text = f"下一节课: {next_class['subject']} ({next_class['start_time']}) 还有{minutes_diff}分钟"
             self.next_class_label.config(text=text)
-            self.next_class_text = text  # 保存当前文本内容
             self._adjust_font_size(self.next_class_label, text)
         elif self.timetable.get(current_weekday_en):
             # 当天有课程但没有下一节课（已放学）
             text = "今天课程已结束"
             self.next_class_label.config(text=text)
-            self.next_class_text = text  # 保存当前文本内容
             self._adjust_font_size(self.next_class_label, text)
             
             # 检查是否需要清除已完成的临时调课记录
@@ -868,7 +795,6 @@ class DragWindow(tk.Tk):
             # 即使当天没有更多课程也保持程序正常运行
             text = "今天没有更多课程"
             self.next_class_label.config(text=text)
-            self.next_class_text = text  # 保存当前文本内容
             self._adjust_font_size(self.next_class_label, text)
             # print("今天没有更多课程")  # 调试信息
     

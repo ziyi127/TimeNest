@@ -2,166 +2,175 @@
   "timetable": {
     "monday": [
       {
-        "start_time": "08:50",
-        "end_time": "09:30"
+        "start_time": "08:10",
+        "end_time": "08:50"
       },
       {
-        "start_time": "09:40",
-        "end_time": "10:20"
+        "start_time": "09:00",
+        "end_time": "09:40"
       },
       {
-        "start_time": "10:50",
-        "end_time": "11:30"
+        "start_time": "10:20",
+        "end_time": "11:00"
       },
       {
-        "start_time": "11:40",
-        "end_time": "12:20"
+        "start_time": "11:10",
+        "end_time": "11:50"
       },
       {
-        "start_time": "13:30",
-        "end_time": "14:10"
+        "start_time": "13:00",
+        "end_time": "13:40"
       },
       {
-        "start_time": "14:20",
-        "end_time": "15:00"
+        "start_time": "13:50",
+        "end_time": "14:30"
       },
       {
-        "start_time": "15:30",
-        "end_time": "16:10"
+        "start_time": "15:10",
+        "end_time": "15:50"
       }
     ],
     "tuesday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45"
+        "start_time": "08:10",
+        "end_time": "08:55"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40"
+        "start_time": "09:05",
+        "end_time": "09:50"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55"
+        "start_time": "10:30",
+        "end_time": "11:15"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50"
+        "start_time": "11:25",
+        "end_time": "12:10"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45"
+        "start_time": "13:20",
+        "end_time": "14:05"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40"
+        "start_time": "14:15",
+        "end_time": "15:00"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55"
+        "start_time": "15:40",
+        "end_time": "16:25"
       }
     ],
     "wednesday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45"
+        "start_time": "08:10",
+        "end_time": "08:55"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40"
+        "start_time": "09:05",
+        "end_time": "09:50"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55"
+        "start_time": "10:30",
+        "end_time": "11:15"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50"
+        "start_time": "11:25",
+        "end_time": "12:10"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45"
+        "start_time": "13:20",
+        "end_time": "14:05"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40"
+        "start_time": "14:15",
+        "end_time": "15:00"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55"
+        "start_time": "15:40",
+        "end_time": "16:25"
       }
     ],
     "thursday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45"
+        "start_time": "08:10",
+        "end_time": "08:55"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40"
+        "start_time": "09:05",
+        "end_time": "09:50"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55"
+        "start_time": "10:30",
+        "end_time": "11:15"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50"
+        "start_time": "11:25",
+        "end_time": "12:10"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45"
+        "start_time": "13:20",
+        "end_time": "14:05"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40"
+        "start_time": "14:15",
+        "end_time": "15:00"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55"
+        "start_time": "15:40",
+        "end_time": "16:25"
       }
     ],
     "friday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45"
+        "start_time": "08:10",
+        "end_time": "08:55"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40"
+        "start_time": "09:05",
+        "end_time": "09:50"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55"
+        "start_time": "10:30",
+        "end_time": "11:15"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50"
+        "start_time": "11:25",
+        "end_time": "12:10"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45"
+        "start_time": "13:20",
+        "end_time": "14:05"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40"
+        "start_time": "14:15",
+        "end_time": "15:00"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55"
+        "start_time": "15:40",
+        "end_time": "16:25"
       }
     ]
   },
   "allclass": [
     "语文",
     "数学",
-    "英语"
+    "英语",
+    "历史",
+    "班会",
+    "体育",
+    "电子技能实训",
+    "音乐",
+    "通信技术",
+    "政治",
+    "单片机原理与应用",
+    "手机原理与维修"
   ],
   "settings": {
-    "first_class_time": "08:00",
-    "latest_time": "8:50",
-    "max_classes_per_day": 8,
+    "first_class_time": "08:10",
+    "latest_time": "8:10",
+    "max_classes_per_day": 7,
     "small_break_duration": 10,
-    "large_break_duration": 20,
+    "large_break_duration": 30,
     "lunch_break_duration": 60,
     "lunch_break_period": 4,
     "class_duration": 45,
@@ -176,54 +185,54 @@
   ],
   "classtable": {
     "monday": [
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
+      "历史",
+      "历史",
       "英语",
-      "语文",
-      "语文"
+      "英语",
+      "数学",
+      "数学",
+      "班会",
+      ""
     ],
     "tuesday": [
+      "体育",
+      "体育",
       "语文",
       "语文",
-      "语文",
-      "语文",
-      "英语",
-      "",
+      "电子技能实训",
+      "电子技能实训",
       "",
       ""
     ],
     "wednesday": [
+      "数学",
+      "数学",
+      "音乐",
+      "通信技术",
       "语文",
-      "数学",
-      "数学",
-      "英语",
-      "英语",
-      "英语",
-      "数学",
-      "语文"
+      "语文",
+      "政治",
+      ""
     ],
     "thursday": [
-      "语文",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学"
+      "政治",
+      "通信技术",
+      "体育",
+      "政治",
+      "单片机原理与应用",
+      "单片机原理与应用",
+      "",
+      ""
     ],
     "friday": [
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学",
-      "数学"
+      "通信技术",
+      "英语",
+      "手机原理与维修",
+      "手机原理与维修",
+      "",
+      "",
+      "",
+      ""
     ]
   }
 }
