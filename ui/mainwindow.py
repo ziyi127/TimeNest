@@ -783,8 +783,16 @@ class DragWindow(tk.Tk):
             text = f"下一节课: {next_class['subject']} ({next_class['start_time']}) 还有{minutes_diff}分钟"
             self.next_class_label.config(text=text)
             self._adjust_font_size(self.next_class_label, text)
+        elif current_class and not next_class:
+            # 有当前课程但没有下一节课（这天的最后一节课）
+            text = "这是今天的最后一节课"
+            self.next_class_label.config(text=text)
+            self._adjust_font_size(self.next_class_label, text)
+            
+            # 检查是否需要清除已完成的临时调课记录
+            self._clear_completed_single_changes(current_weekday_en, now)
         elif self.timetable.get(current_weekday_en):
-            # 当天有课程但没有下一节课（已放学）
+            # 当天有课程但没有当前课程也没有下一节课（已放学）
             text = "今天课程已结束"
             self.next_class_label.config(text=text)
             self._adjust_font_size(self.next_class_label, text)
