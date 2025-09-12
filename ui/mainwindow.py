@@ -666,6 +666,10 @@ class DragWindow(tk.Tk):
             
             # 遍历课程查找当前和下一节课
             for i, class_info in enumerate(classes):
+                # 跳过subject为空的课程（空白课程）
+                if not class_info["subject"].strip():
+                    continue
+                    
                 start_time = datetime.datetime.strptime(class_info["start_time"], "%H:%M").time()
                 end_time = datetime.datetime.strptime(class_info["end_time"], "%H:%M").time()
                 
