@@ -2,15 +2,15 @@
 
 
 a = Analysis(
-    ['C:\\Users\\hujin\\Desktop\\TimeNest\\main.py'],
+    ['D:\\SoftwareDevelop\\TimeNest\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\hujin\\Desktop\\TimeNest\\timetable.json', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico', '.')],
-    hiddenimports=['tkinter', 'PIL', 'pystray'],
+    datas=[('D:\\SoftwareDevelop\\TimeNest\\timetable.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico', '.'), ('D:\\SoftwareDevelop\\TimeNest\\classtableMeta.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\timetable_ui_settings.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\ui', 'ui')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['unittest', 'distutils', 'setuptools', 'pip', 'numpy', 'scipy', 'matplotlib', 'pandas', 'sklearn', 'tensorflow', 'torch', 'email', 'http', 'html', 'xml', 'urllib', 'ftplib', 'cgi', 'concurrent', 'multiprocessing', 'socket', 'ssl', 'sqlite3', 'mysql', 'psycopg2', 'pytest', 'nose'],
     noarchive=False,
     optimize=0,
 )
@@ -24,22 +24,22 @@ exe = EXE(
     name='TimeNest',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
+    strip=True,
+    upx=False,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico'],
+    icon=['D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico'],
 )
 coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=False,
-    upx=True,
+    strip=True,
+    upx=False,
     upx_exclude=[],
     name='TimeNest',
 )
