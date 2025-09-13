@@ -17,6 +17,10 @@ pyinstaller_cmd = [
     '--specpath', current_dir,  # spec文件路径
     '--noconfirm',  # 覆盖输出目录而不询问
     '--clean',  # 清理临时文件
+    '--onedir',  # 使用onedir模式而不是onefile模式，减少内存占用
+    # 优化选项
+    '--strip',  # 移除符号表
+    '--noupx',  # 不使用UPX压缩（避免兼容性问题）
     # 排除不必要的模块以减小打包体积
     '--exclude-module', 'unittest',
     '--exclude-module', 'distutils',
@@ -25,6 +29,26 @@ pyinstaller_cmd = [
     '--exclude-module', 'numpy',
     '--exclude-module', 'scipy',
     '--exclude-module', 'matplotlib',
+    '--exclude-module', 'pandas',
+    '--exclude-module', 'sklearn',
+    '--exclude-module', 'tensorflow',
+    '--exclude-module', 'torch',
+    '--exclude-module', 'email',
+    '--exclude-module', 'http',
+    '--exclude-module', 'html',
+    '--exclude-module', 'xml',
+    '--exclude-module', 'urllib',
+    '--exclude-module', 'ftplib',
+    '--exclude-module', 'cgi',
+    '--exclude-module', 'concurrent',
+    '--exclude-module', 'multiprocessing',
+    '--exclude-module', 'socket',
+    '--exclude-module', 'ssl',
+    '--exclude-module', 'sqlite3',
+    '--exclude-module', 'mysql',
+    '--exclude-module', 'psycopg2',
+    '--exclude-module', 'pytest',
+    '--exclude-module', 'nose',
     # 主程序文件
     os.path.join(current_dir, 'main.py')
 ]
