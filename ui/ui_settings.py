@@ -211,17 +211,17 @@ class UISettings:
             self.settings["window_width"] = int(180 * scale_factor)
             self.settings["window_height"] = int(70 * scale_factor)
             
-            # 根据比例因子调整字体大小
-            self.settings["time_font_size"] = int(14 * scale_factor)
-            self.settings["date_font_size"] = int(12 * scale_factor)
-            self.settings["class_info_font_size"] = int(12 * scale_factor)
-            self.settings["next_class_font_size"] = int(12 * scale_factor)
+            # 获取用户设置的字体大小（不立即应用比例因子调整）
+            user_time_font_size = self.time_font_scale.get()
+            user_date_font_size = self.date_font_scale.get()
+            user_class_info_font_size = self.class_info_font_scale.get()
+            user_next_class_font_size = self.next_class_font_scale.get()
             
-            # 更新滑块的值以反映计算出的字体大小
-            self.time_font_scale.set(self.settings["time_font_size"])
-            self.date_font_scale.set(self.settings["date_font_size"])
-            self.class_info_font_scale.set(self.settings["class_info_font_size"])
-            self.next_class_font_scale.set(self.settings["next_class_font_size"])
+            # 保存用户设置的字体大小到设置中（不应用比例因子调整）
+            self.settings["time_font_size"] = user_time_font_size
+            self.settings["date_font_size"] = user_date_font_size
+            self.settings["class_info_font_size"] = user_class_info_font_size
+            self.settings["next_class_font_size"] = user_next_class_font_size
             
             # 更新主窗口的设置
             self.drag_window.background_color = self.settings["background_color"]
@@ -251,26 +251,6 @@ class UISettings:
             print("设置已应用到主窗口")
         # 保存设置
         self.save_settings()
-        
-        # 应用背景颜色和透明度
-        self.drag_window.background_color = self.settings["background_color"]
-        self.drag_window.transparency = self.settings["transparency"]
-        self.drag_window._apply_background_and_transparency()
-        
-        # 应用文字颜色和字体大小
-        self.drag_window.time_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["time_font_size"]))
-        self.drag_window.date_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["date_font_size"]))
-        self.drag_window.class_info_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["class_info_font_size"]))
-        self.drag_window.next_class_label.configure(fg=self.settings["text_color"], font=("Arial", self.settings["next_class_font_size"]))
-        
-        # 应用窗口大小
-        self.drag_window.geometry(f"{self.settings['window_width']}x{self.settings['window_height']}")
-        
-        # 应用显示控制
-        print(f"应用显示设置: show_next_class={self.settings['show_next_class']}, show_countdown={self.settings['show_countdown']}")
-        self.drag_window.show_next_class = self.settings["show_next_class"]
-        self.drag_window.show_countdown = self.settings["show_countdown"]
-        self.drag_window.update_display_settings()
     
     def save_and_close(self):
         """保存设置并关闭窗口"""

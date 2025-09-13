@@ -2,23 +2,74 @@
   "timetable": {
     "monday": [
       {
-        "start_time": "08:40",
-        "end_time": "09:25",
+        "start_time": "08:10",
+        "end_time": "08:50",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "09:00",
+        "end_time": "09:40",
+        "subject": "历史",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:20",
+        "end_time": "11:00",
         "subject": "英语",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "09:35",
-        "end_time": "10:20",
+        "start_time": "11:10",
+        "end_time": "11:50",
         "subject": "英语",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "13:00",
+        "end_time": "13:40",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "13:50",
+        "end_time": "14:30",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "15:10",
+        "end_time": "15:50",
+        "subject": "班会",
+        "teacher": "教师",
+        "classroom": "教室"
+      }
+    ],
+    "tuesday": [
+      {
+        "start_time": "08:10",
+        "end_time": "08:55",
+        "subject": "体育",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "09:05",
+        "end_time": "09:50",
+        "subject": "体育",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
         "start_time": "10:30",
         "end_time": "11:15",
-        "subject": "英语",
+        "subject": "语文",
         "teacher": "教师",
         "classroom": "教室"
       },
@@ -32,225 +83,174 @@
       {
         "start_time": "13:20",
         "end_time": "14:05",
-        "subject": "英语",
+        "subject": "电子技能实训",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
         "start_time": "14:15",
         "end_time": "15:00",
-        "subject": "数学",
+        "subject": "电子技能实训",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      }
-    ],
-    "tuesday": [
-      {
-        "start_time": "08:00",
-        "end_time": "08:45",
-        "subject": "数学",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "08:55",
-        "end_time": "09:40",
-        "subject": "数学",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "10:10",
-        "end_time": "10:55",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "11:05",
-        "end_time": "11:50",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "13:00",
-        "end_time": "13:45",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "13:55",
-        "end_time": "14:40",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "15:10",
-        "end_time": "15:55",
-        "subject": "语文",
+        "start_time": "15:40",
+        "end_time": "16:25",
+        "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       }
     ],
     "wednesday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "08:55",
-        "end_time": "09:40",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "10:10",
-        "end_time": "10:55",
-        "subject": "语文",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "11:05",
-        "end_time": "11:50",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "13:00",
-        "end_time": "13:45",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "13:55",
-        "end_time": "14:40",
+        "start_time": "08:10",
+        "end_time": "08:55",
         "subject": "数学",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55",
+        "start_time": "09:05",
+        "end_time": "09:50",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "10:30",
+        "end_time": "11:15",
+        "subject": "音乐",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "11:25",
+        "end_time": "12:10",
+        "subject": "通信技术",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "13:20",
+        "end_time": "14:05",
         "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "14:15",
+        "end_time": "15:00",
+        "subject": "语文",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "15:40",
+        "end_time": "16:25",
+        "subject": "政治",
         "teacher": "教师",
         "classroom": "教室"
       }
     ],
     "thursday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45",
-        "subject": "语文",
+        "start_time": "08:10",
+        "end_time": "08:55",
+        "subject": "政治",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40",
-        "subject": "英语",
+        "start_time": "09:05",
+        "end_time": "09:50",
+        "subject": "通信技术",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55",
-        "subject": "英语",
+        "start_time": "10:30",
+        "end_time": "11:15",
+        "subject": "体育",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50",
-        "subject": "数学",
+        "start_time": "11:25",
+        "end_time": "12:10",
+        "subject": "政治",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45",
-        "subject": "语文",
+        "start_time": "13:20",
+        "end_time": "14:05",
+        "subject": "单片机原理与应用",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40",
-        "subject": "英语",
+        "start_time": "14:15",
+        "end_time": "15:00",
+        "subject": "单片机原理与应用",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:55",
-        "subject": "英语",
+        "start_time": "15:40",
+        "end_time": "16:25",
+        "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       }
     ],
     "friday": [
       {
-        "start_time": "08:00",
-        "end_time": "08:45",
+        "start_time": "08:10",
+        "end_time": "08:55",
+        "subject": "通信技术",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "09:05",
+        "end_time": "09:50",
         "subject": "英语",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "08:55",
-        "end_time": "09:40",
-        "subject": "语文",
+        "start_time": "10:30",
+        "end_time": "11:15",
+        "subject": "手机原理与维修",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "10:10",
-        "end_time": "10:55",
-        "subject": "数学",
+        "start_time": "11:25",
+        "end_time": "12:10",
+        "subject": "手机原理与维修",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:05",
-        "end_time": "11:50",
-        "subject": "英语",
+        "start_time": "13:20",
+        "end_time": "14:05",
+        "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:45",
-        "subject": "英语",
+        "start_time": "14:15",
+        "end_time": "15:00",
+        "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:55",
-        "end_time": "14:40",
-        "subject": "英语",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "15:10",
-        "end_time": "15:55",
-        "subject": "英语",
+        "start_time": "15:40",
+        "end_time": "16:25",
+        "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       }
