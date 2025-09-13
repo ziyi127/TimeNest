@@ -1,4 +1,4 @@
-# TimeNest for HTPC 课程表大屏应用
+# TimeNest for instructional all-in-one PC 课程表大屏应用
 
 <div align="center">
 
@@ -117,7 +117,7 @@ pip3 install pystray
 
 ## 开发说明
 
-本程序部分由AI开发，请仔细甄别，使用Python和Tkinter库实现。
+本程序部分由AI开发，请仔细甄别，使用Python和Tkinter，Pystray，PIL库实现。
 
 ## 🏆 致谢
 
