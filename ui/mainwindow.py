@@ -98,9 +98,8 @@ class DragWindow(tk.Tk):
         self.bind("<ButtonRelease-1>", self.stop_move)# type: ignore
         self.bind("<B1-Motion>", self.on_motion)# type: ignore
         
-        # Linux环境下绑定右键菜单事件
-        import platform
-        if platform.system() == "Linux":
+        # 绑定右键菜单事件
+        if True:  # 这里可以根据需要修改为False来禁用右键菜单
             self.bind("<Button-3>", self._show_context_menu)# type: ignore
         
         # 绑定窗口关闭事件
@@ -223,6 +222,8 @@ class DragWindow(tk.Tk):
             self.context_menu.add_command(label="允许编辑悬浮窗", command=self._toggle_drag_from_menu)
             self.context_menu.add_command(label="UI设置", command=self._open_ui_settings_from_menu)
             self.context_menu.add_command(label='临时调课', command=self._open_temp_class_change_from_menu)
+            self.context_menu.add_command(label='编辑课表和时间表', command=self._open_timetable_wizard)
+
             self.context_menu.add_separator()
             self.context_menu.add_command(label="退出", command=self._quit_from_menu)
         
@@ -251,9 +252,14 @@ class DragWindow(tk.Tk):
             self.tray_manager.open_ui_settings(None, None)
     
     def _open_temp_class_change_from_menu(self):
-        """从菜单打开linshitiaoke"""
+        """从菜单打开临时调课"""
         if hasattr(self, 'tray_manager'):
             self.tray_manager.open_temp_class_change(None, None)
+    
+    def _open_timetable_wizard(self):
+        """从菜单打开编辑课表和时间表"""
+        if hasattr(self, 'tray_manager'):
+            self.tray_manager.open_timetable_wizard(None, None)
     
     def _quit_from_menu(self):
         """从菜单退出程序"""

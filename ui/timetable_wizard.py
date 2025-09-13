@@ -102,7 +102,7 @@ class TimetableWizard:
         # 创建新窗口
         self.window = tk.Toplevel(self.parent)
         self.window.title("时间表设置向导")
-        self.window.geometry("510x500")
+        self.window.geometry("580x570")
         self.window.resizable(True, True)
         
         # 居中显示窗口
@@ -241,8 +241,8 @@ class TimetableWizard:
         large_break_period_label.grid(row=16, column=0, sticky=tk.W, pady=(10, 5))
         self.large_break_frame = ttk.Frame(scrollable_frame)
         self.large_break_frame.grid(row=16, column=1, sticky=(tk.W, tk.E), pady=5)
-        self.add_large_break_period_button = ttk.Button(self.large_break_frame, text="+", command=self.add_large_break_period)
-        self.add_large_break_period_button.pack(side=tk.LEFT, padx=5)
+        self.add_large_break_period_button = ttk.Button(self.large_break_frame, text="+", command=self.add_large_break_period, width=2)
+        self.add_large_break_period_button.pack(side=tk.LEFT, padx=2)
         self.add_large_break_period()
         
         # 10. 有哪些天没有大课间
@@ -250,8 +250,8 @@ class TimetableWizard:
         no_large_break_label.grid(row=18, column=0, sticky=tk.W, pady=(10, 5))
         self.no_large_break_frame = ttk.Frame(scrollable_frame)
         self.no_large_break_frame.grid(row=18, column=1, sticky=(tk.W, tk.E), pady=5)
-        self.add_no_large_break_day_button = ttk.Button(self.no_large_break_frame, text="+", command=self.add_no_large_break_day)
-        self.add_no_large_break_day_button.pack(side=tk.LEFT, padx=5)
+        self.add_no_large_break_day_button = ttk.Button(self.no_large_break_frame, text="+", command=self.add_no_large_break_day, width=2)
+        self.add_no_large_break_day_button.pack(side=tk.LEFT, padx=2)
         self.add_no_large_break_day()
         
         # 11. 学生有哪些课程要上
@@ -259,8 +259,8 @@ class TimetableWizard:
         classes_label.grid(row=20, column=0, sticky=tk.W, pady=(10, 5))
         self.classes_frame = ttk.Frame(scrollable_frame)
         self.classes_frame.grid(row=20, column=1, sticky=(tk.W, tk.E), pady=5)
-        self.add_class_button = ttk.Button(self.classes_frame, text="+", command=self.add_class)
-        self.add_class_button.pack(side=tk.LEFT, padx=5)
+        self.add_class_button = ttk.Button(self.classes_frame, text="+", command=self.add_class, width=2)
+        self.add_class_button.pack(side=tk.LEFT, padx=2)
         self.add_class()
         
         # 按钮框架
@@ -284,8 +284,8 @@ class TimetableWizard:
         entry = ttk.Entry(frame, textvariable=var, width=10)
         entry.pack(side=tk.LEFT, padx=5)
         
-        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_large_break_period(frame))
-        remove_button.pack(side=tk.LEFT, padx=5)
+        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_large_break_period(frame), width=2)
+        remove_button.pack(side=tk.LEFT, padx=2)
         
         self.large_break_periods.append((frame, var))
     
@@ -307,8 +307,8 @@ class TimetableWizard:
         combo['values'] = ["周一", "周二", "周三", "周四", "周五"]
         combo.pack(side=tk.LEFT, padx=5)
         
-        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_no_large_break_day(frame))
-        remove_button.pack(side=tk.LEFT, padx=5)
+        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_no_large_break_day(frame), width=2)
+        remove_button.pack(side=tk.LEFT, padx=2)
         
         self.no_large_break_days.append((frame, var))
     
@@ -329,8 +329,8 @@ class TimetableWizard:
         entry = ttk.Entry(frame, textvariable=var, width=20)
         entry.pack(side=tk.LEFT, padx=5)
         
-        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_class(frame))
-        remove_button.pack(side=tk.LEFT, padx=5)
+        remove_button = ttk.Button(frame, text="-", command=lambda: self.remove_class(frame), width=2)
+        remove_button.pack(side=tk.LEFT, padx=2)
         
         self.classes.append((frame, var))
     
