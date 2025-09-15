@@ -2,15 +2,15 @@
 
 
 a = Analysis(
-    ['D:\\SoftwareDevelop\\TimeNest\\main.py'],
+    ['C:\\Users\\hujin\\Desktop\\TimeNest\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('D:\\SoftwareDevelop\\TimeNest\\timetable.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico', '.'), ('D:\\SoftwareDevelop\\TimeNest\\classtableMeta.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\timetable_ui_settings.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\ui', 'ui')],
+    datas=[('C:\\Users\\hujin\\Desktop\\TimeNest\\timetable.json', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\classtableMeta.json', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\timetable_ui_settings.json', '.'), ('C:\\Users\\hujin\\Desktop\\TimeNest\\ui', 'ui')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['unittest', 'distutils', 'setuptools', 'pip', 'numpy', 'scipy', 'matplotlib', 'pandas', 'sklearn', 'tensorflow', 'torch', 'email', 'http', 'html', 'xml', 'urllib', 'ftplib', 'cgi', 'concurrent', 'multiprocessing', 'socket', 'ssl', 'sqlite3', 'mysql', 'psycopg2', 'pytest', 'nose'],
+    excludes=['unittest', 'distutils', 'setuptools', 'pip', 'numpy', 'scipy', 'matplotlib'],
     noarchive=False,
     optimize=0,
 )
@@ -24,22 +24,22 @@ exe = EXE(
     name='TimeNest',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=True,
-    upx=False,
+    strip=False,
+    upx=True,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico'],
+    icon=['C:\\Users\\hujin\\Desktop\\TimeNest\\TKtimetable.ico'],
 )
 coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=True,
-    upx=False,
+    strip=False,
+    upx=True,
     upx_exclude=[],
     name='TimeNest',
 )

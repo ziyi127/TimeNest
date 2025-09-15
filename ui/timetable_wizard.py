@@ -40,11 +40,11 @@ class TimetableWizard:
             with open(meta_file_path, 'r', encoding='utf-8') as f:
                 meta_data = json.load(f)
             
-            # 加载设置项
+            # 加载设置项(在右键菜单打开的是这个？)
             if "settings" in meta_data:
                 settings = meta_data["settings"]
                 self.first_class_time_var.set(settings.get("first_class_time", "08:00"))
-                self.latest_time_var.set(settings.get("latest_time", "18:00"))
+                self.latest_time_var.set(settings.get("latest_time", "8:50"))
                 self.max_classes_per_day_var.set(str(settings.get("max_classes_per_day", 8)))
                 self.small_break_var.set(str(settings.get("small_break_duration", 10)))
                 self.large_break_var.set(str(settings.get("large_break_duration", 20)))
@@ -360,7 +360,8 @@ class TimetableWizard:
             "no_large_break_days": [var.get() for _, var in self.no_large_break_days],
             "classes": [var.get() for _, var in self.classes]
         }
-        
+        #调试
+        print("用户输入的日常第一节课时间：", data["first_class_time"])  #
         # 验证数据
         if not self.validate_data(data):
             return
@@ -551,7 +552,8 @@ class TimetableWizard:
             "large_break_after_classes": [int(p) for p in data.get("large_break_periods", [2, 6]) if p],  # 第几节课下课有大课间
             "no_large_break_days": data.get("no_large_break_days", ["Monday"])  # 没有大课间的天
         }
-
+        print("first_class_time_var的值：", self.first_class_time_var.get())
+        print("data['first_class_time']的值：", data["first_class_time"])
         # 存储每天的课程时间
         daily_timetable = {}
 
@@ -561,6 +563,7 @@ class TimetableWizard:
             # 确定当天第一节课的上课时间
             if day == "Monday":
                 first_class_time = rules["latest_first_class_time"]
+                print(f"第一节课上课时间{first_class_time}")
                 # 检查周一是否在没有大课间的天数列表中
                 is_large_break_day = "Monday" not in rules["no_large_break_days"]
             else:
@@ -588,6 +591,7 @@ class TimetableWizard:
                 
                 # 计算上课时间
                 class_start = first_class_minutes if i == 1 else current_time + rules["small_break_duration"]
+                
 
                 # 计算下课时间
                 class_end = class_start + current_class_duration

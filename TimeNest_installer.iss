@@ -25,7 +25,7 @@ DisableProgramGroupPage=yes
 LicenseFile=
 PrivilegesRequired=admin
 OutputDir=dist_installer
-OutputBaseFilename=TimeNest-setup
+OutputBaseFilename=TimeNest-setupx64
 SetupIconFile=TKtimetable.ico
 Compression=lzma
 SolidCompression=yes
@@ -33,8 +33,6 @@ WizardStyle=modern
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
-
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "startup"; Description: "开机自启动"; GroupDescription: "启动选项:"; Flags: unchecked

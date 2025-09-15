@@ -2,32 +2,32 @@
   "timetable": {
     "monday": [
       {
-        "start_time": "08:10",
-        "end_time": "08:50"
+        "start_time": "08:50",
+        "end_time": "09:30"
       },
       {
-        "start_time": "09:00",
-        "end_time": "09:40"
+        "start_time": "09:40",
+        "end_time": "10:20"
       },
       {
-        "start_time": "10:20",
-        "end_time": "11:00"
+        "start_time": "11:00",
+        "end_time": "11:40"
       },
       {
-        "start_time": "11:10",
-        "end_time": "11:50"
+        "start_time": "11:50",
+        "end_time": "12:30"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:40"
+        "start_time": "13:40",
+        "end_time": "14:20"
       },
       {
-        "start_time": "13:50",
-        "end_time": "14:30"
+        "start_time": "14:30",
+        "end_time": "15:10"
       },
       {
-        "start_time": "15:10",
-        "end_time": "15:50"
+        "start_time": "15:50",
+        "end_time": "16:30"
       }
     ],
     "tuesday": [
@@ -167,7 +167,7 @@
   ],
   "settings": {
     "first_class_time": "08:10",
-    "latest_time": "8:10",
+    "latest_time": "8:50",
     "max_classes_per_day": 7,
     "small_break_duration": 10,
     "large_break_duration": 30,
