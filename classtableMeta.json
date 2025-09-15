@@ -10,24 +10,24 @@
         "end_time": "10:20"
       },
       {
-        "start_time": "11:00",
-        "end_time": "11:40"
+        "start_time": "10:40",
+        "end_time": "11:20"
       },
       {
-        "start_time": "11:50",
-        "end_time": "12:30"
+        "start_time": "11:30",
+        "end_time": "12:10"
       },
       {
-        "start_time": "13:40",
-        "end_time": "14:20"
+        "start_time": "14:20",
+        "end_time": "15:00"
       },
       {
-        "start_time": "14:30",
-        "end_time": "15:10"
+        "start_time": "15:10",
+        "end_time": "15:50"
       },
       {
-        "start_time": "15:50",
-        "end_time": "16:30"
+        "start_time": "16:10",
+        "end_time": "16:50"
       }
     ],
     "tuesday": [
@@ -40,24 +40,24 @@
         "end_time": "09:50"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15"
+        "start_time": "10:10",
+        "end_time": "10:55"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10"
+        "start_time": "11:05",
+        "end_time": "11:50"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05"
+        "start_time": "14:00",
+        "end_time": "14:45"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00"
+        "start_time": "14:55",
+        "end_time": "15:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25"
+        "start_time": "16:00",
+        "end_time": "16:45"
       }
     ],
     "wednesday": [
@@ -70,24 +70,24 @@
         "end_time": "09:50"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15"
+        "start_time": "10:10",
+        "end_time": "10:55"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10"
+        "start_time": "11:05",
+        "end_time": "11:50"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05"
+        "start_time": "14:00",
+        "end_time": "14:45"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00"
+        "start_time": "14:55",
+        "end_time": "15:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25"
+        "start_time": "16:00",
+        "end_time": "16:45"
       }
     ],
     "thursday": [
@@ -100,24 +100,24 @@
         "end_time": "09:50"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15"
+        "start_time": "10:10",
+        "end_time": "10:55"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10"
+        "start_time": "11:05",
+        "end_time": "11:50"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05"
+        "start_time": "14:00",
+        "end_time": "14:45"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00"
+        "start_time": "14:55",
+        "end_time": "15:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25"
+        "start_time": "16:00",
+        "end_time": "16:45"
       }
     ],
     "friday": [
@@ -130,24 +130,24 @@
         "end_time": "09:50"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15"
+        "start_time": "10:10",
+        "end_time": "10:55"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10"
+        "start_time": "11:05",
+        "end_time": "11:50"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05"
+        "start_time": "14:00",
+        "end_time": "14:45"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00"
+        "start_time": "14:55",
+        "end_time": "15:40"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25"
+        "start_time": "16:00",
+        "end_time": "16:45"
       }
     ]
   },
@@ -170,8 +170,8 @@
     "latest_time": "8:50",
     "max_classes_per_day": 7,
     "small_break_duration": 10,
-    "large_break_duration": 30,
-    "lunch_break_duration": 60,
+    "large_break_duration": 10,
+    "lunch_break_duration": 120,
     "lunch_break_period": 4,
     "class_duration": 45,
     "latest_class_duration": 40

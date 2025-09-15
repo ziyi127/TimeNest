@@ -2,43 +2,36 @@
   "timetable": {
     "monday": [
       {
-        "start_time": "08:10",
-        "end_time": "08:50",
+        "start_time": "08:50",
+        "end_time": "09:30",
         "subject": "历史",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "09:00",
-        "end_time": "09:40",
+        "start_time": "09:40",
+        "end_time": "10:20",
         "subject": "历史",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "10:20",
-        "end_time": "11:00",
+        "start_time": "10:40",
+        "end_time": "11:20",
         "subject": "英语",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:10",
-        "end_time": "11:50",
+        "start_time": "11:30",
+        "end_time": "12:10",
         "subject": "英语",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:00",
-        "end_time": "13:40",
-        "subject": "数学",
-        "teacher": "教师",
-        "classroom": "教室"
-      },
-      {
-        "start_time": "13:50",
-        "end_time": "14:30",
+        "start_time": "14:20",
+        "end_time": "15:00",
         "subject": "数学",
         "teacher": "教师",
         "classroom": "教室"
@@ -46,6 +39,13 @@
       {
         "start_time": "15:10",
         "end_time": "15:50",
+        "subject": "数学",
+        "teacher": "教师",
+        "classroom": "教室"
+      },
+      {
+        "start_time": "16:10",
+        "end_time": "16:50",
         "subject": "班会",
         "teacher": "教师",
         "classroom": "教室"
@@ -67,36 +67,36 @@
         "classroom": "教室"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15",
+        "start_time": "10:10",
+        "end_time": "10:55",
         "subject": "语文",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10",
+        "start_time": "11:05",
+        "end_time": "11:50",
         "subject": "语文",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05",
+        "start_time": "14:00",
+        "end_time": "14:45",
         "subject": "电子技能实训",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00",
+        "start_time": "14:55",
+        "end_time": "15:40",
         "subject": "电子技能实训",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25",
+        "start_time": "16:00",
+        "end_time": "16:45",
         "subject": "",
         "teacher": "教师",
         "classroom": "教室"
@@ -118,36 +118,36 @@
         "classroom": "教室"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15",
+        "start_time": "10:10",
+        "end_time": "10:55",
         "subject": "音乐",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10",
+        "start_time": "11:05",
+        "end_time": "11:50",
         "subject": "通信技术",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05",
+        "start_time": "14:00",
+        "end_time": "14:45",
         "subject": "语文",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00",
+        "start_time": "14:55",
+        "end_time": "15:40",
         "subject": "语文",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25",
+        "start_time": "16:00",
+        "end_time": "16:45",
         "subject": "政治",
         "teacher": "教师",
         "classroom": "教室"
@@ -169,36 +169,36 @@
         "classroom": "教室"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15",
+        "start_time": "10:10",
+        "end_time": "10:55",
         "subject": "体育",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10",
+        "start_time": "11:05",
+        "end_time": "11:50",
         "subject": "政治",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05",
+        "start_time": "14:00",
+        "end_time": "14:45",
         "subject": "单片机原理与应用",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00",
+        "start_time": "14:55",
+        "end_time": "15:40",
         "subject": "单片机原理与应用",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25",
+        "start_time": "16:00",
+        "end_time": "16:45",
         "subject": "",
         "teacher": "教师",
         "classroom": "教室"
@@ -220,36 +220,36 @@
         "classroom": "教室"
       },
       {
-        "start_time": "10:30",
-        "end_time": "11:15",
+        "start_time": "10:10",
+        "end_time": "10:55",
         "subject": "手机原理与维修",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "11:25",
-        "end_time": "12:10",
+        "start_time": "11:05",
+        "end_time": "11:50",
         "subject": "手机原理与维修",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "13:20",
-        "end_time": "14:05",
+        "start_time": "14:00",
+        "end_time": "14:45",
         "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "14:15",
-        "end_time": "15:00",
+        "start_time": "14:55",
+        "end_time": "15:40",
         "subject": "",
         "teacher": "教师",
         "classroom": "教室"
       },
       {
-        "start_time": "15:40",
-        "end_time": "16:25",
+        "start_time": "16:00",
+        "end_time": "16:45",
         "subject": "",
         "teacher": "教师",
         "classroom": "教室"
