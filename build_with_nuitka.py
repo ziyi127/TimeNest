@@ -80,8 +80,27 @@ def main():
     print(' '.join(nuitka_cmd))
     
     try:
-        # 执行Nuitka命令
-        result = subprocess.run(nuitka_cmd, cwd=current_dir, check=True)
+        # 执行Nuitka命令，实时输出编译过程
+        print('开始编译...这可能需要几分钟时间，请耐心等待')
+        process = subprocess.Popen(
+            nuitka_cmd,
+            cwd=current_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+        
+        # 实时打印输出，防止GitHub Actions因无响应而超时
+        for line in iter(process.stdout.readline, ''):
+            print(line, end='', flush=True)
+        
+        # 等待进程完成
+        process.stdout.close()
+        return_code = process.wait()
+        
+        if return_code != 0:
+            raise subprocess.CalledProcessError(return_code, nuitka_cmd)
         print('\n编译完成!')
         print(f'可执行文件位于: {os.path.join(current_dir, "dist_nuitka", "main.dist")}')
         
