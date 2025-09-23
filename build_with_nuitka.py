@@ -5,10 +5,21 @@ import shutil
 import time
 from datetime import datetime
 
+# 设置标准输出编码为UTF-8
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 def log_message(message, level="INFO"):
     """日志函数"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] [{level}] {message}")
+    try:
+        print(f"[{timestamp}] [{level}] {message}")
+    except UnicodeEncodeError:
+        # 在Windows环境下处理编码问题，使用ASCII安全的输出
+        safe_message = message.encode('ascii', errors='replace').decode('ascii')
+        print(f"[{timestamp}] [{level}] {safe_message}")
 
 def check_nuitka():
     """检查Nuitka是否安装"""
