@@ -2,20 +2,21 @@ name: 自动编译和发布
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ matrix.os == 'windows-latest' && 60 || 30 }}
+    timeout-minutes: ${{ matrix.os == 'windows-2022' && 60 || 30 }}
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-latest ]
+        os: [ windows-2022, ubuntu-latest ]
         include:
-          - os: windows-latest
+          - os: windows-2022
             timeout: 60
           - os: ubuntu-latest
             timeout: 30
@@ -26,23 +27,51 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.13'
+        python-version: '3.11'  # 使用Python 3.11避免3.13的Nuitka兼容性问题
+    
+    - name: 缓存pip依赖
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: 缓存Nuitka构建缓存
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/Nuitka
+        key: ${{ runner.os }}-nuitka-${{ hashFiles('**/build_with_nuitka.py', '**/main.py') }}
+        restore-keys: |
+          ${{ runner.os }}-nuitka-
     
     - name: 安装依赖
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install nuitka
+        pip install nuitka==2.4.11  # 使用特定版本的Nuitka确保稳定性
+        pip install ordered-set  # Nuitka依赖
+        pip install zstandard  # 用于压缩优化
     
     - name: 在Windows上编译
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
+      timeout-minutes: 45  # 设置45分钟超时
       run: |
         python build_with_nuitka.py
+        if (!(Test-Path "dist_nuitka/main.dist/main.exe")) {
+          Write-Error "Windows可执行文件未生成"
+          exit 1
+        }
     
     - name: 在Linux上编译
       if: matrix.os == 'ubuntu-latest'
+      timeout-minutes: 45  # 设置45分钟超时
       run: |
         python build_with_nuitka.py
+        if [ ! -f "dist_nuitka/main.dist/main" ]; then
+          echo "Linux可执行文件未生成"
+          exit 1
+        fi
         chmod +x dist_nuitka/main.dist/main
     
     - name: 准备发布文件
@@ -62,16 +91,54 @@ jobs:
     - name: 上传构建产物
       uses: actions/upload-artifact@v4
       with:
-        name: TimeNest-${{ runner.os }}
+        name: TimeNest-${{ runner.os }}-${{ github.run_number }}
         path: ${{ runner.os == 'Windows' && 'TimeNest-windows.zip' || 'TimeNest-linux.tar.gz' }}
         if-no-files-found: error
+        retention-days: 30  # 保留30天
     
-    - name: 发布发行版
+    - name: 构建摘要
+      if: always()
+      run: |
+        echo "## 构建摘要" >> $GITHUB_STEP_SUMMARY
+        echo "- 操作系统: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 构建状态: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 提交: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- 构建时间: $(date)" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "- ✅ 构建成功" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "- 📦 Windows可执行文件已生成" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- 📦 Linux可执行文件已生成" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "- ❌ 构建失败，请检查日志" >> $GITHUB_STEP_SUMMARY
+        fi
+      shell: bash
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
         files: |
           TimeNest-windows.zip
           TimeNest-linux.tar.gz
+        name: Release ${{ github.ref_name }}
+        body: |
+          自动构建的TimeNest应用程序
+          
+          ## 构建信息
+          - 构建时间: ${{ github.event.head_commit.timestamp || github.event.created_at }}
+          - 提交: ${{ github.sha }}
+          - Python版本: 3.11
+          - Nuitka版本: 2.4.11
+          
+          ## 下载说明
+          - Windows用户请下载 `TimeNest-windows.zip`
+          - Linux用户请下载 `TimeNest-linux.tar.gz`
+          
+          ## 使用说明
+          1. 下载对应系统的压缩包
+          2. 解压到任意目录
+          3. 运行主程序即可
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

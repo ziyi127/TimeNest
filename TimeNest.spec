@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['D:\\SoftwareDevelop\\TimeNest\\main.py'],
+    ['C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('D:\\SoftwareDevelop\\TimeNest\\timetable.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico', '.'), ('D:\\SoftwareDevelop\\TimeNest\\classtableMeta.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\timetable_ui_settings.json', '.'), ('D:\\SoftwareDevelop\\TimeNest\\ui', 'ui')],
+    datas=[('C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\timetable.json', '.'), ('C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\TKtimetable.ico', '.'), ('C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\classtableMeta.json', '.'), ('C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\timetable_ui_settings.json', '.'), ('C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\ui', 'ui')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['D:\\SoftwareDevelop\\TimeNest\\TKtimetable.ico'],
+    icon=['C:\\Users\\ziyi127\\Desktop\\Dev\\TimeNest\\TKtimetable.ico'],
 )
 coll = COLLECT(
     exe,
