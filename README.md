@@ -119,6 +119,30 @@ pip3 install pystray
 
 本程序部分由AI开发，请仔细甄别，使用Python和Tkinter，Pystray，PIL库实现。
 
+## 自动构建和发布
+
+本项目使用GitHub Actions实现自动编译和发布功能。当代码推送到main分支或创建版本标签（v*.*.*）时，GitHub Actions将自动执行以下操作：
+
+1. 在Windows和Linux环境下安装Python依赖
+2. 使用Nuitka编译Python代码为可执行文件
+3. 打包编译后的文件为ZIP（Windows）或TAR.GZ（Linux）格式
+4. 对于版本标签推送，自动创建GitHub Release并上传构建产物
+
+### 构建脚本
+
+- `build_with_nuitka.py`: Nuitka编译脚本，可在本地使用
+- `.github/workflows/auto-build.yml`: GitHub Actions工作流配置文件
+
+### 本地编译
+
+如果需要在本地使用Nuitka编译程序，可以运行以下命令：
+
+```bash
+python build_with_nuitka.py
+```
+
+编译后的文件将位于`dist_nuitka`目录中。
+
 ## 🏆 致谢
 
 ### 核心贡献者

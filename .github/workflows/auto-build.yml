@@ -1,0 +1,70 @@
+name: 自动编译和发布
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+    
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install nuitka
+    
+    - name: 在Windows上编译
+      if: matrix.os == 'windows-latest'
+      run: |
+        python build_with_nuitka.py
+    
+    - name: 在Linux上编译
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        python build_with_nuitka.py
+        chmod +x dist_nuitka/main.dist/main
+    
+    - name: 准备发布文件
+      id: prepare_release
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cd dist_nuitka
+          zip -r ../TimeNest-windows.zip main.dist/
+          cd ..
+        else
+          cd dist_nuitka/main.dist
+          tar -czvf ../../TimeNest-linux.tar.gz *
+          cd ../..
+        fi
+      shell: bash
+    
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v3
+      with:
+        name: TimeNest-${{ runner.os }}
+        path: ${{ runner.os == 'Windows' && 'TimeNest-windows.zip' || 'TimeNest-linux.tar.gz' }}
+    
+    - name: 发布发行版
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          TimeNest-windows.zip
+          TimeNest-linux.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
