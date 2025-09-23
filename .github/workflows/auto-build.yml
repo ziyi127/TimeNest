@@ -58,7 +58,7 @@ jobs:
       timeout-minutes: 45  # 设置45分钟超时
       run: |
         python build_with_nuitka.py
-        if (!(Test-Path "dist_nuitka/main.dist/main.exe")) {
+        if (!(Test-Path "dist_nuitka/main.dist/TimeNest.exe")) {
           Write-Error "Windows可执行文件未生成"
           exit 1
         }
@@ -68,11 +68,11 @@ jobs:
       timeout-minutes: 45  # 设置45分钟超时
       run: |
         python build_with_nuitka.py
-        if [ ! -f "dist_nuitka/main.dist/main" ]; then
+        if [ ! -f "dist_nuitka/main.dist/TimeNest" ]; then
           echo "Linux可执行文件未生成"
           exit 1
         fi
-        chmod +x dist_nuitka/main.dist/main
+        chmod +x dist_nuitka/main.dist/TimeNest
     
     - name: 准备发布文件
       id: prepare_release
@@ -116,6 +116,8 @@ jobs:
           echo "- ❌ 构建失败，请检查日志" >> $GITHUB_STEP_SUMMARY
         fi
       shell: bash
+    
+    - name: 发布发行版
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
