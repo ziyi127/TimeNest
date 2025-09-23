@@ -44,7 +44,23 @@ class UISettings:
         
         tk.Label(bg_frame, text="背景颜色:").pack(side=tk.LEFT)
         self.bg_color_btn = tk.Button(bg_frame, text="选择颜色", command=self.choose_bg_color)
-        self.bg_color_btn.pack(side=tk.RIGHT)
+        self.bg_color_btn.pack(side=tk.RIGHT, padx=5)
+        
+        # 背景颜色推荐按钮
+        self.bg_recommended_frame = tk.Frame(bg_frame)
+        self.bg_recommended_frame.pack(side=tk.RIGHT)
+        
+        # 推荐颜色：蓝色（理性与秩序）
+        self.blue_btn = tk.Button(self.bg_recommended_frame, width=2, bg="#2962FF", command=lambda: self.set_recommended_color("background", "#2962FF"))
+        self.blue_btn.pack(side=tk.LEFT, padx=1)
+        
+        # 推荐颜色：绿色（学习与成长）
+        self.green_btn = tk.Button(self.bg_recommended_frame, width=2, bg="#00C853", command=lambda: self.set_recommended_color("background", "#00C853"))
+        self.green_btn.pack(side=tk.LEFT, padx=1)
+        
+        # 推荐颜色：橙色（活力）
+        self.orange_btn = tk.Button(self.bg_recommended_frame, width=2, bg="#FF6D00", command=lambda: self.set_recommended_color("background", "#FF6D00"))
+        self.orange_btn.pack(side=tk.LEFT, padx=1)
         
         # 文字颜色设置
         text_frame = tk.Frame(self.window)
@@ -52,7 +68,23 @@ class UISettings:
         
         tk.Label(text_frame, text="文字颜色:").pack(side=tk.LEFT)
         self.text_color_btn = tk.Button(text_frame, text="选择颜色", command=self.choose_text_color)
-        self.text_color_btn.pack(side=tk.RIGHT)
+        self.text_color_btn.pack(side=tk.RIGHT, padx=5)
+        
+        # 文字颜色推荐按钮
+        self.text_recommended_frame = tk.Frame(text_frame)
+        self.text_recommended_frame.pack(side=tk.RIGHT)
+        
+        # 推荐颜色：蓝色（理性与秩序）
+        self.blue_text_btn = tk.Button(self.text_recommended_frame, width=2, bg="#2962FF", command=lambda: self.set_recommended_color("text", "#2962FF"))
+        self.blue_text_btn.pack(side=tk.LEFT, padx=1)
+        
+        # 推荐颜色：绿色（学习与成长）
+        self.green_text_btn = tk.Button(self.text_recommended_frame, width=2, bg="#00C853", command=lambda: self.set_recommended_color("text", "#00C853"))
+        self.green_text_btn.pack(side=tk.LEFT, padx=1)
+        
+        # 推荐颜色：橙色（活力）
+        self.orange_text_btn = tk.Button(self.text_recommended_frame, width=2, bg="#FF6D00", command=lambda: self.set_recommended_color("text", "#FF6D00"))
+        self.orange_text_btn.pack(side=tk.LEFT, padx=1)
         
         # 透明度设置
         transparency_frame = tk.Frame(self.window)
@@ -343,3 +375,20 @@ class UISettings:
             self.drag_window.wm_attributes("-alpha", alpha)
         except Exception as e:
             print(f"设置透明度时出错: {e}")
+    
+    def set_recommended_color(self, color_type, color_value):
+        """设置推荐颜色
+        
+        Args:
+            color_type: 颜色类型，"background" 或 "text"
+            color_value: 颜色值，如 "#2962FF"
+        """
+        if color_type == "background":
+            self.settings["background_color"] = color_value
+        elif color_type == "text":
+            self.settings["text_color"] = color_value
+        
+        # 应用设置到主窗口
+        self.apply_settings()
+        
+        print(f"已设置{color_type}颜色为: {color_value}")

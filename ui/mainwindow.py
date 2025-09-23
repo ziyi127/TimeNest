@@ -148,7 +148,7 @@ class DragWindow(tk.Tk):
         # 在_apply_background_and_transparency中会处理字体调整
         
     def _apply_background_and_transparency(self):
-        """应用背景色和透明度设置"""
+        """应用背景色、透明度和文字颜色"""
         # 重新设置背景色
         self.configure(bg=self.background_color)
         self.main_frame.configure(bg=self.background_color)
@@ -156,6 +156,12 @@ class DragWindow(tk.Tk):
         self.date_label.configure(bg=self.background_color)
         self.class_info_label.configure(bg=self.background_color)
         self.next_class_label.configure(bg=self.background_color)
+        
+        # 应用文字颜色
+        self.time_label.configure(fg=self.text_color)
+        self.date_label.configure(fg=self.text_color)
+        self.class_info_label.configure(fg=self.text_color)
+        self.next_class_label.configure(fg=self.text_color)
         
         # 应用透明度
         alpha = self.transparency / 100.0
@@ -387,8 +393,42 @@ class DragWindow(tk.Tk):
             y = self.winfo_y() + deltay
             self.set_display_postion(x, y)
     
+    def _get_screen_resolution(self):
+        """获取屏幕分辨率"""
+        try:
+            # 获取屏幕宽度和高度
+            screen_width = self.winfo_screenwidth()
+            screen_height = self.winfo_screenheight()
+            return screen_width, screen_height
+        except Exception as e:
+            print(f"获取屏幕分辨率时出错: {e}")
+            # 返回默认值
+            return 1920, 1080
+
     def set_display_postion(self, x, y):
-        """设置窗口显示位置"""
+        """设置窗口显示位置，确保窗口不会被拖离屏幕"""
+        # 获取屏幕分辨率
+        screen_width, screen_height = self._get_screen_resolution()
+        
+        # 获取窗口尺寸
+        window_width = self.winfo_width()
+        window_height = self.winfo_height()
+        
+        # 确保窗口不会超出屏幕边界
+        # 左边界检查
+        if x < 0:
+            x = 0
+        # 上边界检查
+        if y < 0:
+            y = 0
+        # 右边界检查
+        if x + window_width > screen_width:
+            x = screen_width - window_width
+        # 下边界检查
+        if y + window_height > screen_height:
+            y = screen_height - window_height
+        
+        # 设置窗口位置
         self.geometry(f"+{x}+{y}")
     
     def update_time(self):
