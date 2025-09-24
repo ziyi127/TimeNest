@@ -85,9 +85,7 @@ jobs:
         id: prepare_release
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
-            cd dist_nuitka
-            zip -r ../TimeNest-windows.zip main.dist/
-            cd ..
+            Compress-Archive -Path dist_nuitka/main.dist/* -DestinationPath TimeNest-windows.zip
           else
             cd dist_nuitka/main.dist
             tar -czvf ../../TimeNest-linux.tar.gz *
