@@ -81,16 +81,18 @@ jobs:
           fi
           chmod +x dist_nuitka/main.dist/TimeNest
 
-      - name: 准备发布文件
-        id: prepare_release
+      - name: 准备Windows发布文件
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            Compress-Archive -Path dist_nuitka/main.dist/* -DestinationPath TimeNest-windows.zip
-          else
-            cd dist_nuitka/main.dist
-            tar -czvf ../../TimeNest-linux.tar.gz *
-            cd ../..
-          fi
+          7z a TimeNest-windows.zip dist_nuitka/main.dist/*
+        shell: cmd
+
+      - name: 准备Linux发布文件
+        if: runner.os == 'Linux'
+        run: |
+          cd dist_nuitka/main.dist
+          tar -czvf ../../TimeNest-linux.tar.gz *
+          cd ../..
         shell: bash
 
       - name: 上传构建产物
