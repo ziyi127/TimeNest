@@ -264,8 +264,19 @@ class DragWindow(tk.Tk):
     
     def _open_timetable_wizard(self):
         """从菜单打开编辑课表和时间表"""
-        if hasattr(self, 'tray_manager'):
-            self.tray_manager.open_timetable_wizard(None, None)
+        try:
+            from ui.new_timetable_wizard import NewTimetableWizard
+            
+            # 创建新时间表向导实例
+            if not hasattr(self, 'new_timetable_wizard') or not self.new_timetable_wizard:
+                self.new_timetable_wizard = NewTimetableWizard(self, self)
+            
+            # 打开窗口
+            self.new_timetable_wizard.open_window()
+        except Exception as e:
+            print(f"打开时间表设置向导时出错: {e}")
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("错误", f"打开时间表设置向导时出错: {e}")
     
     def _quit_from_menu(self):
         """从菜单退出程序"""
@@ -660,14 +671,14 @@ class DragWindow(tk.Tk):
         """打开时间表设置向导"""
         try:
             # 导入时间表设置向导
-            from .timetable_wizard import TimetableWizard
+            from .new_timetable_wizard import NewTimetableWizard
             
             # 创建时间表设置向导实例
-            if not hasattr(self, 'timetable_wizard'):
-                self.timetable_wizard = TimetableWizard(self, self)
+            if not hasattr(self, 'new_timetable_wizard'):
+                self.new_timetable_wizard = NewTimetableWizard(self, self)
             
             # 打开向导窗口
-            self.timetable_wizard.open_window()
+            self.new_timetable_wizard.open_window()
         except Exception as e:
             print(f"打开时间表设置向导时出错: {e}")
             import traceback

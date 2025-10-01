@@ -173,16 +173,16 @@ class TrayManager:
     def open_timetable_wizard(self, icon, item):
         # 打开时间表设置向导
         try:
-            from ui.timetable_wizard import TimetableWizard
+            from ui.new_timetable_wizard import NewTimetableWizard
             
             # 如果窗口已存在，将其带到前台
-            if self.timetable_wizard and self.timetable_wizard.window and self.timetable_wizard.window.winfo_exists():
-                self.timetable_wizard.window.lift()
-                self.timetable_wizard.window.focus_force()
+            if hasattr(self, 'new_timetable_wizard') and self.new_timetable_wizard and self.new_timetable_wizard.window and self.new_timetable_wizard.window.winfo_exists():
+                self.new_timetable_wizard.window.lift()
+                self.new_timetable_wizard.window.focus_force()
             else:
                 # 创建新窗口
-                self.timetable_wizard = TimetableWizard(self.root_window, self.root_window)
-                self.timetable_wizard.open_window()
+                self.new_timetable_wizard = NewTimetableWizard(self.root_window, self.root_window)
+                self.new_timetable_wizard.open_window()
         except Exception as e:
             print(f"打开时间表设置向导时出错: {e}")
     
@@ -210,16 +210,13 @@ class TrayManager:
                 self.temp_class_change = None
             
             # 清理时间表设置向导界面
-            if self.timetable_wizard:
+            if hasattr(self, 'new_timetable_wizard') and self.new_timetable_wizard:
                 try:
-                    # 调用资源清理方法
-                    if hasattr(self.timetable_wizard, '_cleanup_resources'):
-                        self.timetable_wizard._cleanup_resources()
-                    if self.timetable_wizard.window:
-                        self.timetable_wizard.window.destroy()
+                    if self.new_timetable_wizard.window:
+                        self.new_timetable_wizard.window.destroy()
                 except:
                     pass
-                self.timetable_wizard = None
+                self.new_timetable_wizard = None
             
             # 清理课程表设置向导界面
             # 注意：课程表向导是通过时间表向导打开的，可能需要特殊处理

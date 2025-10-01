@@ -112,7 +112,7 @@ pip3 install pystray
   - `tray.py`: 系统托盘实现
   - `ui_settings.py`: UI设置窗口
   - `temp_class_change.py`: 临时调课设置窗口
-  - `timetable_wizard.py`: 课程表向导窗口
+  - `new_timetable_wizard.py`: 新的课程表向导窗口，允许用户指定每节课的上下课时间
   - `classtable_wizard.py`: 课表设置窗口
 
 ## 开发说明
