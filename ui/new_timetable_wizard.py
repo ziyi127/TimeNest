@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import json
 import os
 
+
 class NewTimetableWizard:
     def __init__(self, parent, main_window):
         self.parent = parent
@@ -185,7 +186,10 @@ class NewTimetableWizard:
         self.window = tk.Toplevel(self.parent)
         self.window.title("时间表设置向导 - 自定义上下课时间")
         self.window.geometry("800x600")
-        self.window.resizable(True, True)
+        self.window.iconbitmap("TKtimetable.ico")
+        self.window.wm_iconbitmap("TKtimetable.ico")
+        self.window.resizable(False, False)
+
         
         # 居中显示窗口
         if hasattr(self.main_window, '_center_window'):

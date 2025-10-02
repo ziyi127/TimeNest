@@ -66,6 +66,8 @@ class TempClassChangeWindow:
         self.window.title("临时调课")
         self.window.geometry("400x300")
         self.window.resizable(False, False)
+        self.window.iconbitmap("TKtimetable.ico")
+        self.window.wm_iconbitmap("TKtimetable.ico")
         
         # 设置窗口属性以确保在任务栏显示
         try:

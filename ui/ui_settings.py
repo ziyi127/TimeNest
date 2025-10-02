@@ -10,6 +10,9 @@ class UISettings:
         self.window = tk.Toplevel(parent)
         self.window.title("UI设置")
         self.window.geometry("400x600")
+        self.window.resizable(False, False)
+        self.window.iconbitmap("TKtimetable.ico")
+        self.window.wm_iconbitmap("TKtimetable.ico")
         
         # 居中显示窗口
         if hasattr(self.drag_window, '_center_window'):
