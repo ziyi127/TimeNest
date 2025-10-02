@@ -65,6 +65,11 @@ class NewTimetableWizard:
             # 确保当前编辑的日期数据也被保存
             self.save_current_day_data()
             
+            # 验证所有时间格式
+            if not self.validate_all_times():
+                messagebox.showerror("错误", "存在无效的时间格式，请检查所有开始时间和结束时间")
+                return
+            
             # 获取项目目录
             project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             data_file_path = os.path.join(project_path, "timetable.json")
@@ -120,6 +125,53 @@ class NewTimetableWizard:
         except Exception as e:
             print(f"保存数据时出错: {e}")
             messagebox.showerror("错误", f"保存数据时出错: {e}")
+    
+    def validate_all_times(self):
+        """验证所有时间格式是否正确"""
+        # 验证当前编辑的日期数据
+        self.save_current_day_data()
+        
+        # 验证所有日期的时间格式
+        for day, classes in self.timetable_data.items():
+            for class_info in classes:
+                start_time = class_info.get("start_time", "")
+                end_time = class_info.get("end_time", "")
+                
+                # 验证开始时间格式
+                if not self.is_valid_time_format(start_time):
+                    return False
+                
+                # 验证结束时间格式
+                if not self.is_valid_time_format(end_time):
+                    return False
+        
+        return True
+    
+    def is_valid_time_format(self, time_str):
+        """验证时间格式是否为HH:MM"""
+        if not time_str or not isinstance(time_str, str):
+            return False
+        
+        # 检查是否包含冒号
+        if ":" not in time_str:
+            return False
+        
+        # 分割小时和分钟
+        parts = time_str.split(":")
+        if len(parts) != 2:
+            return False
+        
+        hours, minutes = parts
+        
+        # 验证是否为数字
+        try:
+            h = int(hours)
+            m = int(minutes)
+        except ValueError:
+            return False
+        
+        # 验证范围
+        return 0 <= h <= 23 and 0 <= m <= 59
     
     def open_window(self):
         """打开时间表设置向导"""
@@ -183,15 +235,25 @@ class NewTimetableWizard:
             ("星期日", "sunday")
         ]
         
+        # 保存星期按钮的引用，以便后续更新样式
+        self.day_buttons = {}
+        
         for i, (display_name, day_key) in enumerate(days):
             # 使用默认参数值修复闭包问题，确保每个按钮绑定正确的day_key
-            btn = ttk.Button(
+            btn = tk.Button(
                 day_buttons_frame, 
                 text=display_name, 
                 command=lambda d=day_key: self.switch_day(d),
-                width=8
+                width=8,
+                relief=tk.RAISED,
+                bd=1,
+                highlightthickness=0
             )
             btn.grid(row=0, column=i, padx=2, pady=5)
+            self.day_buttons[day_key] = btn
+        
+        # 初始化选中状态
+        self.update_day_button_styles()
         
         # 课程列表框架
         self.classes_frame = ttk.LabelFrame(main_frame, text="课程列表", padding="10")
@@ -249,7 +311,7 @@ class NewTimetableWizard:
         # 取消按钮
         cancel_button = ttk.Button(button_frame, text="取消", command=self.window.destroy)
         cancel_button.pack(side=tk.RIGHT, padx=5)
-    
+
     def switch_day(self, day):
         """切换星期"""
         # 保存当前星期的数据
@@ -257,7 +319,18 @@ class NewTimetableWizard:
         
         # 切换到新星期
         self.current_day = day
+        self.update_day_button_styles()
         self.display_day_classes()
+    
+    def update_day_button_styles(self):
+        """更新星期按钮的样式，选中的按钮显示为按下状态"""
+        for day_key, btn in self.day_buttons.items():
+            if day_key == self.current_day:
+                # 选中的按钮显示为按下状态
+                btn.config(relief=tk.SUNKEN, bd=2)
+            else:
+                # 未选中的按钮恢复默认样式
+                btn.config(relief=tk.RAISED, bd=1)
     
     def display_day_classes(self):
         """显示当前星期的课程"""
@@ -292,11 +365,15 @@ class NewTimetableWizard:
         start_time_var = tk.StringVar(value=class_info["start_time"])
         start_time_entry = ttk.Entry(frame, textvariable=start_time_var, width=10)
         start_time_entry.grid(row=0, column=1, padx=5)
+        # 添加验证回调，保护时间格式
+        start_time_var.trace_add("write", lambda *args: self.validate_time_format(start_time_var, "08:00"))
         
         # 结束时间
         end_time_var = tk.StringVar(value=class_info["end_time"])
         end_time_entry = ttk.Entry(frame, textvariable=end_time_var, width=10)
         end_time_entry.grid(row=0, column=2, padx=5)
+        # 添加验证回调，保护时间格式
+        end_time_var.trace_add("write", lambda *args: self.validate_time_format(end_time_var, "08:45"))
         
         # 课程名称
         subject_var = tk.StringVar(value=class_info["subject"])
@@ -327,6 +404,58 @@ class NewTimetableWizard:
         }
         
         self.class_frames.append(frame)
+    
+    def validate_time_format(self, time_var, default_value):
+        """验证并保护时间格式为HH:MM"""
+        current_value = time_var.get()
+        
+        # 如果输入为空，恢复默认值
+        if not current_value:
+            time_var.set(default_value)
+            return
+        
+        # 如果不包含冒号，尝试修复
+        if ":" not in current_value:
+            # 如果是4位数字，格式化为HH:MM
+            if current_value.isdigit() and len(current_value) == 4:
+                hours = current_value[:2]
+                minutes = current_value[2:]
+                # 验证有效性
+                try:
+                    h = int(hours)
+                    m = int(minutes)
+                    if 0 <= h <= 23 and 0 <= m <= 59:
+                        time_var.set(f"{hours}:{minutes}")
+                        return
+                except ValueError:
+                    pass
+            # 其他情况恢复默认值
+            time_var.set(default_value)
+            return
+        
+        # 如果包含冒号，验证格式
+        parts = current_value.split(":")
+        if len(parts) != 2:
+            time_var.set(default_value)
+            return
+            
+        hours, minutes = parts
+        
+        # 验证小时和分钟
+        try:
+            h = int(hours)
+            m = int(minutes)
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                time_var.set(default_value)
+                return
+        except ValueError:
+            time_var.set(default_value)
+            return
+            
+        # 确保格式正确（HH:MM）
+        formatted_time = f"{h:02d}:{m:02d}"
+        if current_value != formatted_time:
+            time_var.set(formatted_time)
     
     def add_class(self):
         """添加新课程"""
