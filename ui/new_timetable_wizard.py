@@ -303,10 +303,13 @@ class NewTimetableWizard:
         # 按钮框架
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X)
-        
+        # 保存并关闭按钮
+        save_and_close_button = ttk.Button(button_frame, text="保存并关闭", command=self.save_and_close)
+        save_and_close_button.pack(side=tk.RIGHT, padx=5) 
         # 保存按钮
-        save_button = ttk.Button(button_frame, text="保存时间表", command=self.save_data)
+        save_button = ttk.Button(button_frame, text="保存", command=self.save_data)
         save_button.pack(side=tk.RIGHT, padx=5)
+
         
         # 取消按钮
         cancel_button = ttk.Button(button_frame, text="取消", command=self.window.destroy)

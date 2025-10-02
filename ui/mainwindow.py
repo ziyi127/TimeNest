@@ -543,6 +543,12 @@ class DragWindow(tk.Tk):
                 else:
                     print(f"{day_cn}: 无课程")
             
+            # 更新实例变量
+            self.timetable = converted_timetable
+            
+            # 刷新界面显示
+            self.update_info(datetime.datetime.now())
+            
             return converted_timetable
         except Exception as e:
             print(f"加载课程表时出错: {e}")
