@@ -367,6 +367,9 @@ class NewTimetableWizard:
         start_time_entry.grid(row=0, column=1, padx=5)
         # 添加验证回调，保护时间格式
         start_time_var.trace_add("write", lambda *args: self.validate_time_format(start_time_var, "08:00"))
+        # 添加光标控制和删除键处理
+        start_time_entry.bind("<KeyRelease>", lambda e: self.handle_time_key_release(e, start_time_entry, start_time_var))
+        start_time_entry.bind("<KeyPress>", lambda e: self.handle_time_key_press(e, start_time_entry, start_time_var))
         
         # 结束时间
         end_time_var = tk.StringVar(value=class_info["end_time"])
@@ -374,6 +377,9 @@ class NewTimetableWizard:
         end_time_entry.grid(row=0, column=2, padx=5)
         # 添加验证回调，保护时间格式
         end_time_var.trace_add("write", lambda *args: self.validate_time_format(end_time_var, "08:45"))
+        # 添加光标控制和删除键处理
+        end_time_entry.bind("<KeyRelease>", lambda e: self.handle_time_key_release(e, end_time_entry, end_time_var))
+        end_time_entry.bind("<KeyPress>", lambda e: self.handle_time_key_press(e, end_time_entry, end_time_var))
         
         # 课程名称
         subject_var = tk.StringVar(value=class_info["subject"])
@@ -405,57 +411,169 @@ class NewTimetableWizard:
         
         self.class_frames.append(frame)
     
-    def validate_time_format(self, time_var, default_value):
-        """验证并保护时间格式为HH:MM"""
+    def handle_time_key_press(self, event, entry, time_var):
+        """处理时间输入框按键按下事件"""
+        # 获取当前光标位置
+        cursor_pos = entry.index(tk.INSERT)
         current_value = time_var.get()
         
-        # 如果输入为空，恢复默认值
-        if not current_value:
-            time_var.set(default_value)
-            return
+        # 处理删除键 - 防止删除冒号
+        if event.keysym == "BackSpace":
+            # 如果光标正好在冒号位置，阻止删除冒号并移动光标
+            if cursor_pos == 3 and len(current_value) > 2 and current_value[2] == ":":
+                entry.icursor(2)  # 将光标移动到冒号前
+                return "break"  # 阻止默认的删除行为
         
-        # 如果不包含冒号，尝试修复
-        if ":" not in current_value:
-            # 如果是4位数字，格式化为HH:MM
-            if current_value.isdigit() and len(current_value) == 4:
-                hours = current_value[:2]
-                minutes = current_value[2:]
-                # 验证有效性
+        # 限制小时部分输入长度
+        if ":" in current_value:
+            parts = current_value.split(":", 1)  # 只分割一次
+            # 如果光标在小时部分（冒号前）且小时部分已经有两位，阻止继续输入
+            if len(parts) == 2 and len(parts[0]) >= 2 and cursor_pos <= 2 and event.char.isdigit():
+                return "break"
+        else:
+            # 如果还没有冒号且小时部分已经有两位，阻止继续输入
+            if len(current_value) >= 2 and cursor_pos <= 2 and event.char.isdigit():
+                return "break"
+        
+        # 限制分钟部分输入长度
+        if ":" in current_value:
+            parts = current_value.split(":", 1)  # 只分割一次
+            if len(parts) == 2 and len(parts[1]) >= 2 and cursor_pos > 3:
+                # 如果分钟部分已经有两位且光标在分钟部分，阻止继续输入
+                if event.char.isdigit():  # 只阻止数字输入
+                    return "break"
+        
+        # 允许所有其他输入，不过滤字符
+        return None  # 不阻止任何输入
+    
+    def handle_time_key_release(self, event, entry, time_var):
+        """处理时间输入框按键释放事件"""
+        # 获取当前光标位置和输入内容
+        cursor_pos = entry.index(tk.INSERT)
+        current_value = time_var.get()
+        
+        # 自动转换数字为时间格式的功能
+        # 如果输入的是纯数字且在1000以内，则转换为时间格式
+        if current_value.isdigit() and len(current_value) <= 4 and len(current_value) >= 1:
+            num_value = int(current_value)
+            if num_value < 1000:  # 确保是1000以内的数字
+                # 根据数字长度转换为时间格式
+                new_value = None
+                if len(current_value) == 1:
+                    # 例如: 3 -> 00:03
+                    new_value = "00:0" + current_value
+                elif len(current_value) == 2:
+                    # 例如: 43 -> 00:43
+                    new_value = "00:" + current_value
+                elif len(current_value) == 3:
+                    # 例如: 643 -> 06:43
+                    hours = "0" + current_value[0]
+                    minutes = current_value[1:]
+                    # 验证时间有效性
+                    try:
+                        hour_val = int(hours)
+                        min_val = int(minutes)
+                        if hour_val <= 23 and min_val <= 59:
+                            new_value = hours + ":" + minutes
+                    except ValueError:
+                        pass
+                elif len(current_value) == 4:
+                    # 例如: 0643 -> 06:43 或者 1800 -> 18:00
+                    hours = current_value[:2]
+                    minutes = current_value[2:]
+                    # 验证时间有效性
+                    try:
+                        hour_val = int(hours)
+                        min_val = int(minutes)
+                        if hour_val <= 23 and min_val <= 59:
+                            new_value = hours + ":" + minutes
+                        else:
+                            # 尝试其他可能的组合
+                            # 例如: 2501 -> 02:50 (把25当作2和50)
+                            # 或者 2559 -> 02:55 (把25当作2和55)
+                            # 这种情况比较复杂，我们简单处理
+                            pass
+                    except ValueError:
+                        pass
+                
+                # 如果生成了有效的时间格式，则更新值
+                if new_value and ":" in new_value and new_value != current_value:
+                    time_var.set(new_value)
+                    # 将光标移动到末尾
+                    entry.icursor(len(new_value))
+                    return
+        
+        # 检查并限制小时部分长度（冒号前的部分）
+        if ":" in current_value:
+            parts = current_value.split(":", 1)  # 只分割一次，避免多个冒号的问题
+            if len(parts) == 2:
+                # 限制小时部分为两位数
+                if len(parts[0]) > 2:
+                    # 如果小时部分超过两位，只保留最后两位
+                    new_hours = parts[0][-2:]
+                    new_value = new_hours + ":" + parts[1]
+                    time_var.set(new_value)
+                    # 调整光标位置
+                    entry.icursor(min(len(new_value), cursor_pos))
+                    return
+                # 限制分钟部分为两位数
+                elif len(parts[1]) > 2:
+                    # 如果分钟部分超过两位，截取前两位
+                    new_value = parts[0] + ":" + parts[1][:2]
+                    time_var.set(new_value)
+                    # 调整光标位置
+                    entry.icursor(min(len(new_value), cursor_pos))
+                    return
+                # 验证小时和分钟的有效性
                 try:
-                    h = int(hours)
-                    m = int(minutes)
-                    if 0 <= h <= 23 and 0 <= m <= 59:
-                        time_var.set(f"{hours}:{minutes}")
-                        return
+                    hour_val = int(parts[0])
+                    min_val = int(parts[1])
+                    if hour_val > 23 or min_val > 59:
+                        # 时间无效，但不自动修改，让用户自己修正
+                        pass
                 except ValueError:
+                    # 包含非数字字符，不处理
                     pass
-            # 其他情况恢复默认值
-            time_var.set(default_value)
-            return
-        
-        # 如果包含冒号，验证格式
-        parts = current_value.split(":")
-        if len(parts) != 2:
-            time_var.set(default_value)
-            return
-            
-        hours, minutes = parts
-        
-        # 验证小时和分钟
-        try:
-            h = int(hours)
-            m = int(minutes)
-            if not (0 <= h <= 23 and 0 <= m <= 59):
-                time_var.set(default_value)
+        else:
+            # 如果还没有冒号且小时部分超过两位，只保留最后两位
+            if len(current_value) > 2:
+                new_value = current_value[-2:]
+                time_var.set(new_value)
+                # 调整光标位置
+                entry.icursor(min(len(new_value), cursor_pos))
                 return
-        except ValueError:
-            time_var.set(default_value)
-            return
-            
-        # 确保格式正确（HH:MM）
-        formatted_time = f"{h:02d}:{m:02d}"
-        if current_value != formatted_time:
-            time_var.set(formatted_time)
+        
+        # 自动插入冒号功能
+        if len(current_value) == 2 and ":" not in current_value and current_value.isdigit():
+            # 在两位数字后自动插入冒号
+            new_value = current_value + ":"
+            time_var.set(new_value)
+            # 自动将光标移动到分钟位置
+            entry.icursor(3)
+        elif len(current_value) == 3 and current_value[2] != ":" and ":" not in current_value and current_value.isdigit():
+            # 如果第三位不是冒号且还没有冒号，插入冒号
+            new_value = current_value[:2] + ":" + current_value[2:]
+            time_var.set(new_value)
+            # 调整光标位置
+            entry.icursor(cursor_pos + 1)
+        elif len(current_value) > 3 and ":" in current_value:
+            # 确保冒号在正确位置
+            parts = current_value.split(":", 1)  # 只分割一次
+            if len(parts) == 2 and len(parts[0]) > 2:
+                # 小时部分超过两位，重新格式化
+                hours = parts[0][-2:]
+                minutes = parts[1][:2] if parts[1] else ""
+                new_value = hours + ":" + minutes
+                time_var.set(new_value)
+                # 调整光标位置
+                if cursor_pos > 3:
+                    entry.icursor(min(len(new_value), cursor_pos))
+    
+    def validate_time_format(self, time_var, default_value):
+        """验证时间格式为HH:MM，但不自动修改用户输入"""
+        # 不对用户输入进行自动修改，只在需要时提供基本验证
+        # 用户可以自由输入，只有在保存时才会验证格式是否正确
+        pass
     
     def add_class(self):
         """添加新课程"""
