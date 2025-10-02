@@ -28,8 +28,8 @@ class UISettings:
             "date_font_size": 12,
             "class_info_font_size": 12,
             "next_class_font_size": 12,
-            "window_width": 180,
-            "window_height": 70
+            "window_width": 280,
+            "window_height": 65
         }
         
         self.create_widgets()

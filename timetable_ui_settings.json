@@ -2,14 +2,14 @@
   "background_color": "#bbf4be",
   "text_color": "#000000",
   "transparency": 74,
-  "position_x": 821,
-  "position_y": 975,
+  "position_x": 804,
+  "position_y": 0,
   "show_next_class": true,
   "show_countdown": true,
   "time_font_size": 18,
   "date_font_size": 16,
   "class_info_font_size": 13,
   "next_class_font_size": 13,
-  "window_width": 270,
-  "window_height": 105
+  "window_width": 280,
+  "window_height": 65
 }

@@ -353,8 +353,8 @@ class DragWindow(tk.Tk):
             self.date_font_size = 12
             self.class_info_font_size = 12
             self.next_class_font_size = 12
-            self.window_width = 180
-            self.window_height = 70
+            self.window_width = 280
+            self.window_height = 65
             
             if os.path.exists(settings_file):
                 with open(settings_file, 'r', encoding='utf-8') as f:
@@ -370,8 +370,8 @@ class DragWindow(tk.Tk):
                 self.date_font_size = settings.get("date_font_size", 12)
                 self.class_info_font_size = settings.get("class_info_font_size", 12)
                 self.next_class_font_size = settings.get("next_class_font_size", 12)
-                self.window_width = settings.get("window_width", 180)
-                self.window_height = settings.get("window_height", 70)
+                self.window_width = settings.get("window_width", 280)
+                self.window_height = settings.get("window_height", 65)
             
             # 设置窗口大小
             self.geometry(f"{self.window_width}x{self.window_height}")
@@ -395,7 +395,7 @@ class DragWindow(tk.Tk):
             self.class_info_font_size = 12
             self.next_class_font_size = 12
             self.window_width = 180
-            self.window_height = 70
+            self.window_height = 50
     
     def set_draggable(self, draggable):
         """设置窗口是否可拖动"""
