@@ -225,7 +225,7 @@ class DragWindow(tk.Tk):
         # 创建菜单
         if not self.context_menu:
             self.context_menu = tk.Menu(self, tearoff=0)
-            self.context_menu.add_command(label="允许编辑悬浮窗", command=self._toggle_drag_from_menu)
+            self.context_menu.add_checkbutton(label="允许编辑悬浮窗", command=self._toggle_drag_from_menu)
             self.context_menu.add_command(label="UI设置", command=self._open_ui_settings_from_menu)
             self.context_menu.add_command(label='临时调课', command=self._open_temp_class_change_from_menu)
             self.context_menu.add_command(label='编辑课表和时间表', command=self._open_timetable_wizard)
