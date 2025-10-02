@@ -353,8 +353,8 @@ class DragWindow(tk.Tk):
             self.date_font_size = 12
             self.class_info_font_size = 12
             self.next_class_font_size = 12
-            self.window_width = 280
-            self.window_height = 65
+            self.window_width = 175
+            self.window_height = 50
             
             if os.path.exists(settings_file):
                 with open(settings_file, 'r', encoding='utf-8') as f:
@@ -394,7 +394,7 @@ class DragWindow(tk.Tk):
             self.date_font_size = 12
             self.class_info_font_size = 12
             self.next_class_font_size = 12
-            self.window_width = 180
+            self.window_width = 175
             self.window_height = 50
     
     def set_draggable(self, draggable):

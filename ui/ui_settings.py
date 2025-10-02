@@ -185,9 +185,9 @@ class UISettings:
                 if "next_class_font_size" not in self.settings:
                     self.settings["next_class_font_size"] = 12
                 if "window_width" not in self.settings:
-                    self.settings["window_width"] = 180
+                    self.settings["window_width"] = 175
                 if "window_height" not in self.settings:
-                    self.settings["window_height"] = 70
+                    self.settings["window_height"] = 50
                 
                 self.transparency_scale.set(self.settings["transparency"])
                 self.show_next_class_var.set(self.settings["show_next_class"])
@@ -222,8 +222,8 @@ class UISettings:
             
             # 根据size_scale的值计算窗口的宽度和高度
             scale_factor = self.size_scale.get()
-            self.settings["window_width"] = int(180 * scale_factor)
-            self.settings["window_height"] = int(70 * scale_factor)
+            self.settings["window_width"] = int(175 * scale_factor)
+            self.settings["window_height"] = int(50 * scale_factor)
             
             with open(settings_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=2)
@@ -240,8 +240,8 @@ class UISettings:
             
             # 根据size_scale的值计算窗口的宽度和高度
             scale_factor = self.size_scale.get()
-            self.settings["window_width"] = int(180 * scale_factor)
-            self.settings["window_height"] = int(70 * scale_factor)
+            self.settings["window_width"] = int(175 * scale_factor)
+            self.settings["window_height"] = int(50 * scale_factor)
             
             # 获取用户设置的字体大小（不立即应用比例因子调整）
             user_time_font_size = self.time_font_scale.get()
