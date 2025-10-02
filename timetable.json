@@ -1,0 +1,34 @@
+{
+    "timetable": {
+        "monday": [
+            {
+                "start_time": "08:00",
+                "end_time": "08:45",
+                "subject": "数学",
+                "teacher": "张老师",
+                "classroom": "教室1"
+            },
+            {
+                "start_time": "08:55",
+                "end_time": "09:40",
+                "subject": "语文",
+                "teacher": "李老师",
+                "classroom": "教室2"
+            }
+        ],
+        "tuesday": [
+            {
+                "start_time": "08:00",
+                "end_time": "08:45",
+                "subject": "英语",
+                "teacher": "王老师",
+                "classroom": "教室3"
+            }
+        ],
+        "wednesday": [],
+        "thursday": [],
+        "friday": [],
+        "saturday": [],
+        "sunday": []
+    }
+}

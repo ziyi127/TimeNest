@@ -9,7 +9,6 @@ class DragWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("课程表悬浮窗")
-        self.geometry("180x70")
         
         # 检查操作系统类型，Linux环境下不使用无边框窗口以避免兼容性问题
         import platform
@@ -53,16 +52,19 @@ class DragWindow(tk.Tk):
         
         # 创建主框架
         self.main_frame = tk.Frame(self, bg=self.background_color)
-        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=2)
-        
-        # 创建时间框架
-        self.time_frame = tk.Frame(self.main_frame, bg=self.background_color)
-        self.time_frame.pack(anchor='w')
+        self.main_frame.grid(sticky='nsew')
+        # 第0列（时间列）和第1列（课程列）都可扩展，权重1:1
+        self.main_frame.columnconfigure(0, weight=1)
+        self.main_frame.columnconfigure(1, weight=1)
+        # 第0行（当前时间/课程）和第1行（日期/下节课）都可扩展，权重1:1
+        self.main_frame.rowconfigure(0, weight=1)
+        self.main_frame.rowconfigure(1, weight=1)
         
         # 创建时间标签
         time_font = tkFont.Font(family="Arial", size=self.time_font_size)
-        self.time_label = tk.Label(self.time_frame, font=time_font, fg=self.text_color, bg=self.background_color)
-        self.time_label.pack(side='left')
+        self.time_label = tk.Label(self.main_frame, font=time_font, fg=self.text_color, bg=self.background_color)
+        # sticky='nsew'：让时间标签填充整个单元格（水平+垂直）
+        self.time_label.grid(row=0, column=0, sticky='nsew', padx=2, pady=2)
         
         # 设置初始鼠标穿透状态
         # 使用after方法确保窗口完全初始化后再设置
@@ -72,23 +74,22 @@ class DragWindow(tk.Tk):
         """初始化透明度设置"""
         # 创建日期和星期标签
         date_font = tkFont.Font(family="Arial", size=self.date_font_size)
-        self.date_label = tk.Label(self.time_frame, font=date_font, bg=self.background_color, fg=self.text_color)
-        self.date_label.pack(side='left', padx=(3, 0))
+        self.date_label = tk.Label(self.main_frame, font=date_font, bg=self.background_color, fg=self.text_color)
+        self.date_label.grid(row=1, column=0, sticky='nsew', padx=2, pady=2)
         
         # 创建右键菜单
         self.context_menu = None
         
         # 创建课程信息标签
         class_info_font = tkFont.Font(family="Arial", size=self.class_info_font_size)
-        self.class_info_label = tk.Label(self.main_frame, font=class_info_font, bg=self.background_color, fg=self.text_color)
+        self.class_info_label = tk.Label(self.main_frame, font=class_info_font, bg=self.background_color, fg=self.text_color,wraplength=150)
         if self.show_next_class:
-            self.class_info_label.pack(anchor='w')
-        
+            self.class_info_label.grid(row=0, column=1, sticky='nsew', padx=2, pady=2)
         # 创建下一节课信息标签
         next_class_font = tkFont.Font(family="Arial", size=self.next_class_font_size)
-        self.next_class_label = tk.Label(self.main_frame, font=next_class_font, bg=self.background_color, fg=self.text_color)
+        self.next_class_label = tk.Label(self.main_frame, font=next_class_font, bg=self.background_color, fg=self.text_color,wraplength=150)
         if self.show_countdown:
-            self.next_class_label.pack(anchor='w')
+            self.next_class_label.grid(row=1, column=1, sticky='nsew', padx=2, pady=2)  
         
         # 加载课程表
         self.timetable = self.load_timetable()   
@@ -99,10 +100,9 @@ class DragWindow(tk.Tk):
         self.bind("<B1-Motion>", self.on_motion)# type: ignore
         
         # 绑定右键菜单事件
-        if True:  # 这里可以根据需要修改为False来禁用右键菜单
-            self.bind("<Button-3>", self._show_context_menu)# type: ignore
+        self.bind("<Button-3>", self._show_context_menu)# type: ignore
         
-        # 绑定窗口关闭事件
+        # 绑定窗口关闭事件（之前是由于Linux环境下有可能无法显示托盘菜单导致的linux独占，但是还是给Windows用吧，也方便点）
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
         # 开始更新时间
@@ -112,6 +112,9 @@ class DragWindow(tk.Tk):
         import platform
         if platform.system() == "Linux":
             self._ensure_topmost()
+            
+        # 应用字体设置
+        self._apply_fonts()
     
     def _adjust_font_size(self, label, text):
         """根据文本长度调整标签的字体大小"""
@@ -121,6 +124,25 @@ class DragWindow(tk.Tk):
         # 如果标签宽度为0（可能还未完全初始化），使用窗口宽度作为参考
         if label_width <= 0:
             label_width = self.winfo_width() - 20  # 减去一些边距
+        
+        # 获取当前字体
+        current_font = tkFont.Font(font=label['font'])
+        font_family = current_font['family']
+        current_size = current_font['size']
+        
+        # 从当前字体大小开始，向下调整到最小字体大小8
+        for size in range(current_size, 7, -1):
+            # 创建临时字体对象来测量文本宽度
+            temp_font = tkFont.Font(family=font_family, size=size)
+            text_width = temp_font.measure(text)
+            
+            # 如果文本宽度小于标签宽度，则使用该字体大小
+            if text_width < label_width:
+                label.config(font=(font_family, size))
+                break
+        else:
+            # 如果所有字体都太大，使用最小字体大小
+            label.config(font=(font_family, 8))
         
     
         
@@ -304,15 +326,15 @@ class DragWindow(tk.Tk):
         """更新显示设置"""
         # 控制课程信息标签的显示
         if self.show_next_class:
-            self.class_info_label.pack(anchor='w')
+            self.class_info_label.grid(sticky='nsew', row=0, column=1, padx=2, pady=2)
         else:
-            self.class_info_label.pack_forget()
+            self.class_info_label.grid_forget()
         
         # 控制下一节课信息标签的显示
         if self.show_countdown:
-            self.next_class_label.pack(anchor='w')
+            self.next_class_label.grid(sticky='nsew', row=1, column=1, padx=2, pady=2)
         else:
-            self.next_class_label.pack_forget()
+            self.next_class_label.grid_forget()
     
     def load_ui_settings(self):
         """加载UI设置"""
@@ -455,7 +477,9 @@ class DragWindow(tk.Tk):
             
             # 更新时间标签
             self.time_label.config(text=current_time)
+            self._adjust_font_size(self.time_label, current_time)
             self.date_label.config(text=f"{current_date} {weekday}")
+            self._adjust_font_size(self.date_label, f"{current_date} {weekday}")
             
             # 更新课程信息
             self.update_info(now)
@@ -694,7 +718,7 @@ class DragWindow(tk.Tk):
         """打开课程表设置向导"""
         try:
             # 导入课程表设置向导
-            from .classtable_wizard import ClassTableWizard
+            from new_timetable_wizard import ClassTableWizard
             
             # 创建课程表设置向导实例
             if not hasattr(self, 'class_table_wizard'):
