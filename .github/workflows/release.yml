@@ -1,0 +1,45 @@
+name: 发布到Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 列出下载的文件
+        run: |
+          echo "下载的文件:"
+          ls -R artifacts/
+
+      - name: 创建发布版本
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*/TimeNest-windows.zip
+            artifacts/*/TimeNest-linux.tar.gz
+          name: Release ${{ github.ref_name }}
+          body: |
+            自动构建的TimeNest应用程序
+            
+            ## 下载说明
+            - Windows用户请下载 `TimeNest-windows.zip`
+            - Linux用户请下载 `TimeNest-linux.tar.gz`
+            
+            ## 使用说明
+            1. 下载对应系统的压缩包
+            2. 解压到任意目录
+            3. 运行主程序即可
+            
+            ## 版本信息
+            - 版本: ${{ github.ref_name }}
+            - 构建时间: $(date)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

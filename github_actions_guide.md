@@ -22,10 +22,20 @@
 - ✅ 缓存pip依赖和Nuitka构建缓存
 - ✅ 生成Windows和Linux可执行文件
 - ✅ 自动创建压缩分发包
-- ✅ 发布GitHub Release (当创建标签时)
 - ✅ 详细的构建摘要和错误处理
 
-### 2. 测试构建 (`test-build.yml`)
+### 2. 发布到Release (`release.yml`)
+
+**触发条件：**
+- 创建版本标签 (`v*.*.*`)
+
+**主要功能：**
+- ✅ 自动下载构建产物
+- ✅ 创建GitHub Release
+- ✅ 上传Windows和Linux可执行文件
+- ✅ 自动生成Release说明
+
+### 3. 测试构建 (`test-build.yml`)
 
 **触发条件：**
 - 推送到 `feature/*` 或 `fix/*` 分支
