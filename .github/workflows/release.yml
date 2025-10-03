@@ -9,22 +9,28 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
       - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: 列出下载的文件
+      - name: 查找并列出下载的文件
         run: |
-          echo "下载的文件:"
-          ls -R artifacts/
+          echo "下载的文件结构:"
+          find artifacts -type f
+          
+          echo "Artifact目录:"
+          ls -la artifacts/
 
       - name: 创建发布版本
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/*/TimeNest-windows.zip
-            artifacts/*/TimeNest-linux.tar.gz
+            artifacts/TimeNest-Windows-*/TimeNest-windows.zip
+            artifacts/TimeNest-Linux-*/TimeNest-linux.tar.gz
           name: Release ${{ github.ref_name }}
           body: |
             自动构建的TimeNest应用程序

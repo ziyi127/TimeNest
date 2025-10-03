@@ -34,6 +34,7 @@
 - ✅ 创建GitHub Release
 - ✅ 上传Windows和Linux可执行文件
 - ✅ 自动生成Release说明
+- ✅ 改进的artifact处理逻辑
 
 ### 3. 测试构建 (`test-build.yml`)
 
