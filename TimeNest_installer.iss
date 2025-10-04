@@ -1,62 +1,46 @@
 ; Inno Setup Script for TimeNest
-; Created by AI Assistant
-
-#define MyAppName "TimeNest"
-#define MyAppVersion "1.0"
-#define MyAppPublisher "TimeNest Team"
-#define MyAppURL "https://github.com/TimeNest"
-#define MyAppExeName "TimeNest.exe"
+; Script to create installer with auto-start functionality
 
 [Setup]
-; NOTE: The value of AppId uniquely identifies this application.
-; Do not use the same AppId value in installers for other applications.
-; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{8B4D9C54-3F3D-4F3E-8D74-2E9A9B7C9A9B}
-AppName={#MyAppName}
-AppVersion={#MyAppVersion}
-AppVerName={#MyAppName} {#MyAppVersion}
-AppPublisher={#MyAppPublisher}
-AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
+AppName=TimeNest
+AppVersion=1.0.0
+AppPublisher=TimeNest Team
+AppPublisherURL=https://github.com/yourusername/TimeNest
+AppSupportURL=https://github.com/yourusername/TimeNest/issues
+AppUpdatesURL=https://github.com/yourusername/TimeNest/releases
 
-DefaultDirName={autopf}\{#MyAppName}
-DisableProgramGroupPage=yes
+DefaultDirName={autopf}\TimeNest
+DefaultGroupName=TimeNest
+AllowNoIcons=yes
 LicenseFile=
-PrivilegesRequired=admin
-OutputDir=dist_installer
-OutputBaseFilename=TimeNest-setup
-SetupIconFile=TKtimetable.ico
+OutputDir=.
+OutputBaseFilename=TimeNest_Setup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+PrivilegesRequired=admin
+PrivilegesRequiredOverridesAllowed=dialog
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "startup"; Description: "开机自启动"; GroupDescription: "启动选项:"; Flags: unchecked
 
 [Files]
-Source: "dist_pyinstaller\TimeNest\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist_pyinstaller\TimeNest\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
-; JSON files are now included from the _internal directory
-Source: "dist_pyinstaller\TimeNest\_internal\classtableMeta.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist_pyinstaller\TimeNest\_internal\timetable.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dist_pyinstaller\TimeNest\_internal\timetable_ui_settings.json"; DestDir: "{app}"; Flags: ignoreversion
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+Source: "dist_nuitka\main.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\TimeNest"; Filename: "{app}\TimeNest.exe"
+Name: "{autodesktop}\TimeNest"; Filename: "{app}\TimeNest.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\TimeNest.exe"; Description: "{cm:LaunchProgram,TimeNest}"; Flags: nowait postinstall skipifsilent
 
 [InstallDelete]
-Type: filesandordirs; Name: "{app}\_internal"
+Type: filesandordirs; Name: "{app}\*"
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: startup
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "TimeNest"; ValueData: """{app}\TimeNest.exe"""; Flags: uninsdeletevalue; Tasks: startup
