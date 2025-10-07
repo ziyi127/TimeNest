@@ -165,7 +165,9 @@ python build_with_nuitka.py
     </td>
     <!-- 我们一直在等第三个人，加入我们的团队，一起完善这个项目！ -->
 
+
 </table>
+程序的图标使用了来自awesome-iwb项目组主要成员Douxiba为我们重绘的图标，感谢awesome-iwb项目对我们的帮助
 
 ## 许可证
 
